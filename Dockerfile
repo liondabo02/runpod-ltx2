@@ -56,8 +56,11 @@ RUN git clone --depth 1 https://github.com/comfyanonymous/ComfyUI.git ${COMFYUI_
 
 WORKDIR ${COMFYUI_DIR}
 
+# Keep PyTorch aligned with the CUDA 12.8 base image and current ComfyUI/comfy-kitchen.
+# The previous cu121 wheels were too old for comfy-kitchen's PEP 585 type annotations
+# and caused infer_schema(... list[int] ...) to fail during ComfyUI startup.
 RUN sed -i 's/comfy-aimdo>=0.2.7/comfy-aimdo==0.2.6/g' requirements.txt \
-    && python3 -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121 \
+    && python3 -m pip install --upgrade torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128 \
     && python3 -m pip install -r requirements.txt
 
 RUN git clone --depth 1 https://github.com/Lightricks/ComfyUI-LTXVideo custom_nodes/ComfyUI-LTXVideo \
