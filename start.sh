@@ -204,7 +204,9 @@ if [ -d "${LTX2_HOME}/workflows" ] && compgen -G "${LTX2_HOME}/workflows/*.json"
 fi
 
 AUTO_DOWNLOAD_MODELS="${MODELS_AUTO_DOWNLOAD:-auto}"
-if [ "${AUTO_DOWNLOAD_MODELS}" = "auto" ]; then
+if is_true "${MINIVERSE_SMOKE_TEST:-false}"; then
+  AUTO_DOWNLOAD_MODELS="false"
+elif [ "${AUTO_DOWNLOAD_MODELS}" = "auto" ]; then
   if is_true "${RUNPOD_SERVERLESS:-false}"; then
     AUTO_DOWNLOAD_MODELS="${SERVERLESS_STARTUP_MODEL_DOWNLOAD:-false}"
   else
@@ -224,8 +226,13 @@ start_runtime_pruner
 COMFY_ARGS=(
   --listen "${COMFYUI_LISTEN:-0.0.0.0}"
   --port "${COMFYUI_PORT:-8188}"
-  --highvram
 )
+
+if is_true "${MINIVERSE_SMOKE_TEST:-false}"; then
+  COMFY_ARGS+=(--cpu)
+else
+  COMFY_ARGS+=(--highvram)
+fi
 
 start_comfyui_background() {
   cd "${COMFYUI_DIR}"
@@ -235,8 +242,6 @@ start_comfyui_background() {
 }
 
 wait_for_comfyui() {
-  # Use an API endpoint for health instead of the browser UI root. Newer
-  # ComfyUI releases can have frontend/root-page issues while the API is ready.
   local health_url="http://127.0.0.1:${COMFYUI_PORT:-8188}/system_stats"
   local retries="${COMFYUI_HEALTH_RETRIES:-120}"
   local sleep_s="${COMFYUI_HEALTH_SLEEP_SECONDS:-2}"
@@ -250,8 +255,6 @@ wait_for_comfyui() {
       return 0
     fi
 
-    # Fail fast if ComfyUI itself crashed instead of burning an expensive GPU
-    # for the entire health timeout.
     if ! kill -0 "${COMFYUI_PID}" >/dev/null 2>&1; then
       local exit_code=0
       wait "${COMFYUI_PID}" || exit_code=$?
@@ -265,6 +268,19 @@ wait_for_comfyui() {
   echo "[entrypoint] ComfyUI did not become healthy in time." >&2
   return 1
 }
+
+if is_true "${MINIVERSE_SMOKE_TEST:-false}"; then
+  echo "[entrypoint] MINIVERSE_SMOKE_TEST=true, validating ComfyUI startup on CPU."
+  export COMFYUI_HEALTH_RETRIES="${COMFYUI_HEALTH_RETRIES:-90}"
+  export COMFYUI_HEALTH_SLEEP_SECONDS="${COMFYUI_HEALTH_SLEEP_SECONDS:-1}"
+  start_comfyui_background
+  wait_for_comfyui
+  curl -fsS "http://127.0.0.1:${COMFYUI_PORT:-8188}/system_stats" >/dev/null
+  kill "${COMFYUI_PID}" >/dev/null 2>&1 || true
+  wait "${COMFYUI_PID}" >/dev/null 2>&1 || true
+  echo "[entrypoint] smoke test passed."
+  exit 0
+fi
 
 if [ "${RUNPOD_SERVERLESS:-false}" = "true" ]; then
   echo "[entrypoint] RUNPOD_SERVERLESS=true, starting worker mode."
