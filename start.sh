@@ -235,16 +235,30 @@ start_comfyui_background() {
 }
 
 wait_for_comfyui() {
-  local health_url="http://127.0.0.1:${COMFYUI_PORT:-8188}/"
+  # Use an API endpoint for health instead of the browser UI root. Newer
+  # ComfyUI releases can have frontend/root-page issues while the API is ready.
+  local health_url="http://127.0.0.1:${COMFYUI_PORT:-8188}/system_stats"
   local retries="${COMFYUI_HEALTH_RETRIES:-120}"
   local sleep_s="${COMFYUI_HEALTH_SLEEP_SECONDS:-2}"
   local i
+
+  echo "[entrypoint] waiting for ComfyUI health at ${health_url} (retries=${retries}, sleep=${sleep_s}s)"
 
   for ((i=1; i<=retries; i++)); do
     if curl -fsS "${health_url}" >/dev/null 2>&1; then
       echo "[entrypoint] ComfyUI is ready."
       return 0
     fi
+
+    # Fail fast if ComfyUI itself crashed instead of burning an expensive GPU
+    # for the entire health timeout.
+    if ! kill -0 "${COMFYUI_PID}" >/dev/null 2>&1; then
+      local exit_code=0
+      wait "${COMFYUI_PID}" || exit_code=$?
+      echo "[entrypoint] ComfyUI process exited before becoming healthy (exit=${exit_code})." >&2
+      return 1
+    fi
+
     sleep "${sleep_s}"
   done
 
