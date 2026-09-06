@@ -40,6 +40,31 @@ jobs:
             type=sha,prefix=sha-
             type=raw,value=latest,enable={{is_default_branch}}
 
+      - name: Build local smoke-test image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: miniverse-ltx2-smoke:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test ComfyUI startup
+        run: |
+          set -euxo pipefail
+          docker run --rm \
+            -e MINIVERSE_SMOKE_TEST=true \
+            -e MODELS_AUTO_DOWNLOAD=false \
+            -e PERSIST_MODELS=false \
+            -e PERSIST_HF_CACHE=false \
+            -e RUNTIME_PRUNE_ENABLED=false \
+            -e COMFYUI_HEALTH_RETRIES=90 \
+            -e COMFYUI_HEALTH_SLEEP_SECONDS=1 \
+            miniverse-ltx2-smoke:ci
+
       - name: Login to GHCR
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
