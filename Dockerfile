@@ -66,6 +66,19 @@ RUN sed -i 's/comfy-aimdo>=0.2.7/comfy-aimdo==0.2.6/g' requirements.txt \
 RUN git clone --depth 1 https://github.com/Lightricks/ComfyUI-LTXVideo custom_nodes/ComfyUI-LTXVideo \
     && git clone --depth 1 https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite custom_nodes/VideoHelperSuite
 
+# Current ComfyUI changed the AudioVAE constructor. The upstream low-VRAM loader
+# still calls AudioVAE(sd, metadata), which raises TypeError at runtime.
+# Patch it to use the same VAE wrapper path as ComfyUI's core LTX audio loader.
+RUN python3 - <<'PY'
+from pathlib import Path
+p = Path('/ComfyUI/custom_nodes/ComfyUI-LTXVideo/low_vram_loaders.py')
+s = p.read_text()
+if 'import comfy.sd' not in s:
+    s = s.replace('import comfy.utils\n', 'import comfy.utils\nimport comfy.sd\n', 1)
+s = s.replace('audio_vae = AudioVAE(sd, metadata)', 'audio_vae = comfy.sd.VAE(sd=sd, metadata=metadata)')
+p.write_text(s)
+PY
+
 COPY custom_nodes ${COMFYUI_DIR}/custom_nodes
 
 RUN set -eux; \
