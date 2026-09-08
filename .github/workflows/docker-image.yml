@@ -65,7 +65,7 @@ jobs:
             -e COMFYUI_HEALTH_SLEEP_SECONDS=1 \
             miniverse-ltx2-smoke:ci
 
-      - name: Validate live LTX text encoder node schema
+      - name: Validate live LTX text encoder node schema and workflow inputs
         run: |
           set -euxo pipefail
           cleanup() { docker rm -f miniverse-schema >/dev/null 2>&1 || true; }
@@ -85,23 +85,41 @@ jobs:
             sleep 1
           done
           curl -fsS http://127.0.0.1:8188/object_info/LTXAVTextEncoderLoader > /tmp/ltx_text_encoder_schema.json
+          docker cp miniverse-schema:/opt/ltx2/workflows/image_to_video.json /tmp/image_to_video.json
           cat /tmp/ltx_text_encoder_schema.json
           python3 - <<'PY'
           import json
           from pathlib import Path
+
           data = json.loads(Path('/tmp/ltx_text_encoder_schema.json').read_text())
           node = data.get('LTXAVTextEncoderLoader', data)
           required = set((node.get('input') or {}).get('required') or {})
           optional = set((node.get('input') or {}).get('optional') or {})
           print('required_inputs=', sorted(required))
           print('optional_inputs=', sorted(optional))
-          expected_required = {'text_encoder', 'ckpt_name'}
-          if not expected_required.issubset(required):
-              raise SystemExit(f'Unexpected LTXAVTextEncoderLoader schema: missing {sorted(expected_required - required)}')
-          unexpected = required - expected_required
-          if unexpected:
-              raise SystemExit(f'Unexpected required inputs for LTXAVTextEncoderLoader: {sorted(unexpected)}')
-          workflow = json.loads(Path('/opt/ltx2/workflows/image_to_video.json').read_text()) if Path('/opt/ltx2/workflows/image_to_video.json').exists() else None
+
+          expected_required = {'text_encoder', 'ckpt_name', 'device'}
+          if required != expected_required:
+              raise SystemExit(
+                  f'Unexpected LTXAVTextEncoderLoader schema: expected {sorted(expected_required)}, got {sorted(required)}'
+              )
+
+          workflow = json.loads(Path('/tmp/image_to_video.json').read_text())
+          loaders = [
+              item for item in workflow.values()
+              if isinstance(item, dict) and item.get('class_type') == 'LTXAVTextEncoderLoader'
+          ]
+          if len(loaders) != 1:
+              raise SystemExit(f'Expected exactly one LTXAVTextEncoderLoader, found {len(loaders)}')
+
+          inputs = loaders[0].get('inputs') or {}
+          missing = expected_required - set(inputs)
+          if missing:
+              raise SystemExit(f'Workflow missing required LTXAVTextEncoderLoader inputs: {sorted(missing)}')
+          if inputs.get('device') != 'default':
+              raise SystemExit(f"Unexpected LTX text encoder device: {inputs.get('device')!r}")
+          print('workflow_loader_inputs=', inputs)
+          print('LTX schema/workflow preflight passed')
           PY
 
       - name: Login to GHCR
