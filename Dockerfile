@@ -107,6 +107,7 @@ for p in root.glob('*.api.json'):
             node['inputs'] = {
                 'text_encoder': 'gemma_text_encoder.safetensors',
                 'ckpt_name': 'ltx-2-19b-distilled.safetensors',
+                'device': 'default',
             }
             meta = node.setdefault('_meta', {})
             meta['title'] = 'Native LTX AV Text Encoder'
