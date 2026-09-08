@@ -65,6 +65,45 @@ jobs:
             -e COMFYUI_HEALTH_SLEEP_SECONDS=1 \
             miniverse-ltx2-smoke:ci
 
+      - name: Validate live LTX text encoder node schema
+        run: |
+          set -euxo pipefail
+          cleanup() { docker rm -f miniverse-schema >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          docker run -d --name miniverse-schema -p 8188:8188 \
+            --entrypoint bash \
+            miniverse-ltx2-smoke:ci \
+            -lc 'cd /ComfyUI && python3 main.py --cpu --listen 0.0.0.0 --port 8188'
+          for i in $(seq 1 120); do
+            if curl -fsS http://127.0.0.1:8188/system_stats >/dev/null 2>&1; then
+              break
+            fi
+            if [ "$i" -eq 120 ]; then
+              docker logs miniverse-schema
+              exit 1
+            fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:8188/object_info/LTXAVTextEncoderLoader > /tmp/ltx_text_encoder_schema.json
+          cat /tmp/ltx_text_encoder_schema.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path('/tmp/ltx_text_encoder_schema.json').read_text())
+          node = data.get('LTXAVTextEncoderLoader', data)
+          required = set((node.get('input') or {}).get('required') or {})
+          optional = set((node.get('input') or {}).get('optional') or {})
+          print('required_inputs=', sorted(required))
+          print('optional_inputs=', sorted(optional))
+          expected_required = {'text_encoder', 'ckpt_name'}
+          if not expected_required.issubset(required):
+              raise SystemExit(f'Unexpected LTXAVTextEncoderLoader schema: missing {sorted(expected_required - required)}')
+          unexpected = required - expected_required
+          if unexpected:
+              raise SystemExit(f'Unexpected required inputs for LTXAVTextEncoderLoader: {sorted(unexpected)}')
+          workflow = json.loads(Path('/opt/ltx2/workflows/image_to_video.json').read_text()) if Path('/opt/ltx2/workflows/image_to_video.json').exists() else None
+          PY
+
       - name: Login to GHCR
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
