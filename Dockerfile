@@ -56,9 +56,6 @@ RUN git clone --depth 1 https://github.com/comfyanonymous/ComfyUI.git ${COMFYUI_
 
 WORKDIR ${COMFYUI_DIR}
 
-# Keep PyTorch aligned with the CUDA 12.8 base image and current ComfyUI/comfy-kitchen.
-# The previous cu121 wheels were too old for comfy-kitchen's PEP 585 type annotations
-# and caused infer_schema(... list[int] ...) to fail during ComfyUI startup.
 RUN sed -i 's/comfy-aimdo>=0.2.7/comfy-aimdo==0.2.6/g' requirements.txt \
     && python3 -m pip install --upgrade torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128 \
     && python3 -m pip install -r requirements.txt
@@ -66,9 +63,6 @@ RUN sed -i 's/comfy-aimdo>=0.2.7/comfy-aimdo==0.2.6/g' requirements.txt \
 RUN git clone --depth 1 https://github.com/Lightricks/ComfyUI-LTXVideo custom_nodes/ComfyUI-LTXVideo \
     && git clone --depth 1 https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite custom_nodes/VideoHelperSuite
 
-# Current ComfyUI changed the AudioVAE constructor. The upstream low-VRAM loader
-# still calls AudioVAE(sd, metadata), which raises TypeError at runtime.
-# Patch it to use the same VAE wrapper path as ComfyUI's core LTX audio loader.
 RUN python3 - <<'PY'
 from pathlib import Path
 p = Path('/ComfyUI/custom_nodes/ComfyUI-LTXVideo/low_vram_loaders.py')
@@ -92,6 +86,39 @@ COPY requirements.txt ${LTX2_HOME}/requirements.txt
 RUN python3 -m pip install -r ${LTX2_HOME}/requirements.txt
 
 COPY workflows ${LTX2_HOME}/workflows
+
+# The old LTXVGemmaCLIPModelLoader requires a full HuggingFace Gemma directory
+# (config/tokenizer/shards). Our persistent model cache intentionally uses the
+# single-file ComfyUI Gemma encoder. Use ComfyUI's native LTXAVTextEncoderLoader
+# instead; it supports that single-file encoder and the LTX checkpoint directly.
+# Also make the API-format workflows the runtime aliases so serverless never
+# reconverts the legacy UI graph back to the incompatible Gemma loader.
+RUN python3 - <<'PY'
+import json
+import shutil
+from pathlib import Path
+root = Path('/opt/ltx2/workflows')
+for p in root.glob('*.api.json'):
+    data = json.loads(p.read_text())
+    changed = False
+    for node in data.values():
+        if isinstance(node, dict) and node.get('class_type') == 'LTXVGemmaCLIPModelLoader':
+            node['class_type'] = 'LTXAVTextEncoderLoader'
+            node['inputs'] = {
+                'text_encoder': 'gemma_text_encoder.safetensors',
+                'ckpt_name': 'ltx-2-19b-distilled.safetensors',
+            }
+            meta = node.setdefault('_meta', {})
+            meta['title'] = 'Native LTX AV Text Encoder'
+            changed = True
+    if changed:
+        p.write_text(json.dumps(data, indent=2))
+for stem in ('image_to_video', 'cinematic_i2v'):
+    api = root / f'{stem}.api.json'
+    if api.exists():
+        shutil.copy2(api, root / f'{stem}.json')
+PY
+
 COPY scripts ${LTX2_HOME}/scripts
 COPY api ${LTX2_HOME}/api
 COPY start.sh /start.sh
