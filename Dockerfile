@@ -86,45 +86,19 @@ COPY requirements.txt ${LTX2_HOME}/requirements.txt
 RUN python3 -m pip install -r ${LTX2_HOME}/requirements.txt
 
 COPY workflows ${LTX2_HOME}/workflows
-
-# The old LTXVGemmaCLIPModelLoader requires a full HuggingFace Gemma directory
-# (config/tokenizer/shards). Our persistent model cache intentionally uses the
-# single-file ComfyUI Gemma encoder. Use ComfyUI's native LTXAVTextEncoderLoader
-# instead; it supports that single-file encoder and the LTX checkpoint directly.
-# Also make the API-format workflows the runtime aliases so serverless never
-# reconverts the legacy UI graph back to the incompatible Gemma loader.
-RUN python3 - <<'PY'
-import json
-import shutil
-from pathlib import Path
-root = Path('/opt/ltx2/workflows')
-for p in root.glob('*.api.json'):
-    data = json.loads(p.read_text())
-    changed = False
-    for node in data.values():
-        if isinstance(node, dict) and node.get('class_type') == 'LTXVGemmaCLIPModelLoader':
-            node['class_type'] = 'LTXAVTextEncoderLoader'
-            node['inputs'] = {
-                'text_encoder': 'gemma_text_encoder.safetensors',
-                'ckpt_name': 'ltx-2-19b-distilled.safetensors',
-                'device': 'default',
-            }
-            meta = node.setdefault('_meta', {})
-            meta['title'] = 'Native LTX AV Text Encoder'
-            changed = True
-    if changed:
-        p.write_text(json.dumps(data, indent=2))
-for stem in ('image_to_video', 'cinematic_i2v'):
-    api = root / f'{stem}.api.json'
-    if api.exists():
-        shutil.copy2(api, root / f'{stem}.json')
-PY
-
-COPY scripts ${LTX2_HOME}/scripts
 COPY api ${LTX2_HOME}/api
+COPY scripts ${LTX2_HOME}/scripts
+
+# Rebuild API-format runtime prompts from the checked-in ComfyUI UI workflows
+# using the converter shipped with this worker. This keeps widget-only required
+# inputs synchronized with the current workflow source instead of maintaining
+# stale hand-edited .api.json snapshots. The regeneration step also applies the
+# native single-file Gemma text-encoder compatibility patch used by this image.
+RUN python3 ${LTX2_HOME}/scripts/regenerate_runtime_workflows.py
+
 COPY start.sh /start.sh
 
-RUN chmod +x /start.sh ${LTX2_HOME}/scripts/download_models.sh
+RUN chmod +x /start.sh ${LTX2_HOME}/scripts/download_models.sh ${LTX2_HOME}/scripts/regenerate_runtime_workflows.py
 
 EXPOSE 8188
 
