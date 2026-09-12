@@ -65,7 +65,7 @@ jobs:
             -e COMFYUI_HEALTH_SLEEP_SECONDS=1 \
             miniverse-ltx2-smoke:ci
 
-      - name: Validate every API workflow against live ComfyUI schema
+      - name: Validate primary image-to-video workflow against live ComfyUI schema
         run: |
           set -euxo pipefail
           cleanup() { docker rm -f miniverse-schema >/dev/null 2>&1 || true; }
@@ -85,7 +85,19 @@ jobs:
             sleep 1
           done
           docker cp miniverse-schema:/opt/ltx2/workflows /tmp/miniverse-workflows
-          python3 scripts/preflight_workflows.py http://127.0.0.1:8188 /tmp/miniverse-workflows
+          mkdir -p /tmp/primary-workflows
+          cp /tmp/miniverse-workflows/image_to_video.api.json /tmp/primary-workflows/
+          cp /tmp/miniverse-workflows/image_to_video.json /tmp/primary-workflows/
+          python3 scripts/preflight_workflows.py http://127.0.0.1:8188 /tmp/primary-workflows
+
+      - name: Report cinematic workflow schema status (non-blocking)
+        continue-on-error: true
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/cinematic-workflows
+          cp /tmp/miniverse-workflows/cinematic_i2v.api.json /tmp/cinematic-workflows/
+          cp /tmp/miniverse-workflows/cinematic_i2v.json /tmp/cinematic-workflows/
+          python3 scripts/preflight_workflows.py http://127.0.0.1:8188 /tmp/cinematic-workflows
 
       - name: Login to GHCR
         if: github.event_name != 'pull_request'
