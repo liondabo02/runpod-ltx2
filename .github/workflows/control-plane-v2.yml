@@ -26,6 +26,12 @@ jobs:
         run: python -m pip install ./control_plane_v2[test]
       - name: Compile package
         run: python -m compileall -q control_plane_v2/miniverse
+      - name: Validate deployment scripts
+        run: |
+          bash -n control_plane_v2/deploy/install_worker.sh
+          bash -n control_plane_v2/deploy/verify_worker.sh
+          cp control_plane_v2/.env.runtime.example control_plane_v2/.env.runtime
+          docker compose -f control_plane_v2/docker-compose.worker.yml config >/dev/null
       - name: Import official frameworks
         run: |
           python - <<'PY'
