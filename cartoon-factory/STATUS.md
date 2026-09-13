@@ -13,6 +13,14 @@
 - Pilot bölüm: %18
 - Tam otomatik 8 dk bölüm: %28
 
+## Proje izolasyonu
+
+- [x] Cartoon Factory ana LTX2 proje kökünden ayrıldı.
+- [x] Tüm Cartoon Factory uygulama dosyaları `cartoon-factory/` altında toplandı.
+- [x] Eski `cartoon_factory/` klasörü feature branch'ten kaldırıldı.
+- [x] Main branch'e yanlışlıkla eklenen Cartoon Factory README temizlendi.
+- [x] Bundan sonraki geliştirmeler yalnızca `cartoon-factory/` altında yapılacak.
+
 ## Ana hikâye yapısı
 
 - Merkez karakter: **Harun**
@@ -68,8 +76,8 @@ Ana 16 karakter kalıcıdır. Bölüm akışına göre doktor, öğretmen, komş
 - [x] Telegram biten bölümde 5 dil çıktısını teslim edecek şekilde kodlandı.
 - [x] FastAPI `/episodes/run` ve `/episodes/{id}/status` endpointleri eklendi.
 - [x] Docker Compose'a API + Telegram + voice-service eklendi.
-- [x] GitHub CI workflow eklendi (Python compile + YAML validation).
 - [x] RunPod/LTX-2 özel sahne yönlendirme altyapısı mevcut.
+- [x] RunPod karakter-generation worker paketi eklendi.
 - [x] Karakter asset kontratı ve kalite kuralları oluşturuldu.
 - [x] 30–60 saniyelik pilot manifest altyapısı eklendi.
 
@@ -99,6 +107,7 @@ Her karakter için:
 
 ## Kalan ana işler
 
+- [ ] Cartoon Factory için ayrı RunPod ComfyUI endpoint oluşturmak
 - [ ] 16 karakter için gerçek onaylı PNG/model-sheet assetleri
 - [ ] 16 karakter için yapay/sahip olunan referans ses WAV'ları
 - [ ] Arka plan PNG paketlerini gerçek olarak üretmek
@@ -147,11 +156,11 @@ Beklenen çıktı:
 
 ## Nereden takip edilir?
 
-- PR: `https://github.com/liondabo02/runpod-ltx2/pull/3`
 - Branch: `feature/cartoon-factory`
-- Bu dosya: `cartoon_factory/STATUS.md`
-- Ana klasör: `cartoon_factory/`
+- Proje kökü: `cartoon-factory/`
+- Durum dosyası: `cartoon-factory/STATUS.md`
+- README: `cartoon-factory/README.md`
 
 ## Sonraki hedef
 
-**16 karakter için gerçek asset üretimini başlatmak ve ilk 35–60 saniyelik izlenebilir pilotu render etmek.**
+**Cartoon Factory için ayrı ComfyUI endpoint açmak; ardından 16 karakter için gerçek asset üretimini başlatmak ve ilk 35–60 saniyelik izlenebilir pilotu render etmek.**
