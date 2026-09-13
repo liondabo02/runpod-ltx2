@@ -21,6 +21,9 @@ class Settings:
     worker_heartbeat_seconds: float = float(os.getenv("MINIVERSE_WORKER_HEARTBEAT_SECONDS", "30"))
     worker_retry_base_seconds: float = float(os.getenv("MINIVERSE_WORKER_RETRY_BASE_SECONDS", "15"))
     worker_poll_seconds: float = float(os.getenv("MINIVERSE_WORKER_POLL_SECONDS", "2"))
+    worker_health_file: str = os.getenv(
+        "MINIVERSE_WORKER_HEALTH_FILE", "/var/lib/miniverse/worker-heartbeat.json"
+    )
 
     def missing_runtime_settings(self) -> list[str]:
         missing: list[str] = []
