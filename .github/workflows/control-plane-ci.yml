@@ -1,0 +1,37 @@
+name: Control Plane CI
+
+on:
+  pull_request:
+    paths:
+      - 'control_plane/**'
+      - 'tests/test_control_plane_*.py'
+      - '.github/workflows/control-plane-ci.yml'
+  push:
+    branches:
+      - 'feature/agent-control-plane'
+    paths:
+      - 'control_plane/**'
+      - 'tests/test_control_plane_*.py'
+      - '.github/workflows/control-plane-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r control_plane/requirements.txt pytest
+      - name: Compile control plane
+        run: python -m compileall -q control_plane
+      - name: Run policy and preflight tests
+        run: pytest -q tests/test_control_plane_policy.py tests/test_control_plane_preflight.py
