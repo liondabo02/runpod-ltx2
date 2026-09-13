@@ -38,8 +38,15 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          Test-Path 'control_plane_v2/Dockerfile.worker' | Should -BeTrue
-        continue-on-error: true
+          $required = @(
+            'control_plane_v2/Dockerfile.worker',
+            'control_plane_v2/docker-compose.worker.yml',
+            'control_plane_v2/miniverse/worker.py',
+            'control_plane_v2/miniverse/worker_cli.py'
+          )
+          foreach ($path in $required) {
+            if (-not (Test-Path $path)) { throw "Missing required file: $path" }
+          }
 
       - name: Validate worker image can build
         shell: pwsh
