@@ -11,10 +11,7 @@ services:
       MINIVERSE_WORKER_HEALTH_FILE: /var/lib/miniverse/worker-heartbeat.json
       MINIVERSE_WORKSPACE_ROOT: /workspace
     volumes:
-      - miniverse_state:/var/lib/miniverse
-      - miniverse_workspace:/workspace
+      - ./runtime/state:/var/lib/miniverse
+      - ./runtime/workspaces:/workspace
     stop_grace_period: 30s
 
-volumes:
-  miniverse_state:
-  miniverse_workspace:
