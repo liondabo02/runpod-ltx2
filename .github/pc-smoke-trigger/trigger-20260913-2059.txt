@@ -1,0 +1,1 @@
+Trigger Miniverse self-hosted PC smoke test.
