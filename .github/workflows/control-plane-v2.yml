@@ -31,10 +31,14 @@ jobs:
           python - <<'PY'
           from agent_framework.orchestrations import ConcurrentBuilder
           from openhands.sdk import Agent, Conversation, LLM, Tool
+          from miniverse.execution import MiniverseExecutionPipeline
           from miniverse.policy import OwnerPolicy
           assert ConcurrentBuilder
           assert Agent and Conversation and LLM and Tool
+          assert MiniverseExecutionPipeline
           assert not OwnerPolicy().evaluate('review GitHub docs and CI logs').reasons
           assert OwnerPolicy().evaluate('run a paid RunPod GPU job').reasons
           print('CONTROL PLANE V2 STATIC PREFLIGHT PASSED')
           PY
+      - name: Test execution pipeline without paid model calls
+        run: python -m pytest -q control_plane_v2/tests
