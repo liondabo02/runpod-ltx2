@@ -2,6 +2,12 @@ name: Miniverse Self-Hosted PC Smoke
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feature/agent-control-plane
+    paths:
+      - '.github/pc-smoke-trigger/**'
+      - '.github/workflows/miniverse-self-hosted-smoke.yml'
 
 permissions:
   contents: read
