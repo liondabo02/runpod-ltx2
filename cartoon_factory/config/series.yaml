@@ -1,0 +1,89 @@
+series:
+  title: "Untitled Kids Series"
+  language: tr
+  episode_minutes: 8
+  target_age: "5-8"
+  style: "bright 2D cartoon, clean shapes, expressive faces, child-safe"
+  fps: 24
+  resolution: [1920, 1080]
+  max_scene_seconds: 12
+  rules:
+    - "Use only the 10 registered recurring characters unless explicitly approved."
+    - "Keep character appearance, personality, voice and relationships consistent."
+    - "No frightening, sexual, hateful, dangerous-imitation or age-inappropriate content."
+    - "Each episode must have a simple educational or social-emotional takeaway."
+    - "Avoid copyrighted characters, songs, brands and imitation of living artists."
+
+characters:
+  - id: c01
+    name: "Karakter 1"
+    role: "lead"
+    personality: "curious, kind, energetic"
+    voice_id: "c01"
+    sprite_dir: "assets/characters/c01"
+  - id: c02
+    name: "Karakter 2"
+    role: "friend"
+    personality: "funny, loyal, impatient"
+    voice_id: "c02"
+    sprite_dir: "assets/characters/c02"
+  - id: c03
+    name: "Karakter 3"
+    role: "friend"
+    personality: "smart, calm, observant"
+    voice_id: "c03"
+    sprite_dir: "assets/characters/c03"
+  - id: c04
+    name: "Karakter 4"
+    role: "friend"
+    personality: "creative, playful, brave"
+    voice_id: "c04"
+    sprite_dir: "assets/characters/c04"
+  - id: c05
+    name: "Karakter 5"
+    role: "friend"
+    personality: "gentle, shy, thoughtful"
+    voice_id: "c05"
+    sprite_dir: "assets/characters/c05"
+  - id: c06
+    name: "Karakter 6"
+    role: "friend"
+    personality: "competitive, good-hearted, active"
+    voice_id: "c06"
+    sprite_dir: "assets/characters/c06"
+  - id: c07
+    name: "Karakter 7"
+    role: "mentor"
+    personality: "patient, wise, warm"
+    voice_id: "c07"
+    sprite_dir: "assets/characters/c07"
+  - id: c08
+    name: "Karakter 8"
+    role: "comic relief"
+    personality: "silly, lovable, surprising"
+    voice_id: "c08"
+    sprite_dir: "assets/characters/c08"
+  - id: c09
+    name: "Karakter 9"
+    role: "helper"
+    personality: "organized, practical, caring"
+    voice_id: "c09"
+    sprite_dir: "assets/characters/c09"
+  - id: c10
+    name: "Karakter 10"
+    role: "rival-friend"
+    personality: "confident, clever, learns from mistakes"
+    voice_id: "c10"
+    sprite_dir: "assets/characters/c10"
+
+relationships:
+  - "Define permanent relationships here before production starts."
+
+production:
+  llm_temperature: 0.7
+  scene_count_target: 45
+  tts: "piper"
+  lipsync: "rhubarb"
+  renderer: "ffmpeg_sprite"
+  gpu_special_shots: "runpod_ltx2"
+  qc_retry_limit: 2
