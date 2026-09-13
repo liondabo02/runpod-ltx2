@@ -1,0 +1,8 @@
+FROM python:3.11-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends git curl ca-certificates && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+RUN pip install --no-cache-dir runpod requests
+COPY cartoon_factory/runpod/character_worker.py /app/character_worker.py
+COPY cartoon_factory/workflows /app/workflows
+CMD ["python", "/app/character_worker.py"]
