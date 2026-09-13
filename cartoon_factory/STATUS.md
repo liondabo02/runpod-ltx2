@@ -4,12 +4,14 @@
 
 ## Genel durum
 
-- Altyapı: %60
-- Görsel üretim / karakter assetleri: %20
-- Ses / lip-sync: %55
-- Render / montaj: %55
-- Pilot bölüm: %15
-- Tam otomatik 8 dk bölüm: %10
+- Altyapı / orkestrasyon: %78
+- Telegram kontrol: %70
+- 5 dil lokalizasyon zinciri: %72
+- Görsel üretim / karakter assetleri: %32
+- Ses / lip-sync: %68
+- Render / montaj: %62
+- Pilot bölüm: %18
+- Tam otomatik 8 dk bölüm: %28
 
 ## Ana hikâye yapısı
 
@@ -20,7 +22,7 @@
 - Ahmet Aden ve Kaan'ın babası; evde sürekli yaşamıyor, yaklaşık haftada bir aile içine geliyor.
 - Harun herkesin toplandığı, güvenilen, sevilen ve çoğu bölümde çözümü toparlayan karakter.
 
-## Sabit kadro
+## Sabit kadro — 16 karakter kilitli
 
 1. Harun
 2. Aden
@@ -39,28 +41,43 @@
 15. Aras
 16. Ramin
 
+Ana 16 karakter kalıcıdır. Bölüm akışına göre doktor, öğretmen, komşu, kasiyer, park görevlisi vb. misafir karakterler otomatik üretilebilir; bunlar ana kadroyu değiştirmez.
+
 ## Yapılanlar
 
 - [x] `feature/cartoon-factory` branch'i oluşturuldu.
 - [x] Otomatik senaryo ve sahne planlama altyapısı kuruldu.
+- [x] Tek kelimeden 8 dakikalık bölüm planı üretecek giriş mantığı kuruldu.
 - [x] OpenAI-compatible LLM bağlantısı eklendi (`openrouter/free` varsayılan).
 - [x] 8 dakikalık bölüm için scene/job manifest yapısı kuruldu.
-- [x] Piper TTS worker eklendi.
-- [x] Rhubarb lip-sync entegrasyonu eklendi.
+- [x] Sabit 16 karakter ile misafir karakterler ayrıldı.
+- [x] 16 karakter için kimlik / rol / ilişki / görünüş kuralları kilitlendi.
+- [x] 16 karakter için model sheet, pose, expression ve mouth-shape job builder güncellendi.
+- [x] Tekrar kullanılabilir arka plan dünyası/bible eklendi.
+- [x] 5 dil aktif: TR / DE / AR / FR / ES.
+- [x] Lokalizasyon worker eklendi; sahne süreleri korunuyor.
+- [x] Her dil için ayrı TTS/lip-sync job manifesti oluşturuluyor.
+- [x] Chatterbox Multilingual V3 voice-service mikroservisi eklendi.
+- [x] Piper hafif fallback olarak tutuldu.
+- [x] Rhubarb lip-sync cue üretimi eklendi.
 - [x] FFmpeg sprite render altyapısı eklendi.
+- [x] Her dil için ayrı video klasörü ve final MP4 akışı eklendi.
 - [x] Sahne videolarını tek MP4'e birleştiren final montaj eklendi.
-- [x] Müzik/SFX job altyapısı eklendi.
-- [x] n8n/webhook için FastAPI endpoint eklendi.
-- [x] RunPod/LTX-2 özel sahne yönlendirme altyapısı eklendi.
+- [x] Ortak müzik/SFX job altyapısı eklendi.
+- [x] Telegram bot gateway eklendi: normal mesaj = yeni bölüm, `/status` = durum.
+- [x] Telegram biten bölümde 5 dil çıktısını teslim edecek şekilde kodlandı.
+- [x] FastAPI `/episodes/run` ve `/episodes/{id}/status` endpointleri eklendi.
+- [x] Docker Compose'a API + Telegram + voice-service eklendi.
+- [x] GitHub CI workflow eklendi (Python compile + YAML validation).
+- [x] RunPod/LTX-2 özel sahne yönlendirme altyapısı mevcut.
 - [x] Karakter asset kontratı ve kalite kuralları oluşturuldu.
 - [x] 30–60 saniyelik pilot manifest altyapısı eklendi.
-- [x] 16 karakterlik gerçek aile evreni ve ilişkiler sisteme işlendi.
 
 ## Şimdi üzerinde çalışılan aşama
 
-### Karakter üretimi ve kilitleme
+### Gerçek karakter assetleri + ilk pilot
 
-Öncelik:
+Öncelik sırası:
 
 1. Harun
 2. Aden
@@ -68,32 +85,34 @@
 4. Esra
 5. Esma
 6. Ahmet
+7. Kalan 10 sabit karakter
 
-Her karakter için üretilecek:
+Her karakter için:
 
-- model sheet
+- ana front reference / model sheet
 - ön / 3-4 açı / yan / arka görünüş
-- sabit kıyafet ve renk paleti
+- sabit renk / siluet / imza özellikler
 - 8+ yüz ifadesi
-- idle / talk / walk / run / sit / jump / point / wave pozları
+- idle / talk / walk / run / sit / jump / point / wave / hug / carry / kneel pozları
 - 8 ağız şekli
-- ses kimliği
+- tek karakter ses kimliği / reference WAV
 
 ## Kalan ana işler
 
-- [ ] Harun, Aden ve Kaan için gerçek onaylı karakter görselleri
-- [ ] Diğer 13 karakter için karakter paketleri
-- [ ] Arka plan kütüphanesi (ev, salon, mutfak, park, sokak vb.)
-- [ ] 16 karakter için sabit ses modelleri / ses profilleri
-- [ ] Gerçek müzik üretim veya telifsiz müzik motoru bağlantısı
-- [ ] SFX kütüphanesi
-- [ ] Sprite animasyonlarını daha doğal hale getiren hareket sistemi
+- [ ] 16 karakter için gerçek onaylı PNG/model-sheet assetleri
+- [ ] 16 karakter için yapay/sahip olunan referans ses WAV'ları
+- [ ] Arka plan PNG paketlerini gerçek olarak üretmek
+- [ ] Rhubarb mouth-cue'larını gerçek mouth layer compositing ile sprite renderer'a bağlamak
+- [ ] Daha doğal walk/talk/idle hareket sistemi
+- [ ] Müzik üretim veya ticari kullanıma uygun özgün müzik motorunu bağlamak
+- [ ] SFX kütüphanesini gerçek dosyalarla doldurmak
+- [ ] RunPod'da Chatterbox voice-service GPU deploy
+- [ ] RunPod/ComfyUI karakter asset generation endpointini gerçek workflow'a bağlamak
 - [ ] 35–60 saniyelik ilk gerçek pilot render
-- [ ] Pilot kalite değerlendirme ve düzeltme
+- [ ] Pilot kalite değerlendirme + otomatik retry
 - [ ] Tam 8 dakikalık bölüm render
-- [ ] n8n ile uçtan uca tek komut üretim
-- [ ] QC + otomatik retry
-- [ ] Çok dilli seslendirme
+- [ ] n8n import edilebilir üretim workflow'u
+- [ ] Büyük MP4 dosyaları için object storage / public delivery URL
 - [ ] YouTube otomatik yayınlama
 
 ## Başarı kriteri
@@ -101,11 +120,30 @@ Her karakter için üretilecek:
 İlk pilot ancak şu şartlarda "geçti" sayılacak:
 
 - Harun, Aden ve Kaan her sahnede aynı görünmeli.
+- 16 sabit karakterin kimliği değişmemeli.
 - Karakterler fotoğraf gibi değil, kaliteli 2D çocuk çizgi filmi gibi görünmeli.
 - Konuşma ve ağız hareketleri rahatsız edici olmamalı.
-- Sesler karakterlere sabitlenmeli.
+- Ses kimliği 5 dilde mümkün olduğunca korunmalı.
 - Arka plan ve karakter stili birbiriyle uyumlu olmalı.
 - 30–60 saniyelik pilot gerçekten izlenebilir olmalı.
+
+## Kullanım hedefi
+
+Telegram'a örnek:
+
+`paylaşmak`
+
+veya:
+
+`Aden ve Kaan parkta paylaşmayı öğrensin. Harun herkesi toplasın.`
+
+Beklenen çıktı:
+
+- `episode_xxx_tr.mp4`
+- `episode_xxx_de.mp4`
+- `episode_xxx_ar.mp4`
+- `episode_xxx_fr.mp4`
+- `episode_xxx_es.mp4`
 
 ## Nereden takip edilir?
 
@@ -116,4 +154,4 @@ Her karakter için üretilecek:
 
 ## Sonraki hedef
 
-**Harun + Aden + Kaan karakterlerini görsel olarak üretip kilitlemek ve ilk gerçek pilotu render etmek.**
+**16 karakter için gerçek asset üretimini başlatmak ve ilk 35–60 saniyelik izlenebilir pilotu render etmek.**
