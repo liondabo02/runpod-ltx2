@@ -15,6 +15,7 @@ dependencies = [
 [project.scripts]
 miniverse = "miniverse.cli:main"
 miniverse-worker = "miniverse.worker_cli:main"
+miniverse-health = "miniverse.health:main"
 
 [project.optional-dependencies]
 test = [
