@@ -27,6 +27,7 @@ env:
 
 jobs:
   docker:
+    if: github.event_name != 'pull_request' || github.head_ref != 'feature/agent-control-plane'
     runs-on: ubuntu-latest
     permissions:
       contents: read
