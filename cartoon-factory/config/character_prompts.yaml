@@ -1,0 +1,133 @@
+style_lock:
+  positive: >-
+    premium original 2D children's TV animation, clean vector-like linework, soft cel shading,
+    expressive readable face, appealing silhouette, consistent proportions, full-body,
+    production character sheet quality, child-safe, polished, simple reusable shapes,
+    warm family-comedy tone, transparent background
+  negative: >-
+    photorealistic, 3D render, anime imitation, copyrighted character, text, watermark,
+    extra fingers, extra limbs, malformed hands, asymmetrical eyes, distorted face,
+    inconsistent clothes, inconsistent colors, noisy background, painterly texture,
+    uncanny realism, harsh horror expression
+  consistency_rules:
+    - "Never redesign an approved recurring character."
+    - "Keep exact face geometry, hairstyle/head covering, body proportions and signature silhouette."
+    - "Use the approved reference sheet as the primary identity source for every new pose."
+    - "Clothing may only vary through explicitly approved wardrobe variants."
+    - "Babies and toddlers must preserve age-appropriate proportions in every pose."
+
+characters:
+  harun:
+    priority: anchor
+    description: >-
+      tall handsome adult man, long well-kept dark hair, warm charismatic face, calm confident posture,
+      friendly expressive eyes, polished casual family clothing, strong but approachable silhouette;
+      the beloved family anchor who makes people feel safe, hopeful and gathered together
+    signature: "tall long-haired silhouette and warm charismatic face"
+    acting_notes: "calm entrances, open-arm gathering gestures, kneels to children's eye level, warm smile, confident problem-solving"
+  aden:
+    priority: lead
+    description: >-
+      3-year-old girl, preschool proportions, small energetic silhouette, large readable eyes,
+      expressive eyebrows, lively body language, bright child-friendly clothing, curious warm face
+    signature: "tiny energetic preschool silhouette and very expressive face"
+    acting_notes: "curious pointing, excited little runs, big reactions, affectionate hugs"
+  kaan:
+    priority: lead
+    description: >-
+      1-year-old toddler boy, round toddler proportions, soft cheeks, short childlike hair,
+      big expressive eyes, compact body, comfortable toddler outfit, sweet comic expressions
+    signature: "round toddler face and compact baby-like proportions"
+    acting_notes: "wobbly steps, claps, giggles, reaches up, surprised reactions"
+  esra:
+    priority: core
+    description: >-
+      warm adult mother, modest elegant clothing with hijab, gentle maternal face,
+      practical calm posture, soft expressive eyes, polished family-cartoon silhouette
+    signature: "hijab and warm maternal expression"
+    acting_notes: "protective gestures, comforting hugs, practical household movement"
+  ahmet:
+    priority: recurring
+    description: >-
+      calm caring adult father, clean casual clothing, dependable relaxed posture,
+      warm face and friendly eyes, simple recognizable family-cartoon silhouette
+    signature: "calm dependable father silhouette"
+    acting_notes: "warm greetings, affectionate father-child moments, occasional family visits"
+  esma:
+    priority: core
+    description: >-
+      gentle adult aunt, modest elegant clothing with hijab, warm affectionate face,
+      early pregnancy at three months shown subtly and respectfully without exaggerated belly,
+      graceful family-cartoon silhouette
+    signature: "hijab, gentle smile and subtle early-pregnancy continuity"
+    acting_notes: "soft humor, affectionate attention to children, supportive couple scenes with Harun"
+  veysel:
+    priority: recurring
+    description: >-
+      friendly adult man, relaxed casual clothing, cheerful approachable face,
+      easygoing posture, readable comedic reactions without caricature cruelty
+    signature: "relaxed friendly posture and cheerful face"
+    acting_notes: "easy laughs, friendly banter with Harun, relaxed family-group scenes"
+  oznur:
+    priority: recurring
+    description: >-
+      calm caring adult woman, modest clothing with hijab, warm composed face,
+      gentle family-oriented silhouette and clear expressive eyes
+    signature: "hijab and calm caring presence"
+    acting_notes: "soft maternal gestures, calm reactions, affectionate scenes with her children"
+  salih:
+    priority: recurring_child
+    description: >-
+      2-year-old boy, toddler proportions, active stance, playful expressive face,
+      simple colorful toddler clothes, slightly mischievous energy
+    signature: "active two-year-old stance and playful expression"
+    acting_notes: "short fast runs, playful grabbing, laughing, tiny tantrum reactions"
+  medine:
+    priority: baby
+    description: >-
+      2-month-old baby girl, very small infant proportions, soft round face,
+      simple baby onesie and blanket, gentle sleepy expressions, always handled safely
+    signature: "tiny infant proportions and soft sleepy face"
+    acting_notes: "sleeping, blinking, tiny smiles, safe cradled poses"
+  davut:
+    priority: recurring
+    description: >-
+      slim adult man with long hair, lanky silhouette, good-hearted comic face,
+      slightly loose casual clothes, expressive awkward body language, appealing not mean-spirited
+    signature: "slim long-haired silhouette and lanky comic body language"
+    acting_notes: "big surprised reactions, awkward turns, friendly comic timing"
+  fatos:
+    priority: recurring
+    description: >-
+      adult woman with intentionally quirky slightly messy styling, strong readable facial expressions,
+      energetic posture, distinctive but child-friendly comic silhouette, never grotesque or demeaning
+    signature: "quirky slightly messy styling and strong comic expressions"
+    acting_notes: "direct reactions, comic exasperation, energetic family scenes"
+  emos:
+    priority: recurring_child
+    description: >-
+      4-year-old girl, older-preschool proportions, confident expressive face,
+      lively colorful clothing, slightly leader-like posture among younger children
+    signature: "confident four-year-old stance and talkative expression"
+    acting_notes: "explains things, leads games, big confident gestures"
+  berzan:
+    priority: recurring_child
+    description: >-
+      2-year-old twin boy, toddler proportions, energetic stance, playful face,
+      visually distinct outfit and gesture language from twin Aras
+    signature: "twin A with more energetic posture"
+    acting_notes: "quick movement, giggles, impulsive playful reactions"
+  aras:
+    priority: recurring_child
+    description: >-
+      2-year-old twin boy, toddler proportions, curious calmer stance, warm playful face,
+      clearly distinguishable clothing and pose language from twin Berzan
+    signature: "twin B with calmer curious posture"
+    acting_notes: "observes first, then joins, curious pointing and soft smiles"
+  ramin:
+    priority: baby
+    description: >-
+      1-month-old newborn boy, very small newborn proportions, swaddled safely,
+      soft sleepy face, minimal movement, warm family-cartoon rendering
+    signature: "newborn swaddled silhouette"
+    acting_notes: "sleeping, tiny facial movements, safe cradled poses only"

@@ -1,0 +1,189 @@
+series:
+  title: "Untitled Kids Series"
+  language: tr
+  episode_minutes: 8
+  target_age: "5-8"
+  style: "premium 2D children's cartoon, clean bold line art, soft cinematic shading, expressive faces, polished TV-animation look, bright balanced palette, no photorealism"
+  fps: 24
+  resolution: [1920, 1080]
+  max_scene_seconds: 12
+  locked_cast: true
+  locked_character_count: 16
+  visual_style:
+    master_prompt: "premium 2D children's cartoon, clean bold line art, soft cinematic shading, expressive faces, appealing child-friendly proportions, consistent reusable character model sheets, polished TV animation look, bright but balanced palette, no photorealism"
+    consistency_priority: very_high
+    character_redesign_allowed: false
+    face_changes_allowed: false
+    body_proportion_changes_allowed: false
+    hairstyle_changes_allowed: false
+    identity_palette_changes_allowed: false
+    wardrobe_changes_allowed: controlled
+    temporary_accessories_allowed: true
+  narrative_core:
+    household: "Harun and Esma's home"
+    residents: [harun, esma, esra, aden, kaan]
+    dominant_character: harun
+    child_leads: [aden, kaan]
+    father_presence_rule: "Ahmet is Aden and Kaan's father but does not live in the main household; he normally appears about once per week or in story-appropriate family visits."
+    harun_story_function: "Harun is the most anticipated and beloved adult character, naturally gathers everyone, restores hope, solves problems warmly, and often becomes the emotional center of the episode without replacing Ahmet's role as father."
+  rules:
+    - "The recurring cast is locked to exactly 16 registered characters unless the owner explicitly approves a permanent cast change."
+    - "Do not rename, age-shift, merge, split, replace, redesign or silently remove any locked character."
+    - "Keep character appearance, face, hairstyle, identity colors, body proportions, personality, voice and relationships consistent."
+    - "Wardrobe may vary only as controlled episode clothing; face, hairstyle, body shape and identity palette remain locked."
+    - "Temporary props/accessories may change for story needs but must not become permanent identity changes without approval."
+    - "Aden and Kaan live with their mother Esra in Harun and Esma's home."
+    - "Ahmet remains Aden and Kaan's father; do not rewrite Harun as their father."
+    - "Ahmet is a recurring visitor rather than a constant household character, usually around once a week unless the story needs him."
+    - "Harun should frequently be the person who gathers the family, gives confidence, creates solutions or turns tension into a warm ending."
+    - "No frightening, sexual, hateful, dangerous-imitation or age-inappropriate content."
+    - "Each episode must have a simple educational or social-emotional takeaway."
+    - "Avoid copyrighted characters, songs, brands and imitation of living artists."
+    - "Prefer reusable sprite/puppet animation; use gpu_special only for visually important shots."
+
+characters:
+  - id: harun
+    locked: true
+    name: "Harun"
+    role: "dominant beloved family anchor"
+    personality: "charismatic, calm, protective, funny, warm, solution-oriented, hopeful"
+    voice_id: "harun"
+    sprite_dir: "assets/characters/harun"
+  - id: aden
+    locked: true
+    name: "Aden"
+    age: 3
+    role: "child lead"
+    personality: "curious, energetic, expressive, loving"
+    voice_id: "aden"
+    sprite_dir: "assets/characters/aden"
+  - id: kaan
+    locked: true
+    name: "Kaan"
+    age: 1
+    role: "baby co-lead"
+    personality: "sweet, funny, expressive, playful"
+    voice_id: "kaan"
+    sprite_dir: "assets/characters/kaan"
+  - id: esra
+    locked: true
+    name: "Esra"
+    role: "mother of Aden and Kaan"
+    personality: "caring, protective, warm, organized"
+    appearance_note: "wears hijab"
+    voice_id: "esra"
+    sprite_dir: "assets/characters/esra"
+  - id: ahmet
+    locked: true
+    name: "Ahmet"
+    role: "father of Aden and Kaan; recurring visitor"
+    personality: "calm, caring, dependable"
+    voice_id: "ahmet"
+    sprite_dir: "assets/characters/ahmet"
+  - id: esma
+    locked: true
+    name: "Esma"
+    role: "aunt; Harun's wife"
+    personality: "warm, affectionate, gentle"
+    appearance_note: "wears hijab; three months pregnant"
+    voice_id: "esma"
+    sprite_dir: "assets/characters/esma"
+  - id: veysel
+    locked: true
+    name: "Veysel"
+    role: "Harun's friend"
+    personality: "friendly, relaxed, cheerful"
+    voice_id: "veysel"
+    sprite_dir: "assets/characters/veysel"
+  - id: oznur
+    locked: true
+    name: "Öznur"
+    role: "Veysel's wife"
+    personality: "calm, caring, warm"
+    appearance_note: "wears hijab"
+    voice_id: "oznur"
+    sprite_dir: "assets/characters/oznur"
+  - id: salih
+    locked: true
+    name: "Salih"
+    age: 2
+    role: "child"
+    personality: "active, playful, mischievous"
+    voice_id: "salih"
+    sprite_dir: "assets/characters/salih"
+  - id: medine
+    locked: true
+    name: "Medine"
+    age_months: 2
+    role: "baby"
+    personality: "gentle baby character"
+    voice_id: "medine"
+    sprite_dir: "assets/characters/medine"
+  - id: davut
+    locked: true
+    name: "Davut"
+    role: "Harun's friend"
+    personality: "funny, clumsy, good-hearted"
+    appearance_note: "slim build, long hair"
+    voice_id: "davut"
+    sprite_dir: "assets/characters/davut"
+  - id: fatos
+    locked: true
+    name: "Fatoş"
+    role: "Davut's wife"
+    personality: "direct, funny, energetic"
+    appearance_note: "intentionally quirky, slightly messy and comedic but still child-friendly and appealing"
+    voice_id: "fatos"
+    sprite_dir: "assets/characters/fatos"
+  - id: emos
+    locked: true
+    name: "Emoş"
+    age: 4
+    role: "older child"
+    personality: "talkative, confident, playful"
+    voice_id: "emos"
+    sprite_dir: "assets/characters/emos"
+  - id: berzan
+    locked: true
+    name: "Berzan"
+    age: 2
+    role: "twin child"
+    personality: "energetic, funny"
+    voice_id: "berzan"
+    sprite_dir: "assets/characters/berzan"
+  - id: aras
+    locked: true
+    name: "Aras"
+    age: 2
+    role: "twin child"
+    personality: "curious, slightly calmer than Berzan"
+    voice_id: "aras"
+    sprite_dir: "assets/characters/aras"
+  - id: ramin
+    locked: true
+    name: "Ramin"
+    age_months: 1
+    role: "newborn baby"
+    personality: "gentle newborn character"
+    voice_id: "ramin"
+    sprite_dir: "assets/characters/ramin"
+
+relationships:
+  - "Aden and Kaan are siblings."
+  - "Esra is Aden and Kaan's mother."
+  - "Ahmet is Aden and Kaan's father."
+  - "Esma is Aden and Kaan's maternal aunt."
+  - "Harun is Esma's husband and Aden and Kaan's uncle by marriage."
+  - "Esra, Aden and Kaan live in Harun and Esma's home."
+  - "Ahmet visits the family regularly but is not a permanent resident of the main household."
+  - "Veysel and Öznur are parents of Salih and Medine."
+  - "Davut and Fatoş are parents of Emoş, twins Berzan and Aras, and newborn Ramin."
+
+production:
+  llm_temperature: 0.65
+  scene_count_target: 45
+  tts: "piper"
+  lipsync: "rhubarb"
+  renderer: "ffmpeg_sprite"
+  gpu_special_shots: "runpod_ltx2"
+  qc_retry_limit: 2

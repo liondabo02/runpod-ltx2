@@ -1,0 +1,27 @@
+voice_policy:
+  identity_locked: true
+  languages: [tr, de, ar, fr, es]
+  strategy: "same character identity per language with age/gender/energy preserved"
+  never_clone_real_people_without_rights: true
+  path_template: assets/voices/{language}/{character_id}.onnx
+  fallback_template: assets/voices/{language}/default.onnx
+  loudness_lufs: -16
+  sample_rate: 24000
+
+characters:
+  harun: {age_style: adult, energy: calm_confident_warm, pace: medium, pitch: medium_low, anchor: true}
+  aden: {age_style: preschool_3, energy: curious_bright, pace: medium_fast, pitch: high}
+  kaan: {age_style: toddler_1, energy: sweet_playful, pace: slow_fragmented, pitch: high}
+  esra: {age_style: adult, energy: warm_maternal, pace: medium, pitch: medium}
+  ahmet: {age_style: adult, energy: calm_dependable, pace: medium, pitch: medium_low}
+  esma: {age_style: adult, energy: gentle_affectionate, pace: medium, pitch: medium}
+  veysel: {age_style: adult, energy: cheerful_relaxed, pace: medium, pitch: medium}
+  oznur: {age_style: adult, energy: calm_caring, pace: medium, pitch: medium}
+  salih: {age_style: toddler_2, energy: active_mischievous, pace: fast_short, pitch: high}
+  medine: {age_style: infant, energy: baby_coos_only, pace: minimal, pitch: high}
+  davut: {age_style: adult, energy: comedic_goodhearted, pace: medium_fast, pitch: medium}
+  fatos: {age_style: adult, energy: direct_comedic, pace: medium_fast, pitch: medium}
+  emos: {age_style: preschool_4, energy: confident_talkative, pace: medium_fast, pitch: high}
+  berzan: {age_style: toddler_2, energy: energetic_playful, pace: fast_short, pitch: high}
+  aras: {age_style: toddler_2, energy: curious_calm, pace: medium_short, pitch: high}
+  ramin: {age_style: newborn, energy: newborn_sounds_only, pace: minimal, pitch: high}

@@ -1,0 +1,41 @@
+services:
+  cartoon-factory:
+    build: .
+    env_file: .env
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./config:/app/config:ro
+      - ./assets:/app/assets
+      - ./output:/app/output
+    depends_on:
+      - voice-service
+    restart: unless-stopped
+
+  telegram-bot:
+    build: .
+    env_file: .env
+    command: ["python", "telegram_bot.py"]
+    volumes:
+      - ./config:/app/config:ro
+      - ./assets:/app/assets
+      - ./output:/app/output
+    depends_on:
+      - voice-service
+    restart: unless-stopped
+
+  voice-service:
+    build:
+      context: ./voice_service
+    environment:
+      CHATTERBOX_DEVICE: ${CHATTERBOX_DEVICE:-cpu}
+      VOICE_REFERENCE_DIR: /voices
+    ports:
+      - "4123:4123"
+    volumes:
+      - ./assets/voice_refs:/voices:ro
+      - chatterbox-cache:/root/.cache
+    restart: unless-stopped
+
+volumes:
+  chatterbox-cache:

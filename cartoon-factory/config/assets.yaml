@@ -1,0 +1,45 @@
+asset_contract:
+  format: png
+  transparent_background: true
+  canvas: [1024, 1024]
+  required_views: [front, three_quarter, side, back]
+  required_emotions: [neutral, happy, sad, angry, surprised, scared, thinking, laughing]
+  required_actions: [idle, talk, walk, run, sit, jump, point, wave, hug, carry, kneel]
+  mouth_shapes: [X, A, B, C, D, E, F, G]
+  naming:
+    character_dir: assets/characters/{character_id}
+    pose: poses/{action}_{view}.png
+    emotion: faces/{emotion}.png
+    mouth: mouths/{shape}.png
+  lock_policy:
+    identity_locked: true
+    proportions_locked: true
+    signature_features_locked: true
+    reference_required_for_all_new_poses: true
+    palette_status: "provisional until first approved model sheet, then immutable"
+
+voice_contract:
+  sample_rate: 24000
+  mono: true
+  normalize_lufs: -16
+  per_character_voice: true
+  multilingual_identity: true
+  voice_path: assets/voices/{language}/{character_id}.onnx
+
+characters:
+  - {id: harun, tier: anchor, height_scale: 1.12, apparel_palette: ["#243447", "#F2C94C", "#F2F2F2"], signature: "tall silhouette, long hair, charismatic warm face"}
+  - {id: aden, tier: lead, age: 3, height_scale: 0.58, apparel_palette: ["#E85D75", "#F6BD60", "#F7EDE2"], signature: "small energetic preschool silhouette, expressive face"}
+  - {id: kaan, tier: lead, age: 1, height_scale: 0.43, apparel_palette: ["#5DADE2", "#F4D35E", "#F8F9FA"], signature: "toddler proportions, round expressive face"}
+  - {id: esra, tier: core, height_scale: 0.96, apparel_palette: ["#8E6C88", "#D7BDE2", "#F5EEF8"], signature: "hijab, warm maternal silhouette"}
+  - {id: ahmet, tier: recurring, height_scale: 1.02, apparel_palette: ["#455A64", "#78909C", "#ECEFF1"], signature: "calm father silhouette"}
+  - {id: esma, tier: core, height_scale: 0.97, apparel_palette: ["#6C8E6B", "#E8D5B7", "#F7F3E8"], signature: "hijab, gentle aunt silhouette, subtle early pregnancy"}
+  - {id: veysel, tier: recurring, height_scale: 1.00, apparel_palette: ["#356859", "#FDCA40", "#F2F2F2"], signature: "friendly relaxed adult silhouette"}
+  - {id: oznur, tier: recurring, height_scale: 0.95, apparel_palette: ["#7A5195", "#EF5675", "#F7F3F0"], signature: "hijab, calm caring silhouette"}
+  - {id: salih, tier: recurring_child, age: 2, height_scale: 0.52, apparel_palette: ["#2D9CDB", "#F2994A", "#F2F2F2"], signature: "active two-year-old silhouette"}
+  - {id: medine, tier: baby, age_months: 2, height_scale: 0.30, apparel_palette: ["#F2C6DE", "#FFF0F5", "#D6EAF8"], signature: "tiny infant proportions"}
+  - {id: davut, tier: recurring, height_scale: 1.05, apparel_palette: ["#5D6D7E", "#D4AC0D", "#F4F6F7"], signature: "slim build, long hair, comedic body language"}
+  - {id: fatos, tier: recurring, height_scale: 0.94, apparel_palette: ["#C0392B", "#F5B041", "#FDEBD0"], signature: "quirky slightly messy comedic styling, child-friendly"}
+  - {id: emos, tier: recurring_child, age: 4, height_scale: 0.63, apparel_palette: ["#9B59B6", "#48C9B0", "#F7DC6F"], signature: "confident four-year-old silhouette"}
+  - {id: berzan, tier: recurring_child, age: 2, height_scale: 0.52, apparel_palette: ["#3498DB", "#E67E22", "#F2F3F4"], signature: "twin A; energetic stance"}
+  - {id: aras, tier: recurring_child, age: 2, height_scale: 0.52, apparel_palette: ["#16A085", "#F4D03F", "#F2F3F4"], signature: "twin B; calmer curious stance; clearly distinguishable from Berzan"}
+  - {id: ramin, tier: baby, age_months: 1, height_scale: 0.28, apparel_palette: ["#AED6F1", "#E8DAEF", "#FCF3CF"], signature: "newborn proportions"}

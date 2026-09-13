@@ -1,0 +1,34 @@
+languages:
+  - code: tr
+    name: Türkçe
+    enabled: true
+  - code: de
+    name: Deutsch
+    enabled: true
+  - code: ar
+    name: العربية
+    enabled: true
+  - code: fr
+    name: Français
+    enabled: true
+  - code: es
+    name: Español
+    enabled: true
+
+localization:
+  strategy: master_animation_multilingual_audio
+  preserve_scene_timing: true
+  adapt_dialogue_to_duration: true
+  regenerate_lipsync_per_language: true
+  reuse_music_and_sfx: true
+  output_template: "{episode_id}_{language}.mp4"
+
+telegram:
+  default_mode: all_languages
+  accepted_input_examples:
+    - "paylaşmak"
+    - "Aden ve Kaan parkta paylaşmayı öğrensin"
+    - "Harun herkesi pikniğe toplasın"
+  response:
+    return_all_language_outputs: true
+    bundle_manifest: true
