@@ -1,0 +1,43 @@
+name: Cartoon Factory CI
+
+on:
+  push:
+    branches: [main, feature/cartoon-factory]
+    paths:
+      - 'cartoon_factory/**'
+      - '.github/workflows/cartoon-factory-ci.yml'
+  pull_request:
+    paths:
+      - 'cartoon_factory/**'
+      - '.github/workflows/cartoon-factory-ci.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install validation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r cartoon_factory/requirements.txt
+      - name: Compile Python
+        run: python -m compileall -q cartoon_factory
+      - name: Parse YAML configs
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+          for p in Path('cartoon_factory/config').glob('*.yaml'):
+              with p.open(encoding='utf-8') as f:
+                  yaml.safe_load(f)
+              print('OK', p)
+          PY
+      - name: Validate required project files
+        run: |
+          test -f cartoon_factory/config/series.yaml
+          test -f cartoon_factory/config/languages.yaml
+          test -f cartoon_factory/telegram_bot.py
+          test -f cartoon_factory/run_pipeline.py
