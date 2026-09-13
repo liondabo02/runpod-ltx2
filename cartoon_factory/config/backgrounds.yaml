@@ -1,0 +1,63 @@
+world_style:
+  prompt: >-
+    premium original 2D children's TV animation background, clean shapes, soft cel shading,
+    warm family-comedy atmosphere, readable depth, uncluttered play space for characters,
+    consistent architecture and color language, no text, no logos, no photorealism
+  resolution: [1920, 1080]
+  continuity_locked: true
+
+locations:
+  harun_esma_living_room:
+    tier: primary
+    description: "warm spacious family living room in Harun and Esma's home; soft sofa, child-safe furniture, family gathering space"
+    reuse: high
+  harun_esma_kitchen:
+    tier: primary
+    description: "bright family kitchen connected visually to the main home; child-safe layout, breakfast table, warm cabinets"
+    reuse: high
+  children_room:
+    tier: primary
+    description: "shared playful children's room for Aden and Kaan; toy storage, soft rug, simple colorful decor"
+    reuse: high
+  hallway_entry:
+    tier: primary
+    description: "recognizable apartment/home entry and hallway used for arrivals, Ahmet visits and guests"
+    reuse: medium
+  balcony:
+    tier: secondary
+    description: "safe family balcony with plants and simple seating"
+    reuse: medium
+  neighborhood_park:
+    tier: primary
+    description: "friendly urban neighborhood park, playground, walking path, trees and open grass"
+    reuse: high
+  playground:
+    tier: primary
+    description: "child-safe playground with slide, swings, sandbox and benches"
+    reuse: high
+  supermarket:
+    tier: secondary
+    description: "bright generic supermarket aisle and checkout, no brands or logos"
+    reuse: medium
+  clinic_waiting_room:
+    tier: secondary
+    description: "gentle child-friendly clinic waiting room, no real hospital branding"
+    reuse: low
+  street:
+    tier: secondary
+    description: "safe residential European city street, generic storefronts, crosswalk and trees, no logos"
+    reuse: medium
+  picnic_area:
+    tier: secondary
+    description: "green family picnic area with tables, trees and open play space"
+    reuse: medium
+  kindergarten:
+    tier: secondary
+    description: "bright generic kindergarten classroom with activity tables and child-safe shelves"
+    reuse: medium
+
+guest_location_policy:
+  allow_generated_locations: true
+  save_for_reuse_after_first_generation: true
+  must_match_world_style: true
+  never_copy_real_brands_or_copyrighted_sets: true
