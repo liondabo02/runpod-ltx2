@@ -13,78 +13,146 @@ series:
     character_redesign_allowed: false
     wardrobe_changes_allowed: false
     face_changes_allowed: false
+  narrative_core:
+    household: "Harun and Esma's home"
+    residents: [harun, esma, esra, aden, kaan]
+    dominant_character: harun
+    child_leads: [aden, kaan]
+    father_presence_rule: "Ahmet is Aden and Kaan's father but does not live in the main household; he normally appears about once per week or in story-appropriate family visits."
+    harun_story_function: "Harun is the most anticipated and beloved adult character, naturally gathers everyone, restores hope, solves problems warmly, and often becomes the emotional center of the episode without replacing Ahmet's role as father."
   rules:
-    - "Use only the 10 registered recurring characters unless explicitly approved."
+    - "Use only registered recurring characters unless explicitly approved."
     - "Keep character appearance, face, hairstyle, clothing, colors, proportions, personality, voice and relationships consistent."
+    - "Aden and Kaan live with their mother Esra in Harun and Esma's home."
+    - "Ahmet remains Aden and Kaan's father; do not rewrite Harun as their father."
+    - "Ahmet is a recurring visitor rather than a constant household character, usually around once a week unless the story needs him."
+    - "Harun should frequently be the person who gathers the family, gives confidence, creates solutions or turns tension into a warm ending."
     - "No frightening, sexual, hateful, dangerous-imitation or age-inappropriate content."
     - "Each episode must have a simple educational or social-emotional takeaway."
     - "Avoid copyrighted characters, songs, brands and imitation of living artists."
     - "Prefer reusable sprite/puppet animation; use gpu_special only for visually important shots."
 
 characters:
-  - id: c01
-    name: "Karakter 1"
-    role: "lead"
-    personality: "curious, kind, energetic"
-    voice_id: "c01"
-    sprite_dir: "assets/characters/c01"
-  - id: c02
-    name: "Karakter 2"
-    role: "friend"
-    personality: "funny, loyal, impatient"
-    voice_id: "c02"
-    sprite_dir: "assets/characters/c02"
-  - id: c03
-    name: "Karakter 3"
-    role: "friend"
-    personality: "smart, calm, observant"
-    voice_id: "c03"
-    sprite_dir: "assets/characters/c03"
-  - id: c04
-    name: "Karakter 4"
-    role: "friend"
-    personality: "creative, playful, brave"
-    voice_id: "c04"
-    sprite_dir: "assets/characters/c04"
-  - id: c05
-    name: "Karakter 5"
-    role: "friend"
-    personality: "gentle, shy, thoughtful"
-    voice_id: "c05"
-    sprite_dir: "assets/characters/c05"
-  - id: c06
-    name: "Karakter 6"
-    role: "friend"
-    personality: "competitive, good-hearted, active"
-    voice_id: "c06"
-    sprite_dir: "assets/characters/c06"
-  - id: c07
-    name: "Karakter 7"
-    role: "mentor"
-    personality: "patient, wise, warm"
-    voice_id: "c07"
-    sprite_dir: "assets/characters/c07"
-  - id: c08
-    name: "Karakter 8"
-    role: "comic relief"
-    personality: "silly, lovable, surprising"
-    voice_id: "c08"
-    sprite_dir: "assets/characters/c08"
-  - id: c09
-    name: "Karakter 9"
-    role: "helper"
-    personality: "organized, practical, caring"
-    voice_id: "c09"
-    sprite_dir: "assets/characters/c09"
-  - id: c10
-    name: "Karakter 10"
-    role: "rival-friend"
-    personality: "confident, clever, learns from mistakes"
-    voice_id: "c10"
-    sprite_dir: "assets/characters/c10"
+  - id: harun
+    name: "Harun"
+    role: "dominant beloved family anchor"
+    personality: "charismatic, calm, protective, funny, warm, solution-oriented, hopeful"
+    voice_id: "harun"
+    sprite_dir: "assets/characters/harun"
+  - id: aden
+    name: "Aden"
+    age: 3
+    role: "child lead"
+    personality: "curious, energetic, expressive, loving"
+    voice_id: "aden"
+    sprite_dir: "assets/characters/aden"
+  - id: kaan
+    name: "Kaan"
+    age: 1
+    role: "baby co-lead"
+    personality: "sweet, funny, expressive, playful"
+    voice_id: "kaan"
+    sprite_dir: "assets/characters/kaan"
+  - id: esra
+    name: "Esra"
+    role: "mother of Aden and Kaan"
+    personality: "caring, protective, warm, organized"
+    appearance_note: "wears hijab"
+    voice_id: "esra"
+    sprite_dir: "assets/characters/esra"
+  - id: ahmet
+    name: "Ahmet"
+    role: "father of Aden and Kaan; recurring visitor"
+    personality: "calm, caring, dependable"
+    voice_id: "ahmet"
+    sprite_dir: "assets/characters/ahmet"
+  - id: esma
+    name: "Esma"
+    role: "aunt; Harun's wife"
+    personality: "warm, affectionate, gentle"
+    appearance_note: "wears hijab; three months pregnant"
+    voice_id: "esma"
+    sprite_dir: "assets/characters/esma"
+  - id: veysel
+    name: "Veysel"
+    role: "Harun's friend"
+    personality: "friendly, relaxed, cheerful"
+    voice_id: "veysel"
+    sprite_dir: "assets/characters/veysel"
+  - id: oznur
+    name: "Öznur"
+    role: "Veysel's wife"
+    personality: "calm, caring, warm"
+    appearance_note: "wears hijab"
+    voice_id: "oznur"
+    sprite_dir: "assets/characters/oznur"
+  - id: salih
+    name: "Salih"
+    age: 2
+    role: "child"
+    personality: "active, playful, mischievous"
+    voice_id: "salih"
+    sprite_dir: "assets/characters/salih"
+  - id: medine
+    name: "Medine"
+    age_months: 2
+    role: "baby"
+    personality: "gentle baby character"
+    voice_id: "medine"
+    sprite_dir: "assets/characters/medine"
+  - id: davut
+    name: "Davut"
+    role: "Harun's friend"
+    personality: "funny, clumsy, good-hearted"
+    appearance_note: "slim build, long hair"
+    voice_id: "davut"
+    sprite_dir: "assets/characters/davut"
+  - id: fatos
+    name: "Fatoş"
+    role: "Davut's wife"
+    personality: "direct, funny, energetic"
+    appearance_note: "intentionally quirky, slightly messy and comedic but still child-friendly and appealing"
+    voice_id: "fatos"
+    sprite_dir: "assets/characters/fatos"
+  - id: emos
+    name: "Emoş"
+    age: 4
+    role: "older child"
+    personality: "talkative, confident, playful"
+    voice_id: "emos"
+    sprite_dir: "assets/characters/emos"
+  - id: berzan
+    name: "Berzan"
+    age: 2
+    role: "twin child"
+    personality: "energetic, funny"
+    voice_id: "berzan"
+    sprite_dir: "assets/characters/berzan"
+  - id: aras
+    name: "Aras"
+    age: 2
+    role: "twin child"
+    personality: "curious, slightly calmer than Berzan"
+    voice_id: "aras"
+    sprite_dir: "assets/characters/aras"
+  - id: ramin
+    name: "Ramin"
+    age_months: 1
+    role: "newborn baby"
+    personality: "gentle newborn character"
+    voice_id: "ramin"
+    sprite_dir: "assets/characters/ramin"
 
 relationships:
-  - "Define permanent relationships here before production starts."
+  - "Aden and Kaan are siblings."
+  - "Esra is Aden and Kaan's mother."
+  - "Ahmet is Aden and Kaan's father."
+  - "Esma is Aden and Kaan's maternal aunt."
+  - "Harun is Esma's husband and Aden and Kaan's uncle by marriage."
+  - "Esra, Aden and Kaan live in Harun and Esma's home."
+  - "Ahmet visits the family regularly but is not a permanent resident of the main household."
+  - "Veysel and Öznur are parents of Salih and Medine."
+  - "Davut and Fatoş are parents of Emoş, twins Berzan and Aras, and newborn Ramin."
 
 production:
   llm_temperature: 0.65
