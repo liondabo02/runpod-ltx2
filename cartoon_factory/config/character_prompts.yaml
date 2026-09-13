@@ -1,0 +1,47 @@
+style_lock:
+  positive: >-
+    premium 2D children's TV animation, clean vector-like linework, soft cel shading,
+    expressive readable face, appealing silhouette, consistent proportions, full-body,
+    production character sheet quality, original design, child-safe, polished, simple shapes,
+    reusable animation asset, transparent background
+  negative: >-
+    photorealistic, 3D render, anime imitation, copyrighted character, text, watermark,
+    extra fingers, extra limbs, malformed hands, asymmetrical eyes, distorted face,
+    inconsistent clothes, inconsistent colors, noisy background, painterly texture
+  consistency_rules:
+    - "Do not change hair shape, eye color, outfit, shoes, body proportions or signature accessories."
+    - "Keep exact palette from assets.yaml."
+    - "Keep head-to-body ratio identical across every generated pose."
+    - "All pose sheets must be generated from the approved front reference image."
+
+characters:
+  aras:
+    description: "7-year-old curious boy, warm tan skin, short slightly wavy dark brown hair, large brown eyes, cobalt blue hoodie with a small yellow star patch, charcoal shorts, yellow sneakers; energetic and kind"
+    signature: "yellow star patch on blue hoodie"
+  robo:
+    description: "small friendly rounded helper robot, silver-gray shell, cyan face screen with two simple expressive eyes, orange side accents, short flexible arms, compact wheels; cute rather than mechanical"
+    signature: "cyan face screen and orange side accents"
+  elif:
+    description: "7-year-old clever girl, medium warm skin, long dark brown hair in a low ponytail, red cardigan over white shirt, navy skirt/leggings, white sneakers; observant and confident"
+    signature: "red cardigan and low ponytail"
+  mert:
+    description: "8-year-old cheerful boy, light olive skin, short dark hair, green zip jacket, mustard t-shirt, dark trousers, green-white sneakers; active and funny"
+    signature: "green jacket and mustard shirt"
+  luna:
+    description: "small magical moon-cat companion, creamy white fur, lavender ears and tail tip, big turquoise eyes, tiny crescent charm; gentle and curious"
+    signature: "crescent charm and turquoise eyes"
+  piko:
+    description: "tiny orange bird-like comic sidekick, rounded body, red feather crest, mint-green little backpack, expressive eyebrows, short wings; silly and lovable"
+    signature: "red crest and mint backpack"
+  dede:
+    description: "warm grandfather mentor, silver hair and moustache, beige cardigan, brown trousers, comfortable shoes, kind eyes, slightly rounded posture; wise and calm"
+    signature: "silver moustache and beige cardigan"
+  ogretmen:
+    description: "friendly teacher in early 30s, dark shoulder-length hair, purple cardigan, cream top, dark trousers, simple flats; patient and energetic"
+    signature: "purple cardigan"
+  kaptan:
+    description: "adventure captain mentor, navy jacket with simple gold trim, white shirt, dark trousers, brown boots, short dark hair with one silver streak; brave and warm"
+    signature: "single silver hair streak and navy-gold jacket"
+  zuzu:
+    description: "small yellow-blue fantasy creature, rounded triangular ears, bright blue belly patch, red scarf, large friendly eyes, bouncy tail; playful rival-friend"
+    signature: "red scarf and blue belly patch"
