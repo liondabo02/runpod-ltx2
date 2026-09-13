@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -13,6 +14,30 @@ def ffmpeg_run(args: list[str]) -> None:
     subprocess.run(["ffmpeg", "-y", *args], check=True)
 
 
+def slug(value: str) -> str:
+    return re.sub(r"[^a-zA-Z0-9_-]+", "_", value.strip().lower()) or "default"
+
+
+def character_id(item: Any) -> str:
+    if isinstance(item, str):
+        return item
+    if isinstance(item, dict):
+        return str(item.get("id") or item.get("character_id") or item.get("name") or "")
+    return ""
+
+
+def choose_pose(cid: str, scene: dict[str, Any]) -> Path | None:
+    action = str(scene.get("action", "idle")).lower()
+    actions = ["run", "walk", "sit", "jump", "point", "wave", "talk", "idle"]
+    selected = next((a for a in actions if a in action), "idle")
+    base = ROOT / "assets" / "characters" / slug(cid) / "poses"
+    for name in [f"{selected}_front.png", "idle_front.png"]:
+        path = base / name
+        if path.exists():
+            return path
+    return None
+
+
 def render_scene(scene: dict[str, Any], episode_dir: Path) -> Path:
     sid = str(scene["id"])
     duration = float(scene.get("duration_seconds", 8))
@@ -22,17 +47,54 @@ def render_scene(scene: dict[str, Any], episode_dir: Path) -> Path:
     out = episode_dir / "video" / f"{sid}.mp4"
     out.parent.mkdir(parents=True, exist_ok=True)
 
-    bg = ROOT / "assets" / "backgrounds" / f"{scene.get('location','default')}.png"
+    location = slug(str(scene.get("location", "default")))
+    bg = ROOT / "assets" / "backgrounds" / f"{location}.png"
+
+    args: list[str] = []
     if bg.exists():
-        inputs = ["-loop", "1", "-i", str(bg)]
-        vf = f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},fps={fps}"
-        ffmpeg_run([*inputs, "-t", str(duration), "-vf", vf, "-c:v", "libx264", "-pix_fmt", "yuv420p", str(out)])
+        args += ["-loop", "1", "-i", str(bg)]
     else:
         color = os.getenv("CARTOON_FALLBACK_BG", "#87CEEB")
-        ffmpeg_run([
-            "-f", "lavfi", "-i", f"color=c={color}:s={width}x{height}:r={fps}",
-            "-t", str(duration), "-c:v", "libx264", "-pix_fmt", "yuv420p", str(out)
-        ])
+        args += ["-f", "lavfi", "-i", f"color=c={color}:s={width}x{height}:r={fps}"]
+
+    sprite_paths: list[Path] = []
+    for item in scene.get("characters", []):
+        cid = character_id(item)
+        if not cid:
+            continue
+        pose = choose_pose(cid, scene)
+        if pose:
+            sprite_paths.append(pose)
+            args += ["-loop", "1", "-i", str(pose)]
+
+    filters = [f"[0:v]scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},fps={fps}[bg]"]
+    previous = "bg"
+    n = max(len(sprite_paths), 1)
+    for idx, _path in enumerate(sprite_paths, start=1):
+        char_h = int(height * 0.62)
+        x = int((idx / (n + 1)) * width - char_h * 0.32)
+        y = int(height - char_h - height * 0.05)
+        filters.append(f"[{idx}:v]scale=-1:{char_h},format=rgba[s{idx}]")
+        out_label = f"v{idx}"
+        filters.append(f"[{previous}][s{idx}]overlay=x={x}:y={y}:format=auto[{out_label}]")
+        previous = out_label
+
+    if not sprite_paths:
+        filters.append("[bg]null[vout]")
+        map_label = "[vout]"
+    else:
+        map_label = f"[{previous}]"
+
+    ffmpeg_run([
+        *args,
+        "-filter_complex", ";".join(filters),
+        "-map", map_label,
+        "-t", str(duration),
+        "-r", str(fps),
+        "-c:v", "libx264",
+        "-pix_fmt", "yuv420p",
+        str(out),
+    ])
     return out
 
 
