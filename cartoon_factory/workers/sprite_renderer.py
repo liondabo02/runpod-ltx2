@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def ffmpeg_run(args: list[str]) -> None:
-    subprocess.run(["ffmpeg", "-y", *args], check=True)
+    subprocess.run([os.getenv("FFMPEG_BIN", "ffmpeg"), "-y", *args], check=True)
 
 
 def slug(value: str) -> str:
@@ -38,13 +38,14 @@ def choose_pose(cid: str, scene: dict[str, Any]) -> Path | None:
     return None
 
 
-def render_scene(scene: dict[str, Any], episode_dir: Path) -> Path:
+def render_scene(scene: dict[str, Any], episode_dir: Path, language: str | None = None) -> Path:
     sid = str(scene["id"])
     duration = float(scene.get("duration_seconds", 8))
     width = int(os.getenv("CARTOON_WIDTH", "1920"))
     height = int(os.getenv("CARTOON_HEIGHT", "1080"))
     fps = int(os.getenv("CARTOON_FPS", "24"))
-    out = episode_dir / "video" / f"{sid}.mp4"
+    video_dir = episode_dir / "video" / language if language else episode_dir / "video"
+    out = video_dir / f"{sid}.mp4"
     out.parent.mkdir(parents=True, exist_ok=True)
 
     location = slug(str(scene.get("location", "default")))
@@ -100,7 +101,10 @@ def render_scene(scene: dict[str, Any], episode_dir: Path) -> Path:
 
 def main() -> None:
     episode_json = Path(os.environ.get("EPISODE_JSON", ROOT / "output" / "episode_001" / "episode.json"))
+    language = os.environ.get("LANGUAGE") or None
     episode = json.loads(episode_json.read_text(encoding="utf-8"))
+    if not language:
+        language = episode.get("language") if episode_json.name != "episode.json" else None
     episode_dir = episode_json.parent
     rendered = []
     skipped = []
@@ -108,9 +112,10 @@ def main() -> None:
         if scene.get("render_mode", "sprite") != "sprite":
             skipped.append(scene["id"])
             continue
-        rendered.append(str(render_scene(scene, episode_dir)))
-    manifest = {"rendered": rendered, "gpu_special_skipped": skipped}
-    (episode_dir / "render_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+        rendered.append(str(render_scene(scene, episode_dir, language)))
+    manifest = {"language": language or "master", "rendered": rendered, "gpu_special_skipped": skipped}
+    manifest_name = f"render_manifest_{language}.json" if language else "render_manifest.json"
+    (episode_dir / manifest_name).write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps({"ok": True, **manifest}, ensure_ascii=False))
 
 
