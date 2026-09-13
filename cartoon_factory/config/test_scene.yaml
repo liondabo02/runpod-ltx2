@@ -1,0 +1,34 @@
+episode_id: pilot_visual_test
+scene:
+  id: pilot_001
+  duration_seconds: 35
+  location: playground_day
+  render_mode: sprite
+  camera: "slow push-in, then gentle pan right"
+  background_prompt: "bright friendly neighborhood playground, premium 2D children's TV animation, clean shapes, soft cel shading, sunny afternoon, no text"
+  characters:
+    - id: aras
+      action: walk
+      emotion: happy
+      x: 0.34
+      y: 0.72
+      scale: 0.86
+      dialogue: "Robo, bugün yeni bir şey öğrenelim mi?"
+    - id: robo
+      action: idle
+      emotion: happy
+      x: 0.62
+      y: 0.73
+      scale: 0.72
+      dialogue: "Hazırım Aras! Birlikte daha kolay öğreniriz."
+  music_mood: "light playful warm curiosity"
+  sfx:
+    - "soft birds"
+    - "light footsteps"
+    - "small friendly robot beep"
+  quality_targets:
+    character_identity_score_min: 0.90
+    palette_match_score_min: 0.94
+    black_frame_ratio_max: 0.001
+    dialogue_lufs: -16
+    music_ducking_db: -9
