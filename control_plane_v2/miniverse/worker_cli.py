@@ -57,6 +57,7 @@ def main() -> None:
         heartbeat_seconds=settings.worker_heartbeat_seconds,
         retry_base_seconds=settings.worker_retry_base_seconds,
         poll_seconds=settings.worker_poll_seconds,
+        health_file=settings.worker_health_file,
     )
     asyncio.run(worker.run_forever())
 
