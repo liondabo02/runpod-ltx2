@@ -10,6 +10,7 @@ from typing import Any, Protocol
 
 from .config import Settings
 from .execution import ExecutionResult, MiniverseExecutionPipeline
+from .health import write_heartbeat
 from .queue import SQLiteTaskQueue, TaskRecord
 
 
@@ -57,6 +58,7 @@ class PersistentWorker:
         heartbeat_seconds: float = 30.0,
         retry_base_seconds: float = 15.0,
         poll_seconds: float = 2.0,
+        health_file: str | Path | None = None,
     ) -> None:
         if heartbeat_seconds <= 0 or heartbeat_seconds >= lease_seconds:
             raise ValueError("heartbeat_seconds must be > 0 and < lease_seconds")
@@ -71,16 +73,23 @@ class PersistentWorker:
         self.heartbeat_seconds = heartbeat_seconds
         self.retry_base_seconds = retry_base_seconds
         self.poll_seconds = poll_seconds
+        self.health_file = Path(health_file) if health_file else None
         self._stop = asyncio.Event()
 
     def stop(self) -> None:
         self._stop.set()
 
+    def _health(self, state: str) -> None:
+        if self.health_file is not None:
+            write_heartbeat(self.health_file, owner=self.owner, state=state)
+
     async def run_once(self) -> bool:
+        self._health("polling")
         task = self.queue.claim(self.owner, lease_seconds=self.lease_seconds)
         if task is None:
             return False
 
+        self._health(f"running:{task.id}")
         heartbeat_task = asyncio.create_task(self._heartbeat_loop(task.id))
         try:
             result = await self.executor.execute(task)
@@ -100,23 +109,29 @@ class PersistentWorker:
                 await heartbeat_task
             except asyncio.CancelledError:
                 pass
+            self._health("polling")
         return True
 
     async def run_forever(self) -> None:
-        while not self._stop.is_set():
-            worked = await self.run_once()
-            if worked:
-                continue
-            try:
-                await asyncio.wait_for(self._stop.wait(), timeout=self.poll_seconds)
-            except asyncio.TimeoutError:
-                pass
+        self._health("starting")
+        try:
+            while not self._stop.is_set():
+                worked = await self.run_once()
+                if worked:
+                    continue
+                try:
+                    await asyncio.wait_for(self._stop.wait(), timeout=self.poll_seconds)
+                except asyncio.TimeoutError:
+                    self._health("polling")
+        finally:
+            self._health("stopped")
 
     async def _heartbeat_loop(self, task_id: str) -> None:
         while True:
             await asyncio.sleep(self.heartbeat_seconds)
             if not self.queue.heartbeat(task_id, self.owner, lease_seconds=self.lease_seconds):
                 raise RuntimeError(f"Lost lease for task {task_id}")
+            self._health(f"running:{task_id}")
 
 
 def enqueue_coding_task(
