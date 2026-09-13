@@ -14,9 +14,20 @@ ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(ROOT / ".env")
 
 
-def load_series() -> dict[str, Any]:
-    with open(ROOT / "config" / "series.yaml", "r", encoding="utf-8") as f:
+def load_yaml(path: Path) -> dict[str, Any]:
+    with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
+
+
+def load_series() -> dict[str, Any]:
+    return load_yaml(ROOT / "config" / "series.yaml")
+
+
+def load_guest_policy() -> dict[str, Any]:
+    path = ROOT / "config" / "guest_characters.yaml"
+    if not path.exists():
+        return {"guest_character_policy": {"enabled": False}}
+    return load_yaml(path)
 
 
 def llm_chat(messages: list[dict[str, str]], temperature: float = 0.7) -> str:
@@ -45,18 +56,45 @@ def extract_json(text: str) -> dict[str, Any]:
 
 def make_episode(idea: str) -> dict[str, Any]:
     cfg = load_series()
+    guest_cfg = load_guest_policy().get("guest_character_policy", {})
     series = cfg["series"]
     characters = cfg["characters"]
     char_summary = [
-        {"id": c["id"], "name": c["name"], "role": c["role"], "personality": c["personality"]}
+        {
+            "id": c["id"],
+            "name": c["name"],
+            "role": c["role"],
+            "personality": c["personality"],
+            "age": c.get("age"),
+            "age_months": c.get("age_months"),
+            "appearance_note": c.get("appearance_note"),
+        }
         for c in characters
     ]
     system = f"""You are the head writer and production planner of a recurring 2D children's cartoon.
 Return ONLY valid JSON. Language: {series['language']}. Target age: {series['target_age']}.
-Episode length: about {series['episode_minutes']} minutes. Use ONLY registered recurring characters.
-Characters: {json.dumps(char_summary, ensure_ascii=False)}
-Rules: {json.dumps(series['rules'], ensure_ascii=False)}
-Create a complete episode with title, lesson, logline and scene list.
+Episode length: about {series['episode_minutes']} minutes.
+
+LOCKED RECURRING CAST:
+{json.dumps(char_summary, ensure_ascii=False)}
+
+SERIES RULES:
+{json.dumps(series['rules'], ensure_ascii=False)}
+
+NARRATIVE CORE:
+{json.dumps(series.get('narrative_core', {}), ensure_ascii=False)}
+
+GUEST CHARACTER POLICY:
+{json.dumps(guest_cfg, ensure_ascii=False)}
+
+The 16 recurring characters are permanent and must never be renamed, merged, replaced or redesigned.
+Harun is the dominant beloved family anchor. Aden and Kaan are the child leads.
+You may create temporary guest characters only when the story naturally needs them.
+Every guest must use an id beginning with 'guest_' and must be listed in a top-level guest_characters array.
+Each guest entry must contain: id, name, role, age_group, appearance, personality, voice_style, wardrobe, episode_only=true.
+Never promote a guest into the recurring cast automatically.
+
+Create a complete episode with title, lesson, logline, guest_characters and scene list.
 Each scene must include: id, duration_seconds, location, background_prompt, characters, action,
 dialogue (array of {{character_id,text,emotion}}), music_mood, sfx (array), camera, render_mode.
 render_mode must be 'sprite' for normal shots and 'gpu_special' only when generative video is truly useful.
@@ -70,11 +108,20 @@ Aim for roughly {cfg['production']['scene_count_target']} scenes and total durat
     episode = extract_json(raw)
     episode["series_title"] = series["title"]
     episode["source_idea"] = idea
+    episode.setdefault("guest_characters", [])
     return episode
 
 
 def build_jobs(episode: dict[str, Any]) -> dict[str, Any]:
-    jobs: dict[str, Any] = {"tts": [], "render": [], "music": [], "qc": []}
+    jobs: dict[str, Any] = {"guest_assets": [], "tts": [], "render": [], "music": [], "qc": []}
+    for guest in episode.get("guest_characters", []):
+        jobs["guest_assets"].append({
+            "job_id": f"{guest['id']}-asset-pack",
+            "character_id": guest["id"],
+            "design": guest,
+            "episode_only": True,
+            "output_dir": f"assets/guests/{guest['id']}",
+        })
     for scene in episode.get("scenes", []):
         sid = scene["id"]
         for idx, line in enumerate(scene.get("dialogue", [])):
@@ -102,7 +149,8 @@ def build_jobs(episode: dict[str, Any]) -> dict[str, Any]:
             "output": f"video/{sid}.mp4",
         })
     jobs["qc"].append({"job_id": "episode-qc", "checks": [
-        "duration", "missing_audio", "missing_scene", "character_ids", "black_frames", "peak_audio"
+        "duration", "missing_audio", "missing_scene", "character_ids", "guest_id_policy",
+        "locked_cast_integrity", "black_frames", "peak_audio"
     ]})
     return jobs
 
@@ -119,7 +167,12 @@ def main() -> None:
     jobs = build_jobs(episode)
     (out / "episode.json").write_text(json.dumps(episode, ensure_ascii=False, indent=2), encoding="utf-8")
     (out / "jobs.json").write_text(json.dumps(jobs, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(json.dumps({"ok": True, "episode_dir": str(out), "scenes": len(episode.get('scenes', []))}, ensure_ascii=False))
+    print(json.dumps({
+        "ok": True,
+        "episode_dir": str(out),
+        "scenes": len(episode.get("scenes", [])),
+        "guests": len(episode.get("guest_characters", [])),
+    }, ensure_ascii=False))
 
 
 if __name__ == "__main__":
