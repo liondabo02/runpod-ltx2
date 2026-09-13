@@ -12,15 +12,18 @@ def run(args: list[str]) -> None:
     subprocess.run(args, check=True)
 
 
-def make_scene_audio(scene_id: str, episode_dir: Path, duration: float) -> Path:
-    audio_dir = episode_dir / "audio"
-    music = audio_dir / f"{scene_id}_music.wav"
-    voices = sorted(audio_dir.glob(f"{scene_id}_*_*.wav"))
-    out = audio_dir / f"{scene_id}_mix.wav"
+def make_scene_audio(scene_id: str, episode_dir: Path, duration: float, language: str | None) -> Path:
+    audio_root = episode_dir / "audio"
+    voice_dir = audio_root / language if language else audio_root
+    music = audio_root / f"{scene_id}_music.wav"
+    voices = sorted(voice_dir.glob(f"{scene_id}_*_*.wav"))
+    mix_dir = audio_root / language if language else audio_root
+    mix_dir.mkdir(parents=True, exist_ok=True)
+    out = mix_dir / f"{scene_id}_mix.wav"
 
     if not music.exists() and not voices:
         run([
-            "ffmpeg", "-y", "-f", "lavfi", "-i",
+            os.getenv("FFMPEG_BIN", "ffmpeg"), "-y", "-f", "lavfi", "-i",
             "anullsrc=channel_layout=stereo:sample_rate=48000",
             "-t", str(duration), str(out)
         ])
@@ -35,14 +38,13 @@ def make_scene_audio(scene_id: str, episode_dir: Path, duration: float) -> Path:
         idx += 1
 
     voice_labels: list[str] = []
-    delay_ms = 300
     cursor = 250
     for v in voices:
         inputs += ["-i", str(v)]
         label = f"v{idx}"
         labels.append(f"[{idx}:a]adelay={cursor}|{cursor},volume=1.0[{label}]")
         voice_labels.append(f"[{label}]")
-        cursor += delay_ms + 1800
+        cursor += 2100
         idx += 1
 
     mix_inputs = ("[m]" if music.exists() else "") + "".join(voice_labels)
@@ -50,7 +52,7 @@ def make_scene_audio(scene_id: str, episode_dir: Path, duration: float) -> Path:
     labels.append(f"{mix_inputs}amix=inputs={max(n,1)}:duration=longest:normalize=0,alimiter=limit=0.95[aout]")
 
     run([
-        "ffmpeg", "-y", *inputs,
+        os.getenv("FFMPEG_BIN", "ffmpeg"), "-y", *inputs,
         "-filter_complex", ";".join(labels),
         "-map", "[aout]",
         "-t", str(duration),
@@ -61,7 +63,7 @@ def make_scene_audio(scene_id: str, episode_dir: Path, duration: float) -> Path:
 
 def mux_scene(video: Path, audio: Path, out: Path) -> None:
     run([
-        "ffmpeg", "-y", "-i", str(video), "-i", str(audio),
+        os.getenv("FFMPEG_BIN", "ffmpeg"), "-y", "-i", str(video), "-i", str(audio),
         "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
         "-shortest", str(out)
     ])
@@ -69,33 +71,43 @@ def mux_scene(video: Path, audio: Path, out: Path) -> None:
 
 def main() -> None:
     episode_id = os.environ.get("EPISODE_ID", "episode_001")
+    language = os.environ.get("LANGUAGE") or None
     episode_dir = ROOT / "output" / episode_id
-    episode = json.loads((episode_dir / "episode.json").read_text(encoding="utf-8"))
-    final_scene_dir = episode_dir / "muxed"
+    episode_path = episode_dir / (f"episode_{language}.json" if language else "episode.json")
+    episode = json.loads(episode_path.read_text(encoding="utf-8"))
+
+    final_scene_dir = episode_dir / "muxed" / language if language else episode_dir / "muxed"
     final_scene_dir.mkdir(parents=True, exist_ok=True)
+    video_dir = episode_dir / "video" / language if language else episode_dir / "video"
 
     muxed: list[Path] = []
     for scene in episode.get("scenes", []):
         sid = str(scene["id"])
-        video = episode_dir / "video" / f"{sid}.mp4"
+        video = video_dir / f"{sid}.mp4"
         if not video.exists():
             continue
-        audio = make_scene_audio(sid, episode_dir, float(scene.get("duration_seconds", 8)))
+        audio = make_scene_audio(sid, episode_dir, float(scene.get("duration_seconds", 8)), language)
         out = final_scene_dir / f"{sid}.mp4"
         mux_scene(video, audio, out)
         muxed.append(out)
 
     if not muxed:
-        raise RuntimeError("No rendered scenes found")
+        raise RuntimeError(f"No rendered scenes found for language={language or 'master'}")
 
-    concat = episode_dir / "concat.txt"
+    concat = episode_dir / (f"concat_{language}.txt" if language else "concat.txt")
     concat.write_text("\n".join(f"file '{p.resolve().as_posix()}'" for p in muxed), encoding="utf-8")
-    final = episode_dir / f"{episode_id}.mp4"
+    suffix = f"_{language}" if language else ""
+    final = episode_dir / f"{episode_id}{suffix}.mp4"
     run([
-        "ffmpeg", "-y", "-f", "concat", "-safe", "0",
+        os.getenv("FFMPEG_BIN", "ffmpeg"), "-y", "-f", "concat", "-safe", "0",
         "-i", str(concat), "-c", "copy", str(final)
     ])
-    print(json.dumps({"ok": True, "final": str(final), "scenes": len(muxed)}, ensure_ascii=False))
+    print(json.dumps({
+        "ok": True,
+        "language": language or "master",
+        "final": str(final),
+        "scenes": len(muxed),
+    }, ensure_ascii=False))
 
 
 if __name__ == "__main__":
