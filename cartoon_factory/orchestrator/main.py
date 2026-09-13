@@ -90,6 +90,7 @@ def build_jobs(episode: dict[str, Any]) -> dict[str, Any]:
             "job_id": f"{sid}-music",
             "scene_id": sid,
             "mood": scene.get("music_mood", "light playful"),
+            "sfx": scene.get("sfx", []),
             "duration_seconds": scene.get("duration_seconds", 8),
             "output": f"audio/{sid}_music.wav",
         })
