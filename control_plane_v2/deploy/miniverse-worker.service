@@ -1,0 +1,17 @@
+[Unit]
+Description=Miniverse Persistent Control Plane Worker
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/miniverse-control-plane/control_plane_v2
+EnvironmentFile=%h/.config/miniverse/runtime.env
+ExecStart=/usr/bin/docker compose -f docker-compose.worker.yml up --build --remove-orphans
+ExecStop=/usr/bin/docker compose -f docker-compose.worker.yml down
+Restart=always
+RestartSec=5
+TimeoutStartSec=0
+
+[Install]
+WantedBy=default.target
