@@ -12,6 +12,10 @@ dependencies = [
   "pydantic>=2.12,<3",
 ]
 
+[project.scripts]
+miniverse = "miniverse.cli:main"
+miniverse-worker = "miniverse.worker_cli:main"
+
 [project.optional-dependencies]
 test = [
   "pytest>=9.1,<10",
