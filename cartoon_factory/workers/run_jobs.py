@@ -6,6 +6,8 @@ import os
 import subprocess
 from pathlib import Path
 
+import httpx
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -32,15 +34,40 @@ def resolve_voice_model(job: dict) -> Path:
     )
 
 
-def synthesize_tts(job: dict, episode_id: str) -> None:
+def synthesize_piper(job: dict, out: Path) -> None:
     model = resolve_voice_model(job)
-    out = ROOT / "output" / episode_id / job["output"]
-    out.parent.mkdir(parents=True, exist_ok=True)
     run([
         os.getenv("PIPER_BIN", "piper"),
         "--model", str(model),
         "--output_file", str(out),
     ], job["text"])
+
+
+def synthesize_chatterbox(job: dict, out: Path) -> None:
+    base = os.getenv("CHATTERBOX_API_URL", "http://voice-service:4123").rstrip("/")
+    payload = {
+        "text": job["text"],
+        "language": job.get("language", "tr"),
+        "character_id": job["character_id"],
+        "exaggeration": float(os.getenv("CHATTERBOX_EXAGGERATION", "0.45")),
+        "cfg_weight": float(os.getenv("CHATTERBOX_CFG_WEIGHT", "0.35")),
+    }
+    with httpx.Client(timeout=600) as client:
+        r = client.post(f"{base}/v1/speech", json=payload)
+        r.raise_for_status()
+        out.write_bytes(r.content)
+
+
+def synthesize_tts(job: dict, episode_id: str) -> None:
+    engine = os.getenv("TTS_ENGINE", "chatterbox_api").strip().lower()
+    out = ROOT / "output" / episode_id / job["output"]
+    out.parent.mkdir(parents=True, exist_ok=True)
+    if engine == "chatterbox_api":
+        synthesize_chatterbox(job, out)
+    elif engine == "piper":
+        synthesize_piper(job, out)
+    else:
+        raise ValueError(f"Unsupported TTS_ENGINE={engine}")
 
 
 def lipsync(job: dict, episode_id: str) -> None:
@@ -73,6 +100,7 @@ def main() -> None:
         "ok": True,
         "episode_id": args.episode_id,
         "language": args.language or "master",
+        "tts_engine": os.getenv("TTS_ENGINE", "chatterbox_api"),
         "tts_jobs": len(jobs.get("tts", [])),
         "next": "render",
     }, ensure_ascii=False))
