@@ -1,83 +1,34 @@
 # Cartoon Factory
 
-Otonom, tekrar eden 10 karakterli 2D çizgi film üretim katmanı.
+Automated 2D cartoon episode pipeline for a fixed cast of 10 recurring characters.
 
-## Kalite hedefi
+## Current production foundation
 
-Amaç yalnız teknik demo üretmek değil; çocukların izleyebileceği, görsel kimliği tutarlı, tekrar eden karakterleri olan düzgün bir 2D seri üretmek. Bunun için karakter yüzü, kıyafeti, renk paleti, boy oranı, ses ve kişilik seri boyunca kilitlenir. Asset eksikse sistem fail-soft çalışır ama yayın kalitesi sayılmaz.
+- 10 persistent characters across the full series
+- locked series bible, visual style and character-consistency rules
+- OpenAI-compatible story/scene planner (`openrouter/free` by default)
+- production-ready scene and worker job manifests
+- Piper TTS + Rhubarb lip-sync
+- reusable character asset contract: reference views, emotions, actions and mouth shapes
+- character prompt pack + automatic asset-job builder
+- FFmpeg sprite renderer + final episode assembler
+- music/SFX worker contract
+- FastAPI endpoint for n8n/webhook orchestration
+- optional RunPod/LTX-2 path for GPU-heavy special shots
+- asset quality gate before episode rendering
+- 35-second pilot visual test manifest
 
-## Tek komut bölüm üretimi
+## Quality strategy
 
-```bash
-cd cartoon_factory
-python run_pipeline.py "Paylaşmayı öğrenme üzerine komik ve eğitici bir macera." --episode-id episode_001
-```
+Normal dialogue/action shots use reusable 2D character assets instead of regenerating the cast every time. This keeps faces, clothes, colors and proportions stable across hundreds of episodes. AI video generation is reserved for shots where it adds real value.
 
-Final dosya:
+The production gate requires a complete approved character pack before full episodes are rendered. The first target is a polished 30-60 second pilot; only after visual quality is approved should the system scale to 8-minute episodes.
 
-```text
-cartoon_factory/output/episode_001/episode_001.mp4
-```
-
-## Karakter fabrikası
-
-Önce 10 karakter için sabit model-sheet/pose seti üretilir:
-
-```bash
-python workers/generate_character_assets.py
-python workers/qc_visual.py
-```
-
-`CHARACTER_COMFY_ENDPOINT` ayarlanırsa karakter üretim istekleri ComfyUI/RunPod endpointine gönderilir. Her karakter için aynı stil, yüz, saç, kıyafet ve oranları koruyan prompt sözleşmesi kullanılır.
-
-## 10 karakteri kilitleme
-
-`config/series.yaml` kişilik, rol, hikâye ve TV-kalitesi görsel stil kurallarını tutar.
-`config/assets.yaml` her karakter için zorunlu görsel ve ses asset sözleşmesini tanımlar.
-
-Minimum asset yapısı:
-
-```text
-assets/characters/<id>/
-  poses/
-    idle_front.png
-    idle_three_quarter.png
-    idle_side.png
-    idle_back.png
-    talk_front.png
-    walk_front.png
-    run_front.png
-    sit_front.png
-    jump_front.png
-    point_front.png
-    wave_front.png
-  faces/
-    neutral.png happy.png sad.png angry.png
-    surprised.png scared.png thinking.png laughing.png
-  mouths/
-    X.png A.png B.png C.png D.png E.png F.png G.png
-assets/voices/<id>.onnx
-```
-
-Bu dosyalar bir kez hazırlanır; sonraki bölümlerde karakter yeniden tasarlanmaz.
-
-## Üretim zinciri
-
-```text
-idea
-  -> orchestrator/main.py
-  -> episode.json + jobs.json
-  -> workers/music_sfx.py
-  -> workers/run_jobs.py        # Piper + Rhubarb
-  -> workers/sprite_renderer.py
-  -> workers/finalize_episode.py
-  -> episode_id.mp4
-```
-
-## GPU özel sahneler
-
-Normal sahneler `sprite`; yalnız gerçekten ihtiyaç olan sinematik sahneler `gpu_special` olarak işaretlenir. Böylece tüm 8 dakikayı pahalı video modelinden üretmek yerine yalnız özel sahneler mevcut RunPod/LTX-2 hattına gönderilebilir.
-
-## Mevcut durum
-
-Kod zinciri, karakter asset sözleşmesi, karakter üretim worker'ı, TTS/lip-sync, müzik/SFX planı, sprite compositing, final montaj ve asset QC mevcut. Yayın kalitesine geçmek için sıradaki iş gerçek 10 karakter tasarımını ve sabit ses modellerini seçip üretmektir.
+See:
+- `config/series.yaml`
+- `config/assets.yaml`
+- `config/character_prompts.yaml`
+- `config/test_scene.yaml`
+- `orchestrator/main.py`
+- `tools/build_character_jobs.py`
+- `tools/qc_assets.py`
