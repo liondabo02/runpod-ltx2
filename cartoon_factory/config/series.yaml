@@ -3,16 +3,23 @@ series:
   language: tr
   episode_minutes: 8
   target_age: "5-8"
-  style: "bright 2D cartoon, clean shapes, expressive faces, child-safe"
+  style: "premium 2D children's cartoon, clean bold line art, soft cinematic shading, expressive faces, polished TV-animation look, bright balanced palette, no photorealism"
   fps: 24
   resolution: [1920, 1080]
   max_scene_seconds: 12
+  visual_style:
+    master_prompt: "premium 2D children's cartoon, clean bold line art, soft cinematic shading, expressive faces, appealing child-friendly proportions, consistent reusable character model sheets, polished TV animation look, bright but balanced palette, no photorealism"
+    consistency_priority: high
+    character_redesign_allowed: false
+    wardrobe_changes_allowed: false
+    face_changes_allowed: false
   rules:
     - "Use only the 10 registered recurring characters unless explicitly approved."
-    - "Keep character appearance, personality, voice and relationships consistent."
+    - "Keep character appearance, face, hairstyle, clothing, colors, proportions, personality, voice and relationships consistent."
     - "No frightening, sexual, hateful, dangerous-imitation or age-inappropriate content."
     - "Each episode must have a simple educational or social-emotional takeaway."
     - "Avoid copyrighted characters, songs, brands and imitation of living artists."
+    - "Prefer reusable sprite/puppet animation; use gpu_special only for visually important shots."
 
 characters:
   - id: c01
@@ -80,7 +87,7 @@ relationships:
   - "Define permanent relationships here before production starts."
 
 production:
-  llm_temperature: 0.7
+  llm_temperature: 0.65
   scene_count_target: 45
   tts: "piper"
   lipsync: "rhubarb"
