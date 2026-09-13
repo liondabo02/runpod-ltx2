@@ -1,0 +1,51 @@
+asset_contract:
+  format: png
+  transparent_background: true
+  canvas: [1024, 1024]
+  required_views: [front, three_quarter, side, back]
+  required_emotions: [neutral, happy, sad, angry, surprised, scared, thinking, laughing]
+  required_actions: [idle, talk, walk, run, sit, jump, point, wave]
+  mouth_shapes: [X, A, B, C, D, E, F, G]
+  naming:
+    character_dir: assets/characters/{character_id}
+    pose: poses/{action}_{view}.png
+    emotion: faces/{emotion}.png
+    mouth: mouths/{shape}.png
+
+voice_contract:
+  sample_rate: 24000
+  mono: true
+  normalize_lufs: -16
+  per_character_voice: true
+
+characters:
+  - id: aras
+    palette: ["#6B4423", "#246BCE", "#F2C94C"]
+    height_scale: 1.00
+  - id: robo
+    palette: ["#A7B0B8", "#2D9CDB", "#F2994A"]
+    height_scale: 0.82
+  - id: elif
+    palette: ["#5B3A29", "#EB5757", "#F2F2F2"]
+    height_scale: 0.96
+  - id: mert
+    palette: ["#3B2A20", "#27AE60", "#F2C94C"]
+    height_scale: 1.02
+  - id: luna
+    palette: ["#F2F2F2", "#9B51E0", "#56CCF2"]
+    height_scale: 0.90
+  - id: piko
+    palette: ["#F2994A", "#EB5757", "#6FCF97"]
+    height_scale: 0.65
+  - id: dede
+    palette: ["#D9C2A7", "#8D6E63", "#BDBDBD"]
+    height_scale: 1.05
+  - id: ogretmen
+    palette: ["#4F4F4F", "#BB6BD9", "#F2F2F2"]
+    height_scale: 1.00
+  - id: kaptan
+    palette: ["#1B3B6F", "#FFFFFF", "#F2C94C"]
+    height_scale: 1.08
+  - id: zuzu
+    palette: ["#F2C94C", "#2F80ED", "#EB5757"]
+    height_scale: 0.70
