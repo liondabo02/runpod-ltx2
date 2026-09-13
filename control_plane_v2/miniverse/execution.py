@@ -58,6 +58,9 @@ class MiniverseExecutionPipeline:
 
         builder_result = await asyncio.to_thread(self.builder.run, task, workspace_path)
 
+        changed_files = "\n".join(builder_result.changed_files)
+        tests_run = "\n".join(builder_result.tests_run)
+        remaining_risks = "\n".join(builder_result.remaining_risks)
         qa_prompt = (
             "Review the completed isolated-workspace coding run below. Try to falsify it. Do not modify anything. "
             "Decide whether tests are sufficient, identify regressions or unsupported claims, and state whether it is "
@@ -65,10 +68,10 @@ class MiniverseExecutionPipeline:
             f"\n\nORIGINAL TASK:\n{task}"
             f"\n\nPREFLIGHT REPORT:\n{preflight}"
             f"\n\nBUILDER SUMMARY:\n{builder_result.summary}"
-            f"\n\nCHANGED FILES:\n" + "\n".join(builder_result.changed_files)
-            f"\n\nTESTS RUN:\n" + "\n".join(builder_result.tests_run)
+            f"\n\nCHANGED FILES:\n{changed_files}"
+            f"\n\nTESTS RUN:\n{tests_run}"
             f"\n\nROLLBACK:\n{builder_result.rollback}"
-            f"\n\nREMAINING RISKS:\n" + "\n".join(builder_result.remaining_risks)
+            f"\n\nREMAINING RISKS:\n{remaining_risks}"
         )
         qa_report = await self.orchestrator.analyze(qa_prompt)
 
