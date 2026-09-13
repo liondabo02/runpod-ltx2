@@ -1,0 +1,53 @@
+name: Miniverse Self-Hosted PC Smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: [self-hosted, Windows, X64, miniverse]
+    timeout-minutes: 10
+    steps:
+      - name: Checkout control-plane branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/agent-control-plane
+
+      - name: Show runner identity
+        shell: pwsh
+        run: |
+          Write-Host "Computer: $env:COMPUTERNAME"
+          Write-Host "User: $env:USERNAME"
+          Write-Host "Runner: $env:RUNNER_NAME"
+          Write-Host "OS: $env:RUNNER_OS"
+          Write-Host "Arch: $env:RUNNER_ARCH"
+
+      - name: Check required local tools
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git --version
+          python --version
+          docker --version
+          docker compose version
+
+      - name: Validate Miniverse worker files
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Test-Path 'control_plane_v2/Dockerfile.worker' | Should -BeTrue
+        continue-on-error: true
+
+      - name: Validate worker image can build
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          docker build -f control_plane_v2/Dockerfile.worker -t miniverse-worker:pc-smoke .
+
+      - name: Report success
+        shell: pwsh
+        run: |
+          Write-Host 'MINIVERSE_SELF_HOSTED_PC_SMOKE=PASS'
