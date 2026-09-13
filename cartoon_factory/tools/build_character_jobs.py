@@ -19,11 +19,18 @@ def main() -> None:
     assets = load_yaml(ROOT / "config" / "assets.yaml")
     style = prompts["style_lock"]
     contract = assets["asset_contract"]
+    asset_by_id = {c["id"]: c for c in assets["characters"]}
     jobs: list[dict[str, Any]] = []
 
     for char_id, char in prompts["characters"].items():
-        palette = next((c["palette"] for c in assets["characters"] if c["id"] == char_id), [])
-        base = f"{style['positive']}. Character: {char['description']}. Signature: {char['signature']}. Palette: {', '.join(palette)}."
+        meta = asset_by_id.get(char_id, {})
+        palette = meta.get("apparel_palette", [])
+        acting = char.get("acting_notes", "")
+        base = (
+            f"{style['positive']}. Character: {char['description']}. "
+            f"Signature: {char['signature']}. Apparel palette: {', '.join(palette)}. "
+            f"Acting language: {acting}."
+        )
         ref_dir = f"assets/characters/{char_id}"
 
         jobs.append({
@@ -31,7 +38,7 @@ def main() -> None:
             "character_id": char_id,
             "kind": "master_reference",
             "view": "front",
-            "prompt": base + " Front view, neutral standing pose, symmetrical model sheet, feet visible.",
+            "prompt": base + " Front view, neutral standing pose, clean production model sheet, full body, feet visible.",
             "negative_prompt": style["negative"],
             "output": f"{ref_dir}/reference/front.png",
             "requires_reference": False,
@@ -45,7 +52,7 @@ def main() -> None:
                 "character_id": char_id,
                 "kind": "view",
                 "view": view,
-                "prompt": base + f" Exact same character, {view} view, neutral standing pose, feet visible.",
+                "prompt": base + f" Exact same approved character, {view} view, neutral standing pose, full body, feet visible.",
                 "negative_prompt": style["negative"],
                 "output": f"{ref_dir}/reference/{view}.png",
                 "requires_reference": True,
@@ -58,22 +65,38 @@ def main() -> None:
                 "character_id": char_id,
                 "kind": "emotion",
                 "emotion": emotion,
-                "prompt": base + f" Portrait face layer, exact same character, {emotion} expression, transparent background.",
+                "prompt": base + f" Face layer, exact same approved character, {emotion} expression, transparent background.",
                 "negative_prompt": style["negative"],
                 "output": f"{ref_dir}/faces/{emotion}.png",
                 "requires_reference": True,
                 "reference": f"{ref_dir}/reference/front.png",
             })
 
+        # Front pose is mandatory because the sprite renderer uses it directly.
         for action in contract["required_actions"]:
+            for view in ["front", "three_quarter"]:
+                jobs.append({
+                    "job_id": f"{char_id}-pose-{action}-{view}",
+                    "character_id": char_id,
+                    "kind": "pose",
+                    "action": action,
+                    "view": view,
+                    "prompt": base + f" Full-body animation key pose: {action}, {view} view, exact same approved character, clothing and proportions, transparent background.",
+                    "negative_prompt": style["negative"],
+                    "output": f"{ref_dir}/poses/{action}_{view}.png",
+                    "requires_reference": True,
+                    "reference": f"{ref_dir}/reference/front.png",
+                })
+
+        for shape in contract["mouth_shapes"]:
             jobs.append({
-                "job_id": f"{char_id}-pose-{action}",
+                "job_id": f"{char_id}-mouth-{shape}",
                 "character_id": char_id,
-                "kind": "pose",
-                "action": action,
-                "prompt": base + f" Full-body animation key pose: {action}, three-quarter view, exact same clothing and proportions, transparent background.",
+                "kind": "mouth",
+                "shape": shape,
+                "prompt": base + f" Isolated mouth replacement layer for lip-sync shape {shape}, exact same face style, transparent background.",
                 "negative_prompt": style["negative"],
-                "output": f"{ref_dir}/poses/{action}_three_quarter.png",
+                "output": f"{ref_dir}/mouths/{shape}.png",
                 "requires_reference": True,
                 "reference": f"{ref_dir}/reference/front.png",
             })
@@ -81,7 +104,7 @@ def main() -> None:
     out = ROOT / "output" / "character_jobs.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps({"jobs": jobs}, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(json.dumps({"ok": True, "jobs": len(jobs), "output": str(out)}, ensure_ascii=False))
+    print(json.dumps({"ok": True, "characters": len(prompts['characters']), "jobs": len(jobs), "output": str(out)}, ensure_ascii=False))
 
 
 if __name__ == "__main__":
