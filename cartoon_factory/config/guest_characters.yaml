@@ -1,0 +1,29 @@
+guest_character_policy:
+  enabled: true
+  recurring_cast_locked: true
+  recurring_cast_count: 16
+  requires_user_approval_to_promote_guest: true
+  max_guests_per_episode: 6
+  id_prefix: guest_
+  allowed_examples:
+    - teacher
+    - doctor
+    - nurse
+    - shopkeeper
+    - neighbor
+    - driver
+    - police_officer
+    - park_worker
+    - waiter
+    - delivery_worker
+    - child_friend
+    - grandparent
+  rules:
+    - "Guest characters may be created when the story naturally needs them."
+    - "Guests must never replace, rename or overwrite one of the 16 locked recurring characters."
+    - "Guests are temporary by default and exist only for the current episode unless explicitly reused."
+    - "A guest may become recurring only after explicit user approval."
+    - "Guest design must match the same premium 2D visual universe and remain child-friendly."
+    - "Avoid making guest characters visually confusingly similar to Harun, Aden, Kaan or other recurring cast members."
+    - "Do not use real public figures, copyrighted characters or branded mascots as guests."
+    - "For each guest create a compact design card: id, name, role, age_group, appearance, personality, voice_style, wardrobe, episode_only."
