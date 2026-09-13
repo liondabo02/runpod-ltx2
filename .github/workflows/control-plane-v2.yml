@@ -1,0 +1,40 @@
+name: Control Plane V2 CI
+
+on:
+  pull_request:
+    paths:
+      - 'control_plane_v2/**'
+      - '.github/workflows/control-plane-v2.yml'
+  push:
+    branches:
+      - feature/agent-control-plane
+    paths:
+      - 'control_plane_v2/**'
+      - '.github/workflows/control-plane-v2.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      - name: Install control plane
+        run: python -m pip install ./control_plane_v2[test]
+      - name: Compile package
+        run: python -m compileall -q control_plane_v2/miniverse
+      - name: Import official frameworks
+        run: |
+          python - <<'PY'
+          from agent_framework.orchestrations import ConcurrentBuilder
+          from openhands.sdk import Agent, Conversation, LLM, Tool
+          from miniverse.policy import OwnerPolicy
+          assert ConcurrentBuilder
+          assert Agent and Conversation and LLM and Tool
+          assert not OwnerPolicy().evaluate('review GitHub docs and CI logs').reasons
+          assert OwnerPolicy().evaluate('run a paid RunPod GPU job').reasons
+          print('CONTROL PLANE V2 STATIC PREFLIGHT PASSED')
+          PY
