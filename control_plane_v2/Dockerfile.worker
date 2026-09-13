@@ -12,9 +12,9 @@ RUN python -m pip install --upgrade pip \
 
 RUN useradd --create-home --uid 10001 miniverse \
     && mkdir -p /var/lib/miniverse /workspace \
-    && chown -R miniverse:miniverse /var/lib/miniverse /workspace /app
+    && chown -R 10001:10001 /var/lib/miniverse /workspace /app
 
-USER miniverse
+USER 10001:10001
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=45s --retries=3 \
     CMD miniverse-health --path /var/lib/miniverse/worker-heartbeat.json --max-age-seconds 90 || exit 1
