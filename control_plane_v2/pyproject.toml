@@ -6,6 +6,7 @@ requires-python = ">=3.12,<3.15"
 dependencies = [
   "agent-framework==1.18.0",
   "openhands-sdk==1.47.0",
+  "openhands-tools==1.47.0",
   "litellm==1.100.1",
   "python-dotenv>=1.0.1,<2",
   "pydantic>=2.12,<3",
