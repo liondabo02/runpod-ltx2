@@ -24,7 +24,7 @@ jobs:
           clean: false
 
       - name: Show runner identity
-        shell: pwsh
+        shell: powershell
         run: |
           Write-Host "Computer: $env:COMPUTERNAME"
           Write-Host "User: $env:USERNAME"
@@ -33,7 +33,7 @@ jobs:
           Write-Host "Arch: $env:RUNNER_ARCH"
 
       - name: Check required local tools
-        shell: pwsh
+        shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           git --version
@@ -42,7 +42,7 @@ jobs:
           docker compose version
 
       - name: Validate Miniverse worker files
-        shell: pwsh
+        shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           $required = @(
@@ -56,12 +56,12 @@ jobs:
           }
 
       - name: Validate worker image can build
-        shell: pwsh
+        shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           docker build -f control_plane_v2/Dockerfile.worker -t miniverse-worker:pc-smoke .
 
       - name: Report success
-        shell: pwsh
+        shell: powershell
         run: |
           Write-Host 'MINIVERSE_SELF_HOSTED_PC_SMOKE=PASS'
