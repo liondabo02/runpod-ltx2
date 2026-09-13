@@ -1,0 +1,11 @@
+services:
+  cartoon-factory:
+    build: .
+    env_file: .env
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./config:/app/config:ro
+      - ./assets:/app/assets
+      - ./output:/app/output
+    restart: unless-stopped
