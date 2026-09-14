@@ -46,11 +46,12 @@
                   {
                       "id":  "AHOS-004",
                       "title":  "Add owner approval inbox",
-                      "status":  "pending",
+                      "status":  "blocked",
                       "risk":  "low",
                       "authority":  "B",
                       "requires_owner_approval":  false,
-                      "task":  "Inside ahos_core only, implement a local approval inbox that records blocked C/D action requests and owner decisions in an auditable form. It must not auto-approve anything. Add tests for pending, approve, reject, and immutable history behavior."
+                      "task":  "Inside ahos_core only, implement a local approval inbox that records blocked C/D action requests and owner decisions in an auditable form. It must not auto-approve anything. Add tests for pending, approve, reject, and immutable history behavior.",
+                      "note":  "PermissionError: Owner approval required before execution: external spend requires owner approval; external publishing requires owner approval; destructive action requires owner approval; credential changes require owner approval"
                   },
                   {
                       "id":  "AHOS-005",
