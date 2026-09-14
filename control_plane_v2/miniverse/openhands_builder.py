@@ -16,7 +16,7 @@ from .config import Settings
 
 
 class BuilderFinish(BaseModel):
-    summary: str = Field(description="What was changed and why.")
+    change_summary: str = Field(description="What was changed and why.")
     tests_run: list[str] = Field(description="Exact tests/commands run and their outcomes.")
     changed_files: list[str] = Field(description="Files changed inside the isolated workspace.")
     rollback: str = Field(description="How to revert the change safely.")
@@ -79,7 +79,7 @@ class OpenHandsBuilder:
         metrics = conversation.conversation_stats.get_combined_metrics()
         cost = float(metrics.accumulated_cost or 0.0)
         return BuilderResult(
-            summary=finish.summary,
+            summary=finish.change_summary,
             tests_run=tuple(finish.tests_run),
             changed_files=tuple(finish.changed_files),
             rollback=finish.rollback,
