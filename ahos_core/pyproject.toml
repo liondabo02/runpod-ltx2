@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ahos-core"
+version = "0.1.0"
+description = "Safety-first autonomous holding operating system core"
+requires-python = ">=3.12,<3.15"
+
+[project.optional-dependencies]
+test = ["pytest>=9.1,<10"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ahos*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
