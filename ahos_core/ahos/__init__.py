@@ -3,6 +3,13 @@ from .costs import CostGuard
 from .events import Event, EventBus
 from .governance import ActionRequest, AuthorityLevel, GovernanceDecision, GovernancePolicy
 from .mission_store import Mission, MissionStateStore, MissionStatus
+from .planner import (
+    DependencyCycleError,
+    MissionDefinition,
+    MissionPlanner,
+    MissionPlanningError,
+    UnknownDependencyError,
+)
 from .registry import AgentRegistry
 
 __all__ = [
@@ -18,4 +25,9 @@ __all__ = [
     "Mission",
     "MissionStateStore",
     "MissionStatus",
+    "DependencyCycleError",
+    "MissionDefinition",
+    "MissionPlanner",
+    "MissionPlanningError",
+    "UnknownDependencyError",
 ]

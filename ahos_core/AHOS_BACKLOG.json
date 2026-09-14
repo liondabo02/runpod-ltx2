@@ -26,11 +26,12 @@
                   {
                       "id":  "AHOS-002",
                       "title":  "Add mission planner and dependency graph",
-                      "status":  "pending",
+                      "status":  "completed",
                       "risk":  "low",
                       "authority":  "B",
                       "requires_owner_approval":  false,
-                      "task":  "Inside ahos_core only, add a deterministic mission planner that represents missions, dependencies, priority, and readiness using local code only. Include cycle detection and tests. Preserve existing governance behavior."
+                      "task":  "Inside ahos_core only, add a deterministic mission planner that represents missions, dependencies, priority, and readiness using local code only. Include cycle detection and tests. Preserve existing governance behavior.",
+                      "completed_at":  "2026-09-14T20:49:24.2220077Z"
                   },
                   {
                       "id":  "AHOS-003",
