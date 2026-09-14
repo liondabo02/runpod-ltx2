@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 
+from miniverse.config import Settings
 from miniverse.execution import MiniverseExecutionPipeline
 from miniverse.openhands_builder import BuilderResult
 from miniverse.policy import OwnerPolicy
@@ -56,7 +57,27 @@ async def test_execute_runs_preflight_builder_and_qa(tmp_path: Path):
 
 
 @pytest.mark.asyncio
-async def test_execute_blocks_paid_action_before_builder(tmp_path: Path):
+async def test_smoke_mode_skips_multi_agent_calls(tmp_path: Path):
+    orchestrator = FakeOrchestrator()
+    builder = FakeBuilder()
+    pipeline = MiniverseExecutionPipeline(
+        settings=Settings(smoke_mode=True),
+        policy=OwnerPolicy(),
+        orchestrator=orchestrator,
+        builder=builder,
+    )
+
+    result = await pipeline.execute("create one harmless smoke-test file", tmp_path)
+
+    assert result.preflight_report.startswith("SMOKE MODE")
+    assert result.qa_report.startswith("SMOKE MODE")
+    assert result.builder.summary == "minimal fix created"
+    assert orchestrator.calls == []
+    assert len(builder.calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_execute_blocks_paid_action_before_any_agent_call(tmp_path: Path):
     orchestrator = FakeOrchestrator()
     builder = FakeBuilder()
     pipeline = MiniverseExecutionPipeline(
@@ -68,7 +89,7 @@ async def test_execute_blocks_paid_action_before_builder(tmp_path: Path):
     with pytest.raises(PermissionError, match="Owner approval required"):
         await pipeline.execute("run a paid RunPod GPU job", tmp_path)
 
-    assert len(orchestrator.calls) == 1
+    assert orchestrator.calls == []
     assert builder.calls == []
 
 
