@@ -42,7 +42,7 @@ if (-not (Get-Process miniverse-worker -ErrorAction SilentlyContinue)) {
     Start-Sleep -Seconds 2
 }
 
-& git -C $RepoRoot fetch origin $Branch | Out-Host
+& git -C $RepoRoot fetch origin --prune | Out-Host
 if (-not (Test-Path (Join-Path $Workspace '.git'))) {
     & git -C $RepoRoot worktree add -B $Branch $Workspace "origin/$Branch" | Out-Host
 } else {
@@ -50,7 +50,7 @@ if (-not (Test-Path (Join-Path $Workspace '.git'))) {
     if ($dirty) {
         throw "AHOS worktree contains uncommitted changes. Refusing to overwrite: $Workspace"
     }
-    & git -C $Workspace pull --ff-only origin $Branch | Out-Host
+    & git -C $Workspace reset --hard "origin/$Branch" | Out-Host
 }
 
 function Get-BudgetState {
@@ -157,7 +157,8 @@ while ($true) {
             continue
         }
 
-        & git -C $Workspace pull --ff-only origin $Branch | Out-Null
+        & git -C $RepoRoot fetch origin --prune | Out-Null
+        & git -C $Workspace reset --hard "origin/$Branch" | Out-Null
         $backlogPath = Join-Path $Workspace 'ahos_core\AHOS_BACKLOG.json'
         $doc = Get-Content $backlogPath -Raw | ConvertFrom-Json
         $next = $doc.tasks | Where-Object {
