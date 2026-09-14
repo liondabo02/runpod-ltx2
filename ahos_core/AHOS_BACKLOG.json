@@ -1,74 +1,81 @@
-{
-  "version": 1,
-  "project": "AHOS Core",
-  "rules": {
-    "autonomous_authority": ["A", "B"],
-    "owner_approval_required": ["C", "D"],
-    "never_auto_merge_main": true
-  },
-  "tasks": [
-    {
-      "id": "AHOS-001",
-      "title": "Add persistent SQLite mission state store",
-      "status": "pending",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, implement a small SQLite-backed mission state store with typed mission statuses, create/read/update operations, migration-safe table creation, and focused tests. Do not touch secrets, billing, deployment, external services, or files outside ahos_core. Keep the change reversible and run the AHOS test suite."
-    },
-    {
-      "id": "AHOS-002",
-      "title": "Add mission planner and dependency graph",
-      "status": "pending",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, add a deterministic mission planner that represents missions, dependencies, priority, and readiness without calling external APIs. Include cycle detection and tests. Do not alter governance guardrails."
-    },
-    {
-      "id": "AHOS-003",
-      "title": "Add department capability registry",
-      "status": "pending",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, implement a department/capability registry for future departments such as software, media, research, QA, cost, marketing, CRM, and analytics. The registry must describe capabilities and authority level but must not execute external actions. Add tests."
-    },
-    {
-      "id": "AHOS-004",
-      "title": "Add owner approval inbox",
-      "status": "pending",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, implement a local approval inbox that records blocked C/D action requests and owner decisions in an auditable form. It must not auto-approve anything. Add tests for pending, approve, reject, and immutable history behavior."
-    },
-    {
-      "id": "AHOS-005",
-      "title": "Add local scheduler and retry policy",
-      "status": "pending",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, implement deterministic scheduling primitives for local missions with bounded retries, backoff metadata, and no external side effects. Add tests."
-    },
-    {
-      "id": "AHOS-006",
-      "title": "Add metrics snapshot model",
-      "status": "pending",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, add local metrics models for mission counts, success/failure rate, latency, and estimated cost. No network calls. Add tests and a small reporting helper."
-    },
-    {
-      "id": "AHOS-007",
-      "title": "Define RunPod media capability adapter contract",
-      "status": "pending",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, define interfaces and data models for a future RunPod/media capability adapter. Do not invoke RunPod, GPUs, billing, network APIs, deployment, or paid compute. Tests should prove the contract remains inert without explicit execution authorization."
-    }
-  ]
+﻿{
+    "version":  1,
+    "project":  "AHOS Core",
+    "rules":  {
+                  "autonomous_authority":  [
+                                               "A",
+                                               "B"
+                                           ],
+                  "owner_approval_required":  [
+                                                  "C",
+                                                  "D"
+                                              ],
+                  "never_auto_merge_main":  true
+              },
+    "tasks":  [
+                  {
+                      "id":  "AHOS-001",
+                      "title":  "Add persistent SQLite mission state store",
+                      "status":  "blocked",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, implement a small SQLite-backed mission state store with typed mission statuses, create/read/update operations, migration-safe table creation, and focused tests. Do not touch secrets, billing, deployment, external services, or files outside ahos_core. Keep the change reversible and run the AHOS test suite.",
+                      "note":  "PermissionError: Owner approval required before execution: external spend requires owner approval; external publishing requires owner approval; destructive action requires owner approval; credential changes require owner approval"
+                  },
+                  {
+                      "id":  "AHOS-002",
+                      "title":  "Add mission planner and dependency graph",
+                      "status":  "pending",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, add a deterministic mission planner that represents missions, dependencies, priority, and readiness without calling external APIs. Include cycle detection and tests. Do not alter governance guardrails."
+                  },
+                  {
+                      "id":  "AHOS-003",
+                      "title":  "Add department capability registry",
+                      "status":  "pending",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, implement a department/capability registry for future departments such as software, media, research, QA, cost, marketing, CRM, and analytics. The registry must describe capabilities and authority level but must not execute external actions. Add tests."
+                  },
+                  {
+                      "id":  "AHOS-004",
+                      "title":  "Add owner approval inbox",
+                      "status":  "pending",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, implement a local approval inbox that records blocked C/D action requests and owner decisions in an auditable form. It must not auto-approve anything. Add tests for pending, approve, reject, and immutable history behavior."
+                  },
+                  {
+                      "id":  "AHOS-005",
+                      "title":  "Add local scheduler and retry policy",
+                      "status":  "pending",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, implement deterministic scheduling primitives for local missions with bounded retries, backoff metadata, and no external side effects. Add tests."
+                  },
+                  {
+                      "id":  "AHOS-006",
+                      "title":  "Add metrics snapshot model",
+                      "status":  "pending",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, add local metrics models for mission counts, success/failure rate, latency, and estimated cost. No network calls. Add tests and a small reporting helper."
+                  },
+                  {
+                      "id":  "AHOS-007",
+                      "title":  "Define RunPod media capability adapter contract",
+                      "status":  "pending",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, define interfaces and data models for a future RunPod/media capability adapter. Do not invoke RunPod, GPUs, billing, network APIs, deployment, or paid compute. Tests should prove the contract remains inert without explicit execution authorization."
+                  }
+              ]
 }
