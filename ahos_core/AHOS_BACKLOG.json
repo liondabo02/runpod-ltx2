@@ -36,11 +36,12 @@
                   {
                       "id":  "AHOS-003",
                       "title":  "Add department capability registry",
-                      "status":  "pending",
+                      "status":  "blocked",
                       "risk":  "low",
                       "authority":  "B",
                       "requires_owner_approval":  false,
-                      "task":  "Inside ahos_core only, implement a department/capability registry for future departments such as software, media, research, QA, cost, marketing, CRM, and analytics. The registry must describe capabilities and authority level but must not execute external actions. Add tests."
+                      "task":  "Inside ahos_core only, implement a department/capability registry for future departments such as software, media, research, QA, cost, marketing, CRM, and analytics. The registry must describe capabilities and authority level but must not execute external actions. Add tests.",
+                      "note":  "PermissionError: Owner approval required before execution: external spend requires owner approval; external publishing requires owner approval; destructive action requires owner approval; credential changes require owner approval"
                   },
                   {
                       "id":  "AHOS-004",
