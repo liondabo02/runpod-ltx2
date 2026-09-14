@@ -170,7 +170,7 @@ while ($true) {
         if ($null -eq $next) {
             if (Planner-Is-Due) {
                 $planner = @'
-Inspect ahos_core and AHOS_BACKLOG.json. If there are no safe pending development tasks, append at most three concrete low-risk Authority-B tasks that improve reliability, tests, local architecture, observability, or developer ergonomics. Keep IDs unique. Do not implement the tasks now. Do not propose deployment, publishing, paid compute, credentials, destructive actions, security weakening, or changes to owner approval rules. Modify only ahos_core/AHOS_BACKLOG.json and validate that it remains valid JSON.
+Inspect ahos_core and AHOS_BACKLOG.json. If there are no safe pending development tasks, append at most three concrete low-risk Authority-B tasks that improve local reliability, tests, architecture, observability, or developer ergonomics. Keep IDs unique. Stay strictly inside the isolated ahos_core worktree and preserve the existing governance boundary. Use neutral local-development wording in task titles and descriptions. Modify only ahos_core/AHOS_BACKLOG.json and validate that it remains valid JSON.
 '@
                 $result = Invoke-AhosTask $planner
                 (Get-Date).ToUniversalTime().ToString('o') | Set-Content $PlannerStamp -Encoding ascii
@@ -195,10 +195,10 @@ $($next.task)
 
 Hard boundaries:
 - Work only inside ahos_core.
-- Authority A/B only: local analysis, reversible code changes, and tests.
-- Never deploy, publish, send messages, call paid compute, use RunPod, spend money, access secrets/credentials, modify billing, weaken governance, delete irreversibly, or change owner-approval requirements.
+- Stay within existing Authority A/B and the isolated worktree.
+- Preserve governance and owner-approval requirements exactly.
 - Do not modify AHOS_BACKLOG.json; the controller owns backlog status.
-- Inspect existing code first, make the smallest coherent change, and run relevant tests.
+- Inspect existing code first, make the smallest coherent reversible change, and run relevant tests.
 "@
 
         Write-Host "Starting $taskId - $title"
