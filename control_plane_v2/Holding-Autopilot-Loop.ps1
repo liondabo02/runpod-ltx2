@@ -189,7 +189,7 @@ Inspect ahos_core and AHOS_BACKLOG.json. If there are no safe pending developmen
         $instruction = @"
 You are developing AHOS, the Autonomous Holding Operating System, in its isolated Git worktree.
 
-Implement backlog item $taskId: $title
+Implement backlog item ${taskId}: $title
 
 $($next.task)
 
