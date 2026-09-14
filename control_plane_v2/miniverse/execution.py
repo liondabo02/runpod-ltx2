@@ -45,16 +45,27 @@ class MiniverseExecutionPipeline:
             raise ValueError(f"Workspace does not exist: {workspace_path}")
 
         decision = self.policy.evaluate(task)
+        if not decision.allowed:
+            raise PermissionError(
+                "Owner approval required before execution: " + "; ".join(decision.reasons)
+            )
+
+        if self.settings.smoke_mode:
+            builder_result = await asyncio.to_thread(self.builder.run, task, workspace_path)
+            return ExecutionResult(
+                task=task,
+                preflight_report="SMOKE MODE: multi-agent preflight skipped to minimize API cost.",
+                builder=builder_result,
+                qa_report="SMOKE MODE: adversarial QA pass skipped to minimize API cost.",
+                owner_approval_required=False,
+                owner_approval_reasons=(),
+            )
+
         preflight = await self.orchestrator.analyze(
             task
             + "\n\nPHASE: PREFLIGHT ONLY. Do not claim code was changed. Identify root cause evidence, "
             "safe implementation boundaries, exact tests, and approval gates."
         )
-
-        if not decision.allowed:
-            raise PermissionError(
-                "Owner approval required before execution: " + "; ".join(decision.reasons)
-            )
 
         builder_result = await asyncio.to_thread(self.builder.run, task, workspace_path)
 
@@ -80,6 +91,6 @@ class MiniverseExecutionPipeline:
             preflight_report=preflight,
             builder=builder_result,
             qa_report=qa_report,
-            owner_approval_required=not decision.allowed,
-            owner_approval_reasons=tuple(decision.reasons),
+            owner_approval_required=False,
+            owner_approval_reasons=(),
         )
