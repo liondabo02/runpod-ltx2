@@ -1,0 +1,28 @@
+name: AHOS Core CI
+
+on:
+  push:
+    branches:
+      - feature/ahos-autopilot
+    paths:
+      - 'ahos_core/**'
+      - '.github/workflows/ahos-core-ci.yml'
+  pull_request:
+    paths:
+      - 'ahos_core/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test dependency
+        run: python -m pip install 'pytest>=9.1,<10'
+      - name: Run AHOS core tests
+        env:
+          PYTHONPATH: ahos_core
+        run: python -m pytest ahos_core/tests -q
