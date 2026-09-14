@@ -2,6 +2,7 @@ from .audit import AuditLog
 from .costs import CostGuard
 from .events import Event, EventBus
 from .governance import ActionRequest, AuthorityLevel, GovernanceDecision, GovernancePolicy
+from .mission_store import Mission, MissionStateStore, MissionStatus
 from .registry import AgentRegistry
 
 __all__ = [
@@ -14,4 +15,7 @@ __all__ = [
     "EventBus",
     "GovernanceDecision",
     "GovernancePolicy",
+    "Mission",
+    "MissionStateStore",
+    "MissionStatus",
 ]
