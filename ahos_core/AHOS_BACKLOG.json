@@ -26,11 +26,12 @@
                   {
                       "id":  "AHOS-002",
                       "title":  "Add mission planner and dependency graph",
-                      "status":  "pending",
+                      "status":  "blocked",
                       "risk":  "low",
                       "authority":  "B",
                       "requires_owner_approval":  false,
-                      "task":  "Inside ahos_core only, add a deterministic mission planner that represents missions, dependencies, priority, and readiness without calling external APIs. Include cycle detection and tests. Do not alter governance guardrails."
+                      "task":  "Inside ahos_core only, add a deterministic mission planner that represents missions, dependencies, priority, and readiness without calling external APIs. Include cycle detection and tests. Do not alter governance guardrails.",
+                      "note":  "PermissionError: Owner approval required before execution: external spend requires owner approval; external publishing requires owner approval; destructive action requires owner approval; credential changes require owner approval"
                   },
                   {
                       "id":  "AHOS-003",
