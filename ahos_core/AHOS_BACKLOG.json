@@ -46,11 +46,12 @@
                   {
                       "id":  "AHOS-004",
                       "title":  "Add owner approval inbox",
-                      "status":  "pending",
+                      "status":  "completed",
                       "risk":  "low",
                       "authority":  "B",
                       "requires_owner_approval":  false,
-                      "task":  "Inside ahos_core only, implement a local approval inbox that records blocked C/D action requests and owner decisions in an auditable form. It must never auto-approve. Add tests for pending, approve, reject, and immutable history behavior."
+                      "task":  "Inside ahos_core only, implement a local approval inbox that records blocked C/D action requests and owner decisions in an auditable form. It must never auto-approve. Add tests for pending, approve, reject, and immutable history behavior.",
+                      "completed_at":  "2026-09-15T15:34:18.6630779Z"
                   },
                   {
                       "id":  "AHOS-005",

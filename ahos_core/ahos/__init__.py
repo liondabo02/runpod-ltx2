@@ -1,3 +1,11 @@
+from .approval import (
+    ApprovalDecision,
+    ApprovalEvent,
+    ApprovalEventType,
+    ApprovalInbox,
+    ApprovalRequest,
+    ApprovalStatus,
+)
 from .audit import AuditLog
 from .costs import CostGuard
 from .events import Event, EventBus
@@ -13,6 +21,12 @@ from .planner import (
 from .registry import AgentRegistry, Capability, Department, DepartmentCapabilityRegistry
 
 __all__ = [
+    "ApprovalDecision",
+    "ApprovalEvent",
+    "ApprovalEventType",
+    "ApprovalInbox",
+    "ApprovalRequest",
+    "ApprovalStatus",
     "ActionRequest",
     "AgentRegistry",
     "Capability",
