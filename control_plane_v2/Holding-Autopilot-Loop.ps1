@@ -1,7 +1,9 @@
 param(
     [decimal]$DailyBudgetUsd = 0.10,
+    [decimal]$PaidTaskReserveUsd = 0.035,
     [int]$IdleSleepSeconds = 300,
-    [int]$PlannerIntervalHours = 6
+    [int]$PlannerIntervalHours = 6,
+    [int]$FreeMaintenanceIntervalMinutes = 30
 )
 
 $ErrorActionPreference = 'Stop'
@@ -18,6 +20,7 @@ $Workspace = Join-Path $WorkspaceRoot 'ahos-autopilot'
 $QueueDb = Join-Path $StateDir 'tasks.db'
 $BudgetFile = Join-Path $StateDir 'holding-autopilot-budget.json'
 $PlannerStamp = Join-Path $StateDir 'holding-autopilot-planner.txt'
+$FreeCheckStamp = Join-Path $StateDir 'holding-autopilot-free-check.txt'
 $Branch = 'feature/ahos-autopilot'
 
 New-Item -ItemType Directory -Force -Path $StateDir | Out-Null
@@ -26,6 +29,8 @@ New-Item -ItemType Directory -Force -Path $WorkspaceRoot | Out-Null
 if (-not (Test-Path $EnvFile)) { throw "Missing .env.runtime: $EnvFile" }
 if (-not (Test-Path $WorkerExe)) { throw "Missing worker executable: $WorkerExe" }
 if (-not (Test-Path $PythonExe)) { throw "Missing venv Python: $PythonExe" }
+if ($PaidTaskReserveUsd -le 0) { throw 'PaidTaskReserveUsd must be greater than zero.' }
+if ($PaidTaskReserveUsd -gt $DailyBudgetUsd) { throw 'PaidTaskReserveUsd cannot exceed DailyBudgetUsd.' }
 
 Get-Content $EnvFile | ForEach-Object {
     if ($_ -match '^\s*#' -or $_ -notmatch '=') { return }
@@ -57,12 +62,23 @@ function Get-BudgetState {
     $today = (Get-Date).ToString('yyyy-MM-dd')
     if (Test-Path $BudgetFile) {
         $state = Get-Content $BudgetFile -Raw | ConvertFrom-Json
-        if ($state.date -eq $today) { return $state }
+        if ($state.date -eq $today) {
+            $state | Add-Member -NotePropertyName daily_limit_usd -NotePropertyValue ([double]$DailyBudgetUsd) -Force
+            $state | Add-Member -NotePropertyName paid_task_reserve_usd -NotePropertyValue ([double]$PaidTaskReserveUsd) -Force
+            return $state
+        }
     }
-    return [pscustomobject]@{ date = $today; spent_usd = 0.0 }
+    return [pscustomobject]@{
+        date = $today
+        spent_usd = 0.0
+        daily_limit_usd = [double]$DailyBudgetUsd
+        paid_task_reserve_usd = [double]$PaidTaskReserveUsd
+    }
 }
 
 function Save-BudgetState($state) {
+    $state | Add-Member -NotePropertyName daily_limit_usd -NotePropertyValue ([double]$DailyBudgetUsd) -Force
+    $state | Add-Member -NotePropertyName paid_task_reserve_usd -NotePropertyValue ([double]$PaidTaskReserveUsd) -Force
     $state | ConvertTo-Json | Set-Content -Path $BudgetFile -Encoding utf8
 }
 
@@ -72,7 +88,65 @@ function Add-Cost([decimal]$amount) {
     Save-BudgetState $state
 }
 
+function Get-RemainingBudgetUsd {
+    $state = Get-BudgetState
+    return [decimal]$DailyBudgetUsd - [decimal]$state.spent_usd
+}
+
+function Test-PaidTaskBudgetAvailable {
+    return ((Get-RemainingBudgetUsd) -ge $PaidTaskReserveUsd)
+}
+
+function Free-Maintenance-Is-Due {
+    if (-not (Test-Path $FreeCheckStamp)) { return $true }
+    try {
+        $last = [datetime]::Parse((Get-Content $FreeCheckStamp -Raw))
+        return ((Get-Date).ToUniversalTime() - $last.ToUniversalTime()).TotalMinutes -ge $FreeMaintenanceIntervalMinutes
+    } catch {
+        return $true
+    }
+}
+
+function Invoke-FreeMaintenance {
+    if (-not (Free-Maintenance-Is-Due)) { return $true }
+
+    Write-Host 'FREE MAINTENANCE: running local checks (no AI API calls).'
+    $ok = $true
+    Push-Location $Workspace
+    try {
+        & $PythonExe -m compileall -q ahos_core\ahos
+        if ($LASTEXITCODE -ne 0) { $ok = $false }
+
+        & $PythonExe -c "import json, pathlib; json.loads(pathlib.Path(r'ahos_core/AHOS_BACKLOG.json').read_text(encoding='utf-8-sig'))"
+        if ($LASTEXITCODE -ne 0) { $ok = $false }
+
+        $oldPyPath = $env:PYTHONPATH
+        try {
+            $env:PYTHONPATH = Join-Path $Workspace 'ahos_core'
+            & $PythonExe -m pytest ahos_core\tests -q
+            if ($LASTEXITCODE -ne 0) { $ok = $false }
+        } finally {
+            $env:PYTHONPATH = $oldPyPath
+        }
+    } finally {
+        Pop-Location
+        (Get-Date).ToUniversalTime().ToString('o') | Set-Content $FreeCheckStamp -Encoding ascii
+    }
+
+    if ($ok) {
+        Write-Host 'FREE MAINTENANCE: PASS'
+    } else {
+        Write-Host 'FREE MAINTENANCE: FAIL - paid coding remains paused until reviewed.'
+    }
+    return $ok
+}
+
 function Invoke-AhosTask([string]$instruction) {
+    if (-not (Test-PaidTaskBudgetAvailable)) {
+        $remaining = Get-RemainingBudgetUsd
+        throw "Paid AI budget gate closed. Remaining USD $remaining; reserve required USD $PaidTaskReserveUsd."
+    }
+
     $taskId = & $WorkerExe enqueue $instruction --workspace $Workspace --max-attempts 1
     Write-Host "AHOS TASK: $taskId"
     do {
@@ -135,17 +209,26 @@ function Planner-Is-Due {
     return ((Get-Date).ToUniversalTime() - $last.ToUniversalTime()).TotalHours -ge $PlannerIntervalHours
 }
 
-Write-Host "AHOS AUTOPILOT ONLINE"
+Write-Host 'AHOS AUTOPILOT ONLINE'
 Write-Host "Branch: $Branch"
 Write-Host "Workspace: $Workspace"
 Write-Host "Daily API budget: USD $DailyBudgetUsd"
+Write-Host "Paid-task reserve: USD $PaidTaskReserveUsd"
+Write-Host 'Routing: FREE deterministic checks first -> OpenAI coding only when budget gate permits'
 Write-Host "Smoke mode: $env:MINIVERSE_SMOKE_MODE"
 
 while ($true) {
     try {
-        $budget = Get-BudgetState
-        if ([decimal]$budget.spent_usd -ge $DailyBudgetUsd) {
-            Write-Host "Daily AI budget reached: USD $($budget.spent_usd). Waiting."
+        $freeOk = Invoke-FreeMaintenance
+        if (-not $freeOk) {
+            Start-Sleep -Seconds $IdleSleepSeconds
+            continue
+        }
+
+        if (-not (Test-PaidTaskBudgetAvailable)) {
+            $budget = Get-BudgetState
+            $remaining = Get-RemainingBudgetUsd
+            Write-Host "FREE-ONLY MODE: paid AI paused. Spent USD $($budget.spent_usd); remaining USD $remaining; reserve required USD $PaidTaskReserveUsd."
             Start-Sleep -Seconds $IdleSleepSeconds
             continue
         }
@@ -169,7 +252,7 @@ while ($true) {
         } | Select-Object -First 1
 
         if ($null -eq $next) {
-            if (Planner-Is-Due) {
+            if (Planner-Is-Due -and (Test-PaidTaskBudgetAvailable)) {
                 $planner = @'
 Inspect ahos_core and AHOS_BACKLOG.json. If there are no safe pending development tasks, append at most three concrete low-risk Authority-B tasks that improve local reliability, tests, architecture, observability, or developer ergonomics. Keep IDs unique. Stay strictly inside the isolated ahos_core worktree and preserve the existing governance boundary. Use neutral local-development wording in task titles and descriptions. Modify only ahos_core/AHOS_BACKLOG.json and validate that it remains valid JSON.
 '@
