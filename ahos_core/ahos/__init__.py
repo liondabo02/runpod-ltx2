@@ -19,6 +19,7 @@ from .planner import (
     UnknownDependencyError,
 )
 from .registry import AgentRegistry, Capability, Department, DepartmentCapabilityRegistry
+from .scheduler import LocalScheduler, RetryMetadata, RetryPolicy, ScheduledMission
 
 __all__ = [
     "ApprovalDecision",
@@ -46,5 +47,9 @@ __all__ = [
     "MissionDefinition",
     "MissionPlanner",
     "MissionPlanningError",
+    "LocalScheduler",
+    "RetryMetadata",
+    "RetryPolicy",
+    "ScheduledMission",
     "UnknownDependencyError",
 ]

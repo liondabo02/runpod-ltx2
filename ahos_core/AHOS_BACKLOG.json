@@ -56,11 +56,12 @@
                   {
                       "id":  "AHOS-005",
                       "title":  "Add local scheduler and retry policy",
-                      "status":  "pending",
+                      "status":  "completed",
                       "risk":  "low",
                       "authority":  "B",
                       "requires_owner_approval":  false,
-                      "task":  "Inside ahos_core only, implement deterministic scheduling primitives for local missions with bounded retries and backoff metadata. Keep execution local and side-effect free. Add tests."
+                      "task":  "Inside ahos_core only, implement deterministic scheduling primitives for local missions with bounded retries and backoff metadata. Keep execution local and side-effect free. Add tests.",
+                      "completed_at":  "2026-09-15T15:38:22.8412849Z"
                   },
                   {
                       "id":  "AHOS-006",
