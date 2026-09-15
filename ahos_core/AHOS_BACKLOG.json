@@ -36,11 +36,12 @@
                   {
                       "id":  "AHOS-003",
                       "title":  "Add department capability registry",
-                      "status":  "pending",
+                      "status":  "completed",
                       "risk":  "low",
                       "authority":  "B",
                       "requires_owner_approval":  false,
-                      "task":  "Inside ahos_core only, implement a department and capability registry for future software, media, research, QA, cost, marketing, CRM, and analytics departments. The registry should describe capabilities and authority levels while remaining local and inert. Add tests."
+                      "task":  "Inside ahos_core only, implement a department and capability registry for future software, media, research, QA, cost, marketing, CRM, and analytics departments. The registry should describe capabilities and authority levels while remaining local and inert. Add tests.",
+                      "completed_at":  "2026-09-15T15:27:30.6254535Z"
                   },
                   {
                       "id":  "AHOS-004",

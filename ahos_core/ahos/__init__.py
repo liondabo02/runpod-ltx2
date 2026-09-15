@@ -10,11 +10,14 @@ from .planner import (
     MissionPlanningError,
     UnknownDependencyError,
 )
-from .registry import AgentRegistry
+from .registry import AgentRegistry, Capability, Department, DepartmentCapabilityRegistry
 
 __all__ = [
     "ActionRequest",
     "AgentRegistry",
+    "Capability",
+    "Department",
+    "DepartmentCapabilityRegistry",
     "AuditLog",
     "AuthorityLevel",
     "CostGuard",
