@@ -136,11 +136,12 @@
                   {
                       "id":  "AHOS-013",
                       "title":  "Add work order and department assignment model",
-                      "status":  "pending",
+                      "status":  "completed",
                       "risk":  "low",
                       "authority":  "B",
                       "requires_owner_approval":  false,
-                      "task":  "Inside ahos_core only, implement local work orders that turn approved venture objectives into bounded assignments for departments. Include work-order IDs, venture ID, mission ID, capability requirements, priority, dependencies, budget ceiling metadata, routing result, status, and audit correlation. Keep execution inert and add focused tests."
+                      "task":  "Inside ahos_core only, implement local work orders that turn approved venture objectives into bounded assignments for departments. Include work-order IDs, venture ID, mission ID, capability requirements, priority, dependencies, budget ceiling metadata, routing result, status, and audit correlation. Keep execution inert and add focused tests.",
+                      "completed_at":  "2026-09-16T18:03:40.2841458Z"
                   },
                   {
                       "id":  "AHOS-014",
