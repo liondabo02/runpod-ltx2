@@ -222,6 +222,16 @@
                       "requires_owner_approval":  false,
                       "task":  "Require unambiguous freelance/contract title patterns or exact structured employment metadata for BUSINESS_LEAD. Do not treat generic Consultant titles or plural Contracts nouns as project signals. Keep processing local.",
                       "completed_at":  "2026-09-16T18:44:29.1188264Z"
+                  },
+                  {
+                      "id":  "AHOS-022",
+                      "title":  "Add official Freelancer project-search adapter",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Add a read-only Freelancer.com project-search adapter around the official Python SDK. Keep authentication separate, support injected fake search data for tests, and convert project search results into AHOS opportunity candidates. No bidding, messaging, payments, or other external writes.",
+                      "completed_at":  "2026-09-16T18:48:18.7111172Z"
                   }
               ]
 }
