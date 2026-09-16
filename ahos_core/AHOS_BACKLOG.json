@@ -242,6 +242,16 @@
                       "requires_owner_approval":  false,
                       "task":  "Create the first real virtual-worker layer for AHOS: worker identities, roles, departments, capabilities, task slots, assignment/release, pause/resume, and per-worker AI budget gates. Add an initial multi-department virtual employee roster. Paid AI must be disabled by default. No external actions.",
                       "completed_at":  "2026-09-16T18:54:01.7103848Z"
+                  },
+                  {
+                      "id":  "AHOS-024",
+                      "title":  "Connect virtual employees to task routing and QA lifecycle",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Add deterministic virtual-workforce dispatch: capability matching, single-worker task leases, owner-approval gates for paid/external/destructive/secret-touching work, worker completion, QA handoff, and final QA completion. No LLM or network calls.",
+                      "completed_at":  "2026-09-16T18:55:48.2619970Z"
                   }
               ]
 }
