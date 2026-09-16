@@ -162,6 +162,16 @@
                       "requires_owner_approval":  false,
                       "task":  "Inside ahos_core only, connect opportunity scoring, venture registry, department routing, work orders, financial snapshots, and immutable audit events into one local-only holding operating coordinator. No external side effects. Add focused end-to-end tests.",
                       "completed_at":  "2026-09-16T18:09:57.6404351Z"
+                  },
+                  {
+                      "id":  "AHOS-016",
+                      "title":  "Add read-only real-world opportunity intake adapters",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, add read-only public HTTP JSON/RSS opportunity intake adapters with explicit source configuration, stable candidate IDs, local persistence, and duplicate protection. No posting, outreach, login, payment, purchase, or other external side effects. Add focused tests using injected local fetchers so tests make no network calls.",
+                      "completed_at":  "2026-09-16T18:13:30.3144486Z"
                   }
               ]
 }
