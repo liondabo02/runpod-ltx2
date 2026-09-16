@@ -192,6 +192,16 @@
                       "requires_owner_approval":  false,
                       "task":  "Inside ahos_core only, add deterministic local triage for collected opportunity candidates. Distinguish project/contract-like opportunities from human employment roles, score technical/automation relevance, and persist ranked results locally. No OpenAI calls, no applications, no outreach, no payments, no external writes.",
                       "completed_at":  "2026-09-16T18:33:27.5550456Z"
+                  },
+                  {
+                      "id":  "AHOS-019",
+                      "title":  "Separate real business leads from employee job postings",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Refine local opportunity triage so highly technical full-time employment listings are not mislabeled as holding business opportunities. Require explicit freelance, contractor, consulting, or similar project signals for business-lead promotion. Keep all processing local and free.",
+                      "completed_at":  "2026-09-16T18:36:22.5974326Z"
                   }
               ]
 }

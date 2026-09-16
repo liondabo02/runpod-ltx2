@@ -11,8 +11,9 @@ from .opportunity_intake import OpportunityCandidate, OpportunityCandidateStore
 
 
 class CandidateDisposition(str, Enum):
-    PRIORITY = "priority"
+    BUSINESS_LEAD = "business_lead"
     REVIEW = "review"
+    TECH_JOB = "tech_job"
     LOW_FIT = "low_fit"
     HUMAN_JOB = "human_job"
 
@@ -29,9 +30,11 @@ class CandidateTriage:
     reasons: tuple[str, ...]
     matched_positive_terms: tuple[str, ...]
     matched_negative_terms: tuple[str, ...]
+    explicit_project_signal: bool
+    employment_signal: bool
 
 
-_POSITIVE_TERMS: dict[str, int] = {
+_TECH_TERMS: dict[str, int] = {
     "automation": 18,
     "python": 16,
     "api": 14,
@@ -48,12 +51,12 @@ _POSITIVE_TERMS: dict[str, int] = {
     "saas": 6,
     "security": 5,
     "analytics": 5,
-    "contract": 12,
-    "contractor": 14,
-    "freelance": 16,
+    "shopify": 6,
+    "react": 5,
+    ".net": 5,
 }
 
-_NEGATIVE_TERMS: dict[str, int] = {
+_LOW_FIT_TERMS: dict[str, int] = {
     "nurse": 35,
     "physician": 40,
     "driver": 30,
@@ -68,37 +71,74 @@ _NEGATIVE_TERMS: dict[str, int] = {
     "aircraft": 18,
     "care navigator": 20,
     "healthcare assistant": 20,
+    "mechanic": 18,
 }
 
-_EMPLOYMENT_TERMS = (
+# Strong signals that the listing can plausibly be taken on as project/contract work
+# by a business rather than requiring a person to accept employment.
+_PROJECT_SIGNALS = (
+    "freelance",
+    "freelancer",
+    "contractor",
+    "independent contractor",
+    "consultant",
+    "consulting",
+    "contract role",
+    "contract position",
+    "fixed-term contract",
+    "project-based",
+    "project based",
+    "short-term contract",
+    "short term contract",
+    "temporary contract",
+    "hourly contract",
+    "1099",
+    "statement of work",
+    "sow",
+)
+
+_EMPLOYMENT_SIGNALS = (
     "full-time",
     "full time",
+    "permanent",
     "employee",
     "employment",
     "benefits",
     "salary",
+    "annual salary",
     "years of experience",
     "bachelor",
     "degree",
+    "401k",
+    "401(k)",
+    "pto",
+    "paid time off",
+    "health insurance",
+    "vacation",
     "shift",
+    "equity",
 )
 
-_PROJECT_TERMS = (
-    "contract",
-    "contractor",
-    "freelance",
-    "project",
-    "consulting",
-    "consultant",
-    "temporary",
-    "part-time",
-    "part time",
+_DELIVERABLE_SIGNALS = (
+    "build ",
+    "implement ",
+    "integrate ",
+    "migrate ",
+    "automate ",
+    "develop ",
+    "design ",
+    "deploy ",
+    "fix ",
+    "setup ",
+    "set up ",
+    "audit ",
+    "optimize ",
 )
 
 
 def _normalized_text(candidate: OpportunityCandidate) -> str:
     metadata_bits = []
-    for key in ("company", "location", "tags", "position"):
+    for key in ("company", "location", "tags", "position", "type"):
         value = candidate.raw_metadata.get(key)
         if value:
             metadata_bits.append(str(value))
@@ -116,51 +156,65 @@ def _normalized_text(candidate: OpportunityCandidate) -> str:
 def triage_candidate(candidate: OpportunityCandidate) -> CandidateTriage:
     text = _normalized_text(candidate)
 
-    score = 30
+    score = 25
     positive: list[str] = []
     negative: list[str] = []
     reasons: list[str] = []
 
-    for term, weight in _POSITIVE_TERMS.items():
+    for term, weight in _TECH_TERMS.items():
         if term in text:
             score += weight
             positive.append(term)
 
-    for term, weight in _NEGATIVE_TERMS.items():
+    for term, weight in _LOW_FIT_TERMS.items():
         if term in text:
             score -= weight
             negative.append(term)
 
-    project_like = [term for term in _PROJECT_TERMS if term in text]
-    employment_like = [term for term in _EMPLOYMENT_TERMS if term in text]
+    explicit_project_terms = [term for term in _PROJECT_SIGNALS if term in text]
+    employment_terms = [term for term in _EMPLOYMENT_SIGNALS if term in text]
+    deliverables = [term for term in _DELIVERABLE_SIGNALS if term in text]
 
-    if project_like:
-        score += min(20, 6 * len(project_like))
-        reasons.append("project/contract language detected")
+    explicit_project_signal = bool(explicit_project_terms)
+    employment_signal = bool(employment_terms)
 
-    if employment_like and not project_like:
-        score -= min(25, 5 * len(employment_like))
-        reasons.append("looks like a human employment role")
+    if explicit_project_signal:
+        score += 30
+        reasons.append("explicit freelance/contract/consulting signal")
+
+    if deliverables:
+        score += min(12, 3 * len(deliverables))
+        reasons.append("clear delivery-oriented language")
+
+    if employment_signal and not explicit_project_signal:
+        score -= min(35, 6 * len(employment_terms))
+        reasons.append("employment-style listing")
 
     if candidate.category in {"software", "devops", "remote-work"}:
         score += 5
-        reasons.append(f"source category: {candidate.category}")
 
     score = max(0, min(100, score))
 
-    if employment_like and not project_like and score < 55:
+    # Crucial safety/quality gate:
+    # a normal employment role is never promoted to BUSINESS_LEAD just because
+    # it is highly technical. A strong project/contract signal is required.
+    if explicit_project_signal and score >= 65:
+        disposition = CandidateDisposition.BUSINESS_LEAD
+    elif explicit_project_signal and score >= 45:
+        disposition = CandidateDisposition.REVIEW
+    elif employment_signal and positive:
+        disposition = CandidateDisposition.TECH_JOB
+    elif employment_signal:
         disposition = CandidateDisposition.HUMAN_JOB
-    elif score >= 70:
-        disposition = CandidateDisposition.PRIORITY
-    elif score >= 50:
+    elif score >= 55 and positive:
         disposition = CandidateDisposition.REVIEW
     else:
         disposition = CandidateDisposition.LOW_FIT
 
     if positive:
-        reasons.append("matched useful technical/business terms")
+        reasons.append("technical relevance detected")
     if negative:
-        reasons.append("matched low-fit terms")
+        reasons.append("low-fit role signals detected")
 
     return CandidateTriage(
         candidate_id=candidate.candidate_id,
@@ -173,6 +227,8 @@ def triage_candidate(candidate: OpportunityCandidate) -> CandidateTriage:
         reasons=tuple(reasons),
         matched_positive_terms=tuple(sorted(set(positive))),
         matched_negative_terms=tuple(sorted(set(negative))),
+        explicit_project_signal=explicit_project_signal,
+        employment_signal=employment_signal,
     )
 
 
@@ -180,7 +236,22 @@ def triage_candidates(
     candidates: Iterable[OpportunityCandidate],
 ) -> tuple[CandidateTriage, ...]:
     results = [triage_candidate(candidate) for candidate in candidates]
-    results.sort(key=lambda item: (-item.score, item.title.lower(), item.candidate_id))
+
+    rank = {
+        CandidateDisposition.BUSINESS_LEAD: 0,
+        CandidateDisposition.REVIEW: 1,
+        CandidateDisposition.TECH_JOB: 2,
+        CandidateDisposition.LOW_FIT: 3,
+        CandidateDisposition.HUMAN_JOB: 4,
+    }
+    results.sort(
+        key=lambda item: (
+            rank[item.disposition],
+            -item.score,
+            item.title.lower(),
+            item.candidate_id,
+        )
+    )
     return tuple(results)
 
 
