@@ -152,6 +152,16 @@
                       "requires_owner_approval":  false,
                       "task":  "Inside ahos_core only, implement a local append-only financial ledger for simulated or recorded revenue, costs, commitments, and budget allocations plus deterministic venture-level unit economics snapshots. Do not initiate payments, purchases, transfers, billing, or other external financial actions. Add focused tests.",
                       "completed_at":  "2026-09-16T18:07:47.5721366Z"
+                  },
+                  {
+                      "id":  "AHOS-015",
+                      "title":  "Add local holding operating cycle coordinator",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, connect opportunity scoring, venture registry, department routing, work orders, financial snapshots, and immutable audit events into one local-only holding operating coordinator. No external side effects. Add focused end-to-end tests.",
+                      "completed_at":  "2026-09-16T18:09:57.6404351Z"
                   }
               ]
 }
