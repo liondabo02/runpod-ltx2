@@ -342,6 +342,16 @@
                       "requires_owner_approval":  true,
                       "task":  "Give the AI department manager the exact capability catalog of routable workers and reject invented capability names. Re-run one real manager planning call with local worker execution.",
                       "completed_at":  "2026-09-16T20:05:14.8793941Z"
+                  },
+                  {
+                      "id":  "AHOS-034",
+                      "title":  "Prove full AI manager-to-worker chain",
+                      "status":  "completed",
+                      "risk":  "medium",
+                      "authority":  "C",
+                      "requires_owner_approval":  true,
+                      "completed_at":  "2026-09-16T20:18:44.7494398Z",
+                      "task":  "Prove one end-to-end owner-approved mission with a real AI department manager, real AI researcher, deterministic QA, verified research handoff, real AI software engineer, and final QA. Keep all work local; no publishing, messaging, payments, deployment, destructive actions, or secret access."
                   }
               ]
 }
