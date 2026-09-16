@@ -66,11 +66,12 @@
                   {
                       "id":  "AHOS-006",
                       "title":  "Add metrics snapshot model",
-                      "status":  "pending",
+                      "status":  "completed",
                       "risk":  "low",
                       "authority":  "B",
                       "requires_owner_approval":  false,
-                      "task":  "Inside ahos_core only, add local metrics models for mission counts, success and failure rate, latency, and estimated cost. Add tests and a small reporting helper."
+                      "task":  "Inside ahos_core only, add local metrics models for mission counts, success and failure rate, latency, and estimated cost. Add tests and a small reporting helper.",
+                      "completed_at":  "2026-09-16T14:03:35.1527710Z"
                   },
                   {
                       "id":  "AHOS-007",

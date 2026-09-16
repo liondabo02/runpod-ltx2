@@ -11,6 +11,7 @@ from .costs import CostGuard
 from .events import Event, EventBus
 from .governance import ActionRequest, AuthorityLevel, GovernanceDecision, GovernancePolicy
 from .mission_store import Mission, MissionStateStore, MissionStatus
+from .metrics import MissionMetric, MetricsSnapshot, report_metrics
 from .planner import (
     DependencyCycleError,
     MissionDefinition,
@@ -43,6 +44,9 @@ __all__ = [
     "Mission",
     "MissionStateStore",
     "MissionStatus",
+    "MissionMetric",
+    "MetricsSnapshot",
+    "report_metrics",
     "DependencyCycleError",
     "MissionDefinition",
     "MissionPlanner",
