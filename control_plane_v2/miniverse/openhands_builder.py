@@ -65,7 +65,6 @@ class OpenHandsBuilder:
         conversation = Conversation(
             agent=agent,
             workspace=str(workspace_path),
-            max_budget_per_run=self.settings.max_budget_per_run_usd,
         )
         conversation.send_message(
             "Work only inside this isolated workspace. Do not modify production, credentials, billing, volumes, "
