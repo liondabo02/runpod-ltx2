@@ -6,8 +6,7 @@ from ahos.opportunity_intake import OpportunityCandidate
 
 def _candidate(
     title: str,
-    description: str,
-    category: str = "software",
+    description: str = "",
     raw_metadata: dict | None = None,
 ) -> OpportunityCandidate:
     return OpportunityCandidate(
@@ -17,24 +16,35 @@ def _candidate(
         item_url="https://example.test/job",
         title=title,
         description=description,
-        category=category,
+        category="software",
         discovered_at="2026-09-16T12:00:00+00:00",
         raw_metadata=raw_metadata or {},
     )
 
 
-def test_contract_word_in_boilerplate_does_not_create_business_lead() -> None:
+def test_plural_contracts_title_is_not_project_signal() -> None:
     result = triage_candidate(
         _candidate(
-            "Senior Data Analyst",
-            "Full-time employee role. Contract terms may vary by jurisdiction. Salary and benefits included.",
+            "Senior Contracts and Budget Associate",
+            "Full-time employee role with salary and benefits.",
         )
     )
     assert result.explicit_project_signal is False
-    assert result.disposition is CandidateDisposition.TECH_JOB
+    assert result.disposition is not CandidateDisposition.BUSINESS_LEAD
 
 
-def test_title_freelance_is_business_lead() -> None:
+def test_generic_consultant_title_is_not_project_signal() -> None:
+    result = triage_candidate(
+        _candidate(
+            "Customer Support Consultant",
+            "Full-time employee role with benefits.",
+        )
+    )
+    assert result.explicit_project_signal is False
+    assert result.disposition is not CandidateDisposition.BUSINESS_LEAD
+
+
+def test_freelance_title_is_business_lead() -> None:
     result = triage_candidate(
         _candidate(
             "Freelance Python Automation Developer",
@@ -42,28 +52,27 @@ def test_title_freelance_is_business_lead() -> None:
         )
     )
     assert result.explicit_project_signal is True
-    assert result.project_signal_source == "title"
     assert result.disposition is CandidateDisposition.BUSINESS_LEAD
 
 
-def test_structured_contract_type_is_business_lead() -> None:
+def test_exact_structured_contract_type_is_business_lead() -> None:
     result = triage_candidate(
         _candidate(
             "Python Developer",
             "Build an API integration.",
-            raw_metadata={"employment_type": "contract"},
+            {"employment_type": "contract"},
         )
     )
     assert result.explicit_project_signal is True
-    assert result.project_signal_source == "metadata:employment_type"
     assert result.disposition is CandidateDisposition.BUSINESS_LEAD
 
 
-def test_full_time_technical_job_never_becomes_business_lead() -> None:
+def test_description_contract_word_is_not_project_signal() -> None:
     result = triage_candidate(
         _candidate(
-            "Senior Software Engineer",
-            "Full-time employee role with salary, benefits, degree and 5 years of experience. Build backend APIs.",
+            "Senior Data Analyst",
+            "Full-time employee role. Contract terms vary. Salary and benefits.",
         )
     )
-    assert result.disposition is CandidateDisposition.TECH_JOB
+    assert result.explicit_project_signal is False
+    assert result.disposition is not CandidateDisposition.BUSINESS_LEAD

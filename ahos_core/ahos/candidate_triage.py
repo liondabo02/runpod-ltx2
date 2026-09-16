@@ -75,36 +75,33 @@ _LOW_FIT_TERMS: dict[str, int] = {
     "mechanic": 18,
 }
 
-# These are strong enough ONLY when they occur in the title or structured
-# job-type metadata. We intentionally do not trust arbitrary description text
-# because job-board boilerplate can contain words like "contract".
-_STRONG_PROJECT_TITLE_TERMS = (
-    "freelance",
-    "freelancer",
-    "contractor",
-    "independent contractor",
-    "consultant",
-    "consulting",
-    "contract ",
-    " contract",
-    "fixed-term",
-    "fixed term",
-    "project-based",
-    "project based",
-    "temporary",
+# A title only counts as an explicit project/freelance opportunity when it
+# contains strong, unambiguous wording. Generic job titles such as "Consultant"
+# and plural nouns such as "Contracts" do NOT qualify.
+_STRONG_TITLE_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
+    ("freelance", re.compile(r"\bfreelanc(?:e|er)\b", re.I)),
+    ("independent contractor", re.compile(r"\bindependent\s+contractor\b", re.I)),
+    ("contractor", re.compile(r"\bcontractor\b", re.I)),
+    ("contract role", re.compile(r"\bcontract\s+(?:role|position|job|engagement)\b", re.I)),
+    ("fixed-term", re.compile(r"\bfixed[-\s]term\b", re.I)),
+    ("project-based", re.compile(r"\bproject[-\s]based\b", re.I)),
+    ("temporary contract", re.compile(r"\btemporary\s+contract\b", re.I)),
 )
 
-_STRUCTURED_PROJECT_VALUES = (
+# Structured metadata is much more trustworthy than arbitrary description text.
+_STRUCTURED_PROJECT_VALUES = {
     "freelance",
+    "freelancer",
     "contract",
     "contractor",
-    "consulting",
-    "consultant",
-    "temporary",
-    "fixed-term",
-    "fixed term",
-    "project",
-)
+    "independent contractor",
+    "consulting contract",
+    "temporary contract",
+    "fixed-term contract",
+    "fixed term contract",
+    "project-based contract",
+    "project based contract",
+}
 
 _EMPLOYMENT_SIGNALS = (
     "full-time",
@@ -168,13 +165,14 @@ def _full_text(candidate: OpportunityCandidate) -> str:
 
 
 def _project_signal(candidate: OpportunityCandidate) -> tuple[bool, str | None]:
-    title = _normalize(candidate.title)
-    if any(term in title for term in _STRONG_PROJECT_TITLE_TERMS):
-        return True, "title"
+    title = candidate.title or ""
+    for label, pattern in _STRONG_TITLE_PATTERNS:
+        if pattern.search(title):
+            return True, f"title:{label}"
 
     for key in ("type", "job_type", "employment_type", "contract_type"):
         value = _normalize(candidate.raw_metadata.get(key))
-        if value and any(term in value for term in _STRUCTURED_PROJECT_VALUES):
+        if value in _STRUCTURED_PROJECT_VALUES:
             return True, f"metadata:{key}"
 
     return False, None
@@ -219,8 +217,6 @@ def triage_candidate(candidate: OpportunityCandidate) -> CandidateTriage:
 
     score = max(0, min(100, score))
 
-    # A BUSINESS_LEAD requires a strong signal from title/structured metadata.
-    # Technical relevance alone can never promote a normal employee listing.
     if explicit_project_signal and score >= 65:
         disposition = CandidateDisposition.BUSINESS_LEAD
     elif explicit_project_signal:

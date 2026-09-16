@@ -212,6 +212,16 @@
                       "requires_owner_approval":  false,
                       "task":  "Refine candidate triage so normal job-board descriptions cannot become business leads merely because boilerplate contains words such as contract. Require project signals from the title or structured employment metadata. Keep processing local and deterministic.",
                       "completed_at":  "2026-09-16T18:41:25.3609692Z"
+                  },
+                  {
+                      "id":  "AHOS-021",
+                      "title":  "Eliminate false freelance signals in employee job titles",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Require unambiguous freelance/contract title patterns or exact structured employment metadata for BUSINESS_LEAD. Do not treat generic Consultant titles or plural Contracts nouns as project signals. Keep processing local.",
+                      "completed_at":  "2026-09-16T18:44:29.1188264Z"
                   }
               ]
 }
