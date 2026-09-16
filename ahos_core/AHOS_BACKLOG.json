@@ -262,6 +262,16 @@
                       "requires_owner_approval":  false,
                       "task":  "Add an executable virtual-worker runtime that takes a routed WorkItem, invokes an injected worker executor, releases the worker, hands successful work to QA, and only completes after QA passes. Missing executors, worker failures, QA failures, paid work, and external actions must fail closed. No OpenAI calls.",
                       "completed_at":  "2026-09-16T18:58:16.8354086Z"
+                  },
+                  {
+                      "id":  "AHOS-026",
+                      "title":  "Add OpenHands execution bridge for virtual software workers",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Add a zero-cost tested adapter that converts AHOS WorkItems into isolated OpenHands-style builder executions and maps builder results back into the virtual-worker runtime. Keep the real builder injected, preserve approval gates, and make no live AI calls in this task.",
+                      "completed_at":  "2026-09-16T19:01:38.8642323Z"
                   }
               ]
 }
