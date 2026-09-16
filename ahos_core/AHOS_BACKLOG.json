@@ -112,6 +112,42 @@
                       "requires_owner_approval":  false,
                       "task":  "Inside ahos_core only, implement a local mission execution envelope and dispatcher that combines mission state, dependency readiness, department routing, approval requirements, retry policy, audit metadata, and execution result state. Keep execution inert and side-effect free. Add focused tests.",
                       "completed_at":  "2026-09-16T16:44:41.7647898Z"
+                  },
+                  {
+                      "id":  "AHOS-011",
+                      "title":  "Add opportunity intake and local scoring model",
+                      "status":  "pending",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, implement a local opportunity intake model and deterministic scoring pipeline for potential work, products, services, and internal initiatives. Store source, category, expected value, effort, risk, confidence, strategic fit, and status. Keep it local and inert: no scraping, outreach, purchasing, publishing, or external side effects. Add focused tests."
+                  },
+                  {
+                      "id":  "AHOS-012",
+                      "title":  "Add venture registry and lifecycle state machine",
+                      "status":  "pending",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, add a persistent local venture/company registry with lifecycle states such as idea, validating, building, operating, paused, and retired. Link ventures to opportunities, departments, objectives, budgets, and audit metadata. Enforce deterministic valid state transitions and add focused tests. No external side effects."
+                  },
+                  {
+                      "id":  "AHOS-013",
+                      "title":  "Add work order and department assignment model",
+                      "status":  "pending",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, implement local work orders that turn approved venture objectives into bounded assignments for departments. Include work-order IDs, venture ID, mission ID, capability requirements, priority, dependencies, budget ceiling metadata, routing result, status, and audit correlation. Keep execution inert and add focused tests."
+                  },
+                  {
+                      "id":  "AHOS-014",
+                      "title":  "Add local financial ledger and unit economics snapshot",
+                      "status":  "pending",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, implement a local append-only financial ledger for simulated or recorded revenue, costs, commitments, and budget allocations plus deterministic venture-level unit economics snapshots. Do not initiate payments, purchases, transfers, billing, or other external financial actions. Add focused tests."
                   }
               ]
 }
