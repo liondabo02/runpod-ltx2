@@ -146,11 +146,12 @@
                   {
                       "id":  "AHOS-014",
                       "title":  "Add local financial ledger and unit economics snapshot",
-                      "status":  "pending",
+                      "status":  "completed",
                       "risk":  "low",
                       "authority":  "B",
                       "requires_owner_approval":  false,
-                      "task":  "Inside ahos_core only, implement a local append-only financial ledger for simulated or recorded revenue, costs, commitments, and budget allocations plus deterministic venture-level unit economics snapshots. Do not initiate payments, purchases, transfers, billing, or other external financial actions. Add focused tests."
+                      "task":  "Inside ahos_core only, implement a local append-only financial ledger for simulated or recorded revenue, costs, commitments, and budget allocations plus deterministic venture-level unit economics snapshots. Do not initiate payments, purchases, transfers, billing, or other external financial actions. Add focused tests.",
+                      "completed_at":  "2026-09-16T18:07:47.5721366Z"
                   }
               ]
 }
