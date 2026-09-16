@@ -292,6 +292,26 @@
                       "requires_owner_approval":  true,
                       "completed_at":  "2026-09-16T19:11:00.9759263Z",
                       "task":  "Allow explicitly owner-approved paid work through the OpenHands worker adapter while unapproved protected work remains blocked. Validate locally, then retry one tiny live AI worker smoke."
+                  },
+                  {
+                      "id":  "AHOS-029",
+                      "title":  "Align OpenHands builder with installed SDK conversation API",
+                      "status":  "completed",
+                      "risk":  "medium",
+                      "authority":  "C",
+                      "requires_owner_approval":  true,
+                      "completed_at":  "2026-09-16T19:15:06.4678052Z",
+                      "task":  "Remove the unsupported max_budget_per_run Conversation keyword for the installed OpenHands SDK while retaining max_iteration_per_run, AHOS owner approval, and worker budget gates. Run compatibility tests before one tiny live retry."
+                  },
+                  {
+                      "id":  "AHOS-030",
+                      "title":  "Add department manager and multi-worker mission orchestrator",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Create a department-manager planning layer and a dependency-aware multi-worker mission orchestrator. A manager leases itself for planning, produces a validated step graph through an injected planner, routes each step to the correct virtual worker, hands completed-step summaries downstream, requires QA on every step, and stops the mission on failures or approval gates. No live AI or external actions in this task.",
+                      "completed_at":  "2026-09-16T19:41:54.7408056Z"
                   }
               ]
 }
