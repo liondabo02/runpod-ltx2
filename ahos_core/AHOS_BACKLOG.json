@@ -202,6 +202,16 @@
                       "requires_owner_approval":  false,
                       "task":  "Refine local opportunity triage so highly technical full-time employment listings are not mislabeled as holding business opportunities. Require explicit freelance, contractor, consulting, or similar project signals for business-lead promotion. Keep all processing local and free.",
                       "completed_at":  "2026-09-16T18:36:22.5974326Z"
+                  },
+                  {
+                      "id":  "AHOS-020",
+                      "title":  "Require strong project-signal provenance for business leads",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Refine candidate triage so normal job-board descriptions cannot become business leads merely because boilerplate contains words such as contract. Require project signals from the title or structured employment metadata. Keep processing local and deterministic.",
+                      "completed_at":  "2026-09-16T18:41:25.3609692Z"
                   }
               ]
 }

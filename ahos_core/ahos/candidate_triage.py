@@ -31,6 +31,7 @@ class CandidateTriage:
     matched_positive_terms: tuple[str, ...]
     matched_negative_terms: tuple[str, ...]
     explicit_project_signal: bool
+    project_signal_source: str | None
     employment_signal: bool
 
 
@@ -74,27 +75,35 @@ _LOW_FIT_TERMS: dict[str, int] = {
     "mechanic": 18,
 }
 
-# Strong signals that the listing can plausibly be taken on as project/contract work
-# by a business rather than requiring a person to accept employment.
-_PROJECT_SIGNALS = (
+# These are strong enough ONLY when they occur in the title or structured
+# job-type metadata. We intentionally do not trust arbitrary description text
+# because job-board boilerplate can contain words like "contract".
+_STRONG_PROJECT_TITLE_TERMS = (
     "freelance",
     "freelancer",
     "contractor",
     "independent contractor",
     "consultant",
     "consulting",
-    "contract role",
-    "contract position",
-    "fixed-term contract",
+    "contract ",
+    " contract",
+    "fixed-term",
+    "fixed term",
     "project-based",
     "project based",
-    "short-term contract",
-    "short term contract",
-    "temporary contract",
-    "hourly contract",
-    "1099",
-    "statement of work",
-    "sow",
+    "temporary",
+)
+
+_STRUCTURED_PROJECT_VALUES = (
+    "freelance",
+    "contract",
+    "contractor",
+    "consulting",
+    "consultant",
+    "temporary",
+    "fixed-term",
+    "fixed term",
+    "project",
 )
 
 _EMPLOYMENT_SIGNALS = (
@@ -136,26 +145,43 @@ _DELIVERABLE_SIGNALS = (
 )
 
 
-def _normalized_text(candidate: OpportunityCandidate) -> str:
+def _normalize(value: object) -> str:
+    return re.sub(r"\s+", " ", str(value or "")).strip().lower()
+
+
+def _full_text(candidate: OpportunityCandidate) -> str:
     metadata_bits = []
-    for key in ("company", "location", "tags", "position", "type"):
+    for key in ("company", "location", "tags", "position"):
         value = candidate.raw_metadata.get(key)
         if value:
             metadata_bits.append(str(value))
-    text = " ".join(
-        [
-            candidate.title,
-            candidate.description,
-            candidate.category,
-            *metadata_bits,
-        ]
+    return _normalize(
+        " ".join(
+            [
+                candidate.title,
+                candidate.description,
+                candidate.category,
+                *metadata_bits,
+            ]
+        )
     )
-    return re.sub(r"\s+", " ", text).strip().lower()
+
+
+def _project_signal(candidate: OpportunityCandidate) -> tuple[bool, str | None]:
+    title = _normalize(candidate.title)
+    if any(term in title for term in _STRONG_PROJECT_TITLE_TERMS):
+        return True, "title"
+
+    for key in ("type", "job_type", "employment_type", "contract_type"):
+        value = _normalize(candidate.raw_metadata.get(key))
+        if value and any(term in value for term in _STRUCTURED_PROJECT_VALUES):
+            return True, f"metadata:{key}"
+
+    return False, None
 
 
 def triage_candidate(candidate: OpportunityCandidate) -> CandidateTriage:
-    text = _normalized_text(candidate)
-
+    text = _full_text(candidate)
     score = 25
     positive: list[str] = []
     negative: list[str] = []
@@ -171,20 +197,18 @@ def triage_candidate(candidate: OpportunityCandidate) -> CandidateTriage:
             score -= weight
             negative.append(term)
 
-    explicit_project_terms = [term for term in _PROJECT_SIGNALS if term in text]
+    explicit_project_signal, signal_source = _project_signal(candidate)
     employment_terms = [term for term in _EMPLOYMENT_SIGNALS if term in text]
     deliverables = [term for term in _DELIVERABLE_SIGNALS if term in text]
-
-    explicit_project_signal = bool(explicit_project_terms)
     employment_signal = bool(employment_terms)
 
     if explicit_project_signal:
         score += 30
-        reasons.append("explicit freelance/contract/consulting signal")
+        reasons.append(f"strong project signal from {signal_source}")
 
     if deliverables:
         score += min(12, 3 * len(deliverables))
-        reasons.append("clear delivery-oriented language")
+        reasons.append("delivery-oriented language")
 
     if employment_signal and not explicit_project_signal:
         score -= min(35, 6 * len(employment_terms))
@@ -195,12 +219,11 @@ def triage_candidate(candidate: OpportunityCandidate) -> CandidateTriage:
 
     score = max(0, min(100, score))
 
-    # Crucial safety/quality gate:
-    # a normal employment role is never promoted to BUSINESS_LEAD just because
-    # it is highly technical. A strong project/contract signal is required.
+    # A BUSINESS_LEAD requires a strong signal from title/structured metadata.
+    # Technical relevance alone can never promote a normal employee listing.
     if explicit_project_signal and score >= 65:
         disposition = CandidateDisposition.BUSINESS_LEAD
-    elif explicit_project_signal and score >= 45:
+    elif explicit_project_signal:
         disposition = CandidateDisposition.REVIEW
     elif employment_signal and positive:
         disposition = CandidateDisposition.TECH_JOB
@@ -228,6 +251,7 @@ def triage_candidate(candidate: OpportunityCandidate) -> CandidateTriage:
         matched_positive_terms=tuple(sorted(set(positive))),
         matched_negative_terms=tuple(sorted(set(negative))),
         explicit_project_signal=explicit_project_signal,
+        project_signal_source=signal_source,
         employment_signal=employment_signal,
     )
 
@@ -236,7 +260,6 @@ def triage_candidates(
     candidates: Iterable[OpportunityCandidate],
 ) -> tuple[CandidateTriage, ...]:
     results = [triage_candidate(candidate) for candidate in candidates]
-
     rank = {
         CandidateDisposition.BUSINESS_LEAD: 0,
         CandidateDisposition.REVIEW: 1,
@@ -277,5 +300,4 @@ def triage_store(
                 )
                 + "\n"
             )
-
     return results
