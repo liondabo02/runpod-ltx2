@@ -96,11 +96,12 @@
                   {
                       "id":  "AHOS-009",
                       "title":  "Add department routing engine",
-                      "status":  "pending",
+                      "status":  "completed",
                       "risk":  "low",
                       "authority":  "B",
                       "requires_owner_approval":  false,
-                      "task":  "Inside ahos_core only, implement a deterministic department routing engine that matches missions to registered department capabilities, returns ranked local routing candidates, explains the routing decision, and respects authority levels. Add focused tests. Do not call external services."
+                      "task":  "Inside ahos_core only, implement a deterministic department routing engine that matches missions to registered department capabilities, returns ranked local routing candidates, explains the routing decision, and respects authority levels. Add focused tests. Do not call external services.",
+                      "completed_at":  "2026-09-16T16:38:56.7840833Z"
                   },
                   {
                       "id":  "AHOS-010",
