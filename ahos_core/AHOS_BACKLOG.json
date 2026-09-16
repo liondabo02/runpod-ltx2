@@ -362,6 +362,15 @@
                       "requires_owner_approval":  false,
                       "task":  "Add a local SQLite-backed persistent mission queue and autonomous company loop with atomic leases, bounded retries, stale-lease recovery, blocked-mission fail-closed behavior, result audit persistence, run-once, run-until-idle, and continuous polling primitives. No AI or external actions in this step.",
                       "completed_at":  "2026-09-16T20:23:15.2924369Z"
+                  },
+                  {
+                      "id":  "AHOS-036",
+                      "title":  "Connect persistent company queue to full AI mission chain",
+                      "status":  "pending",
+                      "risk":  "medium",
+                      "authority":  "C",
+                      "requires_owner_approval":  true,
+                      "task":  "Connect the persistent SQLite company mission queue and CompanyLoop to the proven AI manager, AI researcher, QA, handoff, AI developer, and QA chain. Prove one owner-approved queued live mission end-to-end with no external business actions."
                   }
               ]
 }
