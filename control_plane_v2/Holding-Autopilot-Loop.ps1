@@ -1,4 +1,4 @@
-param(
+﻿param(
     [decimal]$DailyBudgetUsd = 0.10,
     [decimal]$PaidTaskReserveUsd = 0.035,
     [int]$IdleSleepSeconds = 300,
@@ -20,7 +20,8 @@ $Workspace = Join-Path $WorkspaceRoot 'ahos-autopilot'
 $QueueDb = Join-Path $StateDir 'tasks.db'
 $BudgetFile = Join-Path $StateDir 'holding-autopilot-budget.json'
 $PlannerStamp = Join-Path $StateDir 'holding-autopilot-planner.txt'
-$FreeCheckStamp = Join-Path $StateDir 'holding-autopilot-free-check.txt'
+$MaintenanceStamp = Join-Path $StateDir 'holding-autopilot-maintenance.txt'
+$ActiveTaskFile = Join-Path $StateDir 'holding-autopilot-active-task.json'
 $Branch = 'feature/ahos-autopilot'
 
 New-Item -ItemType Directory -Force -Path $StateDir | Out-Null
@@ -29,13 +30,15 @@ New-Item -ItemType Directory -Force -Path $WorkspaceRoot | Out-Null
 if (-not (Test-Path $EnvFile)) { throw "Missing .env.runtime: $EnvFile" }
 if (-not (Test-Path $WorkerExe)) { throw "Missing worker executable: $WorkerExe" }
 if (-not (Test-Path $PythonExe)) { throw "Missing venv Python: $PythonExe" }
-if ($PaidTaskReserveUsd -le 0) { throw 'PaidTaskReserveUsd must be greater than zero.' }
-if ($PaidTaskReserveUsd -gt $DailyBudgetUsd) { throw 'PaidTaskReserveUsd cannot exceed DailyBudgetUsd.' }
 
 Get-Content $EnvFile | ForEach-Object {
     if ($_ -match '^\s*#' -or $_ -notmatch '=') { return }
     $name, $value = $_ -split '=', 2
     [Environment]::SetEnvironmentVariable($name.Trim(), $value.Trim(), 'Process')
+}
+
+if (-not $env:MINIVERSE_MAX_BUDGET_PER_RUN_USD) {
+    $env:MINIVERSE_MAX_BUDGET_PER_RUN_USD = '0.03'
 }
 
 $env:MINIVERSE_QUEUE_DB = $QueueDb
@@ -58,106 +61,120 @@ if (-not (Test-Path (Join-Path $Workspace '.git'))) {
     & git -C $Workspace reset --hard "origin/$Branch" | Out-Host
 }
 
-function Get-BudgetState {
-    $today = (Get-Date).ToString('yyyy-MM-dd')
-    if (Test-Path $BudgetFile) {
-        $state = Get-Content $BudgetFile -Raw | ConvertFrom-Json
-        if ($state.date -eq $today) {
-            $state | Add-Member -NotePropertyName daily_limit_usd -NotePropertyValue ([double]$DailyBudgetUsd) -Force
-            $state | Add-Member -NotePropertyName paid_task_reserve_usd -NotePropertyValue ([double]$PaidTaskReserveUsd) -Force
-            return $state
-        }
-    }
-    return [pscustomobject]@{
-        date = $today
+function New-BudgetState {
+    [pscustomobject]@{
+        date = (Get-Date).ToString('yyyy-MM-dd')
         spent_usd = 0.0
-        daily_limit_usd = [double]$DailyBudgetUsd
-        paid_task_reserve_usd = [double]$PaidTaskReserveUsd
     }
 }
 
 function Save-BudgetState($state) {
-    $state | Add-Member -NotePropertyName daily_limit_usd -NotePropertyValue ([double]$DailyBudgetUsd) -Force
-    $state | Add-Member -NotePropertyName paid_task_reserve_usd -NotePropertyValue ([double]$PaidTaskReserveUsd) -Force
     $state | ConvertTo-Json | Set-Content -Path $BudgetFile -Encoding utf8
 }
 
+function Get-BudgetState {
+    $today = (Get-Date).ToString('yyyy-MM-dd')
+    if (Test-Path $BudgetFile) {
+        try {
+            $state = Get-Content $BudgetFile -Raw | ConvertFrom-Json
+            if ($state.date -eq $today) {
+                return $state
+            }
+        } catch {}
+    }
+
+    $state = New-BudgetState
+    Save-BudgetState $state
+    Write-Host "BUDGET RESET: $today -> USD 0"
+    return $state
+}
+
 function Add-Cost([decimal]$amount) {
+    if ($amount -lt 0) { return }
     $state = Get-BudgetState
     $state.spent_usd = [double]$state.spent_usd + [double]$amount
     Save-BudgetState $state
 }
 
-function Get-RemainingBudgetUsd {
+function Paid-Budget-Available {
     $state = Get-BudgetState
-    return [decimal]$DailyBudgetUsd - [decimal]$state.spent_usd
+    return ([decimal]$state.spent_usd + $PaidTaskReserveUsd -le $DailyBudgetUsd)
 }
 
-function Test-PaidTaskBudgetAvailable {
-    return ((Get-RemainingBudgetUsd) -ge $PaidTaskReserveUsd)
+function Get-RemainingBudget {
+    $state = Get-BudgetState
+    return ([decimal]$DailyBudgetUsd - [decimal]$state.spent_usd)
 }
 
-function Free-Maintenance-Is-Due {
-    if (-not (Test-Path $FreeCheckStamp)) { return $true }
+function Get-TaskRecord([string]$taskId) {
     try {
-        $last = [datetime]::Parse((Get-Content $FreeCheckStamp -Raw))
-        return ((Get-Date).ToUniversalTime() - $last.ToUniversalTime()).TotalMinutes -ge $FreeMaintenanceIntervalMinutes
+        return ((& $WorkerExe status $taskId | Out-String) | ConvertFrom-Json)
     } catch {
-        return $true
+        return $null
     }
 }
 
-function Invoke-FreeMaintenance {
-    if (-not (Free-Maintenance-Is-Due)) { return $true }
+function Save-ActiveTask([string]$backlogId, [string]$queueTaskId) {
+    [pscustomobject]@{
+        backlog_id = $backlogId
+        queue_task_id = $queueTaskId
+        saved_at = (Get-Date).ToUniversalTime().ToString('o')
+    } | ConvertTo-Json | Set-Content -Path $ActiveTaskFile -Encoding utf8
+}
 
-    Write-Host 'FREE MAINTENANCE: running local checks (no AI API calls).'
-    $ok = $true
-    Push-Location $Workspace
+function Load-ActiveTask {
+    if (-not (Test-Path $ActiveTaskFile)) { return $null }
     try {
-        & $PythonExe -m compileall -q ahos_core\ahos
-        if ($LASTEXITCODE -ne 0) { $ok = $false }
-
-        & $PythonExe -c "import json, pathlib; json.loads(pathlib.Path(r'ahos_core/AHOS_BACKLOG.json').read_text(encoding='utf-8-sig'))"
-        if ($LASTEXITCODE -ne 0) { $ok = $false }
-
-        $oldPyPath = $env:PYTHONPATH
-        try {
-            $env:PYTHONPATH = Join-Path $Workspace 'ahos_core'
-            & $PythonExe -m pytest ahos_core\tests -q
-            if ($LASTEXITCODE -ne 0) { $ok = $false }
-        } finally {
-            $env:PYTHONPATH = $oldPyPath
-        }
-    } finally {
-        Pop-Location
-        (Get-Date).ToUniversalTime().ToString('o') | Set-Content $FreeCheckStamp -Encoding ascii
+        return Get-Content $ActiveTaskFile -Raw | ConvertFrom-Json
+    } catch {
+        Remove-Item $ActiveTaskFile -Force -ErrorAction SilentlyContinue
+        return $null
     }
-
-    if ($ok) {
-        Write-Host 'FREE MAINTENANCE: PASS'
-    } else {
-        Write-Host 'FREE MAINTENANCE: FAIL - paid coding remains paused until reviewed.'
-    }
-    return $ok
 }
 
-function Invoke-AhosTask([string]$instruction) {
-    if (-not (Test-PaidTaskBudgetAvailable)) {
-        $remaining = Get-RemainingBudgetUsd
-        throw "Paid AI budget gate closed. Remaining USD $remaining; reserve required USD $PaidTaskReserveUsd."
+function Clear-ActiveTask {
+    Remove-Item $ActiveTaskFile -Force -ErrorAction SilentlyContinue
+}
+
+function Invoke-AhosTask([string]$backlogId, [string]$instruction) {
+    $active = Load-ActiveTask
+    $taskId = $null
+
+    if ($active -and $active.backlog_id -eq $backlogId) {
+        $existing = Get-TaskRecord ([string]$active.queue_task_id)
+        if ($existing -and $existing.status -in @('pending', 'running', 'completed', 'failed')) {
+            $taskId = [string]$active.queue_task_id
+            Write-Host "RESUME EXISTING TASK: $backlogId -> $taskId ($($existing.status))"
+        } else {
+            Clear-ActiveTask
+        }
+    } elseif ($active) {
+        $existing = Get-TaskRecord ([string]$active.queue_task_id)
+        if ($existing -and $existing.status -in @('pending', 'running')) {
+            throw "Another AHOS task is still active: $($active.backlog_id) / $($active.queue_task_id)"
+        }
+        Clear-ActiveTask
     }
 
-    $taskId = & $WorkerExe enqueue $instruction --workspace $Workspace --max-attempts 1
-    Write-Host "AHOS TASK: $taskId"
+    if (-not $taskId) {
+        $taskId = (& $WorkerExe enqueue $instruction --workspace $Workspace --max-attempts 1).Trim()
+        Save-ActiveTask $backlogId $taskId
+        Write-Host "AHOS TASK: $taskId"
+    }
+
     do {
         Start-Sleep -Seconds 5
-        $record = (& $WorkerExe status $taskId | Out-String) | ConvertFrom-Json
+        $record = Get-TaskRecord $taskId
+        if ($null -eq $record) {
+            throw "Could not read task status: $taskId"
+        }
         Write-Host "STATUS: $($record.status)"
     } while ($record.status -eq 'pending' -or $record.status -eq 'running')
 
     if ($record.result -and $record.result.builder -and $record.result.builder.estimated_cost_usd) {
         Add-Cost ([decimal]$record.result.builder.estimated_cost_usd)
     }
+
     return $record
 }
 
@@ -172,6 +189,35 @@ function Test-AhosCore {
         $env:PYTHONPATH = $oldPyPath
         Pop-Location
     }
+}
+
+function Maintenance-Is-Due {
+    if (-not (Test-Path $MaintenanceStamp)) { return $true }
+    try {
+        $last = [datetime]::Parse((Get-Content $MaintenanceStamp -Raw))
+        return ((Get-Date).ToUniversalTime() - $last.ToUniversalTime()).TotalMinutes -ge $FreeMaintenanceIntervalMinutes
+    } catch {
+        return $true
+    }
+}
+
+function Invoke-FreeMaintenance {
+    if (-not (Maintenance-Is-Due)) { return }
+
+    Write-Host 'FREE MAINTENANCE: running local checks (no AI API calls).'
+    $ok = Test-AhosCore
+    if ($ok) {
+        Write-Host 'FREE MAINTENANCE: PASS'
+    } else {
+        Write-Host 'FREE MAINTENANCE: TEST FAILURE'
+    }
+
+    $status = & git -C $Workspace status --porcelain
+    if ($status) {
+        Write-Host 'FREE MAINTENANCE: worktree has changes; autonomous paid work will stay paused.'
+    }
+
+    (Get-Date).ToUniversalTime().ToString('o') | Set-Content $MaintenanceStamp -Encoding ascii
 }
 
 function Save-Backlog($doc) {
@@ -192,6 +238,7 @@ function Mark-Task([string]$id, [string]$status, [string]$note = '') {
     $doc = Get-Content $backlogPath -Raw | ConvertFrom-Json
     $item = $doc.tasks | Where-Object { $_.id -eq $id } | Select-Object -First 1
     if ($null -eq $item) { return }
+
     $item.status = $status
     if ($status -eq 'completed') {
         $item | Add-Member -NotePropertyName completed_at -NotePropertyValue ((Get-Date).ToUniversalTime().ToString('o')) -Force
@@ -199,14 +246,18 @@ function Mark-Task([string]$id, [string]$status, [string]$note = '') {
     if ($note) {
         $item | Add-Member -NotePropertyName note -NotePropertyValue $note -Force
     }
+
     Save-Backlog $doc
 }
 
 function Planner-Is-Due {
     if (-not (Test-Path $PlannerStamp)) { return $true }
-    $raw = Get-Content $PlannerStamp -Raw
-    $last = [datetime]::Parse($raw)
-    return ((Get-Date).ToUniversalTime() - $last.ToUniversalTime()).TotalHours -ge $PlannerIntervalHours
+    try {
+        $last = [datetime]::Parse((Get-Content $PlannerStamp -Raw))
+        return ((Get-Date).ToUniversalTime() - $last.ToUniversalTime()).TotalHours -ge $PlannerIntervalHours
+    } catch {
+        return $true
+    }
 }
 
 Write-Host 'AHOS AUTOPILOT ONLINE'
@@ -214,24 +265,13 @@ Write-Host "Branch: $Branch"
 Write-Host "Workspace: $Workspace"
 Write-Host "Daily API budget: USD $DailyBudgetUsd"
 Write-Host "Paid-task reserve: USD $PaidTaskReserveUsd"
+Write-Host "Per-task SDK hard cap: USD $env:MINIVERSE_MAX_BUDGET_PER_RUN_USD"
 Write-Host 'Routing: FREE deterministic checks first -> OpenAI coding only when budget gate permits'
 Write-Host "Smoke mode: $env:MINIVERSE_SMOKE_MODE"
 
 while ($true) {
     try {
-        $freeOk = Invoke-FreeMaintenance
-        if (-not $freeOk) {
-            Start-Sleep -Seconds $IdleSleepSeconds
-            continue
-        }
-
-        if (-not (Test-PaidTaskBudgetAvailable)) {
-            $budget = Get-BudgetState
-            $remaining = Get-RemainingBudgetUsd
-            Write-Host "FREE-ONLY MODE: paid AI paused. Spent USD $($budget.spent_usd); remaining USD $remaining; reserve required USD $PaidTaskReserveUsd."
-            Start-Sleep -Seconds $IdleSleepSeconds
-            continue
-        }
+        Invoke-FreeMaintenance
 
         $dirty = & git -C $Workspace status --porcelain
         if ($dirty) {
@@ -242,6 +282,7 @@ while ($true) {
 
         & git -C $RepoRoot fetch origin --prune | Out-Null
         & git -C $Workspace reset --hard "origin/$Branch" | Out-Null
+
         $backlogPath = Join-Path $Workspace 'ahos_core\AHOS_BACKLOG.json'
         $doc = Get-Content $backlogPath -Raw | ConvertFrom-Json
         $next = $doc.tasks | Where-Object {
@@ -252,46 +293,60 @@ while ($true) {
         } | Select-Object -First 1
 
         if ($null -eq $next) {
-            if (Planner-Is-Due -and (Test-PaidTaskBudgetAvailable)) {
-                $planner = @'
-Inspect ahos_core and AHOS_BACKLOG.json. If there are no safe pending development tasks, append at most three concrete low-risk Authority-B tasks that improve local reliability, tests, architecture, observability, or developer ergonomics. Keep IDs unique. Stay strictly inside the isolated ahos_core worktree and preserve the existing governance boundary. Use neutral local-development wording in task titles and descriptions. Modify only ahos_core/AHOS_BACKLOG.json and validate that it remains valid JSON.
-'@
-                $result = Invoke-AhosTask $planner
+            if ((Paid-Budget-Available) -and (Planner-Is-Due)) {
+                $planner = "AHOS_BACKLOG_ITEM: PLANNER`nInspect ahos_core and AHOS_BACKLOG.json. If there are no safe pending development tasks, append at most three concrete low-risk Authority-B tasks that improve local reliability, tests, architecture, observability, or developer ergonomics. Keep IDs unique. Stay strictly inside the isolated ahos_core worktree and preserve the existing governance boundary. Use neutral local-development wording in task titles and descriptions. Modify only ahos_core/AHOS_BACKLOG.json and validate that it remains valid JSON."
+                $result = Invoke-AhosTask 'PLANNER' $planner
                 (Get-Date).ToUniversalTime().ToString('o') | Set-Content $PlannerStamp -Encoding ascii
+
                 if ($result.status -eq 'completed') {
                     Commit-And-Push 'autopilot: refresh safe AHOS backlog'
                 } else {
                     & git -C $Workspace restore --worktree --staged . | Out-Null
                 }
+
+                Clear-ActiveTask
+            } else {
+                Write-Host "FREE-ONLY: no paid planner call. Remaining daily budget USD $(Get-RemainingBudget)."
             }
+
             Start-Sleep -Seconds $IdleSleepSeconds
             continue
         }
 
         $taskId = [string]$next.id
         $title = [string]$next.title
-        $instruction = @"
-You are developing AHOS, the Autonomous Holding Operating System, in its isolated Git worktree.
 
-Implement backlog item ${taskId}: $title
+        if (-not (Paid-Budget-Available)) {
+            Write-Host "FREE-ONLY: $taskId waiting. Remaining daily budget USD $(Get-RemainingBudget); reserve USD $PaidTaskReserveUsd."
+            Start-Sleep -Seconds $IdleSleepSeconds
+            continue
+        }
 
-$($next.task)
-
-Hard boundaries:
-- Work only inside ahos_core.
-- Stay within existing Authority A/B and the isolated worktree.
-- Preserve governance and owner-approval requirements exactly.
-- Do not modify AHOS_BACKLOG.json; the controller owns backlog status.
-- Inspect existing code first, make the smallest coherent reversible change, and run relevant tests.
-"@
+        $instructionLines = @(
+            "AHOS_BACKLOG_ITEM: $taskId",
+            "You are developing AHOS, the Autonomous Holding Operating System, in its isolated Git worktree.",
+            "",
+            "Implement backlog item ${taskId}: $title",
+            "",
+            [string]$next.task,
+            "",
+            "Hard boundaries:",
+            "- Work only inside ahos_core.",
+            "- Stay within existing Authority A/B and the isolated worktree.",
+            "- Preserve governance and owner-approval requirements exactly.",
+            "- Do not modify AHOS_BACKLOG.json; the controller owns backlog status.",
+            "- Inspect existing code first, make the smallest coherent reversible change, and run relevant tests."
+        )
+        $instruction = $instructionLines -join [Environment]::NewLine
 
         Write-Host "Starting $taskId - $title"
-        $result = Invoke-AhosTask $instruction
+        $result = Invoke-AhosTask $taskId $instruction
 
         if ($result.status -ne 'completed') {
             & git -C $Workspace restore --worktree --staged . | Out-Null
             Mark-Task $taskId 'blocked' ([string]$result.last_error)
             Commit-And-Push "autopilot: mark $taskId blocked"
+            Clear-ActiveTask
             Start-Sleep -Seconds 30
             continue
         }
@@ -300,12 +355,14 @@ Hard boundaries:
             & git -C $Workspace restore --worktree --staged . | Out-Null
             Mark-Task $taskId 'blocked' 'AHOS test suite failed after autonomous change.'
             Commit-And-Push "autopilot: mark $taskId blocked after test failure"
+            Clear-ActiveTask
             Start-Sleep -Seconds 30
             continue
         }
 
         Mark-Task $taskId 'completed'
         Commit-And-Push "autopilot: complete $taskId $title"
+        Clear-ActiveTask
         Write-Host "COMPLETED: $taskId"
         Start-Sleep -Seconds 30
     } catch {

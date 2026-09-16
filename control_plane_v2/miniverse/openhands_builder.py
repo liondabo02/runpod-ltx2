@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -62,7 +62,11 @@ class OpenHandsBuilder:
             ],
             include_default_tools=["ThinkTool"],
         )
-        conversation = Conversation(agent=agent, workspace=str(workspace_path))
+        conversation = Conversation(
+            agent=agent,
+            workspace=str(workspace_path),
+            max_budget_per_run=self.settings.max_budget_per_run_usd,
+        )
         conversation.send_message(
             "Work only inside this isolated workspace. Do not modify production, credentials, billing, volumes, "
             "or external systems. Make the smallest coherent reversible change. Inspect the repository first, run "
@@ -86,3 +90,4 @@ class OpenHandsBuilder:
             remaining_risks=tuple(finish.remaining_risks),
             estimated_cost_usd=cost,
         )
+

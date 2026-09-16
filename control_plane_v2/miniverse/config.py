@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import os
 from dataclasses import dataclass
@@ -24,6 +24,9 @@ class Settings:
     workspace_root: str = os.getenv("MINIVERSE_WORKSPACE_ROOT", "/workspace")
     max_parallel_agents: int = int(os.getenv("MINIVERSE_MAX_PARALLEL_AGENTS", "4"))
     smoke_mode: bool = _env_flag("MINIVERSE_SMOKE_MODE", False)
+    max_budget_per_run_usd: float = float(
+        os.getenv("MINIVERSE_MAX_BUDGET_PER_RUN_USD", "0.03")
+    )
     queue_db_path: str = os.getenv("MINIVERSE_QUEUE_DB", "/var/lib/miniverse/tasks.db")
     worker_lease_seconds: float = float(os.getenv("MINIVERSE_WORKER_LEASE_SECONDS", "120"))
     worker_heartbeat_seconds: float = float(os.getenv("MINIVERSE_WORKER_HEARTBEAT_SECONDS", "30"))
@@ -50,3 +53,4 @@ class Settings:
         if not (self.openai_api_key or self.llm_api_key):
             missing.append("OPENAI_API_KEY or LLM_API_KEY")
         return missing
+
