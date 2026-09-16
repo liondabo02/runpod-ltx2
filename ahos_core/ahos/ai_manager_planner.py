@@ -4,7 +4,7 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, Mapping
 
 from .mission_orchestrator import MissionStepSpec
 
@@ -21,13 +21,15 @@ def _safe_name(value: str) -> str:
 class OpenHandsManagerPlanner:
     """Turn a manager objective into a validated AHOS mission plan.
 
-    The model is never allowed to self-approve protected actions. Any paid,
-    external, destructive, or secret-touching step remains owner-gated by AHOS.
+    The manager is constrained to real departments and, when provided, the
+    exact capabilities exposed by currently routable virtual workers.
+    The model can never self-approve protected work.
     """
 
     runner: PlannerRunner
     workspace_root: Path
     allowed_departments: frozenset[str]
+    capability_catalog: Mapping[str, frozenset[str]] | None = None
     max_steps: int = 6
     max_total_estimated_cost_usd: float = 1.0
 
@@ -38,6 +40,19 @@ class OpenHandsManagerPlanner:
             raise ValueError("max_steps must be >= 1")
         if self.max_total_estimated_cost_usd < 0:
             raise ValueError("max_total_estimated_cost_usd must be >= 0")
+
+        if self.capability_catalog is not None:
+            normalized: dict[str, frozenset[str]] = {}
+            for department, values in self.capability_catalog.items():
+                key = str(department).strip().lower()
+                if key not in self.allowed_departments:
+                    continue
+                normalized[key] = frozenset(
+                    str(value).strip()
+                    for value in values
+                    if str(value).strip()
+                )
+            self.capability_catalog = normalized
 
     def __call__(
         self,
@@ -101,6 +116,28 @@ class OpenHandsManagerPlanner:
                 for value in capabilities_raw
                 if str(value).strip()
             )
+            if not capabilities:
+                raise ValueError(
+                    f"step {step_id or index} must request at least one capability"
+                )
+
+            if self.capability_catalog is not None:
+                allowed_caps = self.capability_catalog.get(
+                    department,
+                    frozenset(),
+                )
+                if not allowed_caps:
+                    raise ValueError(
+                        f"no routable capabilities registered for department "
+                        f"{department!r}"
+                    )
+                unknown = capabilities - allowed_caps
+                if unknown:
+                    raise ValueError(
+                        f"step {step_id or index} requests unroutable "
+                        f"capabilities for {department}: {sorted(unknown)}; "
+                        f"allowed: {sorted(allowed_caps)}"
+                    )
 
             depends_raw = raw.get("depends_on", [])
             if not isinstance(depends_raw, list):
@@ -118,8 +155,6 @@ class OpenHandsManagerPlanner:
                 raise ValueError("estimated_cost_usd must be >= 0")
             total_cost += estimated_cost
 
-            # A model can request approval-sensitive work, but can never grant
-            # itself approval. owner_approved is deliberately forced False.
             steps.append(
                 MissionStepSpec(
                     step_id=step_id,
@@ -156,6 +191,20 @@ class OpenHandsManagerPlanner:
         manager_id: str,
     ) -> str:
         departments = ", ".join(sorted(self.allowed_departments))
+
+        if self.capability_catalog:
+            lines = []
+            for department in sorted(self.allowed_departments):
+                values = sorted(
+                    self.capability_catalog.get(department, frozenset())
+                )
+                lines.append(
+                    f"- {department}: {', '.join(values) if values else '(none)'}"
+                )
+            catalog = "\n".join(lines)
+        else:
+            catalog = "- capability catalog not supplied"
+
         return f"""
 You are AHOS department manager {manager_id}.
 
@@ -175,7 +224,7 @@ The file must be valid JSON with this shape:
       "step_id": "short-unique-id",
       "title": "clear executable task for one worker",
       "department": "one allowed department",
-      "required_capabilities": ["capability"],
+      "required_capabilities": ["exact-capability-from-catalog"],
       "depends_on": [],
       "estimated_cost_usd": 0.0,
       "external_side_effect": false,
@@ -186,10 +235,18 @@ The file must be valid JSON with this shape:
   ]
 }}
 
+Allowed departments:
+{departments}
+
+EXACT ROUTABLE CAPABILITY CATALOG:
+{catalog}
+
 Rules:
-- Allowed departments: {departments}
 - Maximum {self.max_steps} steps.
 - Choose the smallest coherent team and order needed for the objective.
+- required_capabilities MUST contain only exact strings from the selected
+  department's capability catalog above. Do not invent synonyms.
+- Prefer the minimum capability set sufficient to route one worker.
 - Express dependencies explicitly in depends_on.
 - Keep this plan local-only and reversible.
 - Do not plan publishing, messaging, payments, purchases, deployments,
