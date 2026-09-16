@@ -182,6 +182,16 @@
                       "requires_owner_approval":  false,
                       "task":  "Inside ahos_core only, configure verified public read-only Remote OK and We Work Remotely RSS feeds and add resilient per-source collection into the local opportunity candidate store. A failed feed must not stop the other feeds. Tests must use injected local data and make no real network calls. No applications, outreach, posting, login, payments, purchases, or other external write actions.",
                       "completed_at":  "2026-09-16T18:16:04.2720686Z"
+                  },
+                  {
+                      "id":  "AHOS-018",
+                      "title":  "Add free local candidate triage and filtering",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, add deterministic local triage for collected opportunity candidates. Distinguish project/contract-like opportunities from human employment roles, score technical/automation relevance, and persist ranked results locally. No OpenAI calls, no applications, no outreach, no payments, no external writes.",
+                      "completed_at":  "2026-09-16T18:33:27.5550456Z"
                   }
               ]
 }
