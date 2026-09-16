@@ -282,6 +282,16 @@
                       "requires_owner_approval":  true,
                       "completed_at":  "2026-09-16T19:07:40.1748223Z",
                       "task":  "Allow a paid virtual-worker task to pass the approval gate only when owner_approved is explicit, while still enforcing a paid-capable worker and its daily budget. Validate locally, then run one owner-approved live OpenHands smoke task."
+                  },
+                  {
+                      "id":  "AHOS-028",
+                      "title":  "Honor owner approval in OpenHands adapter",
+                      "status":  "completed",
+                      "risk":  "medium",
+                      "authority":  "C",
+                      "requires_owner_approval":  true,
+                      "completed_at":  "2026-09-16T19:11:00.9759263Z",
+                      "task":  "Allow explicitly owner-approved paid work through the OpenHands worker adapter while unapproved protected work remains blocked. Validate locally, then retry one tiny live AI worker smoke."
                   }
               ]
 }

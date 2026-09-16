@@ -32,10 +32,8 @@ def _tuple_of_strings(value: Any) -> tuple[str, ...]:
 class OpenHandsWorkerAdapter:
     """Bridge an AHOS virtual employee to an injected OpenHands-style runner.
 
-    This adapter itself never creates an API client. The runner is injected so
-    tests stay completely local and zero-cost. A later live step can inject the
-    already-existing Miniverse OpenHandsBuilder runner after explicit budget
-    approval.
+    The runner is injected so local tests stay zero-cost. Protected actions,
+    including paid AI work, fail closed unless owner approval is explicit.
     """
 
     runner: BuilderRunner
@@ -46,15 +44,15 @@ class OpenHandsWorkerAdapter:
         self.workspace_root.mkdir(parents=True, exist_ok=True)
 
     def __call__(self, item: WorkItem, worker_id: str) -> WorkerExecutionResult:
-        # Defense in depth. These should already be blocked by the dispatcher.
-        if any(
+        protected_action = any(
             (
                 item.external_side_effect,
                 item.destructive,
                 item.touches_secrets,
                 item.estimated_cost_usd > 0,
             )
-        ):
+        )
+        if protected_action and not item.owner_approved:
             return WorkerExecutionResult(
                 task_id=item.task_id,
                 worker_id=worker_id,
