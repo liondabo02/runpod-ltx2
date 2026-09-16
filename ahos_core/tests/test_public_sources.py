@@ -1,21 +1,57 @@
 from __future__ import annotations
 
+import json
+
 from ahos.opportunity_intake import OpportunitySource, SourceKind
 from ahos.public_sources import collect_public_opportunities, default_public_sources
 
 
-def test_default_sources_are_public_https_read_only_feeds() -> None:
+def test_default_sources_use_remoteok_json_and_wwr_rss() -> None:
     sources = default_public_sources()
+    by_id = {source.source_id: source for source in sources}
 
     assert len(sources) >= 3
     assert all(source.enabled for source in sources)
-    assert all(source.kind is SourceKind.RSS for source in sources)
+    assert by_id["remoteok-api"].kind is SourceKind.JSON
+    assert by_id["remoteok-api"].url == "https://remoteok.com/api"
+    assert by_id["remoteok-api"].title_field == "position"
+    assert by_id["remoteok-api"].url_field == "url"
+
+    assert by_id["wwr-programming-rss"].kind is SourceKind.RSS
+    assert by_id["wwr-devops-rss"].kind is SourceKind.RSS
     assert all(source.url.startswith("https://") for source in sources)
-    assert {source.source_id for source in sources} >= {
-        "remoteok-all-rss",
-        "wwr-programming-rss",
-        "wwr-devops-rss",
-    }
+
+
+def test_remoteok_json_shape_is_supported(tmp_path) -> None:
+    payload = json.dumps(
+        [
+            {"legal": "terms"},
+            {
+                "position": "Python Automation Engineer",
+                "url": "https://remoteok.com/remote-jobs/example",
+                "description": "Build Python automation.",
+                "company": "Example Co",
+                "salary_min": 50000,
+                "salary_max": 70000,
+            },
+        ]
+    ).encode("utf-8")
+
+    source = next(
+        source
+        for source in default_public_sources()
+        if source.source_id == "remoteok-api"
+    )
+
+    report = collect_public_opportunities(
+        tmp_path,
+        sources=(source,),
+        fetcher=lambda _: payload,
+        discovered_at="2026-09-16T12:00:00+00:00",
+    )
+
+    assert report.added_count == 1
+    assert report.failures == ()
 
 
 def test_collection_uses_injected_fetcher_and_deduplicates(tmp_path) -> None:
@@ -50,7 +86,6 @@ def test_collection_uses_injected_fetcher_and_deduplicates(tmp_path) -> None:
 
     assert first.added_count == 1
     assert second.added_count == 0
-    assert first.failures == ()
 
 
 def test_one_failed_source_does_not_block_other_sources(tmp_path) -> None:

@@ -15,15 +15,20 @@ from .opportunity_intake import (
 def default_public_sources() -> tuple[OpportunitySource, ...]:
     """Public, read-only job feeds used by AHOS.
 
-    These feeds require no login and are only read. AHOS does not apply,
-    contact employers, post content, or perform any external write action.
+    Remote OK currently exposes a public JSON API. We Work Remotely exposes
+    public RSS feeds. These sources require no login and are read-only here:
+    AHOS does not apply, contact employers, post content, or perform writes.
     """
     return (
         OpportunitySource(
-            source_id="remoteok-all-rss",
-            kind=SourceKind.RSS,
-            url="https://remoteok.com/remote-jobs.rss",
+            source_id="remoteok-api",
+            kind=SourceKind.JSON,
+            url="https://remoteok.com/api",
             category="remote-work",
+            items_path="",
+            title_field="position",
+            url_field="url",
+            description_field="description",
         ),
         OpportunitySource(
             source_id="wwr-programming-rss",
