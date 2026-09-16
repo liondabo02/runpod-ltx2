@@ -1,11 +1,10 @@
-﻿$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Stop'
 
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $Root
 
 $EnvFile = Join-Path $Root '.env.runtime'
 $WorkerExe = Join-Path $Root '.venv\Scripts\miniverse-worker.exe'
-$HealthExe = Join-Path $Root '.venv\Scripts\miniverse-health.exe'
 $StateDir = Join-Path $Root 'runtime\state'
 $WorkspaceDir = Join-Path $Root 'runtime\workspaces'
 $PidFile = Join-Path $StateDir 'worker.pid'
@@ -16,15 +15,27 @@ $QueueDb = Join-Path $StateDir 'tasks.db'
 
 if (-not (Test-Path $EnvFile)) { throw "Missing .env.runtime: $EnvFile" }
 if (-not (Test-Path $WorkerExe)) { throw "Missing worker executable: $WorkerExe" }
-if (-not (Test-Path $HealthExe)) { throw "Missing health executable: $HealthExe" }
 
 New-Item -ItemType Directory -Force -Path $StateDir | Out-Null
 New-Item -ItemType Directory -Force -Path $WorkspaceDir | Out-Null
 
+function Test-HeartbeatFresh {
+    if (-not (Test-Path $Heartbeat)) { return $false }
+    try {
+        $h = Get-Content $Heartbeat -Raw | ConvertFrom-Json
+        if ($h.state -notin @('polling','running')) { return $false }
+        $now = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() / 1000.0
+        $age = $now - [double]$h.timestamp
+        return ($age -ge 0 -and $age -le 60)
+    } catch {
+        return $false
+    }
+}
+
 Get-Content $EnvFile | ForEach-Object {
     if ($_ -match '^\s*#' -or $_ -notmatch '=') { return }
-    $name, $value = $_ -split '=', 2
-    [Environment]::SetEnvironmentVariable($name.Trim(), $value.Trim(), 'Process')
+    $name,$value = $_ -split '=',2
+    [Environment]::SetEnvironmentVariable($name.Trim(),$value.Trim(),'Process')
 }
 
 $env:MINIVERSE_QUEUE_DB = $QueueDb
@@ -33,86 +44,62 @@ $env:MINIVERSE_WORKSPACE_ROOT = $WorkspaceDir
 
 $existing = Get-Process miniverse-worker -ErrorAction SilentlyContinue
 if ($existing) {
-    Write-Host "Miniverse worker already running. PID(s): $($existing.Id -join ', ')"
-    try {
-        & $HealthExe --path $Heartbeat --max-age-seconds 90
-    } catch {}
-    exit 0
+    if (Test-HeartbeatFresh) {
+        Write-Host "Miniverse worker already running and healthy. PID(s): $($existing.Id -join ', ')"
+        exit 0
+    }
+    $deadline = (Get-Date).AddSeconds(90)
+    do {
+        Start-Sleep -Seconds 2
+        if (Test-HeartbeatFresh) {
+            Write-Host "Miniverse worker became healthy. PID(s): $($existing.Id -join ', ')"
+            exit 0
+        }
+        $existing = Get-Process miniverse-worker -ErrorAction SilentlyContinue
+        if (-not $existing) { break }
+    } while ((Get-Date) -lt $deadline)
+
+    if ($existing) { throw 'Worker exists but heartbeat did not become healthy within 90 seconds.' }
 }
 
-Remove-Item $PidFile -Force -ErrorAction SilentlyContinue
-Remove-Item $LauncherPidFile -Force -ErrorAction SilentlyContinue
+$runner = @"
+`$ErrorActionPreference = 'Stop'
+Set-Location '$($Root.Replace("'","''"))'
+Get-Content '$($EnvFile.Replace("'","''"))' | ForEach-Object {
+    if (`$_ -match '^\s*#' -or `$_ -notmatch '=') { return }
+    `$name,`$value = `$_ -split '=',2
+    [Environment]::SetEnvironmentVariable(`$name.Trim(),`$value.Trim(),'Process')
+}
+`$env:MINIVERSE_QUEUE_DB = '$($QueueDb.Replace("'","''"))'
+`$env:MINIVERSE_WORKER_HEALTH_FILE = '$($Heartbeat.Replace("'","''"))'
+`$env:MINIVERSE_WORKSPACE_ROOT = '$($WorkspaceDir.Replace("'","''"))'
+`$env:OPENHANDS_SUPPRESS_BANNER = '1'
+& '$($WorkerExe.Replace("'","''"))' run --owner MINIVERSE-PC
+"@
 
-$escapedRoot = $Root.Replace("'", "''")
-$escapedEnv = $EnvFile.Replace("'", "''")
-$escapedWorker = $WorkerExe.Replace("'", "''")
-$escapedHeartbeat = $Heartbeat.Replace("'", "''")
-$escapedQueue = $QueueDb.Replace("'", "''")
-$escapedWorkspace = $WorkspaceDir.Replace("'", "''")
-$escapedPid = $PidFile.Replace("'", "''")
-
-$runnerLines = @(
-    '$ErrorActionPreference = ''Stop'''
-    "Set-Location '$escapedRoot'"
-    "Get-Content '$escapedEnv' | ForEach-Object {"
-    "    if (`$_ -match '^\s*#' -or `$_ -notmatch '=') { return }"
-    "    `$name, `$value = `$_ -split '=', 2"
-    "    [Environment]::SetEnvironmentVariable(`$name.Trim(), `$value.Trim(), 'Process')"
-    "}"
-    "`$env:MINIVERSE_QUEUE_DB = '$escapedQueue'"
-    "`$env:MINIVERSE_WORKER_HEALTH_FILE = '$escapedHeartbeat'"
-    "`$env:MINIVERSE_WORKSPACE_ROOT = '$escapedWorkspace'"
-    "`$worker = Start-Process -FilePath '$escapedWorker' -ArgumentList @('run','--owner','MINIVERSE-PC') -WorkingDirectory '$escapedRoot' -PassThru"
-    "`$worker.Id | Set-Content -Path '$escapedPid' -Encoding ascii"
-    "`$worker.WaitForExit()"
-    "exit `$worker.ExitCode"
-)
-
-$runnerLines | Set-Content -Path $RunnerFile -Encoding utf8
+Set-Content -Path $RunnerFile -Value $runner -Encoding utf8
 
 $launcher = Start-Process `
     -FilePath 'powershell.exe' `
-    -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $RunnerFile) `
+    -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-WindowStyle','Hidden','-File',$RunnerFile) `
     -WorkingDirectory $Root `
     -WindowStyle Hidden `
     -PassThru
 
 $launcher.Id | Set-Content -Path $LauncherPidFile -Encoding ascii
 
-$deadline = (Get-Date).AddSeconds(15)
-$healthy = $false
-
+$deadline = (Get-Date).AddSeconds(90)
 do {
-    Start-Sleep -Seconds 1
-
-    if ($launcher.HasExited) {
-        break
+    Start-Sleep -Seconds 2
+    $worker = Get-Process miniverse-worker -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($worker -and (Test-HeartbeatFresh)) {
+        $worker.Id | Set-Content -Path $PidFile -Encoding ascii
+        Write-Host "Miniverse started hidden in background. PID $($worker.Id)"
+        exit 0
     }
-
-    $worker = Get-Process miniverse-worker -ErrorAction SilentlyContinue
-    if ($worker) {
-        try {
-            & $HealthExe --path $Heartbeat --max-age-seconds 90 | Out-Host
-            if ($LASTEXITCODE -eq 0) {
-                $healthy = $true
-                break
-            }
-        } catch {}
+    if ($launcher.HasExited) {
+        throw "Hidden launcher exited during startup with code $($launcher.ExitCode)."
     }
 } while ((Get-Date) -lt $deadline)
 
-if (-not $healthy) {
-    $worker = Get-Process miniverse-worker -ErrorAction SilentlyContinue
-    if (-not $worker) {
-        throw 'Miniverse worker failed to start in background.'
-    }
-    throw 'Miniverse worker process exists but health check did not become healthy in time.'
-}
-
-$worker = Get-Process miniverse-worker -ErrorAction SilentlyContinue | Select-Object -First 1
-if ($worker) {
-    $worker.Id | Set-Content -Path $PidFile -Encoding ascii
-}
-
-Write-Host "Miniverse started in background. PID $($worker.Id)"
-Write-Host "Smoke mode: $env:MINIVERSE_SMOKE_MODE"
+throw 'Miniverse worker did not become healthy within 90 seconds.'
