@@ -12,6 +12,15 @@ from .events import Event, EventBus
 from .governance import ActionRequest, AuthorityLevel, GovernanceDecision, GovernancePolicy
 from .mission_store import Mission, MissionStateStore, MissionStatus
 from .metrics import MissionMetric, MetricsSnapshot, report_metrics
+from .media import (
+    InertMediaCapabilityAdapter,
+    MediaAuthorization,
+    MediaAuthorizationStatus,
+    MediaCapabilityAdapter,
+    MediaExecutionResult,
+    MediaExecutionStatus,
+    MediaRequest,
+)
 from .planner import (
     DependencyCycleError,
     MissionDefinition,
@@ -47,6 +56,13 @@ __all__ = [
     "MissionMetric",
     "MetricsSnapshot",
     "report_metrics",
+    "InertMediaCapabilityAdapter",
+    "MediaAuthorization",
+    "MediaAuthorizationStatus",
+    "MediaCapabilityAdapter",
+    "MediaExecutionResult",
+    "MediaExecutionStatus",
+    "MediaRequest",
     "DependencyCycleError",
     "MissionDefinition",
     "MissionPlanner",

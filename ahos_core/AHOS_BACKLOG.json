@@ -76,11 +76,12 @@
                   {
                       "id":  "AHOS-007",
                       "title":  "Define media capability adapter contract",
-                      "status":  "pending",
+                      "status":  "completed",
                       "risk":  "low",
                       "authority":  "B",
                       "requires_owner_approval":  false,
-                      "task":  "Inside ahos_core only, define interfaces and data models for a future media execution capability. Keep the implementation inert and local-only; model requests, results, and authorization state without performing side effects. Add tests."
+                      "task":  "Inside ahos_core only, define interfaces and data models for a future media execution capability. Keep the implementation inert and local-only; model requests, results, and authorization state without performing side effects. Add tests.",
+                      "completed_at":  "2026-09-16T14:08:04.9376006Z"
                   }
               ]
 }
