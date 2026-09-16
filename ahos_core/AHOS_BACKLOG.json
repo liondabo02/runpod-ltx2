@@ -86,11 +86,12 @@
                   {
                       "id":  "AHOS-008",
                       "title":  "Add immutable local audit event journal",
-                      "status":  "pending",
+                      "status":  "completed",
                       "risk":  "low",
                       "authority":  "B",
                       "requires_owner_approval":  false,
-                      "task":  "Inside ahos_core only, add a local append-only audit event journal for missions, routing decisions, approvals, execution attempts, and outcomes. Use deterministic local storage, stable event IDs, timestamps, correlation IDs, and focused tests. Do not perform external actions."
+                      "task":  "Inside ahos_core only, add a local append-only audit event journal for missions, routing decisions, approvals, execution attempts, and outcomes. Use deterministic local storage, stable event IDs, timestamps, correlation IDs, and focused tests. Do not perform external actions.",
+                      "completed_at":  "2026-09-16T16:28:47.5718128Z"
                   },
                   {
                       "id":  "AHOS-009",
