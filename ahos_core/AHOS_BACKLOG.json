@@ -312,6 +312,16 @@
                       "requires_owner_approval":  false,
                       "task":  "Create a department-manager planning layer and a dependency-aware multi-worker mission orchestrator. A manager leases itself for planning, produces a validated step graph through an injected planner, routes each step to the correct virtual worker, hands completed-step summaries downstream, requires QA on every step, and stops the mission on failures or approval gates. No live AI or external actions in this task.",
                       "completed_at":  "2026-09-16T19:41:54.7408056Z"
+                  },
+                  {
+                      "id":  "AHOS-031",
+                      "title":  "Prove real multi-worker AI mission execution",
+                      "status":  "completed",
+                      "risk":  "medium",
+                      "authority":  "C",
+                      "requires_owner_approval":  true,
+                      "completed_at":  "2026-09-16T19:45:46.6981216Z",
+                      "task":  "Run one owner-approved real mission through Software Department Manager planning, a real OpenHands Researcher worker, QA, downstream result handoff, a real OpenHands Software Engineer worker, and final QA. No publishing, messaging, payments, deployments, or other external business actions."
                   }
               ]
 }
