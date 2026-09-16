@@ -30,6 +30,7 @@ class WorkItem:
     destructive: bool = False
     touches_secrets: bool = False
     requires_owner_approval: bool = False
+    owner_approved: bool = False
 
     def __post_init__(self) -> None:
         if not self.task_id.strip():
@@ -71,7 +72,7 @@ class VirtualWorkforceDispatcher:
 
     @staticmethod
     def _approval_required(item: WorkItem) -> bool:
-        return any(
+        protected_action = any(
             (
                 item.requires_owner_approval,
                 item.external_side_effect,
@@ -80,6 +81,7 @@ class VirtualWorkforceDispatcher:
                 item.estimated_cost_usd > 0,
             )
         )
+        return protected_action and not item.owner_approved
 
     def assign(self, item: WorkItem) -> AssignmentDecision:
         if self._approval_required(item):

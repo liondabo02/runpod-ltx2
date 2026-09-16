@@ -272,6 +272,16 @@
                       "requires_owner_approval":  false,
                       "task":  "Add a zero-cost tested adapter that converts AHOS WorkItems into isolated OpenHands-style builder executions and maps builder results back into the virtual-worker runtime. Keep the real builder injected, preserve approval gates, and make no live AI calls in this task.",
                       "completed_at":  "2026-09-16T19:01:38.8642323Z"
+                  },
+                  {
+                      "id":  "AHOS-027",
+                      "title":  "Add explicit owner-approved paid worker execution path",
+                      "status":  "completed",
+                      "risk":  "medium",
+                      "authority":  "C",
+                      "requires_owner_approval":  true,
+                      "completed_at":  "2026-09-16T19:07:40.1748223Z",
+                      "task":  "Allow a paid virtual-worker task to pass the approval gate only when owner_approved is explicit, while still enforcing a paid-capable worker and its daily budget. Validate locally, then run one owner-approved live OpenHands smoke task."
                   }
               ]
 }
