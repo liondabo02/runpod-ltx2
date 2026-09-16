@@ -126,11 +126,12 @@
                   {
                       "id":  "AHOS-012",
                       "title":  "Add venture registry and lifecycle state machine",
-                      "status":  "pending",
+                      "status":  "completed",
                       "risk":  "low",
                       "authority":  "B",
                       "requires_owner_approval":  false,
-                      "task":  "Inside ahos_core only, add a persistent local venture/company registry with lifecycle states such as idea, validating, building, operating, paused, and retired. Link ventures to opportunities, departments, objectives, budgets, and audit metadata. Enforce deterministic valid state transitions and add focused tests. No external side effects."
+                      "task":  "Inside ahos_core only, add a persistent local venture/company registry with lifecycle states such as idea, validating, building, operating, paused, and retired. Link ventures to opportunities, departments, objectives, budgets, and audit metadata. Enforce deterministic valid state transitions and add focused tests. No external side effects.",
+                      "completed_at":  "2026-09-16T16:56:36.7421260Z"
                   },
                   {
                       "id":  "AHOS-013",
