@@ -352,6 +352,16 @@
                       "requires_owner_approval":  true,
                       "completed_at":  "2026-09-16T20:18:44.7494398Z",
                       "task":  "Prove one end-to-end owner-approved mission with a real AI department manager, real AI researcher, deterministic QA, verified research handoff, real AI software engineer, and final QA. Keep all work local; no publishing, messaging, payments, deployment, destructive actions, or secret access."
+                  },
+                  {
+                      "id":  "AHOS-035",
+                      "title":  "Add persistent autonomous mission queue and company loop",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Add a local SQLite-backed persistent mission queue and autonomous company loop with atomic leases, bounded retries, stale-lease recovery, blocked-mission fail-closed behavior, result audit persistence, run-once, run-until-idle, and continuous polling primitives. No AI or external actions in this step.",
+                      "completed_at":  "2026-09-16T20:23:15.2924369Z"
                   }
               ]
 }
