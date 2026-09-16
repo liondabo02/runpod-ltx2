@@ -322,6 +322,15 @@
                       "requires_owner_approval":  true,
                       "completed_at":  "2026-09-16T19:45:46.6981216Z",
                       "task":  "Run one owner-approved real mission through Software Department Manager planning, a real OpenHands Researcher worker, QA, downstream result handoff, a real OpenHands Software Engineer worker, and final QA. No publishing, messaging, payments, deployments, or other external business actions."
+                  },
+                  {
+                      "id":  "AHOS-032",
+                      "title":  "Add real AI department-manager mission planner",
+                      "status":  "pending",
+                      "risk":  "medium",
+                      "authority":  "C",
+                      "requires_owner_approval":  true,
+                      "task":  "Add a validated OpenHands-backed department manager planner. The manager may choose departments, capabilities, step order, and dependencies, but can never self-approve protected work. Prove it with one live manager AI planning call followed by local multi-worker execution."
                   }
               ]
 }
