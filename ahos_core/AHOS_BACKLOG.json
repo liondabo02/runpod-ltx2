@@ -1,4 +1,4 @@
-﻿{
+{
     "version":  1,
     "project":  "AHOS Core",
     "rules":  {
@@ -82,6 +82,33 @@
                       "requires_owner_approval":  false,
                       "task":  "Inside ahos_core only, define interfaces and data models for a future media execution capability. Keep the implementation inert and local-only; model requests, results, and authorization state without performing side effects. Add tests.",
                       "completed_at":  "2026-09-16T14:08:04.9376006Z"
+                  },
+                  {
+                      "id":  "AHOS-008",
+                      "title":  "Add immutable local audit event journal",
+                      "status":  "pending",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, add a local append-only audit event journal for missions, routing decisions, approvals, execution attempts, and outcomes. Use deterministic local storage, stable event IDs, timestamps, correlation IDs, and focused tests. Do not perform external actions."
+                  },
+                  {
+                      "id":  "AHOS-009",
+                      "title":  "Add department routing engine",
+                      "status":  "pending",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, implement a deterministic department routing engine that matches missions to registered department capabilities, returns ranked local routing candidates, explains the routing decision, and respects authority levels. Add focused tests. Do not call external services."
+                  },
+                  {
+                      "id":  "AHOS-010",
+                      "title":  "Add mission execution envelope and dispatcher",
+                      "status":  "pending",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, implement a local mission execution envelope and dispatcher that combines mission state, dependency readiness, department routing, approval requirements, retry policy, audit metadata, and execution result state. Keep execution inert and side-effect free. Add focused tests."
                   }
               ]
 }
