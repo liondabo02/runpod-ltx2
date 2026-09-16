@@ -1,34 +1,27 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
-Set-Location $Root
+$StateDir = Join-Path $Root 'runtime\state'
+$PidFile = Join-Path $StateDir 'worker.pid'
+$LauncherPidFile = Join-Path $StateDir 'worker-launcher.pid'
 
-$PidFile = Join-Path $Root 'runtime\state\worker.pid'
-$stopped = @()
-
-if (Test-Path $PidFile) {
-    $pidText = (Get-Content $PidFile -Raw).Trim()
-    if ($pidText -match '^\d+$') {
-        $pidValue = [int]$pidText
-        $p = Get-Process -Id $pidValue -ErrorAction SilentlyContinue
-        if ($p) {
-            Stop-Process -Id $pidValue -Force
-            $stopped += $pidValue
-        }
-    }
+$workers = Get-Process miniverse-worker -ErrorAction SilentlyContinue
+if ($workers) {
+    $workers | Stop-Process -Force
+    Write-Host "Stopped Miniverse worker PID(s): $($workers.Id -join ', ')"
+} else {
+    Write-Host 'No Miniverse worker process is running.'
 }
 
-Get-Process miniverse-worker -ErrorAction SilentlyContinue | ForEach-Object {
-    if ($stopped -notcontains $_.Id) {
-        Stop-Process -Id $_.Id -Force
-        $stopped += $_.Id
-    }
+if (Test-Path $LauncherPidFile) {
+    try {
+        $launcherPid = [int](Get-Content $LauncherPidFile -Raw)
+        $launcher = Get-Process -Id $launcherPid -ErrorAction SilentlyContinue
+        if ($launcher) {
+            Stop-Process -Id $launcherPid -Force -ErrorAction SilentlyContinue
+        }
+    } catch {}
 }
 
 Remove-Item $PidFile -Force -ErrorAction SilentlyContinue
-
-if ($stopped.Count -gt 0) {
-    Write-Host "Miniverse stopped. PID(s): $($stopped -join ', ')"
-} else {
-    Write-Host 'Miniverse was already stopped.'
-}
+Remove-Item $LauncherPidFile -Force -ErrorAction SilentlyContinue

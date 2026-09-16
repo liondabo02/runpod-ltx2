@@ -1,4 +1,4 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $Root
@@ -9,8 +9,8 @@ $HealthExe = Join-Path $Root '.venv\Scripts\miniverse-health.exe'
 $StateDir = Join-Path $Root 'runtime\state'
 $WorkspaceDir = Join-Path $Root 'runtime\workspaces'
 $PidFile = Join-Path $StateDir 'worker.pid'
-$OutLog = Join-Path $StateDir 'worker.out.log'
-$ErrLog = Join-Path $StateDir 'worker.err.log'
+$LauncherPidFile = Join-Path $StateDir 'worker-launcher.pid'
+$RunnerFile = Join-Path $StateDir 'worker-runner.ps1'
 $Heartbeat = Join-Path $StateDir 'worker-heartbeat.json'
 $QueueDb = Join-Path $StateDir 'tasks.db'
 
@@ -34,26 +34,85 @@ $env:MINIVERSE_WORKSPACE_ROOT = $WorkspaceDir
 $existing = Get-Process miniverse-worker -ErrorAction SilentlyContinue
 if ($existing) {
     Write-Host "Miniverse worker already running. PID(s): $($existing.Id -join ', ')"
+    try {
+        & $HealthExe --path $Heartbeat --max-age-seconds 90
+    } catch {}
     exit 0
 }
 
-$p = Start-Process `
-    -FilePath $WorkerExe `
-    -ArgumentList @('run', '--owner', 'MINIVERSE-PC') `
+Remove-Item $PidFile -Force -ErrorAction SilentlyContinue
+Remove-Item $LauncherPidFile -Force -ErrorAction SilentlyContinue
+
+$escapedRoot = $Root.Replace("'", "''")
+$escapedEnv = $EnvFile.Replace("'", "''")
+$escapedWorker = $WorkerExe.Replace("'", "''")
+$escapedHeartbeat = $Heartbeat.Replace("'", "''")
+$escapedQueue = $QueueDb.Replace("'", "''")
+$escapedWorkspace = $WorkspaceDir.Replace("'", "''")
+$escapedPid = $PidFile.Replace("'", "''")
+
+$runnerLines = @(
+    '$ErrorActionPreference = ''Stop'''
+    "Set-Location '$escapedRoot'"
+    "Get-Content '$escapedEnv' | ForEach-Object {"
+    "    if (`$_ -match '^\s*#' -or `$_ -notmatch '=') { return }"
+    "    `$name, `$value = `$_ -split '=', 2"
+    "    [Environment]::SetEnvironmentVariable(`$name.Trim(), `$value.Trim(), 'Process')"
+    "}"
+    "`$env:MINIVERSE_QUEUE_DB = '$escapedQueue'"
+    "`$env:MINIVERSE_WORKER_HEALTH_FILE = '$escapedHeartbeat'"
+    "`$env:MINIVERSE_WORKSPACE_ROOT = '$escapedWorkspace'"
+    "`$worker = Start-Process -FilePath '$escapedWorker' -ArgumentList @('run','--owner','MINIVERSE-PC') -WorkingDirectory '$escapedRoot' -PassThru"
+    "`$worker.Id | Set-Content -Path '$escapedPid' -Encoding ascii"
+    "`$worker.WaitForExit()"
+    "exit `$worker.ExitCode"
+)
+
+$runnerLines | Set-Content -Path $RunnerFile -Encoding utf8
+
+$launcher = Start-Process `
+    -FilePath 'powershell.exe' `
+    -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $RunnerFile) `
     -WorkingDirectory $Root `
-    -RedirectStandardOutput $OutLog `
-    -RedirectStandardError $ErrLog `
+    -WindowStyle Hidden `
     -PassThru
 
-$p.Id | Set-Content -Path $PidFile -Encoding ascii
-Start-Sleep -Seconds 3
+$launcher.Id | Set-Content -Path $LauncherPidFile -Encoding ascii
 
-if ($p.HasExited) {
-    Write-Host 'Worker exited during startup.'
-    if (Test-Path $ErrLog) { Get-Content $ErrLog -Tail 50 }
-    throw 'Miniverse worker failed to start.'
+$deadline = (Get-Date).AddSeconds(15)
+$healthy = $false
+
+do {
+    Start-Sleep -Seconds 1
+
+    if ($launcher.HasExited) {
+        break
+    }
+
+    $worker = Get-Process miniverse-worker -ErrorAction SilentlyContinue
+    if ($worker) {
+        try {
+            & $HealthExe --path $Heartbeat --max-age-seconds 90 | Out-Host
+            if ($LASTEXITCODE -eq 0) {
+                $healthy = $true
+                break
+            }
+        } catch {}
+    }
+} while ((Get-Date) -lt $deadline)
+
+if (-not $healthy) {
+    $worker = Get-Process miniverse-worker -ErrorAction SilentlyContinue
+    if (-not $worker) {
+        throw 'Miniverse worker failed to start in background.'
+    }
+    throw 'Miniverse worker process exists but health check did not become healthy in time.'
 }
 
-& $HealthExe --path $Heartbeat --max-age-seconds 90
-Write-Host "Miniverse started. PID: $($p.Id)"
+$worker = Get-Process miniverse-worker -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($worker) {
+    $worker.Id | Set-Content -Path $PidFile -Encoding ascii
+}
+
+Write-Host "Miniverse started in background. PID $($worker.Id)"
 Write-Host "Smoke mode: $env:MINIVERSE_SMOKE_MODE"
