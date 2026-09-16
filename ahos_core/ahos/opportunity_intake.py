@@ -84,7 +84,12 @@ class ReadOnlyHttpFetcher:
 
 
 class OpportunityCandidateStore:
-    """Append-only JSONL store with duplicate protection."""
+    """Append-only JSONL store with duplicate protection.
+
+    JSONL records are split only on physical CR/LF boundaries. Unicode
+    characters such as U+2028/U+2029 may legally occur inside JSON strings and
+    must not be treated as record separators.
+    """
 
     def __init__(self, path: str | Path) -> None:
         self.path = Path(path)
@@ -95,18 +100,18 @@ class OpportunityCandidateStore:
             return ()
 
         result: list[OpportunityCandidate] = []
-        for line_number, line in enumerate(
-            self.path.read_text(encoding="utf-8").splitlines(), start=1
-        ):
-            if not line.strip():
-                continue
-            try:
-                raw = json.loads(line)
-            except json.JSONDecodeError as exc:
-                raise ValueError(
-                    f"invalid opportunity candidate JSON at line {line_number}"
-                ) from exc
-            result.append(OpportunityCandidate(**raw))
+        with self.path.open("r", encoding="utf-8", newline="") as handle:
+            for line_number, line in enumerate(handle, start=1):
+                record = line.rstrip("\r\n")
+                if not record.strip():
+                    continue
+                try:
+                    raw = json.loads(record)
+                except json.JSONDecodeError as exc:
+                    raise ValueError(
+                        f"invalid opportunity candidate JSON at physical line {line_number}"
+                    ) from exc
+                result.append(OpportunityCandidate(**raw))
         return tuple(result)
 
     def ids(self) -> set[str]:
@@ -224,7 +229,6 @@ class OpportunityIntakeEngine:
 
         items = root.findall(".//item")
         if not items:
-            # Basic Atom support.
             items = root.findall(".//{*}entry")
 
         for item in items:
