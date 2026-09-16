@@ -232,6 +232,16 @@
                       "requires_owner_approval":  false,
                       "task":  "Add a read-only Freelancer.com project-search adapter around the official Python SDK. Keep authentication separate, support injected fake search data for tests, and convert project search results into AHOS opportunity candidates. No bidding, messaging, payments, or other external writes.",
                       "completed_at":  "2026-09-16T18:48:18.7111172Z"
+                  },
+                  {
+                      "id":  "AHOS-023",
+                      "title":  "Create AHOS virtual workforce core and initial employee roster",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Create the first real virtual-worker layer for AHOS: worker identities, roles, departments, capabilities, task slots, assignment/release, pause/resume, and per-worker AI budget gates. Add an initial multi-department virtual employee roster. Paid AI must be disabled by default. No external actions.",
+                      "completed_at":  "2026-09-16T18:54:01.7103848Z"
                   }
               ]
 }
