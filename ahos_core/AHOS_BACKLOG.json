@@ -326,20 +326,22 @@
                   {
                       "id":  "AHOS-032",
                       "title":  "Add real AI department-manager mission planner",
-                      "status":  "pending",
+                      "status":  "completed",
                       "risk":  "medium",
                       "authority":  "C",
                       "requires_owner_approval":  true,
-                      "task":  "Add a validated OpenHands-backed department manager planner. The manager may choose departments, capabilities, step order, and dependencies, but can never self-approve protected work. Prove it with one live manager AI planning call followed by local multi-worker execution."
+                      "task":  "Add a validated OpenHands-backed department manager planner. The manager may choose departments, capabilities, step order, and dependencies, but can never self-approve protected work. Prove it with one live manager AI planning call followed by local multi-worker execution.",
+                      "completed_at":  "2026-09-16T20:05:14.8723984Z"
                   },
                   {
                       "id":  "AHOS-033",
                       "title":  "Constrain AI manager to routable worker capabilities",
-                      "status":  "pending",
+                      "status":  "completed",
                       "risk":  "medium",
                       "authority":  "C",
                       "requires_owner_approval":  true,
-                      "task":  "Give the AI department manager the exact capability catalog of routable workers and reject invented capability names. Re-run one real manager planning call with local worker execution."
+                      "task":  "Give the AI department manager the exact capability catalog of routable workers and reject invented capability names. Re-run one real manager planning call with local worker execution.",
+                      "completed_at":  "2026-09-16T20:05:14.8793941Z"
                   }
               ]
 }
