@@ -1,423 +1,433 @@
 {
-  "version": 1,
-  "project": "AHOS Core",
-  "rules": {
-    "autonomous_authority": [
-      "A",
-      "B"
-    ],
-    "owner_approval_required": [
-      "C",
-      "D"
-    ],
-    "never_auto_merge_main": true
-  },
-  "tasks": [
-    {
-      "id": "AHOS-001",
-      "title": "Add persistent SQLite mission state store",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, implement a small SQLite-backed mission state store with typed mission statuses, create/read/update operations, migration-safe table creation, and focused tests. Keep the change reversible and run the AHOS test suite.",
-      "completed_at": "2026-09-14T20:43:11.1491903Z"
-    },
-    {
-      "id": "AHOS-002",
-      "title": "Add mission planner and dependency graph",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, add a deterministic mission planner that represents missions, dependencies, priority, and readiness using local code only. Include cycle detection and tests. Preserve existing governance behavior.",
-      "completed_at": "2026-09-14T20:49:24.2220077Z"
-    },
-    {
-      "id": "AHOS-003",
-      "title": "Add department capability registry",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, implement a department and capability registry for future software, media, research, QA, cost, marketing, CRM, and analytics departments. The registry should describe capabilities and authority levels while remaining local and inert. Add tests.",
-      "completed_at": "2026-09-15T15:27:30.6254535Z"
-    },
-    {
-      "id": "AHOS-004",
-      "title": "Add owner approval inbox",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, implement a local approval inbox that records blocked C/D action requests and owner decisions in an auditable form. It must never auto-approve. Add tests for pending, approve, reject, and immutable history behavior.",
-      "completed_at": "2026-09-15T15:34:18.6630779Z"
-    },
-    {
-      "id": "AHOS-005",
-      "title": "Add local scheduler and retry policy",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, implement deterministic scheduling primitives for local missions with bounded retries and backoff metadata. Keep execution local and side-effect free. Add tests.",
-      "completed_at": "2026-09-15T15:38:22.8412849Z"
-    },
-    {
-      "id": "AHOS-006",
-      "title": "Add metrics snapshot model",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, add local metrics models for mission counts, success and failure rate, latency, and estimated cost. Add tests and a small reporting helper.",
-      "completed_at": "2026-09-16T14:03:35.1527710Z"
-    },
-    {
-      "id": "AHOS-007",
-      "title": "Define media capability adapter contract",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, define interfaces and data models for a future media execution capability. Keep the implementation inert and local-only; model requests, results, and authorization state without performing side effects. Add tests.",
-      "completed_at": "2026-09-16T14:08:04.9376006Z"
-    },
-    {
-      "id": "AHOS-008",
-      "title": "Add immutable local audit event journal",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, add a local append-only audit event journal for missions, routing decisions, approvals, execution attempts, and outcomes. Use deterministic local storage, stable event IDs, timestamps, correlation IDs, and focused tests. Do not perform external actions.",
-      "completed_at": "2026-09-16T16:28:47.5718128Z"
-    },
-    {
-      "id": "AHOS-009",
-      "title": "Add department routing engine",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, implement a deterministic department routing engine that matches missions to registered department capabilities, returns ranked local routing candidates, explains the routing decision, and respects authority levels. Add focused tests. Do not call external services.",
-      "completed_at": "2026-09-16T16:38:56.7840833Z"
-    },
-    {
-      "id": "AHOS-010",
-      "title": "Add mission execution envelope and dispatcher",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, implement a local mission execution envelope and dispatcher that combines mission state, dependency readiness, department routing, approval requirements, retry policy, audit metadata, and execution result state. Keep execution inert and side-effect free. Add focused tests.",
-      "completed_at": "2026-09-16T16:44:41.7647898Z"
-    },
-    {
-      "id": "AHOS-011",
-      "title": "Add opportunity intake and local scoring model",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, implement a local opportunity intake model and deterministic scoring pipeline for potential work, products, services, and internal initiatives. Store source, category, expected value, effort, risk, confidence, strategic fit, and status. Keep it local and inert: no scraping, outreach, purchasing, publishing, or external side effects. Add focused tests.",
-      "completed_at": "2026-09-16T16:53:10.6998291Z"
-    },
-    {
-      "id": "AHOS-012",
-      "title": "Add venture registry and lifecycle state machine",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, add a persistent local venture/company registry with lifecycle states such as idea, validating, building, operating, paused, and retired. Link ventures to opportunities, departments, objectives, budgets, and audit metadata. Enforce deterministic valid state transitions and add focused tests. No external side effects.",
-      "completed_at": "2026-09-16T16:56:36.7421260Z"
-    },
-    {
-      "id": "AHOS-013",
-      "title": "Add work order and department assignment model",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, implement local work orders that turn approved venture objectives into bounded assignments for departments. Include work-order IDs, venture ID, mission ID, capability requirements, priority, dependencies, budget ceiling metadata, routing result, status, and audit correlation. Keep execution inert and add focused tests.",
-      "completed_at": "2026-09-16T18:03:40.2841458Z"
-    },
-    {
-      "id": "AHOS-014",
-      "title": "Add local financial ledger and unit economics snapshot",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, implement a local append-only financial ledger for simulated or recorded revenue, costs, commitments, and budget allocations plus deterministic venture-level unit economics snapshots. Do not initiate payments, purchases, transfers, billing, or other external financial actions. Add focused tests.",
-      "completed_at": "2026-09-16T18:07:47.5721366Z"
-    },
-    {
-      "id": "AHOS-015",
-      "title": "Add local holding operating cycle coordinator",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, connect opportunity scoring, venture registry, department routing, work orders, financial snapshots, and immutable audit events into one local-only holding operating coordinator. No external side effects. Add focused end-to-end tests.",
-      "completed_at": "2026-09-16T18:09:57.6404351Z"
-    },
-    {
-      "id": "AHOS-016",
-      "title": "Add read-only real-world opportunity intake adapters",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, add read-only public HTTP JSON/RSS opportunity intake adapters with explicit source configuration, stable candidate IDs, local persistence, and duplicate protection. No posting, outreach, login, payment, purchase, or other external side effects. Add focused tests using injected local fetchers so tests make no network calls.",
-      "completed_at": "2026-09-16T18:13:30.3144486Z"
-    },
-    {
-      "id": "AHOS-017",
-      "title": "Connect verified public opportunity feeds",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, configure verified public read-only Remote OK and We Work Remotely RSS feeds and add resilient per-source collection into the local opportunity candidate store. A failed feed must not stop the other feeds. Tests must use injected local data and make no real network calls. No applications, outreach, posting, login, payments, purchases, or other external write actions.",
-      "completed_at": "2026-09-16T18:16:04.2720686Z"
-    },
-    {
-      "id": "AHOS-018",
-      "title": "Add free local candidate triage and filtering",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Inside ahos_core only, add deterministic local triage for collected opportunity candidates. Distinguish project/contract-like opportunities from human employment roles, score technical/automation relevance, and persist ranked results locally. No OpenAI calls, no applications, no outreach, no payments, no external writes.",
-      "completed_at": "2026-09-16T18:33:27.5550456Z"
-    },
-    {
-      "id": "AHOS-019",
-      "title": "Separate real business leads from employee job postings",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Refine local opportunity triage so highly technical full-time employment listings are not mislabeled as holding business opportunities. Require explicit freelance, contractor, consulting, or similar project signals for business-lead promotion. Keep all processing local and free.",
-      "completed_at": "2026-09-16T18:36:22.5974326Z"
-    },
-    {
-      "id": "AHOS-020",
-      "title": "Require strong project-signal provenance for business leads",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Refine candidate triage so normal job-board descriptions cannot become business leads merely because boilerplate contains words such as contract. Require project signals from the title or structured employment metadata. Keep processing local and deterministic.",
-      "completed_at": "2026-09-16T18:41:25.3609692Z"
-    },
-    {
-      "id": "AHOS-021",
-      "title": "Eliminate false freelance signals in employee job titles",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Require unambiguous freelance/contract title patterns or exact structured employment metadata for BUSINESS_LEAD. Do not treat generic Consultant titles or plural Contracts nouns as project signals. Keep processing local.",
-      "completed_at": "2026-09-16T18:44:29.1188264Z"
-    },
-    {
-      "id": "AHOS-022",
-      "title": "Add official Freelancer project-search adapter",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Add a read-only Freelancer.com project-search adapter around the official Python SDK. Keep authentication separate, support injected fake search data for tests, and convert project search results into AHOS opportunity candidates. No bidding, messaging, payments, or other external writes.",
-      "completed_at": "2026-09-16T18:48:18.7111172Z"
-    },
-    {
-      "id": "AHOS-023",
-      "title": "Create AHOS virtual workforce core and initial employee roster",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Create the first real virtual-worker layer for AHOS: worker identities, roles, departments, capabilities, task slots, assignment/release, pause/resume, and per-worker AI budget gates. Add an initial multi-department virtual employee roster. Paid AI must be disabled by default. No external actions.",
-      "completed_at": "2026-09-16T18:54:01.7103848Z"
-    },
-    {
-      "id": "AHOS-024",
-      "title": "Connect virtual employees to task routing and QA lifecycle",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Add deterministic virtual-workforce dispatch: capability matching, single-worker task leases, owner-approval gates for paid/external/destructive/secret-touching work, worker completion, QA handoff, and final QA completion. No LLM or network calls.",
-      "completed_at": "2026-09-16T18:55:48.2619970Z"
-    },
-    {
-      "id": "AHOS-025",
-      "title": "Add executable virtual-worker runtime with QA lifecycle",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Add an executable virtual-worker runtime that takes a routed WorkItem, invokes an injected worker executor, releases the worker, hands successful work to QA, and only completes after QA passes. Missing executors, worker failures, QA failures, paid work, and external actions must fail closed. No OpenAI calls.",
-      "completed_at": "2026-09-16T18:58:16.8354086Z"
-    },
-    {
-      "id": "AHOS-026",
-      "title": "Add OpenHands execution bridge for virtual software workers",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Add a zero-cost tested adapter that converts AHOS WorkItems into isolated OpenHands-style builder executions and maps builder results back into the virtual-worker runtime. Keep the real builder injected, preserve approval gates, and make no live AI calls in this task.",
-      "completed_at": "2026-09-16T19:01:38.8642323Z"
-    },
-    {
-      "id": "AHOS-027",
-      "title": "Add explicit owner-approved paid worker execution path",
-      "status": "completed",
-      "risk": "medium",
-      "authority": "C",
-      "requires_owner_approval": true,
-      "completed_at": "2026-09-16T19:07:40.1748223Z",
-      "task": "Allow a paid virtual-worker task to pass the approval gate only when owner_approved is explicit, while still enforcing a paid-capable worker and its daily budget. Validate locally, then run one owner-approved live OpenHands smoke task."
-    },
-    {
-      "id": "AHOS-028",
-      "title": "Honor owner approval in OpenHands adapter",
-      "status": "completed",
-      "risk": "medium",
-      "authority": "C",
-      "requires_owner_approval": true,
-      "completed_at": "2026-09-16T19:11:00.9759263Z",
-      "task": "Allow explicitly owner-approved paid work through the OpenHands worker adapter while unapproved protected work remains blocked. Validate locally, then retry one tiny live AI worker smoke."
-    },
-    {
-      "id": "AHOS-029",
-      "title": "Align OpenHands builder with installed SDK conversation API",
-      "status": "completed",
-      "risk": "medium",
-      "authority": "C",
-      "requires_owner_approval": true,
-      "completed_at": "2026-09-16T19:15:06.4678052Z",
-      "task": "Remove the unsupported max_budget_per_run Conversation keyword for the installed OpenHands SDK while retaining max_iteration_per_run, AHOS owner approval, and worker budget gates. Run compatibility tests before one tiny live retry."
-    },
-    {
-      "id": "AHOS-030",
-      "title": "Add department manager and multi-worker mission orchestrator",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Create a department-manager planning layer and a dependency-aware multi-worker mission orchestrator. A manager leases itself for planning, produces a validated step graph through an injected planner, routes each step to the correct virtual worker, hands completed-step summaries downstream, requires QA on every step, and stops the mission on failures or approval gates. No live AI or external actions in this task.",
-      "completed_at": "2026-09-16T19:41:54.7408056Z"
-    },
-    {
-      "id": "AHOS-031",
-      "title": "Prove real multi-worker AI mission execution",
-      "status": "completed",
-      "risk": "medium",
-      "authority": "C",
-      "requires_owner_approval": true,
-      "completed_at": "2026-09-16T19:45:46.6981216Z",
-      "task": "Run one owner-approved real mission through Software Department Manager planning, a real OpenHands Researcher worker, QA, downstream result handoff, a real OpenHands Software Engineer worker, and final QA. No publishing, messaging, payments, deployments, or other external business actions."
-    },
-    {
-      "id": "AHOS-032",
-      "title": "Add real AI department-manager mission planner",
-      "status": "completed",
-      "risk": "medium",
-      "authority": "C",
-      "requires_owner_approval": true,
-      "task": "Add a validated OpenHands-backed department manager planner. The manager may choose departments, capabilities, step order, and dependencies, but can never self-approve protected work. Prove it with one live manager AI planning call followed by local multi-worker execution.",
-      "completed_at": "2026-09-16T20:05:14.8723984Z"
-    },
-    {
-      "id": "AHOS-033",
-      "title": "Constrain AI manager to routable worker capabilities",
-      "status": "completed",
-      "risk": "medium",
-      "authority": "C",
-      "requires_owner_approval": true,
-      "task": "Give the AI department manager the exact capability catalog of routable workers and reject invented capability names. Re-run one real manager planning call with local worker execution.",
-      "completed_at": "2026-09-16T20:05:14.8793941Z"
-    },
-    {
-      "id": "AHOS-034",
-      "title": "Prove full AI manager-to-worker chain",
-      "status": "completed",
-      "risk": "medium",
-      "authority": "C",
-      "requires_owner_approval": true,
-      "completed_at": "2026-09-16T20:18:44.7494398Z",
-      "task": "Prove one end-to-end owner-approved mission with a real AI department manager, real AI researcher, deterministic QA, verified research handoff, real AI software engineer, and final QA. Keep all work local; no publishing, messaging, payments, deployment, destructive actions, or secret access."
-    },
-    {
-      "id": "AHOS-035",
-      "title": "Add persistent autonomous mission queue and company loop",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Add a local SQLite-backed persistent mission queue and autonomous company loop with atomic leases, bounded retries, stale-lease recovery, blocked-mission fail-closed behavior, result audit persistence, run-once, run-until-idle, and continuous polling primitives. No AI or external actions in this step.",
-      "completed_at": "2026-09-16T20:23:15.2924369Z"
-    },
-    {
-      "id": "AHOS-036",
-      "title": "Connect persistent company queue to full AI mission chain",
-      "status": "completed",
-      "risk": "medium",
-      "authority": "C",
-      "requires_owner_approval": true,
-      "task": "Connect the persistent SQLite company mission queue and CompanyLoop to the proven AI manager, AI researcher, QA, handoff, AI developer, and QA chain. Prove one owner-approved queued live mission end-to-end with no external business actions.",
-      "completed_at": "2026-09-16T20:38:47.7594453Z"
-    },
-    {
-      "id": "AHOS-037",
-      "title": "Install persistent Windows company service",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "completed_at": "2026-09-19T09:39:47.3639820Z",
-      "task": "Install a local Windows logon-started company service with heartbeat and SAFE-IDLE mode."
-    },
-    {
-      "id": "AHOS-038",
-      "title": "Add persistent owner-approval inbox and execution gate",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Add a local SQLite owner-approval inbox, WAITING_OWNER_APPROVAL mission/queue state, fail-closed gate for paid/external/destructive/secret-touching work, approve/reject decisions, and safe resume after approval. No live AI or external actions."
-    },
-    {
-      "id": "AHOS-039",
-      "title": "Expand holding departments and department-manager workforce",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Expand the local virtual holding so every core department has its own department manager plus at least one specialist. Add a validated department-structure catalog for software, quality, research, infrastructure, data, creative, marketing, sales, finance, operations, and support. Keep specialist routing stable and all paid AI disabled by default. No live AI or external actions."
-    },
-    {
-      "id": "AHOS-040",
-      "title": "Convert qualified opportunities into persistent queued missions",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Add a local fail-closed bridge from qualified BUSINESS_LEAD opportunity candidates into the persistent AHOS mission queue. Use stable mission IDs, deterministic department selection, duplicate protection, and explicit read-only objectives that prohibit applications, bids, outreach, messages, payments, purchases, publishing, deployment, login, and credential use. No live AI, network fetch, or external write actions."
-    },
-    {
-      "id": "AHOS-041",
-      "title": "Install local Holding Control Center dashboard",
-      "status": "completed",
-      "risk": "low",
-      "authority": "B",
-      "requires_owner_approval": false,
-      "task": "Install a localhost-only Holding Control Center with service heartbeat, mission queue, virtual worker roster and last activity, approval inbox approve/reject controls, owner kill switch, start/resume control, and local runtime backups. No live AI or external business actions."
-    }
-  ]
+    "version":  1,
+    "project":  "AHOS Core",
+    "rules":  {
+                  "autonomous_authority":  [
+                                               "A",
+                                               "B"
+                                           ],
+                  "owner_approval_required":  [
+                                                  "C",
+                                                  "D"
+                                              ],
+                  "never_auto_merge_main":  true
+              },
+    "tasks":  [
+                  {
+                      "id":  "AHOS-001",
+                      "title":  "Add persistent SQLite mission state store",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, implement a small SQLite-backed mission state store with typed mission statuses, create/read/update operations, migration-safe table creation, and focused tests. Keep the change reversible and run the AHOS test suite.",
+                      "completed_at":  "2026-09-14T20:43:11.1491903Z"
+                  },
+                  {
+                      "id":  "AHOS-002",
+                      "title":  "Add mission planner and dependency graph",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, add a deterministic mission planner that represents missions, dependencies, priority, and readiness using local code only. Include cycle detection and tests. Preserve existing governance behavior.",
+                      "completed_at":  "2026-09-14T20:49:24.2220077Z"
+                  },
+                  {
+                      "id":  "AHOS-003",
+                      "title":  "Add department capability registry",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, implement a department and capability registry for future software, media, research, QA, cost, marketing, CRM, and analytics departments. The registry should describe capabilities and authority levels while remaining local and inert. Add tests.",
+                      "completed_at":  "2026-09-15T15:27:30.6254535Z"
+                  },
+                  {
+                      "id":  "AHOS-004",
+                      "title":  "Add owner approval inbox",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, implement a local approval inbox that records blocked C/D action requests and owner decisions in an auditable form. It must never auto-approve. Add tests for pending, approve, reject, and immutable history behavior.",
+                      "completed_at":  "2026-09-15T15:34:18.6630779Z"
+                  },
+                  {
+                      "id":  "AHOS-005",
+                      "title":  "Add local scheduler and retry policy",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, implement deterministic scheduling primitives for local missions with bounded retries and backoff metadata. Keep execution local and side-effect free. Add tests.",
+                      "completed_at":  "2026-09-15T15:38:22.8412849Z"
+                  },
+                  {
+                      "id":  "AHOS-006",
+                      "title":  "Add metrics snapshot model",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, add local metrics models for mission counts, success and failure rate, latency, and estimated cost. Add tests and a small reporting helper.",
+                      "completed_at":  "2026-09-16T14:03:35.1527710Z"
+                  },
+                  {
+                      "id":  "AHOS-007",
+                      "title":  "Define media capability adapter contract",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, define interfaces and data models for a future media execution capability. Keep the implementation inert and local-only; model requests, results, and authorization state without performing side effects. Add tests.",
+                      "completed_at":  "2026-09-16T14:08:04.9376006Z"
+                  },
+                  {
+                      "id":  "AHOS-008",
+                      "title":  "Add immutable local audit event journal",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, add a local append-only audit event journal for missions, routing decisions, approvals, execution attempts, and outcomes. Use deterministic local storage, stable event IDs, timestamps, correlation IDs, and focused tests. Do not perform external actions.",
+                      "completed_at":  "2026-09-16T16:28:47.5718128Z"
+                  },
+                  {
+                      "id":  "AHOS-009",
+                      "title":  "Add department routing engine",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, implement a deterministic department routing engine that matches missions to registered department capabilities, returns ranked local routing candidates, explains the routing decision, and respects authority levels. Add focused tests. Do not call external services.",
+                      "completed_at":  "2026-09-16T16:38:56.7840833Z"
+                  },
+                  {
+                      "id":  "AHOS-010",
+                      "title":  "Add mission execution envelope and dispatcher",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, implement a local mission execution envelope and dispatcher that combines mission state, dependency readiness, department routing, approval requirements, retry policy, audit metadata, and execution result state. Keep execution inert and side-effect free. Add focused tests.",
+                      "completed_at":  "2026-09-16T16:44:41.7647898Z"
+                  },
+                  {
+                      "id":  "AHOS-011",
+                      "title":  "Add opportunity intake and local scoring model",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, implement a local opportunity intake model and deterministic scoring pipeline for potential work, products, services, and internal initiatives. Store source, category, expected value, effort, risk, confidence, strategic fit, and status. Keep it local and inert: no scraping, outreach, purchasing, publishing, or external side effects. Add focused tests.",
+                      "completed_at":  "2026-09-16T16:53:10.6998291Z"
+                  },
+                  {
+                      "id":  "AHOS-012",
+                      "title":  "Add venture registry and lifecycle state machine",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, add a persistent local venture/company registry with lifecycle states such as idea, validating, building, operating, paused, and retired. Link ventures to opportunities, departments, objectives, budgets, and audit metadata. Enforce deterministic valid state transitions and add focused tests. No external side effects.",
+                      "completed_at":  "2026-09-16T16:56:36.7421260Z"
+                  },
+                  {
+                      "id":  "AHOS-013",
+                      "title":  "Add work order and department assignment model",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, implement local work orders that turn approved venture objectives into bounded assignments for departments. Include work-order IDs, venture ID, mission ID, capability requirements, priority, dependencies, budget ceiling metadata, routing result, status, and audit correlation. Keep execution inert and add focused tests.",
+                      "completed_at":  "2026-09-16T18:03:40.2841458Z"
+                  },
+                  {
+                      "id":  "AHOS-014",
+                      "title":  "Add local financial ledger and unit economics snapshot",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, implement a local append-only financial ledger for simulated or recorded revenue, costs, commitments, and budget allocations plus deterministic venture-level unit economics snapshots. Do not initiate payments, purchases, transfers, billing, or other external financial actions. Add focused tests.",
+                      "completed_at":  "2026-09-16T18:07:47.5721366Z"
+                  },
+                  {
+                      "id":  "AHOS-015",
+                      "title":  "Add local holding operating cycle coordinator",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, connect opportunity scoring, venture registry, department routing, work orders, financial snapshots, and immutable audit events into one local-only holding operating coordinator. No external side effects. Add focused end-to-end tests.",
+                      "completed_at":  "2026-09-16T18:09:57.6404351Z"
+                  },
+                  {
+                      "id":  "AHOS-016",
+                      "title":  "Add read-only real-world opportunity intake adapters",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, add read-only public HTTP JSON/RSS opportunity intake adapters with explicit source configuration, stable candidate IDs, local persistence, and duplicate protection. No posting, outreach, login, payment, purchase, or other external side effects. Add focused tests using injected local fetchers so tests make no network calls.",
+                      "completed_at":  "2026-09-16T18:13:30.3144486Z"
+                  },
+                  {
+                      "id":  "AHOS-017",
+                      "title":  "Connect verified public opportunity feeds",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, configure verified public read-only Remote OK and We Work Remotely RSS feeds and add resilient per-source collection into the local opportunity candidate store. A failed feed must not stop the other feeds. Tests must use injected local data and make no real network calls. No applications, outreach, posting, login, payments, purchases, or other external write actions.",
+                      "completed_at":  "2026-09-16T18:16:04.2720686Z"
+                  },
+                  {
+                      "id":  "AHOS-018",
+                      "title":  "Add free local candidate triage and filtering",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, add deterministic local triage for collected opportunity candidates. Distinguish project/contract-like opportunities from human employment roles, score technical/automation relevance, and persist ranked results locally. No OpenAI calls, no applications, no outreach, no payments, no external writes.",
+                      "completed_at":  "2026-09-16T18:33:27.5550456Z"
+                  },
+                  {
+                      "id":  "AHOS-019",
+                      "title":  "Separate real business leads from employee job postings",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Refine local opportunity triage so highly technical full-time employment listings are not mislabeled as holding business opportunities. Require explicit freelance, contractor, consulting, or similar project signals for business-lead promotion. Keep all processing local and free.",
+                      "completed_at":  "2026-09-16T18:36:22.5974326Z"
+                  },
+                  {
+                      "id":  "AHOS-020",
+                      "title":  "Require strong project-signal provenance for business leads",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Refine candidate triage so normal job-board descriptions cannot become business leads merely because boilerplate contains words such as contract. Require project signals from the title or structured employment metadata. Keep processing local and deterministic.",
+                      "completed_at":  "2026-09-16T18:41:25.3609692Z"
+                  },
+                  {
+                      "id":  "AHOS-021",
+                      "title":  "Eliminate false freelance signals in employee job titles",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Require unambiguous freelance/contract title patterns or exact structured employment metadata for BUSINESS_LEAD. Do not treat generic Consultant titles or plural Contracts nouns as project signals. Keep processing local.",
+                      "completed_at":  "2026-09-16T18:44:29.1188264Z"
+                  },
+                  {
+                      "id":  "AHOS-022",
+                      "title":  "Add official Freelancer project-search adapter",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Add a read-only Freelancer.com project-search adapter around the official Python SDK. Keep authentication separate, support injected fake search data for tests, and convert project search results into AHOS opportunity candidates. No bidding, messaging, payments, or other external writes.",
+                      "completed_at":  "2026-09-16T18:48:18.7111172Z"
+                  },
+                  {
+                      "id":  "AHOS-023",
+                      "title":  "Create AHOS virtual workforce core and initial employee roster",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Create the first real virtual-worker layer for AHOS: worker identities, roles, departments, capabilities, task slots, assignment/release, pause/resume, and per-worker AI budget gates. Add an initial multi-department virtual employee roster. Paid AI must be disabled by default. No external actions.",
+                      "completed_at":  "2026-09-16T18:54:01.7103848Z"
+                  },
+                  {
+                      "id":  "AHOS-024",
+                      "title":  "Connect virtual employees to task routing and QA lifecycle",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Add deterministic virtual-workforce dispatch: capability matching, single-worker task leases, owner-approval gates for paid/external/destructive/secret-touching work, worker completion, QA handoff, and final QA completion. No LLM or network calls.",
+                      "completed_at":  "2026-09-16T18:55:48.2619970Z"
+                  },
+                  {
+                      "id":  "AHOS-025",
+                      "title":  "Add executable virtual-worker runtime with QA lifecycle",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Add an executable virtual-worker runtime that takes a routed WorkItem, invokes an injected worker executor, releases the worker, hands successful work to QA, and only completes after QA passes. Missing executors, worker failures, QA failures, paid work, and external actions must fail closed. No OpenAI calls.",
+                      "completed_at":  "2026-09-16T18:58:16.8354086Z"
+                  },
+                  {
+                      "id":  "AHOS-026",
+                      "title":  "Add OpenHands execution bridge for virtual software workers",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Add a zero-cost tested adapter that converts AHOS WorkItems into isolated OpenHands-style builder executions and maps builder results back into the virtual-worker runtime. Keep the real builder injected, preserve approval gates, and make no live AI calls in this task.",
+                      "completed_at":  "2026-09-16T19:01:38.8642323Z"
+                  },
+                  {
+                      "id":  "AHOS-027",
+                      "title":  "Add explicit owner-approved paid worker execution path",
+                      "status":  "completed",
+                      "risk":  "medium",
+                      "authority":  "C",
+                      "requires_owner_approval":  true,
+                      "completed_at":  "2026-09-16T19:07:40.1748223Z",
+                      "task":  "Allow a paid virtual-worker task to pass the approval gate only when owner_approved is explicit, while still enforcing a paid-capable worker and its daily budget. Validate locally, then run one owner-approved live OpenHands smoke task."
+                  },
+                  {
+                      "id":  "AHOS-028",
+                      "title":  "Honor owner approval in OpenHands adapter",
+                      "status":  "completed",
+                      "risk":  "medium",
+                      "authority":  "C",
+                      "requires_owner_approval":  true,
+                      "completed_at":  "2026-09-16T19:11:00.9759263Z",
+                      "task":  "Allow explicitly owner-approved paid work through the OpenHands worker adapter while unapproved protected work remains blocked. Validate locally, then retry one tiny live AI worker smoke."
+                  },
+                  {
+                      "id":  "AHOS-029",
+                      "title":  "Align OpenHands builder with installed SDK conversation API",
+                      "status":  "completed",
+                      "risk":  "medium",
+                      "authority":  "C",
+                      "requires_owner_approval":  true,
+                      "completed_at":  "2026-09-16T19:15:06.4678052Z",
+                      "task":  "Remove the unsupported max_budget_per_run Conversation keyword for the installed OpenHands SDK while retaining max_iteration_per_run, AHOS owner approval, and worker budget gates. Run compatibility tests before one tiny live retry."
+                  },
+                  {
+                      "id":  "AHOS-030",
+                      "title":  "Add department manager and multi-worker mission orchestrator",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Create a department-manager planning layer and a dependency-aware multi-worker mission orchestrator. A manager leases itself for planning, produces a validated step graph through an injected planner, routes each step to the correct virtual worker, hands completed-step summaries downstream, requires QA on every step, and stops the mission on failures or approval gates. No live AI or external actions in this task.",
+                      "completed_at":  "2026-09-16T19:41:54.7408056Z"
+                  },
+                  {
+                      "id":  "AHOS-031",
+                      "title":  "Prove real multi-worker AI mission execution",
+                      "status":  "completed",
+                      "risk":  "medium",
+                      "authority":  "C",
+                      "requires_owner_approval":  true,
+                      "completed_at":  "2026-09-16T19:45:46.6981216Z",
+                      "task":  "Run one owner-approved real mission through Software Department Manager planning, a real OpenHands Researcher worker, QA, downstream result handoff, a real OpenHands Software Engineer worker, and final QA. No publishing, messaging, payments, deployments, or other external business actions."
+                  },
+                  {
+                      "id":  "AHOS-032",
+                      "title":  "Add real AI department-manager mission planner",
+                      "status":  "completed",
+                      "risk":  "medium",
+                      "authority":  "C",
+                      "requires_owner_approval":  true,
+                      "task":  "Add a validated OpenHands-backed department manager planner. The manager may choose departments, capabilities, step order, and dependencies, but can never self-approve protected work. Prove it with one live manager AI planning call followed by local multi-worker execution.",
+                      "completed_at":  "2026-09-16T20:05:14.8723984Z"
+                  },
+                  {
+                      "id":  "AHOS-033",
+                      "title":  "Constrain AI manager to routable worker capabilities",
+                      "status":  "completed",
+                      "risk":  "medium",
+                      "authority":  "C",
+                      "requires_owner_approval":  true,
+                      "task":  "Give the AI department manager the exact capability catalog of routable workers and reject invented capability names. Re-run one real manager planning call with local worker execution.",
+                      "completed_at":  "2026-09-16T20:05:14.8793941Z"
+                  },
+                  {
+                      "id":  "AHOS-034",
+                      "title":  "Prove full AI manager-to-worker chain",
+                      "status":  "completed",
+                      "risk":  "medium",
+                      "authority":  "C",
+                      "requires_owner_approval":  true,
+                      "completed_at":  "2026-09-16T20:18:44.7494398Z",
+                      "task":  "Prove one end-to-end owner-approved mission with a real AI department manager, real AI researcher, deterministic QA, verified research handoff, real AI software engineer, and final QA. Keep all work local; no publishing, messaging, payments, deployment, destructive actions, or secret access."
+                  },
+                  {
+                      "id":  "AHOS-035",
+                      "title":  "Add persistent autonomous mission queue and company loop",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Add a local SQLite-backed persistent mission queue and autonomous company loop with atomic leases, bounded retries, stale-lease recovery, blocked-mission fail-closed behavior, result audit persistence, run-once, run-until-idle, and continuous polling primitives. No AI or external actions in this step.",
+                      "completed_at":  "2026-09-16T20:23:15.2924369Z"
+                  },
+                  {
+                      "id":  "AHOS-036",
+                      "title":  "Connect persistent company queue to full AI mission chain",
+                      "status":  "completed",
+                      "risk":  "medium",
+                      "authority":  "C",
+                      "requires_owner_approval":  true,
+                      "task":  "Connect the persistent SQLite company mission queue and CompanyLoop to the proven AI manager, AI researcher, QA, handoff, AI developer, and QA chain. Prove one owner-approved queued live mission end-to-end with no external business actions.",
+                      "completed_at":  "2026-09-16T20:38:47.7594453Z"
+                  },
+                  {
+                      "id":  "AHOS-037",
+                      "title":  "Install persistent Windows company service",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "completed_at":  "2026-09-19T09:39:47.3639820Z",
+                      "task":  "Install a local Windows logon-started company service with heartbeat and SAFE-IDLE mode."
+                  },
+                  {
+                      "id":  "AHOS-038",
+                      "title":  "Add persistent owner-approval inbox and execution gate",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Add a local SQLite owner-approval inbox, WAITING_OWNER_APPROVAL mission/queue state, fail-closed gate for paid/external/destructive/secret-touching work, approve/reject decisions, and safe resume after approval. No live AI or external actions."
+                  },
+                  {
+                      "id":  "AHOS-039",
+                      "title":  "Expand holding departments and department-manager workforce",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Expand the local virtual holding so every core department has its own department manager plus at least one specialist. Add a validated department-structure catalog for software, quality, research, infrastructure, data, creative, marketing, sales, finance, operations, and support. Keep specialist routing stable and all paid AI disabled by default. No live AI or external actions."
+                  },
+                  {
+                      "id":  "AHOS-040",
+                      "title":  "Convert qualified opportunities into persistent queued missions",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Add a local fail-closed bridge from qualified BUSINESS_LEAD opportunity candidates into the persistent AHOS mission queue. Use stable mission IDs, deterministic department selection, duplicate protection, and explicit read-only objectives that prohibit applications, bids, outreach, messages, payments, purchases, publishing, deployment, login, and credential use. No live AI, network fetch, or external write actions."
+                  },
+                  {
+                      "id":  "AHOS-041",
+                      "title":  "Install local Holding Control Center dashboard",
+                      "status":  "completed",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Install a localhost-only Holding Control Center with service heartbeat, mission queue, virtual worker roster and last activity, approval inbox approve/reject controls, owner kill switch, start/resume control, and local runtime backups. No live AI or external business actions."
+                  },
+                  {
+                      "id":  "AHOS-042",
+                      "title":  "Final controlled holding acceptance test",
+                      "status":  "completed",
+                      "risk":  "medium",
+                      "authority":  "C",
+                      "requires_owner_approval":  true,
+                      "task":  "Run one explicit owner-approved final acceptance mission through the real persistent company queue, real AI department manager, real AI researcher, deterministic QA, verified handoff, real AI software engineer, final QA, persistent result, and Holding Control Center visibility. No external business actions.",
+                      "completed_at":  "2026-09-19T10:38:50.0917449Z"
+                  }
+              ]
 }
