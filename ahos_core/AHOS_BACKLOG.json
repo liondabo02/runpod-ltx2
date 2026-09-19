@@ -391,6 +391,15 @@
       "authority": "B",
       "requires_owner_approval": false,
       "task": "Add a local SQLite owner-approval inbox, WAITING_OWNER_APPROVAL mission/queue state, fail-closed gate for paid/external/destructive/secret-touching work, approve/reject decisions, and safe resume after approval. No live AI or external actions."
+    },
+    {
+      "id": "AHOS-039",
+      "title": "Expand holding departments and department-manager workforce",
+      "status": "completed",
+      "risk": "low",
+      "authority": "B",
+      "requires_owner_approval": false,
+      "task": "Expand the local virtual holding so every core department has its own department manager plus at least one specialist. Add a validated department-structure catalog for software, quality, research, infrastructure, data, creative, marketing, sales, finance, operations, and support. Keep specialist routing stable and all paid AI disabled by default. No live AI or external actions."
     }
   ]
 }

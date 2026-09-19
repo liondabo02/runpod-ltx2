@@ -201,6 +201,96 @@ def default_virtual_workforce() -> tuple[WorkerProfile, ...]:
             ),
         ),
         WorkerProfile(
+            worker_id="mgr-quality-01",
+            name="Quality Department Manager",
+            role=WorkerRole.DEPARTMENT_MANAGER,
+            department="quality",
+            capabilities=frozenset(
+                {"planning", "task_decomposition", "routing", "quality_oversight"}
+            ),
+        ),
+        WorkerProfile(
+            worker_id="mgr-research-01",
+            name="Research Department Manager",
+            role=WorkerRole.DEPARTMENT_MANAGER,
+            department="research",
+            capabilities=frozenset(
+                {"planning", "task_decomposition", "routing", "research_oversight"}
+            ),
+        ),
+        WorkerProfile(
+            worker_id="mgr-infrastructure-01",
+            name="Infrastructure Department Manager",
+            role=WorkerRole.DEPARTMENT_MANAGER,
+            department="infrastructure",
+            capabilities=frozenset(
+                {"planning", "task_decomposition", "routing", "infrastructure_oversight"}
+            ),
+        ),
+        WorkerProfile(
+            worker_id="mgr-data-01",
+            name="Data Department Manager",
+            role=WorkerRole.DEPARTMENT_MANAGER,
+            department="data",
+            capabilities=frozenset(
+                {"planning", "task_decomposition", "routing", "data_oversight"}
+            ),
+        ),
+        WorkerProfile(
+            worker_id="mgr-creative-01",
+            name="Creative Department Manager",
+            role=WorkerRole.DEPARTMENT_MANAGER,
+            department="creative",
+            capabilities=frozenset(
+                {"planning", "task_decomposition", "routing", "creative_oversight"}
+            ),
+        ),
+        WorkerProfile(
+            worker_id="mgr-marketing-01",
+            name="Marketing Department Manager",
+            role=WorkerRole.DEPARTMENT_MANAGER,
+            department="marketing",
+            capabilities=frozenset(
+                {"planning", "task_decomposition", "routing", "marketing_oversight"}
+            ),
+        ),
+        WorkerProfile(
+            worker_id="mgr-sales-01",
+            name="Sales Department Manager",
+            role=WorkerRole.DEPARTMENT_MANAGER,
+            department="sales",
+            capabilities=frozenset(
+                {"planning", "task_decomposition", "routing", "sales_oversight"}
+            ),
+        ),
+        WorkerProfile(
+            worker_id="mgr-finance-01",
+            name="Finance Department Manager",
+            role=WorkerRole.DEPARTMENT_MANAGER,
+            department="finance",
+            capabilities=frozenset(
+                {"planning", "task_decomposition", "routing", "finance_oversight"}
+            ),
+        ),
+        WorkerProfile(
+            worker_id="mgr-operations-01",
+            name="Operations Department Manager",
+            role=WorkerRole.DEPARTMENT_MANAGER,
+            department="operations",
+            capabilities=frozenset(
+                {"planning", "task_decomposition", "routing", "operations_oversight"}
+            ),
+        ),
+        WorkerProfile(
+            worker_id="mgr-support-01",
+            name="Support Department Manager",
+            role=WorkerRole.DEPARTMENT_MANAGER,
+            department="support",
+            capabilities=frozenset(
+                {"planning", "task_decomposition", "routing", "support_oversight"}
+            ),
+        ),
+        WorkerProfile(
             worker_id="dev-01",
             name="Software Engineer 01",
             role=WorkerRole.SOFTWARE_ENGINEER,
