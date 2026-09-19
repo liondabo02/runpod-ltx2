@@ -46,8 +46,9 @@
     {
       "id": "STUDIO-006",
       "title": "Build voice, music, dubbing and localization pipeline",
-      "status": "pending",
-      "goal": "Generate character-consistent speech, music/SFX, subtitles, and multi-language localized episode variants."
+      "status": "in_progress",
+      "goal": "Generate character-consistent speech, music/SFX, subtitles, and multi-language localized episode variants.",
+      "result": "Foundation complete: Agent Skills-compatible Skill Registry, Technology Radar, provider-agnostic multilingual audio planning, commercial-license gating, persistent audio manifests, voice continuity and audio QA skills. Existing Kokoro endpoint remains to be live-wired and verified before STUDIO-006 is complete."
     },
     {
       "id": "STUDIO-007",
