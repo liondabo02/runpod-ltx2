@@ -141,7 +141,7 @@ def packet_for(ready_plan):
                 objective="listen",
                 action_summary="talk",
                 dialogue=(
-                    DialogueLine(kaan, "Merhaba"),
+                    DialogueLine("kaan", "Merhaba"),
                     DialogueLine(elder, "Hoş geldiniz"),
                 ),
             ),
