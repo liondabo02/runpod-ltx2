@@ -25,7 +25,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN python -m pip install --upgrade pip setuptools wheel \
     && python -m pip install "runpod>=1.7,<2" \
-    && python -m pip install "git+https://github.com/QwenLM/Qwen3-TTS.git@\${QWEN3_TTS_COMMIT}"
+    && python -m pip install "git+https://github.com/QwenLM/Qwen3-TTS.git@${QWEN3_TTS_COMMIT}"
 
 RUN python - <<'PY'
 from huggingface_hub import snapshot_download
