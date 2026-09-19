@@ -1,0 +1,21 @@
+{
+  "studio_step": "STUDIO-006 Chatterbox Multilingual V3 reference-voice continuity live smoke",
+  "status": "PASS",
+  "endpoint_name": "miniverse-chatterbox-v3-prod",
+  "endpoint_id": "pufrhe1ee9mnrj",
+  "model": "Chatterbox Multilingual V3",
+  "language": "tr",
+  "runpod_status": "COMPLETED",
+  "worker_ok": true,
+  "reference_audio_path_used": true,
+  "builtin_voice_fallback": false,
+  "riff_wave_signature": "PASS",
+  "audio_bytes": 203564,
+  "sample_rate_hz": 24000,
+  "watermarked": true,
+  "automatic_retries": 0,
+  "secret_exposed": false,
+  "reference_sha256": "df5cb934583f3a0938963de326a05cce5ac534af40478aedf783c35096b07ed4",
+  "output_sha256": "67394e733aea70d7150c5841fbf705aad397a1474b7be3b4be21157e5f55d17f",
+  "note": "Live reference-audio synthesis path is verified. Human listening comparison is still required before any canonical character voice binding."
+}
