@@ -46,21 +46,27 @@ def studio_technology_radar() -> tuple[TechnologyEntry, ...]:
             license_note="Apache-2.0 project.",
             commercial_default=True,
             rationale=(
-                "Existing RunPod deployment is already available and is suitable as "
-                "a lightweight baseline TTS provider where language quality is acceptable."
+                "Existing RunPod deployment is live-verified and suitable as a "
+                "lightweight English baseline TTS provider."
             ),
             source_url="https://github.com/hexgrad/kokoro",
         ),
         TechnologyEntry(
             technology_id="chatterbox-multilingual",
-            name="Chatterbox Multilingual",
+            name="Chatterbox Multilingual V3",
             category="tts-voice-cloning",
             status=RadarStatus.TRIAL,
-            license_note="MIT project; verify any bundled/reference voice rights separately.",
+            license_note=(
+                "MIT project; generated/reference voice rights remain the studio's "
+                "responsibility and must be tracked separately."
+            ),
             commercial_default=True,
             rationale=(
-                "Strong candidate for multilingual dubbing and zero-shot voice cloning; "
-                "supports Turkish, German, Arabic, French, Spanish and English."
+                "Latest general-purpose Chatterbox multilingual model. Official upstream "
+                "documents 23 supported languages including Turkish, German, Arabic, "
+                "French, Spanish and English, with improved speaker similarity, reduced "
+                "hallucinations, cross-language voice cloning, and built-in PerTh audio "
+                "watermarking. Keep in trial until our own language/character QA passes."
             ),
             source_url="https://github.com/resemble-ai/chatterbox",
         ),
