@@ -5,15 +5,35 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# Resolve all relative paths against this script's own directory, not the
+# process working directory (which .NET may report as C:\Windows\System32).
+if (-not [System.IO.Path]::IsPathRooted($ReferenceWav)) {
+    $ReferenceWav = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot $ReferenceWav))
+}
+if (-not [System.IO.Path]::IsPathRooted($OutputWav)) {
+    $OutputWav = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot $OutputWav))
+}
+$envFile = Join-Path $PSScriptRoot ".env.runtime"
+
+# Pre-create and validate the output directory BEFORE the paid request so a
+# local filesystem issue can never waste a RunPod generation.
+$outputDir = Split-Path -Parent $OutputWav
+if (-not $outputDir) {
+    throw "Output path has no parent directory: $OutputWav"
+}
+New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
+if (-not (Test-Path -LiteralPath $outputDir)) {
+    throw "Output directory could not be prepared: $outputDir"
+}
+
 Write-Host "=== STUDIO-006 CHATTERBOX V3 REFERENCE-VOICE CONTINUITY SMOKE ==="
 Write-Host "Purpose: verify the REAL reference-audio cloning path with exactly ONE paid request."
 Write-Host "This is a technical continuity proof only; it does NOT assign this voice to Aden/Kaan."
 Write-Host "Automatic retry: NO"
 Write-Host ""
 
-$envFile = ".\.env.runtime"
 if (-not (Test-Path -LiteralPath $envFile)) {
-    throw ".env.runtime not found in the current control_plane_v2 directory."
+    throw ".env.runtime not found beside the script: $envFile"
 }
 
 Get-Content -LiteralPath $envFile | ForEach-Object {
@@ -98,10 +118,6 @@ if ($ascii.GetString($outBytes, 0, 4) -ne "RIFF" -or $ascii.GetString($outBytes,
     throw "Output bytes are not RIFF/WAVE."
 }
 
-$outputDir = Split-Path -Parent $OutputWav
-if ($outputDir) {
-    New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
-}
 [System.IO.File]::WriteAllBytes($OutputWav, $outBytes)
 $outputSha = (Get-FileHash -Algorithm SHA256 -LiteralPath $OutputWav).Hash.ToLowerInvariant()
 
