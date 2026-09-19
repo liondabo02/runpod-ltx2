@@ -1,0 +1,18 @@
+{
+  "studio_step": "STUDIO-002",
+  "status": "PASS",
+  "database_path_kind": "private-local-runtime",
+  "character_count": 16,
+  "relationship_count": 28,
+  "canon_fact_count": 3,
+  "all_character_profiles_versioned": true,
+  "reference_integrity": "PASS",
+  "locked_field_enforcement": "PASS",
+  "owner_override_audit": "PASS",
+  "episode_continuity_memory": "READY",
+  "privacy": {
+    "private_cast_seed_committed_to_git": false,
+    "private_character_database_committed_to_git": false
+  },
+  "snapshot_schema": "ahos.character-bible.v1"
+}
