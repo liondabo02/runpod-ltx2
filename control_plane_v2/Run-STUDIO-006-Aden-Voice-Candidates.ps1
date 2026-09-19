@@ -102,7 +102,7 @@ foreach ($candidate in $candidates) {
     } | ConvertTo-Json -Compress
 
     Write-Host "Paid request: Kokoro synthetic reference..."
-    $kokoroResponse = Invoke-WebRequest -Method Post -Uri $kokoroUrl -Headers $headers -ContentType "application/json" -Body $kokoroBody -TimeoutSec 600
+    $kokoroResponse = Invoke-WebRequest -UseBasicParsing -Method Post -Uri $kokoroUrl -Headers $headers -ContentType "application/json" -Body $kokoroBody -TimeoutSec 600
 
     if ([int]$kokoroResponse.StatusCode -ne 200) {
         throw "Kokoro HTTP status: $($kokoroResponse.StatusCode)"
