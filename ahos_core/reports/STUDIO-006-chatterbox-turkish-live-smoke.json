@@ -1,0 +1,19 @@
+{
+  "studio_step": "STUDIO-006 Chatterbox Multilingual V3 Turkish live smoke",
+  "status": "PASS",
+  "endpoint_name": "miniverse-chatterbox-v3-prod",
+  "endpoint_id": "pufrhe1ee9mnrj",
+  "endpoint_type": "queue",
+  "model": "Chatterbox Multilingual V3",
+  "language": "tr",
+  "runpod_status": "COMPLETED",
+  "worker_ok": true,
+  "riff_wave_signature": "PASS",
+  "audio_bytes": 265004,
+  "sample_rate_hz": 24000,
+  "watermarked": true,
+  "automatic_retries": 0,
+  "secret_exposed": false,
+  "character_reference_voice_used": false,
+  "note": "Live Turkish synthesis is verified. Character-consistent reference-audio voice cloning is not yet live-verified."
+}
