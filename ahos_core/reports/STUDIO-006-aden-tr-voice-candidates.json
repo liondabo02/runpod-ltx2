@@ -1,25 +1,35 @@
 {
   "studio_step": "STUDIO-006 Aden Turkish voice candidate audition",
-  "status": "CANDIDATES_READY",
+  "status": "REJECTED_CHARACTER_FIT",
   "character_id": "aden",
-  "language": "tr",
+  "character_requirements": {
+    "age_years": 3,
+    "gender_presentation": "girl",
+    "voice_target": "preschool-age child voice; bright, playful, natural, not adult or falsetto"
+  },
   "canonical_binding_created": false,
-  "human_selection_required": true,
+  "human_selection_required": false,
+  "rejection_reason": "All three trial candidates were derived from adult Kokoro voices and are therefore unsuitable for a 3-year-old girl character. They must never be canonically enrolled for Aden.",
   "candidates": {
     "A": {
-      "source": "existing Chatterbox reference-voice continuity proof based on synthetic Kokoro af_heart reference",
-      "file": "control_plane_v2/runtime/private/animation-studio/audio/samples/chatterbox-v3-tr-continuity-smoke.wav"
+      "status": "rejected",
+      "reason": "adult-source voice"
     },
     "B": {
-      "source": "synthetic Kokoro af_bella -> Chatterbox Multilingual V3 Turkish clone",
-      "file": "control_plane_v2/runtime/private/animation-studio/audio/voice-candidates/aden/aden-candidate-b-tr.wav"
+      "status": "rejected",
+      "reason": "adult female-source voice"
     },
     "C": {
-      "source": "synthetic Kokoro am_michael -> Chatterbox Multilingual V3 Turkish clone",
-      "file": "control_plane_v2/runtime/private/animation-studio/audio/voice-candidates/aden/aden-candidate-c-tr.wav"
+      "status": "rejected",
+      "reason": "adult male-source voice"
     }
   },
-  "resume_behavior": "Existing valid candidate WAVs are skipped; the successful rerun skipped B and only completed missing C.",
-  "next_gate": "Human audition and explicit owner selection before canonical enrollment.",
-  "secret_exposed": false
+  "corrective_plan": {
+    "voice_design_source": "Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+    "design_language": "English",
+    "design_instruction": "Fictional preschool-age girl, about three years old, bright, playful, warm, innocent, short natural phrases, clear articulation for children's animation, no adult timbre, no falsetto imitation, no resemblance to a real person.",
+    "turkish_render_path": "Generate a fully synthetic child-like reference voice, then use Chatterbox Multilingual V3 cross-language voice cloning for Turkish.",
+    "reason": "Qwen3-TTS VoiceDesign can create voices from natural-language descriptions but its official VoiceDesign language list does not include Turkish; Chatterbox V3 supports Turkish and cross-language cloning."
+  },
+  "paid_retry_required": false
 }
