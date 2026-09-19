@@ -1,0 +1,22 @@
+{
+  "studio_step": "STUDIO-006 automatic recurring and guest voice casting",
+  "status": "IMPLEMENTED_FOUNDATION",
+  "core_cast_count": 16,
+  "rules": [
+    "Recurring characters have age/stage/gender/species/speech-mode metadata.",
+    "Preschool/toddler voices explicitly forbid adult timbre and adult falsetto imitation.",
+    "Newborn/young infant characters route to coos/babble/cry SFX instead of adult-like sentence TTS.",
+    "Guest characters are episode-scoped by default and receive stable IDs before final dialogue generation.",
+    "Speaking human guests require explicit age/stage and gender presentation in scenario metadata.",
+    "Elder voices are natural and respectful, not caricatures.",
+    "Non-talking pets use species vocalizations; talking animals use voice design plus species SFX.",
+    "The production flow is two-pass: guest-cast outline -> materialize visual/voice identities -> final story script with expanded allowed cast."
+  ],
+  "examples": {
+    "police": "adult/age and gender from script -> professional natural voice",
+    "care_home": "elder age and gender from script -> respectful older voice",
+    "pet": "species + talking flag -> animal vocalization or talking-animal voice"
+  },
+  "paid_generation_started": false,
+  "qwen3_voice_design_build": "pending/currently building"
+}
