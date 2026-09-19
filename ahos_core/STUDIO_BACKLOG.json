@@ -48,7 +48,7 @@
       "title": "Build voice, music, dubbing and localization pipeline",
       "status": "in_progress",
       "goal": "Generate character-consistent speech, music/SFX, subtitles, and multi-language localized episode variants.",
-      "result": "Foundation complete: Agent Skills-compatible Skill Registry, Technology Radar, provider-agnostic multilingual audio planning, commercial-license gating, persistent audio manifests, voice continuity and audio QA skills. Existing Kokoro endpoint remains to be live-wired and verified before STUDIO-006 is complete."
+      "result": "Live Kokoro baseline is now verified end-to-end on RunPod and wired into AHOS with guarded paid-execution gates. Persistent per-character/per-language voice continuity is implemented with owner-override protection and no silent wrong-language fallback. Versioned localization memory, review gates, and locked terminology consistency are implemented. Agent Skills for voice continuity and multilingual dubbing were hardened. Technology Radar now tracks Chatterbox Multilingual V3 as the preferred multilingual voice-cloning trial candidate for Turkish, German, Arabic, French, Spanish, and English. Remaining STUDIO-006 work: deploy/verify the multilingual provider, then add music/SFX, subtitle timing, dubbing fit, mix QA, and final multi-language audio package."
     },
     {
       "id": "STUDIO-007",
