@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "project": "AHOS Animation Studio",
+  "rules": {
+    "core_ahos_roadmap": "complete",
+    "owner_controlled": true,
+    "paid_ai_default": false,
+    "external_actions_default": false,
+    "actual_publish_requires_owner_approval": true
+  },
+  "tasks": [
+    {
+      "id": "STUDIO-001",
+      "title": "Create Animation Studio business unit and 20-worker organization",
+      "status": "completed",
+      "goal": "Create the reusable business-unit model and the first owner-controlled animation studio with 8 teams and 20 virtual roles."
+    },
+    {
+      "id": "STUDIO-002",
+      "title": "Build persistent Character Bible and continuity memory",
+      "status": "pending",
+      "goal": "Lock recurring characters, relationships, appearance, voices, locations, canon facts, and episode continuity in persistent versioned memory."
+    },
+    {
+      "id": "STUDIO-003",
+      "title": "Build Story and Episode Planning Engine",
+      "status": "pending",
+      "goal": "Turn a topic into season-aware episode briefs, screenplay, dialogue, educational/emotional beats, and approved production packets."
+    },
+    {
+      "id": "STUDIO-004",
+      "title": "Build Scene, Shot, Prompt and Asset Graph",
+      "status": "pending",
+      "goal": "Convert scripts into deterministic scenes/shots with character references, camera, environments, timing, continuity constraints, and asset provenance."
+    },
+    {
+      "id": "STUDIO-005",
+      "title": "Connect visual generation and animation pipeline",
+      "status": "pending",
+      "goal": "Connect ComfyUI/approved compute adapters for repeatable character-consistent image/video generation with cost and approval gates."
+    },
+    {
+      "id": "STUDIO-006",
+      "title": "Build voice, music, dubbing and localization pipeline",
+      "status": "pending",
+      "goal": "Generate character-consistent speech, music/SFX, subtitles, and multi-language localized episode variants."
+    },
+    {
+      "id": "STUDIO-007",
+      "title": "Build episode assembly and studio QA pipeline",
+      "status": "pending",
+      "goal": "Assemble scenes into finished episodes and enforce continuity, child-safety, audio, subtitle, technical, and release-package QA."
+    },
+    {
+      "id": "STUDIO-008",
+      "title": "Run one complete studio acceptance episode",
+      "status": "pending",
+      "goal": "Run one owner-approved topic through the whole studio to a publish-ready multi-language episode package and expose progress in the Holding Control Center."
+    }
+  ]
+}
