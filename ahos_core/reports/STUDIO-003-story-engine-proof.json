@@ -1,0 +1,19 @@
+{
+  "studio_step": "STUDIO-003",
+  "status": "PASS",
+  "episode_id": "S01E001",
+  "episode_status": "ready_for_owner_review",
+  "owner_approved": false,
+  "target_duration_seconds": 480,
+  "scene_duration_sum": 480,
+  "scene_count": 5,
+  "beat_count": 5,
+  "cast_count": 4,
+  "character_bible_context": "PASS",
+  "season_aware_episode_id": "PASS",
+  "continuity_validation": "PASS",
+  "structured_ai_planner_contract": "READY_NOT_CALLED",
+  "private_story_packet_committed_to_git": false,
+  "openai_api_calls": 0,
+  "paid_api_spend_usd": 0
+}
