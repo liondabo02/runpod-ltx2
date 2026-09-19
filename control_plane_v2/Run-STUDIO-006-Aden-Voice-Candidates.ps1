@@ -6,7 +6,7 @@ $ErrorActionPreference = "Stop"
 
 Write-Host "=== STUDIO-006 ADEN TURKISH VOICE CANDIDATES ==="
 Write-Host "Purpose: create two NEW synthetic candidate speakers and compare them with the already-proven candidate A."
-Write-Host "Paid live requests in this run: exactly 4 (2 Kokoro references + 2 Chatterbox Turkish clones)."
+Write-Host "Paid live requests: only for missing candidates. Existing valid WAVs are skipped."
 Write-Host "Automatic retry: NO"
 Write-Host "Canonical character binding: NO"
 Write-Host ""
@@ -93,23 +93,62 @@ foreach ($candidate in $candidates) {
     Write-Host ""
     Write-Host "--- Candidate $($candidate.id): synthetic reference $($candidate.source_voice) ---"
 
-    $kokoroBody = @{
-        model = "tts-1"
-        input = $referenceText
-        voice = $candidate.source_voice
-        response_format = "wav"
-        speed = 1.0
-    } | ConvertTo-Json -Compress
-
-    Write-Host "Paid request: Kokoro synthetic reference..."
-    $kokoroResponse = Invoke-WebRequest -UseBasicParsing -Method Post -Uri $kokoroUrl -Headers $headers -ContentType "application/json" -Body $kokoroBody -TimeoutSec 600
-
-    if ([int]$kokoroResponse.StatusCode -ne 200) {
-        throw "Kokoro HTTP status: $($kokoroResponse.StatusCode)"
+    $candidateAlreadyComplete = $false
+    if (Test-Path -LiteralPath $candidate.out_file) {
+        try {
+            $null = Assert-Wav $candidate.out_file "Candidate $($candidate.id) output"
+            $candidateAlreadyComplete = $true
+        }
+        catch {
+            Remove-Item -LiteralPath $candidate.out_file -Force -ErrorAction SilentlyContinue
+        }
     }
 
-    [System.IO.File]::WriteAllBytes($candidate.ref_file, $kokoroResponse.Content)
-    $refBytes = Assert-Wav $candidate.ref_file "Candidate $($candidate.id) reference"
+    if ($candidateAlreadyComplete) {
+        $outSha = (Get-FileHash -Algorithm SHA256 -LiteralPath $candidate.out_file).Hash.ToLowerInvariant()
+        Write-Host "Candidate $($candidate.id): ALREADY COMPLETE - SKIPPING PAID REQUESTS"
+        Write-Host "Output SHA256: $outSha"
+        continue
+    }
+
+    $refBytes = $null
+    if (Test-Path -LiteralPath $candidate.ref_file) {
+        try {
+            $refBytes = Assert-Wav $candidate.ref_file "Candidate $($candidate.id) reference"
+            Write-Host "Existing valid reference: REUSED - Kokoro request skipped"
+        }
+        catch {
+            Remove-Item -LiteralPath $candidate.ref_file -Force -ErrorAction SilentlyContinue
+            $refBytes = $null
+        }
+    }
+
+    if ($null -eq $refBytes) {
+        $kokoroBody = @{
+            model = "tts-1"
+            input = $referenceText
+            voice = $candidate.source_voice
+            response_format = "wav"
+            speed = 1.0
+        } | ConvertTo-Json -Compress
+
+        Write-Host "Paid request: Kokoro synthetic reference..."
+        try {
+            $kokoroResponse = Invoke-WebRequest -UseBasicParsing -Method Post -Uri $kokoroUrl -Headers $headers -ContentType "application/json" -Body $kokoroBody -TimeoutSec 600
+        }
+        catch {
+            Write-Host "Candidate $($candidate.id) Kokoro request FAILED. Automatic retry: NO"
+            throw
+        }
+
+        if ([int]$kokoroResponse.StatusCode -ne 200) {
+            throw "Kokoro HTTP status: $($kokoroResponse.StatusCode)"
+        }
+
+        [System.IO.File]::WriteAllBytes($candidate.ref_file, $kokoroResponse.Content)
+        $refBytes = Assert-Wav $candidate.ref_file "Candidate $($candidate.id) reference"
+    }
+
     $refSha = (Get-FileHash -Algorithm SHA256 -LiteralPath $candidate.ref_file).Hash.ToLowerInvariant()
 
     $chatterboxBody = @{
