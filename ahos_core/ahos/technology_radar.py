@@ -52,6 +52,23 @@ def studio_technology_radar() -> tuple[TechnologyEntry, ...]:
             source_url="https://github.com/hexgrad/kokoro",
         ),
         TechnologyEntry(
+            technology_id="qwen3-tts-voice-design",
+            name="Qwen3-TTS VoiceDesign 1.7B",
+            category="fictional-voice-design",
+            status=RadarStatus.TRIAL,
+            license_note="Apache-2.0 project; generated voice use still requires normal production-rights review.",
+            commercial_default=True,
+            rationale=(
+                "Natural-language voice design is better suited to creating age-appropriate "
+                "fictional character voices than reusing adult stock timbres. Official "
+                "VoiceDesign supports English/German/French/Spanish and other listed languages "
+                "but not Turkish, so use it to create a synthetic child-like reference and "
+                "then route Turkish through the already-verified Chatterbox V3 cross-language "
+                "cloning path. Keep in trial until our own child-voice QA passes."
+            ),
+            source_url="https://github.com/QwenLM/Qwen3-TTS",
+        ),
+        TechnologyEntry(
             technology_id="chatterbox-multilingual",
             name="Chatterbox Multilingual V3",
             category="tts-voice-cloning",
