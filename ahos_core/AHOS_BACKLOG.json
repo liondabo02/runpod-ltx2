@@ -409,6 +409,15 @@
       "authority": "B",
       "requires_owner_approval": false,
       "task": "Add a local fail-closed bridge from qualified BUSINESS_LEAD opportunity candidates into the persistent AHOS mission queue. Use stable mission IDs, deterministic department selection, duplicate protection, and explicit read-only objectives that prohibit applications, bids, outreach, messages, payments, purchases, publishing, deployment, login, and credential use. No live AI, network fetch, or external write actions."
+    },
+    {
+      "id": "AHOS-041",
+      "title": "Install local Holding Control Center dashboard",
+      "status": "completed",
+      "risk": "low",
+      "authority": "B",
+      "requires_owner_approval": false,
+      "task": "Install a localhost-only Holding Control Center with service heartbeat, mission queue, virtual worker roster and last activity, approval inbox approve/reject controls, owner kill switch, start/resume control, and local runtime backups. No live AI or external business actions."
     }
   ]
 }
