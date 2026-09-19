@@ -400,6 +400,15 @@
       "authority": "B",
       "requires_owner_approval": false,
       "task": "Expand the local virtual holding so every core department has its own department manager plus at least one specialist. Add a validated department-structure catalog for software, quality, research, infrastructure, data, creative, marketing, sales, finance, operations, and support. Keep specialist routing stable and all paid AI disabled by default. No live AI or external actions."
+    },
+    {
+      "id": "AHOS-040",
+      "title": "Convert qualified opportunities into persistent queued missions",
+      "status": "completed",
+      "risk": "low",
+      "authority": "B",
+      "requires_owner_approval": false,
+      "task": "Add a local fail-closed bridge from qualified BUSINESS_LEAD opportunity candidates into the persistent AHOS mission queue. Use stable mission IDs, deterministic department selection, duplicate protection, and explicit read-only objectives that prohibit applications, bids, outreach, messages, payments, purchases, publishing, deployment, login, and credential use. No live AI, network fetch, or external write actions."
     }
   ]
 }
