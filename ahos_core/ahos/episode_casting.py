@@ -290,7 +290,10 @@ def core_cast_voice_briefs() -> tuple[VoiceDesignBrief, ...]:
                 age_stage=spec.age_stage,
                 gender_presentation=spec.gender_presentation,
                 speaking=spec.speech_mode != "infant_vocalization",
-                personality_hint="recurring series character; preserve identity across episodes",
+                personality_hint=(
+                    "recurring series character; preserve identity across episodes; "
+                    + spec.voice_direction
+                ),
                 persistent_scope="series",
             )
         )
