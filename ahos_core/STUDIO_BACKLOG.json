@@ -48,7 +48,7 @@
       "title": "Build voice, music, dubbing and localization pipeline",
       "status": "in_progress",
       "goal": "Generate character-consistent speech, music/SFX, subtitles, and multi-language localized episode variants.",
-      "result": "Kokoro English baseline and Chatterbox Multilingual V3 Turkish synthesis are both live-verified on RunPod. AHOS now includes guarded paid-execution adapters, persistent per-character/per-language voice continuity, versioned localization memory with review gates and locked terminology, and hardened voice/dubbing Agent Skills. Chatterbox V3 returned a real 24 kHz watermarked RIFF/WAVE Turkish sample with no automatic retry and no secret exposure. Remaining STUDIO-006 work: live-verify reference-audio character voice cloning/continuity, then add music/SFX, subtitle timing, dub-length fitting, mix QA, and final multi-language audio packages."
+      "result": "Kokoro English baseline, Chatterbox Multilingual V3 Turkish synthesis, and Chatterbox reference-audio voice continuity are now live-verified on RunPod. The reference path used real WAV conditioning, disabled built-in fallback, returned a valid 24 kHz watermarked WAV, used no automatic retries, and exposed no secrets. AHOS includes guarded paid-execution adapters, persistent per-character/per-language voice continuity, localization review/terminology memory, and hardened audio Agent Skills. Remaining STUDIO-006 work: human speaker-similarity approval before canonical character binding, then canonical voice enrollment for the cast, music/SFX, subtitle timing, dub-length fitting, mix QA, and final multi-language audio packages."
     },
     {
       "id": "STUDIO-007",
