@@ -1,0 +1,21 @@
+{
+  "studio_step": "STUDIO-005",
+  "status": "PASS",
+  "episode_id": "S01E001",
+  "render_job_count": 10,
+  "manifest_db_count": 10,
+  "deterministic_seeds": true,
+  "comfyui_endpoint": "http://127.0.0.1:8188",
+  "comfyui_reachable_now": false,
+  "comfyui_node_count": 0,
+  "comfyui_health_error": "ComfyUIConnectionError: <urlopen error [WinError 10061] Hedef makine etkin olarak reddettiğinden bağlantı kurulamadı>",
+  "localhost_only": true,
+  "workflow_template_contract": "READY",
+  "owner_approval_gate": "PASS",
+  "execution_enable_gate": "PASS",
+  "render_calls": 0,
+  "external_network_calls": 0,
+  "openai_api_calls": 0,
+  "paid_api_spend_usd": 0,
+  "private_render_manifest_committed_to_git": false
+}

@@ -39,8 +39,9 @@
     {
       "id": "STUDIO-005",
       "title": "Connect visual generation and animation pipeline",
-      "status": "pending",
-      "goal": "Connect ComfyUI/approved compute adapters for repeatable character-consistent image/video generation with cost and approval gates."
+      "status": "completed",
+      "goal": "Connect ComfyUI/approved compute adapters for repeatable character-consistent image/video generation with cost and approval gates.",
+      "result": "Localhost-only ComfyUI adapter, deterministic render-job planner, persistent render manifest DB, API-workflow placeholder contract, health/node inventory, owner+execution dual gate, and private dry-run manifest for all STUDIO-004 shots. No render job was submitted during installation."
     },
     {
       "id": "STUDIO-006",
