@@ -20,6 +20,7 @@ class QueueStatus(str, Enum):
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
+    WAITING_OWNER_APPROVAL = "waiting_owner_approval"
     BLOCKED = "blocked"
     FAILED = "failed"
 
@@ -313,6 +314,56 @@ class PersistentMissionQueue:
             last_error=None,
         )
 
+    def wait_for_owner_approval(
+        self,
+        mission_id: str,
+        *,
+        owner: str,
+        result: MissionResult,
+    ) -> None:
+        payload = self._result_payload(result)
+        self._finish(
+            mission_id,
+            owner=owner,
+            status=QueueStatus.WAITING_OWNER_APPROVAL,
+            result_json=json.dumps(payload, ensure_ascii=False),
+            last_error=result.reason,
+        )
+
+    def resume_after_owner_approval(self, mission_id: str) -> QueuedMission:
+        with self._connect() as conn:
+            cursor = conn.execute(
+                """
+                UPDATE missions
+                SET status=?,
+                    attempts=CASE WHEN attempts > 0 THEN attempts - 1 ELSE 0 END,
+                    next_attempt_at=0,
+                    lease_owner=NULL,
+                    lease_until=NULL,
+                    updated_at=?,
+                    last_error=NULL
+                WHERE mission_id=?
+                  AND status=?
+                """,
+                (
+                    QueueStatus.PENDING.value,
+                    _utc_now(),
+                    mission_id,
+                    QueueStatus.WAITING_OWNER_APPROVAL.value,
+                ),
+            )
+            if cursor.rowcount != 1:
+                current = self.get(mission_id)
+                if current is None:
+                    raise KeyError(mission_id)
+                raise RuntimeError(
+                    f"mission {mission_id} is not waiting for owner approval: "
+                    f"{current.status.value}"
+                )
+        resumed = self.get(mission_id)
+        assert resumed is not None
+        return resumed
+
     def block(
         self,
         mission_id: str,
@@ -555,6 +606,12 @@ class CompanyLoop:
 
         if result.status is MissionStatus.COMPLETED:
             self.queue.complete(
+                mission.mission_id,
+                owner=self.owner,
+                result=result,
+            )
+        elif result.status is MissionStatus.WAITING_OWNER_APPROVAL:
+            self.queue.wait_for_owner_approval(
                 mission.mission_id,
                 owner=self.owner,
                 result=result,

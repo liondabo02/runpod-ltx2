@@ -14,10 +14,19 @@ from .worker_runtime import (
 from .workforce_execution import WorkItem, WorkStage, manager_for_department
 
 
+class OwnerApprovalPending(RuntimeError):
+    """Protected work is waiting for explicit owner approval."""
+
+
+class OwnerApprovalRejected(RuntimeError):
+    """The owner explicitly rejected protected work."""
+
+
 class MissionStatus(str, Enum):
     PLANNED = "planned"
     RUNNING = "running"
     COMPLETED = "completed"
+    WAITING_OWNER_APPROVAL = "waiting_owner_approval"
     BLOCKED = "blocked"
 
 
@@ -202,7 +211,16 @@ class MultiWorkerMissionOrchestrator:
                 objective=objective,
                 primary_department=primary_department,
             )
-        except (RuntimeError, ValueError) as exc:
+        except OwnerApprovalPending as exc:
+            return MissionResult(
+                mission_id=mission_id,
+                objective=objective,
+                manager_id=None,
+                status=MissionStatus.WAITING_OWNER_APPROVAL,
+                steps=(),
+                reason=str(exc),
+            )
+        except (OwnerApprovalRejected, RuntimeError, ValueError) as exc:
             return MissionResult(
                 mission_id=mission_id,
                 objective=objective,
