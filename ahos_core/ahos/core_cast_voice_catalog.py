@@ -31,27 +31,27 @@ CORE_CAST_VOICE_SPECS: tuple[CoreCastVoiceSpec, ...] = (
         "soft cheerful toddler, simple early words, spontaneous little laughs and reactions",
     ),
     CoreCastVoiceSpec(
-        "esra", "Esra", "human", None, "adult", "woman", "mother", "speech",
+        "esra", "Esra", "human", 33.0, "adult", "woman", "mother", "speech",
         "warm reassuring mother, calm, affectionate, clear and patient",
     ),
     CoreCastVoiceSpec(
-        "ahmet", "Ahmet", "human", None, "adult", "man", "father", "speech",
+        "ahmet", "Ahmet", "human", 33.0, "adult", "man", "father", "speech",
         "kind relaxed father, grounded and supportive, natural conversational warmth",
     ),
     CoreCastVoiceSpec(
-        "esma", "Esma", "human", None, "adult", "woman", "aunt", "speech",
+        "esma", "Esma", "human", 29.0, "adult", "woman", "aunt", "speech",
         "friendly warm aunt, lively but gentle, expressive without exaggeration",
     ),
     CoreCastVoiceSpec(
-        "harun", "Harun", "human", None, "adult", "man", "uncle", "speech",
+        "harun", "Harun", "human", 30.0, "adult", "man", "uncle", "speech",
         "warm confident optimistic anchor figure, calm humor, reassuring and energetic when needed",
     ),
     CoreCastVoiceSpec(
-        "veysel", "Veysel", "human", None, "adult", "man", "family friend", "speech",
+        "veysel", "Veysel", "human", 33.0, "adult", "man", "family friend", "speech",
         "friendly sociable adult, upbeat natural rhythm, distinct from Harun and Ahmet",
     ),
     CoreCastVoiceSpec(
-        "oznur", "Öznur", "human", None, "adult", "woman", "family friend", "speech",
+        "oznur", "Öznur", "human", 31.0, "adult", "woman", "family friend", "speech",
         "warm composed adult woman, friendly and clear, gentle conversational energy",
     ),
     CoreCastVoiceSpec(
@@ -63,11 +63,11 @@ CORE_CAST_VOICE_SPECS: tuple[CoreCastVoiceSpec, ...] = (
         "very young infant coos, tiny laughs, soft fussing and crying only; no sentence speech",
     ),
     CoreCastVoiceSpec(
-        "davut", "Davut", "human", None, "adult", "man", "family friend", "speech",
+        "davut", "Davut", "human", 30.0, "adult", "man", "family friend", "speech",
         "good-humored relaxed adult man, warm and distinct, natural comic timing when appropriate",
     ),
     CoreCastVoiceSpec(
-        "fatos", "Fatoş", "human", None, "adult", "woman", "family friend", "speech",
+        "fatos", "Fatoş", "human", 30.0, "adult", "woman", "family friend", "speech",
         "friendly expressive adult woman, warm family tone, natural and not theatrical",
     ),
     CoreCastVoiceSpec(
