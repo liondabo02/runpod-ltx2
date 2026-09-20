@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping, Sequence
 
+from .multilingual_audio_package import MultilingualAudioPackage
+
 
 class AcceptancePreflightError(RuntimeError):
     pass
@@ -54,6 +56,7 @@ class StudioAcceptancePreflight:
         episode_id: str,
         backlog: Mapping[str, object],
         required_artifacts: Sequence[str | Path],
+        multilingual_audio_package: MultilingualAudioPackage | None,
         voice_similarity_approved: bool,
         owner_approved: bool,
         execution_enabled: bool,
@@ -77,6 +80,41 @@ class StudioAcceptancePreflight:
         ]
         missing_artifacts = [str(path) for path in required_artifacts if not Path(path).is_file()]
 
+        audio_package_present = multilingual_audio_package is not None
+        audio_package_matches = (
+            audio_package_present and multilingual_audio_package.episode_id == episode_id
+        )
+        audio_package_ready = audio_package_matches and multilingual_audio_package.ready
+        if not audio_package_present:
+            audio_package_message = "Multilingual audio package evidence is required."
+        elif not audio_package_matches:
+            audio_package_message = (
+                "Multilingual audio package episode mismatch: "
+                f"expected {episode_id}, got {multilingual_audio_package.episode_id}."
+            )
+        elif not audio_package_ready:
+            incomplete_languages = [
+                status.language
+                for status in multilingual_audio_package.language_statuses
+                if not status.ready
+            ]
+            missing_shared = []
+            if not multilingual_audio_package.shared_music_present:
+                missing_shared.append("music stem")
+            if not multilingual_audio_package.shared_sfx_present:
+                missing_shared.append("SFX stem")
+            details = incomplete_languages + missing_shared
+            audio_package_message = "Multilingual audio package is incomplete"
+            if details:
+                audio_package_message += ": " + ", ".join(details)
+            audio_package_message += "."
+        else:
+            audio_package_message = (
+                "Multilingual audio package is complete for: "
+                + ", ".join(multilingual_audio_package.required_languages)
+                + "."
+            )
+
         gates = (
             AcceptanceGate(
                 "studio-roadmap",
@@ -91,6 +129,12 @@ class StudioAcceptancePreflight:
                 True,
                 "All acceptance artifacts are present."
                 if not missing_artifacts else "Missing artifacts: " + ", ".join(missing_artifacts),
+            ),
+            AcceptanceGate(
+                "multilingual-audio-package",
+                audio_package_ready,
+                True,
+                audio_package_message,
             ),
             AcceptanceGate(
                 "voice-similarity",

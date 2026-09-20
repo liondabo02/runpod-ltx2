@@ -10,3 +10,10 @@ The default required set is Turkish, German, Arabic, French, Spanish, and
 English. Missing, duplicate, unapproved, or duration-mismatched material fails
 closed. The component only creates a deterministic manifest; it performs no
 generation, network access, paid execution, or publishing.
+
+## Acceptance integration
+
+`StudioAcceptancePreflight` requires this package as evidence. Paid execution
+remains blocked when the package is absent, belongs to another episode, lacks a
+required language deliverable or voice enrollment, or lacks the shared music
+and SFX stems. The check is fail-closed and performs no external action.

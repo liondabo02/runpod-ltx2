@@ -2,7 +2,33 @@ from pathlib import Path
 
 import pytest
 
+from ahos.multilingual_audio_package import AudioPackageAsset, MultilingualAudioPackager
 from ahos.studio_acceptance import AcceptancePreflightError, StudioAcceptancePreflight
+
+
+LANGUAGES = ("tr", "de", "ar", "fr", "es", "en")
+SHA = "a" * 64
+
+
+def audio_package(episode_id="S01E001", omit_language=None):
+    assets = [
+        AudioPackageAsset("music", "music_stem", "private://music.wav", SHA),
+        AudioPackageAsset("sfx", "sfx_stem", "private://sfx.wav", SHA),
+    ]
+    for language in LANGUAGES:
+        if language == omit_language:
+            continue
+        assets.extend((
+            AudioPackageAsset(f"mix:{language}", "final_mix", f"private://{language}.wav", SHA, language, 480),
+            AudioPackageAsset(f"sub:{language}", "subtitle", f"private://{language}.srt", SHA, language, 480),
+        ))
+    return MultilingualAudioPackager().build(
+        episode_id=episode_id,
+        episode_duration_seconds=480,
+        speaking_character_ids=("aden",),
+        canonical_voice_enrollments=(("aden", language) for language in LANGUAGES),
+        assets=tuple(assets),
+    )
 
 
 def backlog(status6="completed"):
@@ -21,6 +47,7 @@ def evaluate(tmp_path: Path, **overrides):
         "episode_id": "S01E001",
         "backlog": backlog(),
         "required_artifacts": (artifact,),
+        "multilingual_audio_package": audio_package(),
         "voice_similarity_approved": True,
         "owner_approved": True,
         "execution_enabled": True,
@@ -64,6 +91,21 @@ def test_publish_request_is_blocked(tmp_path: Path):
 def test_missing_artifact_blocks_acceptance(tmp_path: Path):
     result = evaluate(tmp_path, required_artifacts=(tmp_path / "missing.json",))
     assert result.ready_for_paid_execution is False
+
+
+@pytest.mark.parametrize("package", [None, audio_package(omit_language="ar")])
+def test_multilingual_audio_evidence_fails_closed(tmp_path: Path, package):
+    result = evaluate(tmp_path, multilingual_audio_package=package)
+    assert result.ready_for_paid_execution is False
+    gate = next(g for g in result.gates if g.gate_id == "multilingual-audio-package")
+    assert gate.passed is False
+
+
+def test_wrong_episode_audio_package_is_rejected(tmp_path: Path):
+    result = evaluate(tmp_path, multilingual_audio_package=audio_package("S01E002"))
+    assert result.ready_for_paid_execution is False
+    gate = next(g for g in result.gates if g.gate_id == "multilingual-audio-package")
+    assert "mismatch" in gate.message
 
 
 def test_invalid_backlog_fails_closed(tmp_path: Path):
