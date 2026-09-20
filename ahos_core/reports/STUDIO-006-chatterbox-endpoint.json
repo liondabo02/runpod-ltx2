@@ -1,0 +1,15 @@
+{
+  "studio_step": "STUDIO-006 Chatterbox Multilingual V3 endpoint provisioned",
+  "status": "CONFIGURED_NOT_LIVE_VERIFIED",
+  "endpoint_name": "miniverse-chatterbox-v3-prod",
+  "endpoint_id": "pufrhe1ee9mnrj",
+  "endpoint_type": "queue",
+  "docker_image": "ghcr.io/liondabo02/runpod-ltx2:chatterbox-multilingual-v3-latest",
+  "gpu_vram_gb": 24,
+  "gpu_count": 1,
+  "active_workers": 0,
+  "max_workers": 1,
+  "execution_timeout_seconds": 600,
+  "paid_live_tts_verified": false,
+  "secret_exposed": false
+}

@@ -1,0 +1,389 @@
+{
+  "business_unit_id": "animation-studio",
+  "name": "AHOS Animation & Cartoon Studio",
+  "director_worker_id": "studio-director-01",
+  "owner_controlled": true,
+  "owner_reserved_decisions": [
+    "external publishing or messaging",
+    "payments, purchases, or paid-provider activation",
+    "contracts, customer commitments, or commercial offers",
+    "credential or secret access",
+    "destructive or irreversible actions",
+    "new business-unit creation or closure",
+    "material budget increases",
+    "final release approval when owner gate is enabled"
+  ],
+  "teams": [
+    {
+      "team_id": "studio-management",
+      "name": "Studio Management",
+      "lead_worker_id": "studio-director-01",
+      "mission": "Own production strategy, scheduling, quality, cost, and escalation."
+    },
+    {
+      "team_id": "story",
+      "name": "Story & Continuity",
+      "lead_worker_id": "studio-story-director-01",
+      "mission": "Create age-appropriate episodic stories and preserve canon continuity."
+    },
+    {
+      "team_id": "art",
+      "name": "Art & Visual Development",
+      "lead_worker_id": "studio-art-director-01",
+      "mission": "Preserve character identity, visual language, environments, and shot intent."
+    },
+    {
+      "team_id": "animation",
+      "name": "Animation & Post",
+      "lead_worker_id": "studio-animation-director-01",
+      "mission": "Turn approved scene plans into consistent motion and final picture."
+    },
+    {
+      "team_id": "audio",
+      "name": "Voice, Music & Sound",
+      "lead_worker_id": "studio-voice-director-01",
+      "mission": "Produce character-consistent dialogue, music, ambience, and effects."
+    },
+    {
+      "team_id": "localization",
+      "name": "Localization",
+      "lead_worker_id": "studio-localization-lead-01",
+      "mission": "Adapt approved episodes across target languages while preserving meaning."
+    },
+    {
+      "team_id": "quality",
+      "name": "Quality & Safety",
+      "lead_worker_id": "studio-qa-lead-01",
+      "mission": "Gate continuity, child-safety, technical integrity, and final release readiness."
+    },
+    {
+      "team_id": "publishing-growth",
+      "name": "Publishing & Growth",
+      "lead_worker_id": "studio-publishing-lead-01",
+      "mission": "Prepare owner-approved metadata, packaging, analytics, and growth experiments."
+    }
+  ],
+  "workers": [
+    {
+      "worker_id": "studio-director-01",
+      "name": "Animation Studio Director",
+      "role_name": "studio_director",
+      "team_id": "studio-management",
+      "reports_to": null,
+      "capabilities": [
+        "cross_team_routing",
+        "escalation",
+        "production_planning",
+        "resource_allocation",
+        "studio_strategy"
+      ],
+      "authority_level": "B",
+      "paid_ai_enabled": false,
+      "external_actions_enabled": false
+    },
+    {
+      "worker_id": "studio-production-manager-01",
+      "name": "Production Manager",
+      "role_name": "production_manager",
+      "team_id": "studio-management",
+      "reports_to": "studio-director-01",
+      "capabilities": [
+        "cost_tracking",
+        "dependency_management",
+        "episode_tracking",
+        "scheduling"
+      ],
+      "authority_level": "B",
+      "paid_ai_enabled": false,
+      "external_actions_enabled": false
+    },
+    {
+      "worker_id": "studio-story-director-01",
+      "name": "Story Director",
+      "role_name": "story_director",
+      "team_id": "story",
+      "reports_to": "studio-director-01",
+      "capabilities": [
+        "character_arc",
+        "dialogue_review",
+        "episode_planning",
+        "story_architecture"
+      ],
+      "authority_level": "B",
+      "paid_ai_enabled": false,
+      "external_actions_enabled": false
+    },
+    {
+      "worker_id": "studio-writer-01",
+      "name": "Writer 01",
+      "role_name": "writer",
+      "team_id": "story",
+      "reports_to": "studio-story-director-01",
+      "capabilities": [
+        "children_storytelling",
+        "comedy",
+        "dialogue",
+        "screenwriting"
+      ],
+      "authority_level": "B",
+      "paid_ai_enabled": false,
+      "external_actions_enabled": false
+    },
+    {
+      "worker_id": "studio-writer-02",
+      "name": "Writer 02",
+      "role_name": "writer",
+      "team_id": "story",
+      "reports_to": "studio-story-director-01",
+      "capabilities": [
+        "dialogue",
+        "educational_storytelling",
+        "episode_variation",
+        "screenwriting"
+      ],
+      "authority_level": "B",
+      "paid_ai_enabled": false,
+      "external_actions_enabled": false
+    },
+    {
+      "worker_id": "studio-continuity-editor-01",
+      "name": "Character & Continuity Editor",
+      "role_name": "continuity_editor",
+      "team_id": "story",
+      "reports_to": "studio-story-director-01",
+      "capabilities": [
+        "canon_tracking",
+        "character_bible",
+        "continuity",
+        "episode_memory"
+      ],
+      "authority_level": "B",
+      "paid_ai_enabled": false,
+      "external_actions_enabled": false
+    },
+    {
+      "worker_id": "studio-art-director-01",
+      "name": "Art Director",
+      "role_name": "art_director",
+      "team_id": "art",
+      "reports_to": "studio-director-01",
+      "capabilities": [
+        "character_review",
+        "environment_review",
+        "style_consistency",
+        "visual_direction"
+      ],
+      "authority_level": "B",
+      "paid_ai_enabled": false,
+      "external_actions_enabled": false
+    },
+    {
+      "worker_id": "studio-character-designer-01",
+      "name": "Character Designer",
+      "role_name": "character_designer",
+      "team_id": "art",
+      "reports_to": "studio-art-director-01",
+      "capabilities": [
+        "character_design",
+        "costume_consistency",
+        "expression_sheet",
+        "reference_assets"
+      ],
+      "authority_level": "B",
+      "paid_ai_enabled": false,
+      "external_actions_enabled": false
+    },
+    {
+      "worker_id": "studio-environment-artist-01",
+      "name": "Environment Artist",
+      "role_name": "environment_artist",
+      "team_id": "art",
+      "reports_to": "studio-art-director-01",
+      "capabilities": [
+        "background_design",
+        "color_script",
+        "environment_design",
+        "location_continuity"
+      ],
+      "authority_level": "B",
+      "paid_ai_enabled": false,
+      "external_actions_enabled": false
+    },
+    {
+      "worker_id": "studio-storyboard-artist-01",
+      "name": "Storyboard & Shot Planner",
+      "role_name": "storyboard_artist",
+      "team_id": "art",
+      "reports_to": "studio-art-director-01",
+      "capabilities": [
+        "camera_language",
+        "scene_blocking",
+        "shot_planning",
+        "storyboard"
+      ],
+      "authority_level": "B",
+      "paid_ai_enabled": false,
+      "external_actions_enabled": false
+    },
+    {
+      "worker_id": "studio-animation-director-01",
+      "name": "Animation Director",
+      "role_name": "animation_director",
+      "team_id": "animation",
+      "reports_to": "studio-director-01",
+      "capabilities": [
+        "animation_direction",
+        "motion_consistency",
+        "render_planning",
+        "shot_approval"
+      ],
+      "authority_level": "B",
+      "paid_ai_enabled": false,
+      "external_actions_enabled": false
+    },
+    {
+      "worker_id": "studio-animation-engineer-01",
+      "name": "Animation Pipeline Engineer",
+      "role_name": "animation_pipeline_engineer",
+      "team_id": "animation",
+      "reports_to": "studio-animation-director-01",
+      "capabilities": [
+        "asset_pipeline",
+        "comfyui",
+        "video_generation",
+        "workflow_automation"
+      ],
+      "authority_level": "B",
+      "paid_ai_enabled": false,
+      "external_actions_enabled": false
+    },
+    {
+      "worker_id": "studio-editor-compositor-01",
+      "name": "Editor & Compositor",
+      "role_name": "editor_compositor",
+      "team_id": "animation",
+      "reports_to": "studio-animation-director-01",
+      "capabilities": [
+        "compositing",
+        "editing",
+        "subtitle_burnin",
+        "timing"
+      ],
+      "authority_level": "B",
+      "paid_ai_enabled": false,
+      "external_actions_enabled": false
+    },
+    {
+      "worker_id": "studio-voice-director-01",
+      "name": "Voice Director",
+      "role_name": "voice_director",
+      "team_id": "audio",
+      "reports_to": "studio-director-01",
+      "capabilities": [
+        "character_voice_consistency",
+        "dialogue_direction",
+        "pronunciation",
+        "voice_casting"
+      ],
+      "authority_level": "B",
+      "paid_ai_enabled": false,
+      "external_actions_enabled": false
+    },
+    {
+      "worker_id": "studio-dubbing-engineer-01",
+      "name": "TTS & Dubbing Engineer",
+      "role_name": "dubbing_engineer",
+      "team_id": "audio",
+      "reports_to": "studio-voice-director-01",
+      "capabilities": [
+        "audio_cleanup",
+        "lip_sync",
+        "tts",
+        "voice_synthesis"
+      ],
+      "authority_level": "B",
+      "paid_ai_enabled": false,
+      "external_actions_enabled": false
+    },
+    {
+      "worker_id": "studio-music-sfx-01",
+      "name": "Music & SFX Producer",
+      "role_name": "music_sfx_producer",
+      "team_id": "audio",
+      "reports_to": "studio-voice-director-01",
+      "capabilities": [
+        "loudness",
+        "mixing",
+        "music",
+        "sound_effects"
+      ],
+      "authority_level": "B",
+      "paid_ai_enabled": false,
+      "external_actions_enabled": false
+    },
+    {
+      "worker_id": "studio-localization-lead-01",
+      "name": "Localization Lead",
+      "role_name": "localization_lead",
+      "team_id": "localization",
+      "reports_to": "studio-director-01",
+      "capabilities": [
+        "localization",
+        "subtitle_adaptation",
+        "terminology_memory",
+        "translation"
+      ],
+      "authority_level": "B",
+      "paid_ai_enabled": false,
+      "external_actions_enabled": false
+    },
+    {
+      "worker_id": "studio-qa-lead-01",
+      "name": "Continuity, Quality & Child-Safety Lead",
+      "role_name": "quality_safety_lead",
+      "team_id": "quality",
+      "reports_to": "studio-director-01",
+      "capabilities": [
+        "child_safety",
+        "continuity_qa",
+        "qa",
+        "technical_validation"
+      ],
+      "authority_level": "B",
+      "paid_ai_enabled": false,
+      "external_actions_enabled": false
+    },
+    {
+      "worker_id": "studio-publishing-lead-01",
+      "name": "Publishing & Metadata Specialist",
+      "role_name": "publishing_specialist",
+      "team_id": "publishing-growth",
+      "reports_to": "studio-director-01",
+      "capabilities": [
+        "channel_operations",
+        "metadata",
+        "release_packaging",
+        "thumbnail_brief"
+      ],
+      "authority_level": "B",
+      "paid_ai_enabled": false,
+      "external_actions_enabled": false
+    },
+    {
+      "worker_id": "studio-analytics-growth-01",
+      "name": "Analytics & Growth Specialist",
+      "role_name": "analytics_growth_specialist",
+      "team_id": "publishing-growth",
+      "reports_to": "studio-publishing-lead-01",
+      "capabilities": [
+        "analytics",
+        "content_performance",
+        "experiment_design",
+        "retention_analysis"
+      ],
+      "authority_level": "B",
+      "paid_ai_enabled": false,
+      "external_actions_enabled": false
+    }
+  ]
+}

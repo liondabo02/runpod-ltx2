@@ -1,0 +1,149 @@
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Mapping, Sequence
+
+
+class AcceptancePreflightError(RuntimeError):
+    pass
+
+
+@dataclass(frozen=True, slots=True)
+class AcceptanceGate:
+    gate_id: str
+    passed: bool
+    blocking: bool
+    message: str
+
+
+@dataclass(frozen=True, slots=True)
+class AcceptancePreflight:
+    episode_id: str
+    gates: tuple[AcceptanceGate, ...]
+    ready_for_paid_execution: bool
+    paid_execution_requested: bool
+    publish_requested: bool
+
+    def to_payload(self) -> dict[str, object]:
+        return {
+            "schema": "ahos.studio-acceptance-preflight.v1",
+            "episode_id": self.episode_id,
+            "gates": [
+                {
+                    "gate_id": gate.gate_id,
+                    "passed": gate.passed,
+                    "blocking": gate.blocking,
+                    "message": gate.message,
+                }
+                for gate in self.gates
+            ],
+            "ready_for_paid_execution": self.ready_for_paid_execution,
+            "paid_execution_requested": self.paid_execution_requested,
+            "publish_requested": self.publish_requested,
+        }
+
+
+class StudioAcceptancePreflight:
+    REQUIRED_COMPLETED_STEPS = tuple(f"STUDIO-{n:03d}" for n in range(1, 8))
+
+    def evaluate(
+        self,
+        *,
+        episode_id: str,
+        backlog: Mapping[str, object],
+        required_artifacts: Sequence[str | Path],
+        voice_similarity_approved: bool,
+        owner_approved: bool,
+        execution_enabled: bool,
+        paid_provider_enabled: bool,
+        paid_execution_requested: bool = False,
+        publish_requested: bool = False,
+    ) -> AcceptancePreflight:
+        if not episode_id.strip():
+            raise AcceptancePreflightError("episode_id is required")
+        tasks_raw = backlog.get("tasks")
+        if not isinstance(tasks_raw, list):
+            raise AcceptancePreflightError("studio backlog tasks must be a list")
+        statuses = {
+            str(task.get("id")): str(task.get("status"))
+            for task in tasks_raw
+            if isinstance(task, Mapping)
+        }
+        incomplete = [
+            step for step in self.REQUIRED_COMPLETED_STEPS
+            if statuses.get(step) != "completed"
+        ]
+        missing_artifacts = [str(path) for path in required_artifacts if not Path(path).is_file()]
+
+        gates = (
+            AcceptanceGate(
+                "studio-roadmap",
+                not incomplete,
+                True,
+                "STUDIO-001 through STUDIO-007 are complete."
+                if not incomplete else "Incomplete prerequisites: " + ", ".join(incomplete),
+            ),
+            AcceptanceGate(
+                "required-artifacts",
+                not missing_artifacts,
+                True,
+                "All acceptance artifacts are present."
+                if not missing_artifacts else "Missing artifacts: " + ", ".join(missing_artifacts),
+            ),
+            AcceptanceGate(
+                "voice-similarity",
+                voice_similarity_approved,
+                True,
+                "Human voice-similarity approval recorded."
+                if voice_similarity_approved else "Human voice-similarity approval is required.",
+            ),
+            AcceptanceGate(
+                "owner-approval",
+                owner_approved,
+                True,
+                "Owner approval recorded." if owner_approved else "Explicit owner approval is required.",
+            ),
+            AcceptanceGate(
+                "execution-enable",
+                execution_enabled,
+                True,
+                "Execution is enabled." if execution_enabled else "Execution remains disabled.",
+            ),
+            AcceptanceGate(
+                "paid-provider-enable",
+                paid_provider_enabled,
+                True,
+                "Paid provider is enabled." if paid_provider_enabled else "Paid provider remains disabled.",
+            ),
+            AcceptanceGate(
+                "no-publish",
+                not publish_requested,
+                True,
+                "Publishing is not requested."
+                if not publish_requested else "Acceptance production may not auto-publish.",
+            ),
+        )
+        ready = paid_execution_requested and all(g.passed for g in gates if g.blocking)
+        return AcceptancePreflight(
+            episode_id=episode_id,
+            gates=gates,
+            ready_for_paid_execution=ready,
+            paid_execution_requested=paid_execution_requested,
+            publish_requested=publish_requested,
+        )
+
+
+def load_backlog(path: str | Path) -> dict[str, object]:
+    payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise AcceptancePreflightError("studio backlog must be an object")
+    return payload
+
+
+def export_preflight(preflight: AcceptancePreflight, path: str | Path) -> Path:
+    output = Path(path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(preflight.to_payload(), ensure_ascii=False, indent=2), encoding="utf-8")
+    return output

@@ -1,0 +1,16 @@
+{
+  "studio_step": "STUDIO-006 Kokoro fresh-worker live health",
+  "status": "PASS",
+  "endpoint_name": "miniverse-kokoro-tts-prod",
+  "endpoint_id": "4vygp64ky68w3z",
+  "endpoint_type": "load_balancer",
+  "health_path": "/health",
+  "http_status": 200,
+  "worker_health": "PASS",
+  "fresh_worker_after_recycle": true,
+  "disk_verified_gb": 40,
+  "tts_request_sent": false,
+  "audio_generated": false,
+  "paid_live_execution": true,
+  "secret_exposed": false
+}

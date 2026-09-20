@@ -286,7 +286,7 @@ while ($true) {
         $backlogPath = Join-Path $Workspace 'ahos_core\AHOS_BACKLOG.json'
         $doc = Get-Content $backlogPath -Raw | ConvertFrom-Json
         $next = $doc.tasks | Where-Object {
-            $_.status -eq 'pending' -and
+            (@('pending', 'planned') -contains $_.status) -and
             $_.risk -eq 'low' -and
             $_.authority -eq 'B' -and
             -not $_.requires_owner_approval
@@ -370,3 +370,4 @@ while ($true) {
         Start-Sleep -Seconds $IdleSleepSeconds
     }
 }
+

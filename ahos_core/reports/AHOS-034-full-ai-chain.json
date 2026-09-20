@@ -1,0 +1,83 @@
+{
+  "mission_id": "AHOS-034-full-ai-chain",
+  "status": "completed",
+  "manager_id": "mgr-software-01",
+  "objective": "Create a tiny local-only internal automation prototype plan.\n\nThe department manager must plan exactly two worker steps:\n1. Research first. The research worker must create RESEARCH_BRIEF.md with\n   exactly three concise requirements/constraints for a safe local automation.\n2. Software second, depending on the research step. The software worker must\n   use the handed-off research result and create PROTOTYPE_PLAN.md describing a tiny\n   implementation plan based on that research.\n\nUse only the research and software departments. Keep all work local and\nreversible. Do not contact anyone, publish, deploy, purchase, access secrets,\nor use external business systems.",
+  "ai_manager_plan": {
+    "steps": [
+      {
+        "step_id": "research-brief",
+        "title": "Research and write exactly three concise local automation requirements in RESEARCH_BRIEF.md",
+        "department": "research",
+        "required_capabilities": [
+          "research"
+        ],
+        "depends_on": [],
+        "estimated_cost_usd": 0.0,
+        "external_side_effect": false,
+        "destructive": false,
+        "touches_secrets": false,
+        "requires_owner_approval": false
+      },
+      {
+        "step_id": "prototype-plan",
+        "title": "Use the handed-off RESEARCH_BRIEF.md to write a tiny local implementation plan in PROTOTYPE_PLAN.md",
+        "department": "software",
+        "required_capabilities": [
+          "automation"
+        ],
+        "depends_on": [
+          "research-brief"
+        ],
+        "estimated_cost_usd": 0.0,
+        "external_side_effect": false,
+        "destructive": false,
+        "touches_secrets": false,
+        "requires_owner_approval": false
+      }
+    ]
+  },
+  "executed_steps": [
+    {
+      "step_id": "research-brief",
+      "department": "research",
+      "worker_id": "research-01",
+      "stage": "completed",
+      "qa_summary": "verified non-empty research artifact"
+    },
+    {
+      "step_id": "prototype-plan",
+      "department": "software",
+      "worker_id": "dev-01",
+      "stage": "completed",
+      "qa_summary": "verified non-empty developer artifact"
+    }
+  ],
+  "real_ai_actors": [
+    "mgr-software-01",
+    "research-01",
+    "dev-01"
+  ],
+  "research_to_developer_handoff_verified": true,
+  "research_artifact": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\control_plane_v2\\runtime\\workspaces\\ahos-live-full-chain\\AHOS-034-full-ai-chain_research-brief\\RESEARCH_BRIEF.md",
+  "developer_artifact": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\control_plane_v2\\runtime\\workspaces\\ahos-live-full-chain\\AHOS-034-full-ai-chain_prototype-plan\\PROTOTYPE_PLAN.md",
+  "reported_costs": [
+    {
+      "actor": "manager",
+      "estimated_cost_usd": 0.007453729999999999
+    },
+    {
+      "actor": "researcher",
+      "estimated_cost_usd": 0.007110389999999999
+    },
+    {
+      "actor": "developer",
+      "estimated_cost_usd": 0.01587176
+    }
+  ],
+  "reported_estimated_total_cost_usd": 0.03043588,
+  "external_publish_actions": 0,
+  "external_message_actions": 0,
+  "payment_actions": 0,
+  "deployment_actions": 0
+}
