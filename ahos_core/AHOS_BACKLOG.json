@@ -428,6 +428,33 @@
                       "requires_owner_approval":  true,
                       "task":  "Run one explicit owner-approved final acceptance mission through the real persistent company queue, real AI department manager, real AI researcher, deterministic QA, verified handoff, real AI software engineer, final QA, persistent result, and Holding Control Center visibility. No external business actions.",
                       "completed_at":  "2026-09-19T10:38:50.0917449Z"
+                  },
+                  {
+                      "id":  "AHOS-043",
+                      "title":  "Add local AHOS backlog schema validator",
+                      "status":  "planned",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, add a deterministic validator for AHOS_BACKLOG.json that checks required top-level rules, unique AHOS IDs, allowed status, authority, and risk values, owner-approval consistency, and completed_at presence. Include focused tests and a local report command; do not mutate the backlog or weaken governance."
+                  },
+                  {
+                      "id":  "AHOS-044",
+                      "title":  "Add read-only mission queue consistency checks",
+                      "status":  "planned",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, add a read-only local consistency checker for persistent mission queue and owner-approval records that reports orphan approvals, invalid leases, terminal states with active leases, and mismatched waiting-approval state. Return deterministic diagnostics with focused tests; do not repair data or perform external actions."
+                  },
+                  {
+                      "id":  "AHOS-045",
+                      "title":  "Add repository-root AHOS test entry point",
+                      "status":  "planned",
+                      "risk":  "low",
+                      "authority":  "B",
+                      "requires_owner_approval":  false,
+                      "task":  "Inside ahos_core only, make the documented AHOS test command work from the repository root without manual PYTHONPATH setup by adding a supported local test entry point or package configuration. Preserve package boundaries, avoid network calls, and add a small invocation smoke check."
                   }
               ]
 }
