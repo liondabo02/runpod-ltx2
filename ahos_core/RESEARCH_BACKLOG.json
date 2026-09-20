@@ -99,7 +99,7 @@
     {
       "id": "RESEARCH-006",
       "title": "GitHub hardening and supply-chain CI",
-      "status": "blocked_owner_approval",
+      "status": "prepared_waiting_activation",
       "authority": "C",
       "requires_owner_approval": true,
       "deliverables": [
@@ -109,7 +109,9 @@
         "dependency review",
         "SBOM",
         "branch protection"
-      ]
+      ],
+      "preparation_commit": "f10d91427a8d421a4900d42345451b1d88db27bf",
+      "notes": "CODEOWNERS and Dependabot prepared; security workflow kept disabled; branch protection plan is non-applying."
     },
     {
       "id": "RESEARCH-007",
