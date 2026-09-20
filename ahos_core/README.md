@@ -40,3 +40,6 @@ python -m pytest ahos_core/tests -q
 ## Safety boundary
 
 RunPod/video generation is a capability that AHOS may coordinate later. Paid GPU execution, production deployment, social publishing, purchases, billing changes, credentials, and destructive actions remain outside autonomous execution and require explicit owner approval.
+
+Free and open AI candidates are evaluated through a fail-closed registry; see
+[`docs/FREE_AI_INTEGRATION_POLICY.md`](docs/FREE_AI_INTEGRATION_POLICY.md).

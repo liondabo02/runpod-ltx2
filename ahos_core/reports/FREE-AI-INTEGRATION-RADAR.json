@@ -1,0 +1,20 @@
+{
+  "policy": {
+    "mode": "FREE-ONLY",
+    "default": "deny",
+    "live_external_execution": false,
+    "paid_execution": false,
+    "production_activation": false,
+    "credentials_or_browser_cookies": false,
+    "rule": "Free software, free API quota and free compute are separate facts. All three must be verified before unattended execution."
+  },
+  "decisions": [
+    {"id": "agent-reach-public", "decision": "SANDBOX_CANDIDATE", "allowed_scope": ["public web", "RSS", "YouTube transcripts", "public GitHub"], "blocked_scope": ["social login", "browser cookies", "private repositories", "write actions", "proxy purchase"], "official_source": "https://github.com/Panniantong/Agent-Reach", "license": "MIT"},
+    {"id": "deer-flow-2", "decision": "SANDBOX_CANDIDATE", "allowed_scope": ["isolated evaluation", "architecture benchmark"], "blocked_scope": ["auto approval", "production gateway", "unguarded browser", "private network access", "secrets"], "official_source": "https://github.com/bytedance/deer-flow", "license": "MIT"},
+    {"id": "meituan-longcat-video", "decision": "BLOCKED_UNTIL_FREE_COMPUTE", "official_source": "https://github.com/meituan-longcat/LongCat-Video", "license": "MIT", "reason": "The code and weights are open, but GPU execution has a real cost unless existing idle hardware is proven sufficient."},
+    {"id": "meituan-longcat-2", "decision": "BLOCKED_UNTIL_LICENSE_AND_ENDPOINT_VERIFIED", "official_source": "https://huggingface.co/meituan-longcat/LongCat-2.0"},
+    {"id": "deepseek-v4", "decision": "BLOCKED_UNTIL_FREE_ENDPOINT_VERIFIED", "official_source": "https://huggingface.co/deepseek-ai", "reason": "Open weights and inexpensive APIs are not the same as zero-cost hosted inference."},
+    {"id": "lyria-3.5", "decision": "BLOCKED_PAID_API", "official_source": "https://ai.google.dev/gemini-api/docs/music-generation", "reason": "Free consumer access is not an unattended free API entitlement."},
+    {"id": "ltx-2.5", "decision": "BLOCKED_UNTIL_FREE_COMPUTE", "official_source": "https://huggingface.co/Lightricks/LTX-2.5", "license": "LTX-2.x Community License"}
+  ]
+}
