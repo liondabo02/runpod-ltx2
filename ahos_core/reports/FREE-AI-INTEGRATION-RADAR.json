@@ -15,6 +15,7 @@
     {"id": "meituan-longcat-2", "decision": "BLOCKED_UNTIL_LICENSE_AND_ENDPOINT_VERIFIED", "official_source": "https://huggingface.co/meituan-longcat/LongCat-2.0"},
     {"id": "deepseek-v4", "decision": "BLOCKED_UNTIL_FREE_ENDPOINT_VERIFIED", "official_source": "https://huggingface.co/deepseek-ai", "reason": "Open weights and inexpensive APIs are not the same as zero-cost hosted inference."},
     {"id": "lyria-3.5", "decision": "BLOCKED_PAID_API", "official_source": "https://ai.google.dev/gemini-api/docs/music-generation", "reason": "Free consumer access is not an unattended free API entitlement."},
-    {"id": "ltx-2.5", "decision": "BLOCKED_UNTIL_FREE_COMPUTE", "official_source": "https://huggingface.co/Lightricks/LTX-2.5", "license": "LTX-2.x Community License"}
+    {"id": "ltx-2.5", "decision": "BLOCKED_UNTIL_FREE_COMPUTE", "official_source": "https://huggingface.co/Lightricks/LTX-2.5", "license": "LTX-2.x Community License"},
+    {"id": "remotion-local", "decision": "SANDBOX_CANDIDATE", "official_source": "https://github.com/remotion-dev/remotion", "license": "Remotion Free License (eligibility limited)", "allowed_scope": ["local episode assembly", "captions", "credits", "motion graphics", "localization variants"], "blocked_scope": ["cloud spending", "production use before license recheck"], "reason": "Self-rendering has no platform quota, but it consumes local compute and is not generative AI."}
   ]
 }

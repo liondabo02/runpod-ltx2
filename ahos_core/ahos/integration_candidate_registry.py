@@ -95,6 +95,23 @@ def default_integration_candidate_registry() -> IntegrationCandidateRegistry:
             notes="Benchmark only; auto approval, browser control, private-address access and production gateway stay disabled.",
         ),
         IntegrationCandidate(
+            candidate_id="remotion-local", name="Remotion (local renderer)",
+            kind="video_compositor", source_url="https://github.com/remotion-dev/remotion",
+            license_name="Remotion Free License (eligibility limited)",
+            status=IntegrationStatus.READY_FOR_SANDBOX,
+            isolation=IsolationLevel.CONTAINER,
+            capabilities=frozenset({
+                "programmatic_video", "episode_assembly", "captions",
+                "motion_graphics", "localization_variants", "batch_render",
+            }),
+            local_compute_required=True,
+            notes=(
+                "Use only for local evaluation while Free License eligibility applies. "
+                "It is a compositor, not a generative video model; rendering consumes local compute. "
+                "Recheck licensing before commercial use or organizational growth."
+            ),
+        ),
+        IntegrationCandidate(
             candidate_id="longcat-video", name="Meituan LongCat-Video",
             kind="video_model", source_url="https://github.com/meituan-longcat/LongCat-Video",
             license_name="MIT", status=IntegrationStatus.BLOCKED_COMPUTE,
