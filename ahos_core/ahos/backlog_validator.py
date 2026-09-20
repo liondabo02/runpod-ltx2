@@ -137,7 +137,7 @@ def validate_backlog(data: object) -> ValidationResult:
 def load_and_validate(path: Path) -> ValidationResult:
     """Load and validate one backlog file, reporting file errors deterministically."""
     try:
-        data: Any = json.loads(path.read_text(encoding="utf-8"))
+        data: Any = json.loads(path.read_text(encoding="utf-8-sig"))
     except OSError as exc:
         return ValidationResult((f"unable to read {path}: {exc}",))
     except json.JSONDecodeError as exc:
@@ -152,7 +152,8 @@ def main(argv: list[str] | None = None) -> int:
 
     result = load_and_validate(args.path)
     if result.is_valid:
-        print(f"VALID: {args.path} ({len(json.loads(args.path.read_text(encoding='utf-8'))['tasks'])} tasks)")
+        task_count = len(json.loads(args.path.read_text(encoding="utf-8-sig"))["tasks"])
+        print(f"VALID: {args.path} ({task_count} tasks)")
         return 0
 
     print(f"INVALID: {args.path}")

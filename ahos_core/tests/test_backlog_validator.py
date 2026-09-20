@@ -11,7 +11,16 @@ BACKLOG_PATH = AHOS_CORE / "AHOS_BACKLOG.json"
 
 
 def backlog_data() -> dict:
-    return json.loads(BACKLOG_PATH.read_text(encoding="utf-8"))
+    return json.loads(BACKLOG_PATH.read_text(encoding="utf-8-sig"))
+
+
+def test_loader_accepts_windows_powershell_utf8_bom(tmp_path: Path):
+    from ahos.backlog_validator import load_and_validate
+
+    source = tmp_path / "bom-backlog.json"
+    source.write_text(json.dumps(valid_backlog_data()), encoding="utf-8-sig")
+
+    assert load_and_validate(source).is_valid is True
 
 
 def valid_backlog_data() -> dict:

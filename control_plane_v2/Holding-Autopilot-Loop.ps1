@@ -1,5 +1,6 @@
 param(
     [decimal]$DailyBudgetUsd = 0.10,
+    [decimal]$PaidTaskReserveUsd = 0.08,
     [int]$IdleSleepSeconds = 300,
     [int]$PlannerIntervalHours = 6
 )
@@ -59,20 +60,44 @@ function Get-BudgetState {
         $state = Get-Content $BudgetFile -Raw | ConvertFrom-Json
         if ($state.date -eq $today) { return $state }
     }
-    return [pscustomobject]@{ date = $today; spent_usd = 0.0 }
+    return [pscustomobject]@{ date = $today; spent_usd = 0.0; reserved_usd = 0.0 }
 }
 
 function Save-BudgetState($state) {
     $state | ConvertTo-Json | Set-Content -Path $BudgetFile -Encoding utf8
 }
 
-function Add-Cost([decimal]$amount) {
+function Get-ReservedCost($state) {
+    if ($null -eq $state.PSObject.Properties['reserved_usd']) { return [decimal]0 }
+    return [decimal]$state.reserved_usd
+}
+
+function Get-RemainingBudget {
+    $state = Get-BudgetState
+    return $DailyBudgetUsd - [decimal]$state.spent_usd - (Get-ReservedCost $state)
+}
+
+function Reserve-Cost([decimal]$amount) {
+    $state = Get-BudgetState
+    $remaining = $DailyBudgetUsd - [decimal]$state.spent_usd - (Get-ReservedCost $state)
+    if ($amount -le 0 -or $remaining -lt $amount) { return $false }
+    $state | Add-Member -NotePropertyName reserved_usd -NotePropertyValue ([double]$amount) -Force
+    Save-BudgetState $state
+    return $true
+}
+
+function Settle-Cost([decimal]$amount) {
     $state = Get-BudgetState
     $state.spent_usd = [double]$state.spent_usd + [double]$amount
+    $state | Add-Member -NotePropertyName reserved_usd -NotePropertyValue 0.0 -Force
     Save-BudgetState $state
 }
 
 function Invoke-AhosTask([string]$instruction) {
+    if (-not (Reserve-Cost $PaidTaskReserveUsd)) {
+        throw "Paid task blocked by budget gate. Remaining USD $(Get-RemainingBudget); required reserve USD $PaidTaskReserveUsd."
+    }
+
     $taskId = & $WorkerExe enqueue $instruction --workspace $Workspace --max-attempts 1
     Write-Host "AHOS TASK: $taskId"
     do {
@@ -81,8 +106,12 @@ function Invoke-AhosTask([string]$instruction) {
         Write-Host "STATUS: $($record.status)"
     } while ($record.status -eq 'pending' -or $record.status -eq 'running')
 
-    if ($record.result -and $record.result.builder -and $record.result.builder.estimated_cost_usd) {
-        Add-Cost ([decimal]$record.result.builder.estimated_cost_usd)
+    if ($record.result -and $record.result.builder -and
+        $null -ne $record.result.builder.PSObject.Properties['estimated_cost_usd']) {
+        Settle-Cost ([decimal]$record.result.builder.estimated_cost_usd)
+    } else {
+        # Fail closed: keep the reservation when the provider does not report a cost.
+        Write-Host "BUDGET WARNING: task returned no cost; USD $PaidTaskReserveUsd remains reserved."
     }
     return $record
 }
@@ -102,7 +131,9 @@ function Test-AhosCore {
 
 function Save-Backlog($doc) {
     $path = Join-Path $Workspace 'ahos_core\AHOS_BACKLOG.json'
-    $doc | ConvertTo-Json -Depth 12 | Set-Content -Path $path -Encoding utf8
+    $json = $doc | ConvertTo-Json -Depth 12
+    # Windows PowerShell 5.1's `-Encoding utf8` writes a BOM, which breaks strict JSON readers.
+    [System.IO.File]::WriteAllText($path, $json, (New-Object System.Text.UTF8Encoding($false)))
 }
 
 function Commit-And-Push([string]$message) {
@@ -139,13 +170,14 @@ Write-Host "AHOS AUTOPILOT ONLINE"
 Write-Host "Branch: $Branch"
 Write-Host "Workspace: $Workspace"
 Write-Host "Daily API budget: USD $DailyBudgetUsd"
+Write-Host "Paid-task reserve: USD $PaidTaskReserveUsd"
 Write-Host "Smoke mode: $env:MINIVERSE_SMOKE_MODE"
 
 while ($true) {
     try {
         $budget = Get-BudgetState
-        if ([decimal]$budget.spent_usd -ge $DailyBudgetUsd) {
-            Write-Host "Daily AI budget reached: USD $($budget.spent_usd). Waiting."
+        if ((Get-RemainingBudget) -lt $PaidTaskReserveUsd) {
+            Write-Host "FREE-ONLY: paid calls paused. Remaining USD $(Get-RemainingBudget); required reserve USD $PaidTaskReserveUsd."
             Start-Sleep -Seconds $IdleSleepSeconds
             continue
         }
@@ -161,7 +193,7 @@ while ($true) {
         $backlogPath = Join-Path $Workspace 'ahos_core\AHOS_BACKLOG.json'
         $doc = Get-Content $backlogPath -Raw | ConvertFrom-Json
         $next = $doc.tasks | Where-Object {
-            $_.status -eq 'pending' -and
+            $_.status -in @('pending', 'planned') -and
             $_.risk -eq 'low' -and
             $_.authority -eq 'B' -and
             -not $_.requires_owner_approval
