@@ -99,7 +99,7 @@
     {
       "id": "RESEARCH-006",
       "title": "GitHub hardening and supply-chain CI",
-      "status": "prepared_waiting_activation",
+      "status": "active_waiting_first_manual_run",
       "authority": "C",
       "requires_owner_approval": true,
       "deliverables": [
@@ -111,7 +111,9 @@
         "branch protection"
       ],
       "preparation_commit": "f10d91427a8d421a4900d42345451b1d88db27bf",
-      "notes": "CODEOWNERS and Dependabot prepared; security workflow kept disabled; branch protection plan is non-applying."
+      "activation_commit": "1f958e78b769abcd61798455ce4150f876ab39f8",
+      "template_cleanup_commit": "3ba185af55802b93f9596249347e886ffcefe47b",
+      "notes": "Security workflow activated as manual workflow_dispatch with read-only contents permission and pinned actions. Branch protection remains unapplied; automatic merge remains disabled."
     },
     {
       "id": "RESEARCH-007",
