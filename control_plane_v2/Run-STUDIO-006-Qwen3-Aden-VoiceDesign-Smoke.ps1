@@ -77,6 +77,12 @@ $body = @{
 
 Write-Host ""
 Write-Host "WARNING: the next request can start a 24 GB RunPod GPU worker and incur usage charges."
+$approval = Read-Host "Type RUN to authorize exactly ONE paid Qwen3 VoiceDesign request"
+if ($approval -ne "RUN") {
+    Write-Host "Cancelled. No paid request was sent."
+    exit 0
+}
+Write-Host "Owner approval: CONFIRMED"
 Write-Host "Sending ONE paid VoiceDesign request..."
 
 try {
