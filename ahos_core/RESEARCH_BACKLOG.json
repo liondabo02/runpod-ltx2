@@ -1,0 +1,124 @@
+{
+  "schema": "ahos.research-backlog.v1",
+  "purpose": "Holding-wide technology discovery, evaluation, and safe integration; film studio is one business unit only.",
+  "policy": {
+    "mode": "read-only-dry-run-first",
+    "auto_merge": false,
+    "auto_install": false,
+    "auto_execute_upstream": false,
+    "owner_approval_required": [
+      "paid",
+      "external_write",
+      "critical",
+      "production",
+      "license_exception"
+    ]
+  },
+  "items": [
+    {
+      "id": "RESEARCH-001",
+      "title": "Read-only GitHub discovery adapter",
+      "status": "ready",
+      "authority": "B",
+      "requires_owner_approval": false,
+      "deliverables": [
+        "github_research.py",
+        "allowlisted queries",
+        "rate-limit and pagination evidence",
+        "tests"
+      ]
+    },
+    {
+      "id": "RESEARCH-002",
+      "title": "Deterministic technology and license evaluation",
+      "status": "ready",
+      "authority": "B",
+      "requires_owner_approval": false,
+      "depends_on": [
+        "RESEARCH-001"
+      ],
+      "deliverables": [
+        "technology_evaluation.py",
+        "fail-closed license policy",
+        "security and maintenance scoring",
+        "tests"
+      ]
+    },
+    {
+      "id": "RESEARCH-003",
+      "title": "Append-only candidate evidence store",
+      "status": "ready",
+      "authority": "B",
+      "requires_owner_approval": false,
+      "depends_on": [
+        "RESEARCH-001"
+      ],
+      "deliverables": [
+        "research_store.py",
+        "repo plus immutable commit provenance",
+        "deduplication tests"
+      ]
+    },
+    {
+      "id": "RESEARCH-004",
+      "title": "Integration proposal generator",
+      "status": "planned",
+      "authority": "B",
+      "requires_owner_approval": false,
+      "depends_on": [
+        "RESEARCH-002",
+        "RESEARCH-003"
+      ],
+      "deliverables": [
+        "integration_proposal.py",
+        "test, sandbox, cost, rollback and approval fields"
+      ]
+    },
+    {
+      "id": "RESEARCH-005",
+      "title": "Ephemeral sandbox evaluator",
+      "status": "blocked_owner_approval",
+      "authority": "C",
+      "requires_owner_approval": true,
+      "depends_on": [
+        "RESEARCH-004"
+      ]
+    },
+    {
+      "id": "RESEARCH-006",
+      "title": "GitHub hardening and supply-chain CI",
+      "status": "blocked_owner_approval",
+      "authority": "C",
+      "requires_owner_approval": true,
+      "deliverables": [
+        "CODEOWNERS",
+        "Dependabot",
+        "CodeQL",
+        "dependency review",
+        "SBOM",
+        "branch protection"
+      ]
+    },
+    {
+      "id": "RESEARCH-007",
+      "title": "LangGraph orchestration pilot behind feature flag",
+      "status": "planned",
+      "authority": "C",
+      "requires_owner_approval": true,
+      "depends_on": [
+        "RESEARCH-002",
+        "RESEARCH-003"
+      ]
+    },
+    {
+      "id": "RESEARCH-008",
+      "title": "OpenHands isolated developer sandbox benchmark",
+      "status": "planned",
+      "authority": "C",
+      "requires_owner_approval": true,
+      "depends_on": [
+        "RESEARCH-005"
+      ]
+    }
+  ]
+}
