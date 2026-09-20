@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Mapping, Sequence
 
 from .multilingual_audio_package import MultilingualAudioPackage
+from .music_sfx_supervision import SoundSupervisionPackage
 
 
 class AcceptancePreflightError(RuntimeError):
@@ -57,6 +58,7 @@ class StudioAcceptancePreflight:
         backlog: Mapping[str, object],
         required_artifacts: Sequence[str | Path],
         multilingual_audio_package: MultilingualAudioPackage | None,
+        sound_supervision_package: SoundSupervisionPackage | None,
         voice_similarity_approved: bool,
         owner_approved: bool,
         execution_enabled: bool,
@@ -115,6 +117,24 @@ class StudioAcceptancePreflight:
                 + "."
             )
 
+        sound_package_present = sound_supervision_package is not None
+        sound_package_matches = (
+            sound_package_present and sound_supervision_package.episode_id == episode_id
+        )
+        sound_package_ready = sound_package_matches and sound_supervision_package.ready
+        if not sound_package_present:
+            sound_package_message = "Music/SFX supervision evidence is required."
+        elif not sound_package_matches:
+            sound_package_message = (
+                "Music/SFX supervision episode mismatch: "
+                f"expected {episode_id}, got {sound_supervision_package.episode_id}."
+            )
+        elif not sound_package_ready:
+            failed_checks = [name for name, passed in sound_supervision_package.qa.items() if not passed]
+            sound_package_message = "Music/SFX supervision failed: " + ", ".join(failed_checks) + "."
+        else:
+            sound_package_message = "Music/SFX rights, safety, timing, and creative reviews passed."
+
         gates = (
             AcceptanceGate(
                 "studio-roadmap",
@@ -135,6 +155,12 @@ class StudioAcceptancePreflight:
                 audio_package_ready,
                 True,
                 audio_package_message,
+            ),
+            AcceptanceGate(
+                "music-sfx-supervision",
+                sound_package_ready,
+                True,
+                sound_package_message,
             ),
             AcceptanceGate(
                 "voice-similarity",

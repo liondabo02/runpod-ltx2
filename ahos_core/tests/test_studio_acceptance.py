@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from ahos.multilingual_audio_package import AudioPackageAsset, MultilingualAudioPackager
+from ahos.music_sfx_supervision import MusicSfxSupervisor, SoundAssetEvidence, SoundCue
 from ahos.studio_acceptance import AcceptancePreflightError, StudioAcceptancePreflight
 
 
@@ -31,6 +32,20 @@ def audio_package(episode_id="S01E001", omit_language=None):
     )
 
 
+def sound_package(episode_id="S01E001", approved=True):
+    assets = (
+        SoundAssetEvidence("music", "music", "private://music.wav", SHA, "private://rights/music.json", "CC-BY-4.0", "AHOS Studio", approved),
+        SoundAssetEvidence("sfx", "sfx", "private://sfx.wav", SHA, "private://rights/sfx.json", "CC-BY-4.0", "AHOS Studio", approved),
+    )
+    cues = (
+        SoundCue("music-1", "scene-1", "music", "music", 0, 480, "Episode score", -8, approved, approved),
+        SoundCue("sfx-1", "scene-1", "sfx", "sfx", 1, 2, "Story action", -4, approved, approved),
+    )
+    return MusicSfxSupervisor().build(
+        episode_id=episode_id, episode_duration_seconds=480, assets=assets, cues=cues,
+    )
+
+
 def backlog(status6="completed"):
     return {
         "tasks": [
@@ -48,6 +63,7 @@ def evaluate(tmp_path: Path, **overrides):
         "backlog": backlog(),
         "required_artifacts": (artifact,),
         "multilingual_audio_package": audio_package(),
+        "sound_supervision_package": sound_package(),
         "voice_similarity_approved": True,
         "owner_approved": True,
         "execution_enabled": True,
@@ -105,6 +121,21 @@ def test_wrong_episode_audio_package_is_rejected(tmp_path: Path):
     result = evaluate(tmp_path, multilingual_audio_package=audio_package("S01E002"))
     assert result.ready_for_paid_execution is False
     gate = next(g for g in result.gates if g.gate_id == "multilingual-audio-package")
+    assert "mismatch" in gate.message
+
+
+@pytest.mark.parametrize("package", [None, sound_package(approved=False)])
+def test_music_sfx_supervision_fails_closed(tmp_path: Path, package):
+    result = evaluate(tmp_path, sound_supervision_package=package)
+    assert result.ready_for_paid_execution is False
+    gate = next(g for g in result.gates if g.gate_id == "music-sfx-supervision")
+    assert gate.passed is False
+
+
+def test_wrong_episode_sound_package_is_rejected(tmp_path: Path):
+    result = evaluate(tmp_path, sound_supervision_package=sound_package("S01E002"))
+    assert result.ready_for_paid_execution is False
+    gate = next(g for g in result.gates if g.gate_id == "music-sfx-supervision")
     assert "mismatch" in gate.message
 
 
