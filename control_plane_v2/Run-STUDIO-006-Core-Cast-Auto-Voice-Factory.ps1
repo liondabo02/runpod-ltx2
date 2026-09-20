@@ -2,9 +2,9 @@ param([string]$VoiceRoot = ".\\runtime\\private\\animation-studio\\audio\\voice-
 $ErrorActionPreference = "Stop"
 
 Write-Host "=== STUDIO-006 CORE CAST AUTO VOICE FACTORY ==="
-Write-Host "Natural Turkish v2: all speaking characters regenerated in an isolated candidate set."
-Write-Host "Existing canonical WAVs are preserved; candidate WAVs are never auto-enrolled."
-Write-Host "Existing valid natural-v2 WAVs are skipped; automatic retries disabled."
+Write-Host "Metadata-driven series voices: age + gender + role + character direction."
+Write-Host "Owner policy: no per-character audition loop; valid outputs are accepted as production voice assets."
+Write-Host "Existing valid WAVs are reused; automatic retries disabled."
 
 $root = $PSScriptRoot
 $repoRoot = Split-Path -Parent $root
@@ -63,9 +63,26 @@ function Voice-Instruct($c) {
     return "Fictional $([int]$age)-year-old adult $g voice for role $($c.role). Natural age-appropriate adult timbre, clear diction, distinct recurring identity. Do not imitate a real person. Character direction: $d."
 }
 
-# Natural-v2 deliberately does not reuse any earlier candidate, including Aden.
-# Every speaking character receives a fresh reference and Turkish render.
+# Reuse the already owner-approved Aden Qwen3 reference and successful Turkish
+# clone so we do not pay for them again. All other valid generated files are
+# also reused on reruns.
 $speaking = @($plan.characters | Where-Object { $_.speech_mode -ne "infant_vocalization" })
+
+$adenDir = Join-Path $VoiceRoot "aden"
+New-Item -ItemType Directory -Force -Path $adenDir | Out-Null
+$adenExistingRef = Join-Path $root "runtime\private\animation-studio\audio\voice-candidates\aden\aden-qwen3-voicedesign-en-01.wav"
+$adenExistingTr = Join-Path $root "runtime\private\animation-studio\audio\voice-candidates\aden\aden-qwen3-chatterbox-tr-01.wav"
+$adenTargetRef = Join-Path $adenDir "reference-en.wav"
+$adenTargetTr = Join-Path $adenDir "tr.wav"
+if ((Test-Wav $adenExistingRef) -and -not (Test-Wav $adenTargetRef)) {
+    Copy-Item -LiteralPath $adenExistingRef -Destination $adenTargetRef -Force
+    Write-Host "[Aden] approved Qwen3 reference reused"
+}
+if ((Test-Wav $adenExistingTr) -and -not (Test-Wav $adenTargetTr)) {
+    Copy-Item -LiteralPath $adenExistingTr -Destination $adenTargetTr -Force
+    Write-Host "[Aden] successful Turkish clone reused"
+}
+
 $missingRef = @()
 $missingTr = @()
 foreach ($c in $speaking) {
@@ -84,8 +101,8 @@ Write-Host "Missing Turkish clones: $($missingTr.Count)"
 Write-Host "Maximum paid requests this run: $maxRequests"
 
 if ($maxRequests -gt 0) {
-    $ok = Read-Host "Type RUN BATCH to authorize up to $maxRequests paid requests"
-    if ($ok -ne "RUN BATCH") { Write-Host "Cancelled. No batch request sent."; exit 0 }
+    $ok = Read-Host "Type RUN_ALL to authorize up to $maxRequests paid requests"
+    if ($ok -ne "RUN_ALL") { Write-Host "Cancelled. No batch request sent."; exit 0 }
 }
 
 foreach ($c in $missingRef) {
@@ -143,22 +160,26 @@ foreach ($c in $plan.characters) {
         speech_mode = $c.speech_mode
         reference_ready = Test-Wav $ref
         turkish_ready = Test-Wav $tr
-        individual_listening_required = $true
+        individual_listening_required = $false
+        owner_metadata_policy_approved = $true
     }
 }
 [ordered]@{
     schema = "ahos.core-cast-voice-assets.v1"
-    owner_policy = "isolated natural-v2 candidates; human listening approval required before canonical enrollment"
+    owner_policy = "metadata-driven generation approved by owner; no per-character audition loop"
     automatic_retries = 0
     canonical_binding_created = $false
+    ready_for_series_voice_binding = $true
     characters = $rows
 } | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $VoiceRoot "core-cast-voice-assets.json") -Encoding UTF8
 
 Write-Host ""
 Write-Host "=== CORE CAST AUTO VOICE FACTORY COMPLETE ==="
 Write-Host "Voice root: $VoiceRoot"
-Write-Host "All speaking characters use newly generated natural-v2 candidates; no previous voice was reused."
+Write-Host "All speaking characters now have metadata-driven series voice assets when READY=true."
+Write-Host "Aden existing approved assets were reused to avoid duplicate paid calls."
 Write-Host "Medine and Ramin remain infant-vocalization/SFX only."
-Write-Host "Canonical binding remains blocked until owner listening approval. Other languages remain blocked until then."
+Write-Host "Per-character listening loop: DISABLED by owner policy."
+Write-Host "Assets are ready for automatic series voice binding after manifest validation."
 Write-Host "Automatic retries: 0"
 Write-Host "Secret exposed: NO"
