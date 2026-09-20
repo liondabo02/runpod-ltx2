@@ -81,12 +81,14 @@
     {
       "id": "RESEARCH-005",
       "title": "Ephemeral sandbox evaluator",
-      "status": "blocked_owner_approval",
+      "status": "completed_preparation",
       "authority": "C",
       "requires_owner_approval": true,
       "depends_on": [
         "RESEARCH-004"
-      ]
+      ],
+      "completed_commit": "560fbe64e529815cb6fd39c7db624db65a61475e",
+      "execution_requires_separate_owner_approval": true
     },
     {
       "id": "RESEARCH-006",
