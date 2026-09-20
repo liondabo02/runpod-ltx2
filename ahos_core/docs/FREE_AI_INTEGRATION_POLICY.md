@@ -10,6 +10,9 @@ API price and execution cost have each been verified independently.
   Login, browser-cookie import, private repositories and write actions remain disabled.
 - **DeerFlow 2.0** may enter an isolated architecture benchmark. Auto-approval,
   browser control, private-network access, production exposure and secrets remain disabled.
+  Its authorization, sandbox, secret-boundary, subagent and tool-sanitization
+  test subset passed 441/441. AHOS will port selected contracts instead of
+  adopting DeerFlow as its governing runtime.
 - **Meituan LongCat-Video / Avatar 1.5**, **DeepSeek V4**, and **LTX-2.5** are
   useful candidates, but open weights still require compute. They remain blocked
   until a genuinely zero-cost execution path and hardware fit are proven.

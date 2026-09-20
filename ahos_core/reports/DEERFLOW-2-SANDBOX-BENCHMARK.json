@@ -1,0 +1,45 @@
+{
+  "source": "https://github.com/bytedance/deer-flow",
+  "source_commit": "1e3bfa09d4e31e02d109ef2f4b41895dc89a78fe",
+  "declared_version": "2.1.0-rc0",
+  "license": "MIT",
+  "execution": {
+    "mode": "isolated local virtual environment",
+    "external_model_calls": 0,
+    "credentials_used": false,
+    "paid_spend_usd": 0,
+    "production_changes": false
+  },
+  "security_test_scope": [
+    "authorization enforcement",
+    "RBAC authorization provider",
+    "sandbox authorization",
+    "run metadata secret safety",
+    "request-scoped skill secrets",
+    "subagent prompt security",
+    "sandbox tool security",
+    "tool-result sanitization"
+  ],
+  "result": {
+    "passed": 441,
+    "failed": 0,
+    "warnings": 1,
+    "warning_detail": "Starlette TestClient/httpx deprecation; non-blocking for the tested security behavior.",
+    "decision": "PASS_ARCHITECTURE_REFERENCE_ONLY"
+  },
+  "adopt_for_ahos": [
+    "deny-by-default authorization at discovery and execution",
+    "request-scoped secret handling",
+    "sanitized tool results",
+    "subagent prompt provenance and security boundaries",
+    "sandbox lifecycle and ownership controls"
+  ],
+  "do_not_adopt_directly": [
+    "automatic permission approval",
+    "unguarded browser or private-address access",
+    "production gateway exposure",
+    "credential-bearing metadata",
+    "full framework dependency"
+  ],
+  "integration_strategy": "Port selected contracts and tests into AHOS; do not replace AHOS governance or owner approval."
+}
