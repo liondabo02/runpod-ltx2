@@ -18,7 +18,7 @@
     {
       "id": "RESEARCH-001",
       "title": "Read-only GitHub discovery adapter",
-      "status": "ready",
+      "status": "completed",
       "authority": "B",
       "requires_owner_approval": false,
       "deliverables": [
@@ -26,12 +26,13 @@
         "allowlisted queries",
         "rate-limit and pagination evidence",
         "tests"
-      ]
+      ],
+      "completed_commit": "bc0e98d0dcd002f0af25a014769c7c25c693fbfb"
     },
     {
       "id": "RESEARCH-002",
       "title": "Deterministic technology and license evaluation",
-      "status": "ready",
+      "status": "completed",
       "authority": "B",
       "requires_owner_approval": false,
       "depends_on": [
@@ -42,12 +43,13 @@
         "fail-closed license policy",
         "security and maintenance scoring",
         "tests"
-      ]
+      ],
+      "completed_commit": "bc0e98d0dcd002f0af25a014769c7c25c693fbfb"
     },
     {
       "id": "RESEARCH-003",
       "title": "Append-only candidate evidence store",
-      "status": "ready",
+      "status": "completed",
       "authority": "B",
       "requires_owner_approval": false,
       "depends_on": [
@@ -57,12 +59,13 @@
         "research_store.py",
         "repo plus immutable commit provenance",
         "deduplication tests"
-      ]
+      ],
+      "completed_commit": "bc0e98d0dcd002f0af25a014769c7c25c693fbfb"
     },
     {
       "id": "RESEARCH-004",
       "title": "Integration proposal generator",
-      "status": "planned",
+      "status": "completed",
       "authority": "B",
       "requires_owner_approval": false,
       "depends_on": [
@@ -72,7 +75,8 @@
       "deliverables": [
         "integration_proposal.py",
         "test, sandbox, cost, rollback and approval fields"
-      ]
+      ],
+      "completed_commit": "bc0e98d0dcd002f0af25a014769c7c25c693fbfb"
     },
     {
       "id": "RESEARCH-005",
