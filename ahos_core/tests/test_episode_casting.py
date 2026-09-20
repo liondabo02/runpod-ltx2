@@ -197,3 +197,33 @@ def test_guest_planner_contract_can_return_police_elder_and_pet():
     assert planned[0].role == "police officer"
     assert planned[1].age_years == 78
     assert planned[2].species == "cat"
+
+def test_recurring_adult_voice_metadata_uses_exact_owner_ages():
+    from ahos.core_cast_voice_catalog import CORE_CAST_VOICE_SPECS
+
+    specs = {item.character_id: item for item in CORE_CAST_VOICE_SPECS}
+    expected = {
+        "harun": (30.0, "man"),
+        "davut": (30.0, "man"),
+        "ahmet": (33.0, "man"),
+        "esma": (29.0, "woman"),
+        "fatos": (30.0, "woman"),
+        "esra": (33.0, "woman"),
+        "veysel": (33.0, "man"),
+        "oznur": (31.0, "woman"),
+    }
+
+    for character_id, (age_years, gender) in expected.items():
+        assert specs[character_id].age_years == age_years
+        assert specs[character_id].gender_presentation == gender
+
+
+def test_core_voice_briefs_include_exact_adult_age_and_distinct_direction():
+    briefs = {item.character_id: item for item in core_cast_voice_briefs()}
+
+    assert "30" in briefs["harun"].design_instruction
+    assert "33" in briefs["ahmet"].design_instruction
+    assert "29" in briefs["esma"].design_instruction
+    assert "31" in briefs["oznur"].design_instruction
+    assert briefs["harun"].design_instruction != briefs["davut"].design_instruction
+    assert briefs["esra"].design_instruction != briefs["fatos"].design_instruction
