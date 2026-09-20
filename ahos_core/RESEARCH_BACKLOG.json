@@ -81,14 +81,20 @@
     {
       "id": "RESEARCH-005",
       "title": "Ephemeral sandbox evaluator",
-      "status": "completed_preparation",
+      "status": "completed_verified",
       "authority": "C",
       "requires_owner_approval": true,
       "depends_on": [
         "RESEARCH-004"
       ],
       "completed_commit": "560fbe64e529815cb6fd39c7db624db65a61475e",
-      "execution_requires_separate_owner_approval": true
+      "execution_requires_separate_owner_approval": true,
+      "windows_proof": {
+        "targeted_tests": "8 passed in 0.13s",
+        "full_regression": "298 passed in 5.98s",
+        "paid_calls": 0,
+        "external_code_executed": false
+      }
     },
     {
       "id": "RESEARCH-006",
