@@ -129,12 +129,23 @@
     {
       "id": "RESEARCH-008",
       "title": "OpenHands isolated developer sandbox benchmark",
-      "status": "planned",
+      "status": "in_progress",
       "authority": "C",
       "requires_owner_approval": true,
       "depends_on": [
         "RESEARCH-005"
-      ]
+      ],
+      "candidate_benchmarks": [
+        {
+          "candidate": "deepseek-ai/deepseek-harness",
+          "upstream_commit": "ddefc45fbc7f8e46dd73185e68295696d1297887",
+          "result": "sandbox_policy_benchmark_passed",
+          "workflow_run_id": 35514914411,
+          "evidence": "reports/RESEARCH-008-deepseek-harness-benchmark.json",
+          "production_integration": false
+        }
+      ],
+      "notes": "DeepSeek Harness passed a credential-free ephemeral policy benchmark. It remains sandbox-only; OpenHands and Miniverse comparative benchmarks are still pending."
     }
   ]
 }
