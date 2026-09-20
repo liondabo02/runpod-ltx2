@@ -2,8 +2,9 @@ param([string]$VoiceRoot = ".\runtime\private\animation-studio\audio\core-voices
 $ErrorActionPreference = "Stop"
 
 Write-Host "=== STUDIO-006 CORE CAST AUTO VOICE FACTORY ==="
-Write-Host "Age/gender/role based recurring voices; no per-character listening loop."
-Write-Host "Existing WAVs skipped; automatic retries disabled."
+Write-Host "Natural Turkish v2: all speaking characters regenerated in an isolated candidate set."
+Write-Host "Existing canonical WAVs are preserved; candidate WAVs are never auto-enrolled."
+Write-Host "Existing valid natural-v2 WAVs are skipped; automatic retries disabled."
 
 $root = $PSScriptRoot
 $repoRoot = Split-Path -Parent $root
@@ -62,17 +63,8 @@ function Voice-Instruct($c) {
     return "Fictional $([int]$age)-year-old adult $g voice for role $($c.role). Natural age-appropriate adult timbre, clear diction, distinct recurring identity. Do not imitate a real person. Character direction: $d."
 }
 
-# Reuse already-approved Aden outputs with zero paid calls.
-$oldAden = Join-Path $root "runtime\private\animation-studio\audio\voice-candidates\aden"
-$adenDir = Join-Path $VoiceRoot "aden"
-New-Item -ItemType Directory -Force -Path $adenDir | Out-Null
-$oldRef = Join-Path $oldAden "aden-qwen3-voicedesign-en-01.wav"
-$oldTr = Join-Path $oldAden "aden-qwen3-chatterbox-tr-01.wav"
-$newRef = Join-Path $adenDir "reference-en.wav"
-$newTr = Join-Path $adenDir "tr.wav"
-if (-not (Test-Wav $newRef) -and (Test-Wav $oldRef)) { Copy-Item $oldRef $newRef -Force }
-if (-not (Test-Wav $newTr) -and (Test-Wav $oldTr)) { Copy-Item $oldTr $newTr -Force }
-
+# Natural-v2 deliberately does not reuse any earlier candidate, including Aden.
+# Every speaking character receives a fresh reference and Turkish render.
 $speaking = @($plan.characters | Where-Object { $_.speech_mode -ne "infant_vocalization" })
 $missingRef = @()
 $missingTr = @()
@@ -128,9 +120,9 @@ foreach ($c in $missingTr) {
         voice_id = "$($c.id)-tr-v1"
         reference_audio_base64 = $ref64
         allow_builtin_voice = $false
-        exaggeration = 0.45
-        cfg_weight = 0.55
-        temperature = 0.75
+        exaggeration = 0.30
+        cfg_weight = 0.35
+        temperature = 0.58
     }} | ConvertTo-Json -Depth 8 -Compress
     try { $r = Invoke-RestMethod -Method Post -Uri $cbUrl -Headers $headers -Body $body -TimeoutSec 1200 }
     catch { Write-Host "FAILED at $($c.name); no retry."; throw }
@@ -151,12 +143,12 @@ foreach ($c in $plan.characters) {
         speech_mode = $c.speech_mode
         reference_ready = Test-Wav $ref
         turkish_ready = Test-Wav $tr
-        individual_listening_required = $false
+        individual_listening_required = $true
     }
 }
 [ordered]@{
     schema = "ahos.core-cast-voice-assets.v1"
-    owner_policy = "automatic age/gender/role casting; no per-character listening loop"
+    owner_policy = "isolated natural-v2 candidates; human listening approval required before canonical enrollment"
     automatic_retries = 0
     canonical_binding_created = $false
     characters = $rows
@@ -165,8 +157,8 @@ foreach ($c in $plan.characters) {
 Write-Host ""
 Write-Host "=== CORE CAST AUTO VOICE FACTORY COMPLETE ==="
 Write-Host "Voice root: $VoiceRoot"
-Write-Host "Aden existing approved files reused when present."
+Write-Host "All speaking characters use newly generated natural-v2 candidates; no previous voice was reused."
 Write-Host "Medine and Ramin remain infant-vocalization/SFX only."
-Write-Host "Other languages will reuse the same speaker references on demand."
+Write-Host "Canonical binding remains blocked until owner listening approval. Other languages remain blocked until then."
 Write-Host "Automatic retries: 0"
 Write-Host "Secret exposed: NO"
