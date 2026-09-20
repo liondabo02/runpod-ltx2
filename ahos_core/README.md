@@ -37,6 +37,20 @@ If the backlog becomes empty, the controller may periodically ask Miniverse to i
 python -m pytest ahos_core/tests -q
 ```
 
+## Validate the local backlog
+
+From `ahos_core`, run the read-only report command:
+
+```powershell
+python -m ahos.backlog_validator
+```
+
+Pass a different local JSON path when needed:
+
+```powershell
+python -m ahos.backlog_validator path\to\backlog.json
+```
+
 ## Safety boundary
 
 RunPod/video generation is a capability that AHOS may coordinate later. Paid GPU execution, production deployment, social publishing, purchases, billing changes, credentials, and destructive actions remain outside autonomous execution and require explicit owner approval.
