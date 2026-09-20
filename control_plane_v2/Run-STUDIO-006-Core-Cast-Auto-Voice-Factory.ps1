@@ -1,4 +1,4 @@
-param([string]$VoiceRoot = ".\runtime\private\animation-studio\audio\core-voices")
+param([string]$VoiceRoot = ".\\runtime\\private\\animation-studio\\audio\\voice-candidates\\natural-v2")
 $ErrorActionPreference = "Stop"
 
 Write-Host "=== STUDIO-006 CORE CAST AUTO VOICE FACTORY ==="
