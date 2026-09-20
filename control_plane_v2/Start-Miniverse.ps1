@@ -30,6 +30,14 @@ Get-Content $EnvFile | ForEach-Object {
 $env:MINIVERSE_QUEUE_DB = $QueueDb
 $env:MINIVERSE_WORKER_HEALTH_FILE = $Heartbeat
 $env:MINIVERSE_WORKSPACE_ROOT = $WorkspaceDir
+# Console-script launchers live under .venv\Scripts and may otherwise import a
+# stale wheel from site-packages after a Git-only update. Prefer the checked-out
+# control-plane source so worker restarts always run the code that was fetched.
+$env:PYTHONPATH = if ([string]::IsNullOrWhiteSpace($env:PYTHONPATH)) {
+    $Root
+} else {
+    "$Root$([IO.Path]::PathSeparator)$($env:PYTHONPATH)"
+}
 
 $existing = Get-Process miniverse-worker -ErrorAction SilentlyContinue
 if ($existing) {
