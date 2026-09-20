@@ -60,8 +60,9 @@
     {
       "id": "STUDIO-008",
       "title": "Run one complete studio acceptance episode",
-      "status": "pending",
-      "goal": "Run one owner-approved topic through the whole studio to a publish-ready multi-language episode package and expose progress in the Holding Control Center."
+      "status": "in_progress",
+      "goal": "Run one owner-approved topic through the whole studio to a publish-ready multi-language episode package and expose progress in the Holding Control Center.",
+      "result": "Free acceptance preflight added. Paid execution remains fail-closed until STUDIO-001 through STUDIO-007 are complete, required artifacts exist, human voice-similarity approval is recorded, and owner_approved + execution_enabled + paid_provider_enabled are simultaneously true. Acceptance production cannot auto-publish."
     }
   ]
 }
