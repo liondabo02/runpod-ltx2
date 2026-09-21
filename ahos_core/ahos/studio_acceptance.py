@@ -8,6 +8,7 @@ from typing import Mapping, Sequence
 from .multilingual_audio_package import MultilingualAudioPackage
 from .music_sfx_supervision import SoundSupervisionPackage
 from .voice_readiness import VoiceReadinessReport
+from .voice_quality import VoiceQualityReport
 from .kurmanji_quality import KURMANJI_LANGUAGE, KurmanjiQualityReport
 
 
@@ -69,6 +70,7 @@ class StudioAcceptancePreflight:
         paid_execution_requested: bool = False,
         publish_requested: bool = False,
         kurmanji_quality_report: KurmanjiQualityReport | None = None,
+        voice_quality_report: VoiceQualityReport | None = None,
     ) -> AcceptancePreflight:
         if not episode_id.strip():
             raise AcceptancePreflightError("episode_id is required")
@@ -175,6 +177,20 @@ class StudioAcceptancePreflight:
         else:
             kurmanji_message = "Kurmanji terminology, pronunciation, timing, and child register passed native review."
 
+        voice_quality_ready = voice_quality_report is not None and voice_quality_report.ready
+        if voice_quality_report is None:
+            voice_quality_message = "Professional rendered-voice quality evidence is required."
+        elif not voice_quality_report.ready:
+            failed = [
+                f"{clip.character_id}:{clip.language}:{clip.line_id}"
+                for clip in voice_quality_report.clips if not clip.ready
+            ]
+            voice_quality_message = "Rendered-voice quality failed: " + ", ".join(
+                [*voice_quality_report.missing_pairs, *failed][:8]
+            ) + "."
+        else:
+            voice_quality_message = "Rendered voices passed signal, transcript, native-listening, character-fit, and similarity QA."
+
         gates = (
             AcceptanceGate(
                 "studio-roadmap",
@@ -220,6 +236,12 @@ class StudioAcceptancePreflight:
                 True,
                 "Human voice-similarity approval recorded."
                 if voice_similarity_approved else "Human voice-similarity approval is required.",
+            ),
+            AcceptanceGate(
+                "rendered-voice-quality",
+                voice_quality_ready,
+                True,
+                voice_quality_message,
             ),
             AcceptanceGate(
                 "owner-approval",

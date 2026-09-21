@@ -7,6 +7,7 @@ from ahos.kurmanji_quality import KurmanjiLineReview, KurmanjiQualityGate
 from ahos.music_sfx_supervision import MusicSfxSupervisor, SoundAssetEvidence, SoundCue
 from ahos.studio_acceptance import AcceptancePreflightError, StudioAcceptancePreflight
 from ahos.voice_readiness import VoiceReadinessCell, VoiceReadinessReport
+from ahos.voice_quality import VoiceQualityReport
 
 
 LANGUAGES = ("tr", "ku-latn", "de", "ar", "fr", "es", "en")
@@ -65,6 +66,14 @@ def kurmanji_report(ready=True):
     ))
 
 
+def rendered_voice_report(ready=True):
+    return VoiceQualityReport(
+        clips=(), expected_pairs=("aden:tr",),
+        missing_pairs=() if ready else ("aden:tr",),
+        ready=ready, report_hash="c" * 64,
+    )
+
+
 def backlog(status6="completed"):
     return {
         "tasks": [
@@ -91,6 +100,7 @@ def evaluate(tmp_path: Path, **overrides):
         "paid_execution_requested": True,
         "publish_requested": False,
         "kurmanji_quality_report": kurmanji_report(),
+        "voice_quality_report": rendered_voice_report(),
     }
     values.update(overrides)
     return StudioAcceptancePreflight().evaluate(**values)
@@ -173,6 +183,14 @@ def test_kurmanji_quality_evidence_fails_closed(tmp_path: Path, report):
     result = evaluate(tmp_path, kurmanji_quality_report=report)
     assert result.ready_for_paid_execution is False
     gate = next(g for g in result.gates if g.gate_id == "kurmanji-localization-quality")
+    assert gate.passed is False
+
+
+@pytest.mark.parametrize("report", [None, rendered_voice_report(False)])
+def test_rendered_voice_quality_evidence_fails_closed(tmp_path: Path, report):
+    result = evaluate(tmp_path, voice_quality_report=report)
+    assert result.ready_for_paid_execution is False
+    gate = next(g for g in result.gates if g.gate_id == "rendered-voice-quality")
     assert gate.passed is False
 
 
