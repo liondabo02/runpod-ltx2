@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+import base64
+import binascii
+import hashlib
 import json
 import os
 import re
+import tempfile
 import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Mapping, Protocol
 
 from .visual_pipeline import RenderJob
@@ -26,6 +31,15 @@ class RunPodExecutionGateError(RunPodProviderError):
 
 class RunPodResponseError(RunPodProviderError):
     pass
+
+
+@dataclass(frozen=True, slots=True)
+class MaterializedRenderOutput:
+    path: str
+    sha256: str
+    size_bytes: int
+    mime_type: str
+    source_filename: str
 
 
 _ENDPOINT_RE = re.compile(r"^[A-Za-z0-9_-]+$")
@@ -294,6 +308,68 @@ class RunPodLTX2Provider:
             f"{self.config.endpoint_base}/status/{safe_job_id}",
             api_key=api_key,
             timeout=self.config.request_timeout_seconds,
+        )
+
+    @staticmethod
+    def materialize_inline_output(
+        response: object,
+        destination: str | Path,
+        *,
+        max_bytes: int = 512 * 1024 * 1024,
+        overwrite: bool = False,
+    ) -> MaterializedRenderOutput:
+        """Persist one completed worker output without trusting filenames or hashes."""
+        if max_bytes <= 0:
+            raise ValueError("max_bytes must be positive")
+        if not isinstance(response, Mapping):
+            raise RunPodResponseError("RunPod response must be an object")
+        status = str(response.get("status", "COMPLETED")).upper()
+        if status != "COMPLETED":
+            raise RunPodResponseError(f"RunPod job is not complete: {status}")
+        payload = response.get("output", response)
+        if not isinstance(payload, Mapping) or payload.get("ok") is not True:
+            raise RunPodResponseError("worker output is missing or unsuccessful")
+        outputs = payload.get("outputs")
+        if not isinstance(outputs, list):
+            raise RunPodResponseError("worker returned no output list")
+        candidates = [
+            item for item in outputs
+            if isinstance(item, Mapping)
+            and item.get("inline_status") == "ok"
+            and isinstance(item.get("base64"), str)
+        ]
+        if len(candidates) != 1:
+            raise RunPodResponseError(
+                f"expected exactly one inline render output, received {len(candidates)}"
+            )
+        item = candidates[0]
+        try:
+            raw = base64.b64decode(str(item["base64"]), validate=True)
+        except (ValueError, binascii.Error) as exc:
+            raise RunPodResponseError("worker returned invalid output base64") from exc
+        declared_size = item.get("size_bytes")
+        if declared_size is not None and int(declared_size) != len(raw):
+            raise RunPodResponseError("worker output size does not match decoded bytes")
+        if not raw or len(raw) > max_bytes:
+            raise RunPodResponseError("worker output is empty or exceeds the size limit")
+        target = Path(destination).resolve()
+        if target.exists() and not overwrite:
+            raise RunPodResponseError(f"destination already exists: {target}")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.NamedTemporaryFile(dir=target.parent, delete=False) as handle:
+            temporary = Path(handle.name)
+            handle.write(raw)
+            handle.flush()
+            os.fsync(handle.fileno())
+        try:
+            temporary.replace(target)
+        except Exception:
+            temporary.unlink(missing_ok=True)
+            raise
+        return MaterializedRenderOutput(
+            str(target), hashlib.sha256(raw).hexdigest(), len(raw),
+            str(item.get("mime_type") or "application/octet-stream"),
+            Path(str(item.get("filename") or "render-output")).name,
         )
 
     def cancel(

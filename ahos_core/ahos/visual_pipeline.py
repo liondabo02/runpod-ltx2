@@ -410,6 +410,8 @@ class RenderManifestStore:
                     seed INTEGER NOT NULL,
                     payload_json TEXT NOT NULL,
                     prompt_id TEXT,
+                    provider_job_id TEXT,
+                    output_path TEXT,
                     output_hash TEXT,
                     error TEXT,
                     created_at TEXT NOT NULL,
@@ -417,6 +419,14 @@ class RenderManifestStore:
                 )
                 """
             )
+            columns = {
+                str(row["name"])
+                for row in conn.execute("PRAGMA table_info(render_jobs)").fetchall()
+            }
+            if "provider_job_id" not in columns:
+                conn.execute("ALTER TABLE render_jobs ADD COLUMN provider_job_id TEXT")
+            if "output_path" not in columns:
+                conn.execute("ALTER TABLE render_jobs ADD COLUMN output_path TEXT")
 
     def upsert_planned(self, job: RenderJob) -> None:
         now = _utc_now()
@@ -454,6 +464,89 @@ class RenderManifestStore:
                 (episode_id,),
             ).fetchone()
         return int(row["c"])
+
+    def _transition(
+        self,
+        job_id: str,
+        *,
+        allowed: tuple[RenderJobStatus, ...],
+        target: RenderJobStatus,
+        provider_job_id: str | None = None,
+        output_path: str | None = None,
+        output_hash: str | None = None,
+        error: str | None = None,
+    ) -> None:
+        if output_hash is not None and (
+            len(output_hash) != 64
+            or output_hash != output_hash.lower()
+            or any(c not in "0123456789abcdef" for c in output_hash)
+        ):
+            raise VisualPipelineError("output_hash must be a lowercase SHA-256")
+        now = _utc_now()
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT status FROM render_jobs WHERE job_id=?", (job_id,)
+            ).fetchone()
+            if row is None:
+                raise VisualPipelineError(f"unknown render job: {job_id}")
+            current = RenderJobStatus(str(row["status"]))
+            if current not in allowed:
+                raise VisualPipelineError(
+                    f"invalid render transition {current.value} -> {target.value}"
+                )
+            conn.execute(
+                """
+                UPDATE render_jobs
+                SET status=?, provider_job_id=COALESCE(?, provider_job_id),
+                    output_path=COALESCE(?, output_path),
+                    output_hash=COALESCE(?, output_hash), error=?, updated_at=?
+                WHERE job_id=?
+                """,
+                (
+                    target.value, provider_job_id, output_path, output_hash,
+                    error, now, job_id,
+                ),
+            )
+
+    def mark_submitted(self, job_id: str, provider_job_id: str) -> None:
+        if not provider_job_id.strip():
+            raise VisualPipelineError("provider_job_id is required")
+        self._transition(
+            job_id,
+            allowed=(RenderJobStatus.PLANNED, RenderJobStatus.FAILED),
+            target=RenderJobStatus.SUBMITTED,
+            provider_job_id=provider_job_id.strip(),
+        )
+
+    def mark_completed(self, job_id: str, output_path: str, output_hash: str) -> None:
+        if not output_path.strip():
+            raise VisualPipelineError("output_path is required")
+        self._transition(
+            job_id,
+            allowed=(RenderJobStatus.SUBMITTED,),
+            target=RenderJobStatus.COMPLETED,
+            output_path=output_path.strip(),
+            output_hash=output_hash,
+        )
+
+    def mark_failed(self, job_id: str, error: str) -> None:
+        if not error.strip():
+            raise VisualPipelineError("render failure reason is required")
+        self._transition(
+            job_id,
+            allowed=(RenderJobStatus.PLANNED, RenderJobStatus.SUBMITTED),
+            target=RenderJobStatus.FAILED,
+            error=error.strip(),
+        )
+
+    def get_record(self, job_id: str) -> dict[str, object]:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM render_jobs WHERE job_id=?", (job_id,)
+            ).fetchone()
+        if row is None:
+            raise VisualPipelineError(f"unknown render job: {job_id}")
+        return dict(row)
 
     def list_payloads(self, episode_id: str) -> tuple[dict[str, object], ...]:
         with self._connect() as conn:

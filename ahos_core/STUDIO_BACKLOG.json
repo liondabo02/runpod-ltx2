@@ -2,6 +2,9 @@
   "version": 1,
   "project": "AHOS Animation Studio",
   "rules": {
+    "autonomous_authority": ["A", "B"],
+    "never_auto_merge_main": true,
+    "owner_approval_required": ["C", "D"],
     "core_ahos_roadmap": "in_progress",
     "owner_controlled": true,
     "paid_ai_default": false,
@@ -12,55 +15,91 @@
     {
       "id": "STUDIO-001",
       "title": "Create Animation Studio business unit and 20-worker organization",
+      "task": "Create the reusable business-unit model and the first owner-controlled animation studio with 8 teams and 20 virtual roles.",
       "status": "completed",
+      "authority": "B",
+      "risk": "low",
+      "requires_owner_approval": false,
+      "completed_at": "2026-09-19T12:46:07+02:00",
       "goal": "Create the reusable business-unit model and the first owner-controlled animation studio with 8 teams and 20 virtual roles."
     },
     {
       "id": "STUDIO-002",
       "title": "Build persistent Character Bible and continuity memory",
+      "task": "Lock recurring characters, relationships, appearance, voices, locations, canon facts, and episode continuity in persistent versioned memory.",
       "status": "completed",
+      "authority": "B",
+      "risk": "low",
+      "requires_owner_approval": false,
+      "completed_at": "2026-09-19T12:50:45+02:00",
       "goal": "Lock recurring characters, relationships, appearance, voices, locations, canon facts, and episode continuity in persistent versioned memory.",
       "result": "Persistent local-only SQLite Character Bible with immutable version history, locked-field owner override, relationship graph, canon facts, episode continuity events, snapshots, and a private 16-character initial cast seed."
     },
     {
       "id": "STUDIO-003",
       "title": "Build Story and Episode Planning Engine",
+      "task": "Turn a topic into season-aware episode briefs, screenplay, dialogue, educational and emotional beats, and approved production packets.",
       "status": "completed",
+      "authority": "B",
+      "risk": "low",
+      "requires_owner_approval": false,
+      "completed_at": "2026-09-19T12:57:24+02:00",
       "goal": "Turn a topic into season-aware episode briefs, screenplay, dialogue, educational/emotional beats, and approved production packets.",
       "result": "Season-aware persistent Story/Episode Planning Engine with Character Bible context injection, deterministic zero-cost fallback, strict structured-AI planner contract, cast/continuity validation, exact duration checks, versioned episode packets, and explicit owner approval/rejection state."
     },
     {
       "id": "STUDIO-004",
       "title": "Build Scene, Shot, Prompt and Asset Graph",
+      "task": "Convert scripts into deterministic scenes and shots with character references, camera, environments, timing, continuity constraints, and asset provenance.",
       "status": "completed",
+      "authority": "B",
+      "risk": "low",
+      "requires_owner_approval": false,
+      "completed_at": "2026-09-19T13:01:00+02:00",
       "goal": "Convert scripts into deterministic scenes/shots with character references, camera, environments, timing, continuity constraints, and asset provenance.",
       "result": "Deterministic persistent Scene/Shot/Prompt/Asset Graph with exact timing, Character Bible reference assets and provenance hashes, environment refs, renderer-ready prompt packs, continuity constraints, pending render outputs, versioned private graph storage, and strict zero-render/zero-network behavior."
     },
     {
       "id": "STUDIO-005",
       "title": "Connect visual generation and animation pipeline",
+      "task": "Connect approved visual generation providers and complete a verified owner-approved multi-shot production render.",
       "status": "in_progress",
+      "authority": "C",
+      "risk": "medium",
+      "requires_owner_approval": true,
       "goal": "Connect ComfyUI/approved compute adapters for repeatable character-consistent image/video generation with cost and approval gates.",
-      "result": "Localhost-only ComfyUI adapter, deterministic render-job planner, persistent render manifest DB, API-workflow placeholder contract, health/node inventory, owner+execution dual gate, and private dry-run manifest for all STUDIO-004 shots. No render job was submitted during installation. Provider upgrade: AHOS now has a multi-provider media registry plus a guarded RunPod Serverless LTX-2 adapter using the existing endpoint. RunPod paid execution requires owner_approved + execution_enabled + paid_provider_enabled simultaneously; secrets remain environment-only. Preview render default is 1024x576 (exact 16:9; both dimensions divisible by 32). Remaining work: poll submitted jobs, download and hash outputs, register verified assets, and support resumable failure recovery before this stage can be called complete."
+      "result": "Localhost-only ComfyUI adapter, deterministic render-job planner, persistent render manifest DB, API-workflow placeholder contract, health/node inventory, owner+execution dual gate, and private dry-run manifest for all STUDIO-004 shots. Provider upgrade: AHOS now has a guarded RunPod Serverless LTX-2 adapter, atomic inline-output materialization with decoded byte-size and SHA-256 verification, and a persistent planned/submitted/completed/failed state machine that permits controlled retry after failure but rejects invalid transitions. RunPod paid execution requires owner_approved + execution_enabled + paid_provider_enabled simultaneously; secrets remain environment-only. Preview render default is 1024x576 (exact 16:9; both dimensions divisible by 32). No paid render was submitted during installation. Remaining work: run and validate a real complete multi-shot episode render before this stage can be called complete."
     },
     {
       "id": "STUDIO-006",
       "title": "Build voice, music, dubbing and localization pipeline",
+      "task": "Produce character-consistent speech, music and SFX, subtitles, and professional seven-language localized episode variants.",
       "status": "in_progress",
+      "authority": "C",
+      "risk": "medium",
+      "requires_owner_approval": true,
       "goal": "Generate character-consistent speech, music/SFX, subtitles, and multi-language localized episode variants.",
       "result": "Kokoro English baseline, Chatterbox Multilingual V3 Turkish synthesis, and Chatterbox reference-audio voice continuity are now live-verified on RunPod. The reference path used real WAV conditioning, disabled built-in fallback, returned a valid 24 kHz watermarked WAV, used no automatic retries, and exposed no secrets. AHOS includes guarded paid-execution adapters, persistent per-character/per-language voice continuity, localization review/terminology memory, hardened audio Agent Skills, a deterministic local-only audio post-production planner for SRT timing, conservative dub-length fitting, child-voice protection, mix targets and fail-closed QA, a seven-language release packager including Kurdish (Kurmanji, Latin script), professional music/SFX supervision, a read-only 16-character by seven-language canonical voice readiness audit, and rendered-WAV signal QA for sample rate, depth, duration, level, clipping, silence, DC offset, transcript, native-language listening, character fit, and speaker similarity. Infant vocalizations remain outside sentence TTS. Kurdish automatic TTS remains fail-closed until a provider is explicitly verified; rights-cleared human performance is supported. Remaining STUDIO-006 work: human speaker-similarity approval before canonical character binding, canonical voice enrollment for the cast, actual music/SFX production, and final multi-language audio rendering."
     },
     {
       "id": "STUDIO-007",
       "title": "Build episode assembly and studio QA pipeline",
+      "task": "Assemble verified media into finished multilingual episodes and enforce professional release QA.",
       "status": "in_progress",
+      "authority": "B",
+      "risk": "low",
+      "requires_owner_approval": false,
       "goal": "Assemble scenes into finished episodes and enforce continuity, child-safety, audio, subtitle, technical, and release-package QA.",
-      "result": "Deterministic local-only episode assembly planner with graph-ordered picture assembly, language-aware audio/subtitle packaging, provenance hashes, exact-duration validation, and fail-closed continuity, child-safety, picture, audio, subtitle, and technical QA gates. Installation performs no rendering, paid API calls, publishing, or external actions. Remaining work: execute the FFmpeg assembly, probe actual media duration/codecs, verify file hashes from bytes, require one final mix and subtitle package per release language, and emit a reproducible signed release manifest."
+      "result": "Deterministic episode assembly with graph-ordered picture concatenation and real local FFmpeg/FFprobe execution. The professional assembler verifies every source SHA-256 from file bytes, requires exactly one final mix and subtitle track per requested language, records stream language metadata, probes the finished Matroska master, enforces duration and stream-count tolerances, and emits content-addressed assembly evidence. Continuity, child-safety, picture, audio, subtitle, and technical QA remain fail-closed. Installation performs no paid API calls, publishing, or external actions. Remaining work: execute the complete seven-language acceptance episode with owner-reviewed production assets and bind its final evidence to a signed release manifest."
     },
     {
       "id": "STUDIO-008",
       "title": "Run one complete studio acceptance episode",
+      "task": "Run one owner-approved topic through the whole studio to a publish-ready seven-language episode without automatic publishing.",
       "status": "in_progress",
+      "authority": "C",
+      "risk": "high",
+      "requires_owner_approval": true,
       "goal": "Run one owner-approved topic through the whole studio to a publish-ready multi-language episode package and expose progress in the Holding Control Center.",
       "result": "Free acceptance preflight added. Paid execution remains fail-closed until STUDIO-001 through STUDIO-007 are complete, required artifacts exist, the seven-language audio package passes, rendered-voice signal and human listening QA passes, music/SFX rights, safety, timing and creative supervision pass, human voice-similarity approval is recorded, and owner_approved + execution_enabled + paid_provider_enabled are simultaneously true. Acceptance production cannot auto-publish."
     }

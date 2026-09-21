@@ -1,3 +1,4 @@
+import base64
 import os
 
 import pytest
@@ -7,6 +8,7 @@ from ahos.runpod_ltx2 import (
     RunPodExecutionGateError,
     RunPodLTX2Config,
     RunPodLTX2Provider,
+    RunPodResponseError,
 )
 from ahos.visual_pipeline import RenderJob
 
@@ -134,3 +136,39 @@ def test_configuration_summary_never_contains_api_key(monkeypatch):
 
     assert summary["api_key_present"] is True
     assert "do-not-serialize-me" not in str(summary)
+
+
+def test_completed_inline_render_is_atomically_materialized(tmp_path):
+    raw = b"professional-render-bytes"
+    response = {
+        "status": "COMPLETED",
+        "output": {
+            "ok": True,
+            "outputs": [{
+                "filename": "../../unsafe-name.mp4",
+                "mime_type": "video/mp4",
+                "size_bytes": len(raw),
+                "inline_status": "ok",
+                "base64": base64.b64encode(raw).decode("ascii"),
+            }],
+        },
+    }
+    result = RunPodLTX2Provider.materialize_inline_output(
+        response, tmp_path / "verified.mp4"
+    )
+    assert (tmp_path / "verified.mp4").read_bytes() == raw
+    assert result.source_filename == "unsafe-name.mp4"
+    assert len(result.sha256) == 64
+
+
+@pytest.mark.parametrize(
+    "response",
+    (
+        {"status": "IN_PROGRESS", "output": {}},
+        {"status": "COMPLETED", "output": {"ok": False}},
+        {"status": "COMPLETED", "output": {"ok": True, "outputs": []}},
+    ),
+)
+def test_inline_materialization_fails_closed(response, tmp_path):
+    with pytest.raises(RunPodResponseError):
+        RunPodLTX2Provider.materialize_inline_output(response, tmp_path / "out.mp4")

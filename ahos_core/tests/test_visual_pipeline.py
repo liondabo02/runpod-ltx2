@@ -10,6 +10,7 @@ from ahos.visual_pipeline import (
     VisualProductionPlanner,
     WorkflowTemplate,
     WorkflowTemplateError,
+    VisualPipelineError,
     deterministic_seed,
 )
 
@@ -186,6 +187,33 @@ def test_render_submission_requires_both_owner_and_execution_gate(tmp_path: Path
     )
     assert prompt_id == "prompt-123"
 
+
+def test_render_manifest_enforces_resumable_state_machine(tmp_path: Path):
+    store = RenderManifestStore(tmp_path / "render.sqlite")
+    job = VisualProductionPlanner().plan(graph())[0]
+    store.upsert_planned(job)
+
+    store.mark_submitted(job.job_id, "runpod-job-123")
+    store.mark_completed(job.job_id, "private/render.mp4", "a" * 64)
+
+    record = store.get_record(job.job_id)
+    assert record["status"] == "completed"
+    assert record["provider_job_id"] == "runpod-job-123"
+    assert record["output_hash"] == "a" * 64
+
+    with pytest.raises(VisualPipelineError, match="completed -> failed"):
+        store.mark_failed(job.job_id, "late failure")
+
+
+def test_failed_render_can_be_resubmitted_but_bad_hash_is_rejected(tmp_path: Path):
+    store = RenderManifestStore(tmp_path / "render.sqlite")
+    job = VisualProductionPlanner().plan(graph())[0]
+    store.upsert_planned(job)
+    store.mark_failed(job.job_id, "temporary provider failure")
+    store.mark_submitted(job.job_id, "runpod-job-retry")
+
+    with pytest.raises(VisualPipelineError, match="SHA-256"):
+        store.mark_completed(job.job_id, "private/render.mp4", "not-a-hash")
 
 def test_render_manifest_store_is_persistent(tmp_path: Path):
     db = tmp_path / "render.db"
