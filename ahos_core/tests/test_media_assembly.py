@@ -27,7 +27,7 @@ def build_media(tmp_path: Path):
     videos = []
     for index, color in enumerate(("red", "blue"), start=1):
         path = tmp_path / f"shot-{index}.mp4"
-        run(("ffmpeg", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", f"color={color}:s=320x180:d=1:r=24", "-c:v", "libx264", "-pix_fmt", "yuv420p", str(path)))
+        run(("ffmpeg", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", f"color={color}:s=320x180:d=1:r=24", "-c:v", "mpeg4", "-q:v", "5", "-pix_fmt", "yuv420p", str(path)))
         videos.append(path)
     audio = tmp_path / "tr.wav"
     run(("ffmpeg", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", "sine=frequency=440:duration=2", str(audio)))
