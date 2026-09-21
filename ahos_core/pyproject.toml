@@ -13,6 +13,7 @@ test = ["pytest>=9.1,<10"]
 
 [project.scripts]
 ahos-studio-rehearsal = "ahos.production_rehearsal:main"
+ahos-story-room = "ahos.autonomous_story_room:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

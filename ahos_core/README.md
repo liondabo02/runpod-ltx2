@@ -2,6 +2,34 @@
 
 AHOS Core is the safety-first operating core for the Miniverse digital holding.
 
+## Autonomous AI writers' room
+
+`ahos.autonomous_story_room.AutonomousWritersRoom` replaces manual screenplay
+handling with a fail-closed writer/revision loop. A runtime-supplied AI adapter
+writes complete episode packets and receives machine-readable corrections until
+the draft passes deterministic checks for timing, scene and dialogue coverage,
+infant/toddler speech, repetition, visual action, originality, and approval
+boundaries. Every attempt and accepted-story fingerprint is persisted in SQLite,
+so later episodes cannot silently repeat an earlier story.
+
+The room produces review-ready stories only. It cannot approve its own work,
+spend money, render, publish, or contact an external provider by itself. The
+holding runtime must inject a model adapter through the existing governance and
+budget gates.
+
+Run a free, explicitly enabled external writers' room against an existing
+canonical character database:
+
+```bash
+ahos-story-room --output ../runtime/story-room --characters-db ../runtime/studio-rehearsals/S01E001-professional/state/characters.db --episode 2 --topic "Uçurtmanın kayıp kuyruğu" --learning-goal "sabır ve yardımlaşma" --model openrouter/free --allow-external
+```
+
+The command can revise a rejected draft up to four times. It writes the accepted
+review packet, episode versions, originality fingerprints, and every failed QA
+attempt under `--output`. Paid models additionally require
+`--owner-approved-paid`, a positive estimated per-call cost, and a sufficient
+daily budget. No story is owner-approved automatically.
+
 ## Professional episode rehearsal
 
 Generate a local, traceable eight-minute studio rehearsal without paid or
