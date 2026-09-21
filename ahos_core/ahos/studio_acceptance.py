@@ -7,6 +7,7 @@ from typing import Mapping, Sequence
 
 from .multilingual_audio_package import MultilingualAudioPackage
 from .music_sfx_supervision import SoundSupervisionPackage
+from .voice_readiness import VoiceReadinessReport
 
 
 class AcceptancePreflightError(RuntimeError):
@@ -59,6 +60,7 @@ class StudioAcceptancePreflight:
         required_artifacts: Sequence[str | Path],
         multilingual_audio_package: MultilingualAudioPackage | None,
         sound_supervision_package: SoundSupervisionPackage | None,
+        voice_readiness_report: VoiceReadinessReport | None,
         voice_similarity_approved: bool,
         owner_approved: bool,
         execution_enabled: bool,
@@ -135,6 +137,19 @@ class StudioAcceptancePreflight:
         else:
             sound_package_message = "Music/SFX rights, safety, timing, and creative reviews passed."
 
+        voice_report_ready = voice_readiness_report is not None and voice_readiness_report.ready
+        if voice_readiness_report is None:
+            voice_report_message = "Canonical core-cast voice readiness report is required."
+        elif not voice_readiness_report.ready:
+            preview = ", ".join(voice_readiness_report.missing[:8])
+            remainder = len(voice_readiness_report.missing) - 8
+            voice_report_message = "Missing canonical voices: " + preview
+            if remainder > 0:
+                voice_report_message += f" (+{remainder} more)"
+            voice_report_message += "."
+        else:
+            voice_report_message = "Canonical core-cast voice coverage is complete."
+
         gates = (
             AcceptanceGate(
                 "studio-roadmap",
@@ -161,6 +176,12 @@ class StudioAcceptancePreflight:
                 sound_package_ready,
                 True,
                 sound_package_message,
+            ),
+            AcceptanceGate(
+                "canonical-voice-readiness",
+                voice_report_ready,
+                True,
+                voice_report_message,
             ),
             AcceptanceGate(
                 "voice-similarity",

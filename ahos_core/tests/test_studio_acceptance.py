@@ -5,6 +5,7 @@ import pytest
 from ahos.multilingual_audio_package import AudioPackageAsset, MultilingualAudioPackager
 from ahos.music_sfx_supervision import MusicSfxSupervisor, SoundAssetEvidence, SoundCue
 from ahos.studio_acceptance import AcceptancePreflightError, StudioAcceptancePreflight
+from ahos.voice_readiness import VoiceReadinessCell, VoiceReadinessReport
 
 
 LANGUAGES = ("tr", "de", "ar", "fr", "es", "en")
@@ -46,6 +47,14 @@ def sound_package(episode_id="S01E001", approved=True):
     )
 
 
+def voice_report(ready=True):
+    cell = VoiceReadinessCell(
+        "aden", "tr", "speech", True, ready, 1 if ready else None,
+        SHA if ready else None, "canonical enrollment present" if ready else "missing",
+    )
+    return VoiceReadinessReport(("tr",), (cell,), "b" * 64)
+
+
 def backlog(status6="completed"):
     return {
         "tasks": [
@@ -64,6 +73,7 @@ def evaluate(tmp_path: Path, **overrides):
         "required_artifacts": (artifact,),
         "multilingual_audio_package": audio_package(),
         "sound_supervision_package": sound_package(),
+        "voice_readiness_report": voice_report(),
         "voice_similarity_approved": True,
         "owner_approved": True,
         "execution_enabled": True,
@@ -137,6 +147,14 @@ def test_wrong_episode_sound_package_is_rejected(tmp_path: Path):
     assert result.ready_for_paid_execution is False
     gate = next(g for g in result.gates if g.gate_id == "music-sfx-supervision")
     assert "mismatch" in gate.message
+
+
+@pytest.mark.parametrize("report", [None, voice_report(False)])
+def test_canonical_voice_readiness_fails_closed(tmp_path: Path, report):
+    result = evaluate(tmp_path, voice_readiness_report=report)
+    assert result.ready_for_paid_execution is False
+    gate = next(g for g in result.gates if g.gate_id == "canonical-voice-readiness")
+    assert gate.passed is False
 
 
 def test_invalid_backlog_fails_closed(tmp_path: Path):
