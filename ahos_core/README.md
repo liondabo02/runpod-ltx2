@@ -2,6 +2,18 @@
 
 AHOS Core is the safety-first operating core for the Miniverse digital holding.
 
+## Professional episode rehearsal
+
+Generate a local, traceable eight-minute studio rehearsal without paid or
+external execution:
+
+```bash
+python -m ahos.production_rehearsal --output ../runtime/studio-rehearsals/S01E001
+```
+
+See [docs/PRODUCTION_REHEARSAL.md](docs/PRODUCTION_REHEARSAL.md) for the evidence
+contract, owner approval flow, and remaining production gates.
+
 ## Purpose
 
 AHOS turns the working Miniverse coding worker into a controlled autonomous development system. Miniverse may inspect, plan, code, test, and improve AHOS continuously, but it may not grant itself unrestricted authority.
