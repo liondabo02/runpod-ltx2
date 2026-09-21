@@ -11,10 +11,14 @@ from .audio_pipeline import DEFAULT_LANGUAGE_POLICIES
 from .character_memory import CharacterBibleStore, CharacterProfile, CharacterRelationship
 from .scene_graph import ProductionGraphStore, SceneShotPromptAssetGraphBuilder
 from .story_engine import (
-    DeterministicLocalStoryPlanner,
+    DialogueLine,
     EpisodePlanningEngine,
+    EpisodeProductionPacket,
     EpisodePlanningStore,
     EpisodeRequest,
+    SceneDraft,
+    StoryBeat,
+    StoryContext,
 )
 from .visual_pipeline import RenderManifestStore, VisualProductionPlanner
 
@@ -103,6 +107,116 @@ RELATIONSHIPS = (
 )
 
 
+class ProfessionalPilotStoryPlanner:
+    """Deterministic, production-grade screenplay for the first studio pilot."""
+
+    def plan(self, request: EpisodeRequest, context: StoryContext) -> EpisodeProductionPacket:
+        if request.episode_id != "S01E001":
+            raise ProductionRehearsalError("professional pilot planner is restricted to S01E001")
+
+        def line(speaker: str, text: str, intent: str) -> DialogueLine:
+            return DialogueLine(speaker, text, intent)
+
+        scenes = (
+            SceneDraft(
+                "SCENE-01", "Solan Oyun Odası", "Harun'un evindeki renkli oyun odası",
+                request.cast_ids, 85, "Renklerin kaybolduğunu keşfetmek",
+                "Aden, resim köşesindeki renklerin solduğunu ve yerde parlayan bir harita parçası olduğunu fark eder.",
+                (
+                    line("aden", "Anne, bak! Gökkuşağımın renkleri nereye gitmiş?", "merak ve şaşkınlık"),
+                    line("esra", "Gerçekten de solmuş. Önce sakin olup etrafa dikkatlice bakalım.", "güven vermek"),
+                    line("kaan", "Aa! Da-da!", "haritayı işaret eden neşeli bebek sesi"),
+                    line("aden", "Kaan yerdeki parıltıyı gördü! Bu bir harita parçası.", "keşfi paylaşmak"),
+                    line("harun", "Bu, Kayıp Renkler Haritası olabilir. Tek başımıza değil, birlikte çözeceğiz.", "görevi çerçevelemek"),
+                    line("esra", "Herkes gördüğünü söylesin; en küçük ipucu bile önemli.", "iş birliğini başlatmak"),
+                    line("aden", "Ben kırmızı bir ok görüyorum. Kaan da mavi noktayı buldu.", "gözlemleri birleştirmek"),
+                    line("kaan", "Mavi! Mmm!", "yaşa uygun tek kelimelik tepki"),
+                ),
+            ),
+            SceneDraft(
+                "SCENE-02", "Üç Renk Kapısı", "oyun odasında beliren hayalî renk kapısı",
+                request.cast_ids, 100, "Haritanın ilk bilmecesini paylaşarak çözmek",
+                "Kırmızı, sarı ve mavi taşların doğru yerlere konması gerekir; Aden bütün taşları almak isteyince kapı açılmaz.",
+                (
+                    line("harun", "Kapıda üç boşluk var ama her birimizde farklı bir ipucu bulunuyor.", "problemi açıklamak"),
+                    line("aden", "Taşların hepsini ben koyayım; çok hızlı yapabilirim!", "ilk yanlış yaklaşım"),
+                    line("esra", "Hızlı olmak güzel, fakat paylaşmadan bütün resmi göremeyiz.", "nazik yönlendirme"),
+                    line("kaan", "Ver! Ver!", "paylaşma isteğini yaşa uygun ifade etmek"),
+                    line("aden", "Tamam Kaan, mavi taşı sen tut. Sarıyı anneme veriyorum.", "paylaşmayı denemek"),
+                    line("harun", "Ben de haritadaki şekilleri okuyacağım. Şimdi herkes kendi parçasını söylesin.", "ekibi düzenlemek"),
+                    line("esra", "Benim sarı taşım güneş biçiminde.", "ipucu vermek"),
+                    line("aden", "Kırmızı taşım kalp biçiminde. Kaan'ınki de mavi bir damla!", "ipuçlarını birleştirmek"),
+                    line("harun", "Güneş yukarıya, kalp ortaya, damla aşağıya. Birlikte yerleştirelim.", "çözümü koordine etmek"),
+                ),
+            ),
+            SceneDraft(
+                "SCENE-03", "Sessiz Mavi Dere", "hayalî bahçedeki soluk mavi dere",
+                request.cast_ids, 105, "İlk denemenin neden işe yaramadığını anlamak",
+                "Kapı açılır fakat mavi dere akmaz; Aden haritayı tek başına çekince parça yırtılacak gibi olur ve durmayı seçer.",
+                (
+                    line("aden", "Dere neden hâlâ gri? Haritayı biraz daha çeksem belki açılır.", "aceleci çözüm aramak"),
+                    line("harun", "Dur Aden. Zorlamak yerine önce nedenini düşünelim.", "güvenli müdahale"),
+                    line("aden", "Haklısın enişte. Az daha haritayı yırtıyordum.", "hatasını kabul etmek"),
+                    line("esra", "Hata yapmak öğrenmenin bir parçasıdır. Şimdi birbirimizi dinleyelim.", "duygusal güven sağlamak"),
+                    line("kaan", "Şıp şıp!", "dereyi taklit eden bebek sesi"),
+                    line("aden", "Kaan su sesi yaptı! Belki mavi damlayı dereye götürmeliyiz.", "Kaan'ın katkısını fark etmek"),
+                    line("harun", "Güzel düşünce. Ben yolu göstereyim, sen taşı götür, annen de haritayı korusun.", "görev dağıtmak"),
+                    line("esra", "Hazırım. Kaan da yanımda güvenle izleyecek.", "güvenliği sağlamak"),
+                    line("aden", "Bir, iki, üç... Mavi damla yerine!", "ortak eylemi tamamlamak"),
+                ),
+            ),
+            SceneDraft(
+                "SCENE-04", "Renk Fırtınası", "hayalî bahçenin gökkuşağı tepesi",
+                request.cast_ids, 105, "Son sorunu iş bölümü ve yardımlaşmayla çözmek",
+                "Dere canlanınca renkler hızla savrulur; aile renkleri yakalamak yerine doğru nesnelere yönlendirir.",
+                (
+                    line("aden", "Renkler uçuyor! Hepsini yakalayamam!", "gerilimi ifade etmek"),
+                    line("harun", "Tek başına yakalamayacaksın. Herkes bir göreve odaklansın.", "liderlik ve sakinlik"),
+                    line("esra", "Ben sarı ışığı güneşe yönlendireceğim.", "görev almak"),
+                    line("aden", "Ben kırmızıyı çiçeklere götürüyorum!", "sorumluluk almak"),
+                    line("kaan", "Ma-vi!", "mavi rengi işaret eden bebek tepkisi"),
+                    line("harun", "Harika Kaan! Mavi yolu sen gösterdin; ben dereye yönlendiriyorum.", "en küçük katkıyı değerli kılmak"),
+                    line("aden", "Yeşil de ağaca gidiyor. Renkler yerlerini buluyor!", "ilerlemeyi paylaşmak"),
+                    line("esra", "Çünkü birbirimizi dinledik ve görevleri paylaştık.", "öğrenmeyi görünür kılmak"),
+                    line("harun", "Son parça hepimizin elinde. Birlikte yerine koyalım.", "ortak çözümü tamamlamak"),
+                ),
+            ),
+            SceneDraft(
+                "SCENE-05", "Paylaşılan Gökkuşağı", "yeniden renklenen oyun odası",
+                request.cast_ids, 85, "Dersi doğal ve sıcak biçimde pekiştirmek",
+                "Aile oyun odasına döner; Aden resmi tek başına sahiplenmek yerine herkesin katkısını eklediği ortak bir gökkuşağı yapar.",
+                (
+                    line("aden", "Renkler geri geldi! Bu resmi hep birlikte tamamlayalım mı?", "paylaşmayı seçmek"),
+                    line("esra", "Bu çok güzel bir fikir. Herkes kendi rengini eklesin.", "seçimi desteklemek"),
+                    line("kaan", "Boya! Mavi!", "yaşa uygun neşeli istek"),
+                    line("aden", "Mavi kalemi Kaan'a veriyorum. Ben kırmızıyı kullanacağım.", "somut paylaşma davranışı"),
+                    line("harun", "Bugün haritadaki renklerden daha önemli bir şey bulduk.", "dersi hazırlamak"),
+                    line("aden", "Birlikte düşününce herkesin fikri resmi güzelleştiriyor!", "öğrenmeyi kendi sözüyle ifade etmek"),
+                    line("esra", "Aynen öyle; paylaşmak hem işi kolaylaştırır hem de sevincimizi büyütür.", "dersi pekiştirmek"),
+                    line("kaan", "Birlikte!", "sıcak kapanış"),
+                ),
+            ),
+        )
+        beats = (
+            StoryBeat("B01", "setup", "Oyun odasının renkleri solar ve harita bulunur.", "merak", request.learning_goal),
+            StoryBeat("B02", "challenge", "Aden tek başına çözmeye çalışır; renk kapısı açılmaz.", "hafif gerilim", request.learning_goal),
+            StoryBeat("B03", "attempt", "Aile görevleri paylaşır ve Kaan'ın ipucunu dinler.", "çaba", request.learning_goal),
+            StoryBeat("B04", "resolution", "Harun'un koordinasyonuyla renkler doğru yerlere döner.", "başarı", request.learning_goal),
+            StoryBeat("B05", "lesson", "Aden ortak gökkuşağı yaparak paylaşmayı davranışa dönüştürür.", "sıcaklık", request.learning_goal),
+        )
+        return EpisodeProductionPacket(
+            episode_id=request.episode_id, season_number=request.season_number,
+            episode_number=request.episode_number, title="Kayıp Renkler Haritası",
+            logline="Aden ve küçük kardeşi Kaan, solan oyun odasının renklerini; Esra'nın şefkati ve Harun'un yol göstericiliğiyle paylaşarak geri getirir.",
+            topic=request.topic, learning_goal=request.learning_goal,
+            age_band=request.age_band, primary_language=request.primary_language,
+            target_duration_seconds=request.target_duration_seconds,
+            child_safe_required=request.child_safe_required, cast_ids=request.cast_ids,
+            continuity_notes=tuple(rule for character in context.characters for rule in character.continuity_rules),
+            beats=beats, scenes=scenes, owner_approved=False,
+        )
+
+
 def _write_json(path: Path, payload: object) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
@@ -158,7 +272,7 @@ def run_rehearsal(
     engine = EpisodePlanningEngine(
         character_store=characters,
         episode_store=episode_store,
-        planner=DeterministicLocalStoryPlanner(),
+        planner=ProfessionalPilotStoryPlanner(),
     )
     episode = engine.plan(
         request,

@@ -15,8 +15,8 @@ def test_rehearsal_builds_traceable_professional_episode_without_execution(tmp_p
     assert result.episode_id == "S01E001"
     assert result.status == "awaiting_owner_story_approval"
     assert result.render_job_count == 10
-    assert result.dialogue_line_count == 10
-    assert result.localization_unit_count == 70
+    assert result.dialogue_line_count >= 40
+    assert result.localization_unit_count == result.dialogue_line_count * 7
 
     report = load(result.report_path)
     episode = load(result.output_directory / "artifacts" / "episode.json")
@@ -28,6 +28,17 @@ def test_rehearsal_builds_traceable_professional_episode_without_execution(tmp_p
     assert "owner_story_approval" in report["blockers"]
     assert len(report["evidence_hash"]) == 64
     assert episode["owner_approved"] is False
+    assert episode["title"] == "Kayıp Renkler Haritası"
+    assert all(scene["title"] not in {"Opening", "Challenge"} for scene in episode["scenes"])
+    assert {line["speaker_character_id"] for scene in episode["scenes"] for line in scene["dialogue"]} == {
+        "aden", "kaan", "esra", "harun"
+    }
+    assert all(
+        len(line["text"].split()) <= 3
+        for scene in episode["scenes"]
+        for line in scene["dialogue"]
+        if line["speaker_character_id"] == "kaan"
+    )
     assert sum(scene["duration_seconds"] for scene in episode["scenes"]) == 480
     assert {shot["output_asset_id"] for shot in graph["shots"]} == {
         job["output_asset_id"] for job in renders["jobs"]
