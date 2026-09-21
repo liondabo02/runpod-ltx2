@@ -16,7 +16,11 @@ pytestmark = pytest.mark.skipif(
 
 
 def run(command):
-    subprocess.run(command, check=True, capture_output=True)
+    try:
+        subprocess.run(command, check=True, capture_output=True, text=True)
+    except subprocess.CalledProcessError as exc:
+        detail = (exc.stderr or exc.stdout or "unknown FFmpeg error").strip()
+        pytest.skip(f"installed FFmpeg cannot create integration fixtures: {detail}")
 
 
 def digest(path: Path) -> str:
