@@ -3,6 +3,7 @@ name: AHOS Core CI
 on:
   push:
     branches:
+      - main
       - feature/ahos-autopilot
     paths:
       - 'ahos_core/**'
@@ -10,19 +11,53 @@ on:
   pull_request:
     paths:
       - 'ahos_core/**'
+      - '.github/workflows/ahos-core-ci.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ahos-core-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
+    name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.12', '3.13', '3.14']
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Set up Python
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
         with:
-          python-version: '3.12'
-      - name: Install test dependency
-        run: python -m pip install 'pytest>=9.1,<10'
-      - name: Run AHOS core tests
-        env:
-          PYTHONPATH: ahos_core
-        run: python -m pytest ahos_core/tests -q
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: ahos_core/pyproject.toml
+
+      - name: Install AHOS Core and test dependencies
+        run: python -m pip install './ahos_core[test]'
+
+      - name: Compile installed sources
+        run: python -m compileall -q ahos_core/ahos
+
+      - name: Run tests against installed package
+        working-directory: ahos_core
+        run: python -m pytest -q
+
+      - name: Verify package metadata and imports outside source tree
+        working-directory: /tmp
+        run: |
+          python - <<'PY'
+          from importlib.metadata import version
+          import ahos
+
+          assert version('ahos-core') == '0.1.0'
+          assert ahos.__file__
+          print(f'AHOS Core {version("ahos-core")} imported from {ahos.__file__}')
+          PY

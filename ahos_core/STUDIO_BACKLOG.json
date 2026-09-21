@@ -2,7 +2,7 @@
   "version": 1,
   "project": "AHOS Animation Studio",
   "rules": {
-    "core_ahos_roadmap": "complete",
+    "core_ahos_roadmap": "in_progress",
     "owner_controlled": true,
     "paid_ai_default": false,
     "external_actions_default": false,
@@ -39,9 +39,9 @@
     {
       "id": "STUDIO-005",
       "title": "Connect visual generation and animation pipeline",
-      "status": "completed",
+      "status": "in_progress",
       "goal": "Connect ComfyUI/approved compute adapters for repeatable character-consistent image/video generation with cost and approval gates.",
-      "result": "Localhost-only ComfyUI adapter, deterministic render-job planner, persistent render manifest DB, API-workflow placeholder contract, health/node inventory, owner+execution dual gate, and private dry-run manifest for all STUDIO-004 shots. No render job was submitted during installation. Provider upgrade: AHOS now has a multi-provider media registry plus a guarded RunPod Serverless LTX-2 adapter using the existing endpoint. RunPod paid execution requires owner_approved + execution_enabled + paid_provider_enabled simultaneously; secrets remain environment-only. Preview render default is 1024x576 (exact 16:9; both dimensions divisible by 32)."
+      "result": "Localhost-only ComfyUI adapter, deterministic render-job planner, persistent render manifest DB, API-workflow placeholder contract, health/node inventory, owner+execution dual gate, and private dry-run manifest for all STUDIO-004 shots. No render job was submitted during installation. Provider upgrade: AHOS now has a multi-provider media registry plus a guarded RunPod Serverless LTX-2 adapter using the existing endpoint. RunPod paid execution requires owner_approved + execution_enabled + paid_provider_enabled simultaneously; secrets remain environment-only. Preview render default is 1024x576 (exact 16:9; both dimensions divisible by 32). Remaining work: poll submitted jobs, download and hash outputs, register verified assets, and support resumable failure recovery before this stage can be called complete."
     },
     {
       "id": "STUDIO-006",
@@ -53,9 +53,9 @@
     {
       "id": "STUDIO-007",
       "title": "Build episode assembly and studio QA pipeline",
-      "status": "completed",
+      "status": "in_progress",
       "goal": "Assemble scenes into finished episodes and enforce continuity, child-safety, audio, subtitle, technical, and release-package QA.",
-      "result": "Deterministic local-only episode assembly planner with graph-ordered picture assembly, language-aware audio/subtitle packaging, provenance hashes, exact-duration validation, and fail-closed continuity, child-safety, picture, audio, subtitle, and technical QA gates. Installation performs no rendering, paid API calls, publishing, or external actions."
+      "result": "Deterministic local-only episode assembly planner with graph-ordered picture assembly, language-aware audio/subtitle packaging, provenance hashes, exact-duration validation, and fail-closed continuity, child-safety, picture, audio, subtitle, and technical QA gates. Installation performs no rendering, paid API calls, publishing, or external actions. Remaining work: execute the FFmpeg assembly, probe actual media duration/codecs, verify file hashes from bytes, require one final mix and subtitle package per release language, and emit a reproducible signed release manifest."
     },
     {
       "id": "STUDIO-008",
