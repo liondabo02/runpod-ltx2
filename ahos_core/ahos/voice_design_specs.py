@@ -26,7 +26,7 @@ ADEN_VOICE_DESIGN = FictionalVoiceDesignSpec(
         "Do not sound like an adult woman, do not use an adult falsetto, and do "
         "not imitate or resemble any real person."
     ),
-    target_languages=("tr", "de", "ar", "fr", "es", "en"),
+    target_languages=("tr", "ku-latn", "de", "ar", "fr", "es", "en"),
     forbidden_traits=(
         "adult-woman-timbre",
         "adult-man-timbre",

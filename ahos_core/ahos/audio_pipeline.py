@@ -215,12 +215,12 @@ def default_audio_provider_registry() -> AudioProviderRegistry:
 
 DEFAULT_LANGUAGE_POLICIES = (
     LanguagePolicy("tr", "Turkish", True),
+    LanguagePolicy("ku-latn", "Kurdish (Kurmanji, Latin)", True),
     LanguagePolicy("de", "German", True),
     LanguagePolicy("ar", "Arabic", True),
     LanguagePolicy("fr", "French", True),
     LanguagePolicy("es", "Spanish", True),
     LanguagePolicy("en", "English", True),
-    LanguagePolicy("ku", "Kurdish", False),
 )
 
 

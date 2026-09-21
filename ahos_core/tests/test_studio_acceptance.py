@@ -9,7 +9,7 @@ from ahos.studio_acceptance import AcceptancePreflightError, StudioAcceptancePre
 from ahos.voice_readiness import VoiceReadinessCell, VoiceReadinessReport
 
 
-LANGUAGES = ("tr", "de", "ar", "fr", "es", "en")
+LANGUAGES = ("tr", "ku-latn", "de", "ar", "fr", "es", "en")
 SHA = "a" * 64
 
 

@@ -7,7 +7,7 @@ from ahos.multilingual_audio_package import (
 )
 
 
-LANGUAGES = ("tr", "de", "ar", "fr", "es", "en")
+LANGUAGES = ("tr", "ku-latn", "de", "ar", "fr", "es", "en")
 SHA = "a" * 64
 
 
@@ -24,7 +24,7 @@ def complete_assets():
     return tuple(assets)
 
 
-def test_complete_six_language_package_is_ready_and_deterministic():
+def test_complete_seven_language_package_is_ready_and_deterministic():
     kwargs = dict(
         episode_id="S01E001", episode_duration_seconds=480,
         speaking_character_ids=("aden", "harun"),

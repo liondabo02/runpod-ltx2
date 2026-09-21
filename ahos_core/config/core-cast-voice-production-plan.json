@@ -5,6 +5,7 @@
   "production_clone_provider": "chatterbox-multilingual",
   "target_languages": [
     "tr",
+    "ku-latn",
     "de",
     "ar",
     "fr",

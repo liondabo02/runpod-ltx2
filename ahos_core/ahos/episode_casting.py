@@ -182,7 +182,7 @@ def build_voice_design_brief(
     persistent_scope: str,
 ) -> VoiceDesignBrief:
     species_normalized = species.strip().lower()
-    target_languages = ("tr", "de", "ar", "fr", "es", "en")
+    target_languages = ("tr", "ku-latn", "de", "ar", "fr", "es", "en")
 
     if species_normalized != "human":
         if talking_animal and speaking:

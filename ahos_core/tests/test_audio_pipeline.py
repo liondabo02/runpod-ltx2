@@ -10,6 +10,8 @@ from ahos.audio_pipeline import (
     UnsupportedLanguageError,
     VoiceProfile,
     AudioManifestStore,
+    DEFAULT_LANGUAGE_POLICIES,
+    default_audio_provider_registry,
 )
 from ahos.character_memory import CharacterBibleStore, CharacterProfile
 
@@ -95,6 +97,20 @@ def test_multilingual_commercial_selection_prefers_chatterbox(tmp_path: Path):
         commercial_use=True,
     )
     assert job.provider_id == "chatterbox-multilingual"
+
+
+def test_kurmanji_is_required_but_unverified_tts_fails_closed():
+    required = tuple(policy.code for policy in DEFAULT_LANGUAGE_POLICIES if policy.required)
+    assert required == ("tr", "ku-latn", "de", "ar", "fr", "es", "en")
+
+    with pytest.raises(UnsupportedLanguageError):
+        default_audio_provider_registry().choose(
+            language="ku-latn",
+            capability="tts",
+            allow_paid=True,
+            allow_external=True,
+            commercial_use=True,
+        )
 
 
 def test_translation_required_blocks_tts(tmp_path: Path):
