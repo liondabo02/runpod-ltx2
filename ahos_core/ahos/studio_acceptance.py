@@ -8,6 +8,7 @@ from typing import Mapping, Sequence
 from .multilingual_audio_package import MultilingualAudioPackage
 from .music_sfx_supervision import SoundSupervisionPackage
 from .voice_readiness import VoiceReadinessReport
+from .kurmanji_quality import KURMANJI_LANGUAGE, KurmanjiQualityReport
 
 
 class AcceptancePreflightError(RuntimeError):
@@ -67,6 +68,7 @@ class StudioAcceptancePreflight:
         paid_provider_enabled: bool,
         paid_execution_requested: bool = False,
         publish_requested: bool = False,
+        kurmanji_quality_report: KurmanjiQualityReport | None = None,
     ) -> AcceptancePreflight:
         if not episode_id.strip():
             raise AcceptancePreflightError("episode_id is required")
@@ -150,6 +152,29 @@ class StudioAcceptancePreflight:
         else:
             voice_report_message = "Canonical core-cast voice coverage is complete."
 
+        kurmanji_required = (
+            multilingual_audio_package is not None
+            and KURMANJI_LANGUAGE in multilingual_audio_package.required_languages
+        )
+        kurmanji_ready = (
+            not kurmanji_required
+            or (
+                kurmanji_quality_report is not None
+                and kurmanji_quality_report.language == KURMANJI_LANGUAGE
+                and kurmanji_quality_report.ready
+            )
+        )
+        if not kurmanji_required:
+            kurmanji_message = "Kurmanji is not required by this release package."
+        elif kurmanji_quality_report is None:
+            kurmanji_message = "Native-reviewed Kurmanji localization quality evidence is required."
+        elif not kurmanji_quality_report.ready:
+            kurmanji_message = "Kurmanji localization quality failed: " + ", ".join(
+                kurmanji_quality_report.blocking_issues[:8]
+            ) + "."
+        else:
+            kurmanji_message = "Kurmanji terminology, pronunciation, timing, and child register passed native review."
+
         gates = (
             AcceptanceGate(
                 "studio-roadmap",
@@ -182,6 +207,12 @@ class StudioAcceptancePreflight:
                 voice_report_ready,
                 True,
                 voice_report_message,
+            ),
+            AcceptanceGate(
+                "kurmanji-localization-quality",
+                kurmanji_ready,
+                True,
+                kurmanji_message,
             ),
             AcceptanceGate(
                 "voice-similarity",

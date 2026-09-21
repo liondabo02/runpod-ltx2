@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from ahos.multilingual_audio_package import AudioPackageAsset, MultilingualAudioPackager
+from ahos.kurmanji_quality import KurmanjiLineReview, KurmanjiQualityGate
 from ahos.music_sfx_supervision import MusicSfxSupervisor, SoundAssetEvidence, SoundCue
 from ahos.studio_acceptance import AcceptancePreflightError, StudioAcceptancePreflight
 from ahos.voice_readiness import VoiceReadinessCell, VoiceReadinessReport
@@ -55,6 +56,15 @@ def voice_report(ready=True):
     return VoiceReadinessReport(("tr",), (cell,), "b" * 64)
 
 
+def kurmanji_report(ready=True):
+    return KurmanjiQualityGate().evaluate((
+        KurmanjiLineReview(
+            "L1", "Silav! Tu dixwazî bi min re bilîzî?", "native-reviewer-01",
+            ready, ready, ready, ready,
+        ),
+    ))
+
+
 def backlog(status6="completed"):
     return {
         "tasks": [
@@ -80,6 +90,7 @@ def evaluate(tmp_path: Path, **overrides):
         "paid_provider_enabled": True,
         "paid_execution_requested": True,
         "publish_requested": False,
+        "kurmanji_quality_report": kurmanji_report(),
     }
     values.update(overrides)
     return StudioAcceptancePreflight().evaluate(**values)
@@ -154,6 +165,14 @@ def test_canonical_voice_readiness_fails_closed(tmp_path: Path, report):
     result = evaluate(tmp_path, voice_readiness_report=report)
     assert result.ready_for_paid_execution is False
     gate = next(g for g in result.gates if g.gate_id == "canonical-voice-readiness")
+    assert gate.passed is False
+
+
+@pytest.mark.parametrize("report", [None, kurmanji_report(False)])
+def test_kurmanji_quality_evidence_fails_closed(tmp_path: Path, report):
+    result = evaluate(tmp_path, kurmanji_quality_report=report)
+    assert result.ready_for_paid_execution is False
+    gate = next(g for g in result.gates if g.gate_id == "kurmanji-localization-quality")
     assert gate.passed is False
 
 
