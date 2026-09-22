@@ -89,6 +89,7 @@ jobs:
           cp /tmp/miniverse-workflows/image_to_video.api.json /tmp/primary-workflows/
           cp /tmp/miniverse-workflows/image_to_video.json /tmp/primary-workflows/
           python3 scripts/preflight_workflows.py http://127.0.0.1:8188 /tmp/primary-workflows
+          python3 scripts/dump_ltx_i2v_schemas.py http://127.0.0.1:8188
 
       - name: Report cinematic workflow schema status (non-blocking)
         continue-on-error: true
