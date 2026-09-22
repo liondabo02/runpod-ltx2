@@ -81,6 +81,55 @@ def test_room_fails_closed_after_revision_limit(tmp_path):
         room.plan(request(), context())
 
 
+def test_room_repairs_provider_schema_instead_of_crashing(tmp_path):
+    malformed = payload()
+    malformed["scenes"][0]["dialogue"][0] = {
+        "speaker": "aden", "text": "Kaan, şuna bak!", "intent": "merak"
+    }
+    calls = []
+    drafts = [malformed, payload(suffix=" repaired")]
+
+    def generator(prompt):
+        calls.append(json.loads(prompt))
+        return json.dumps(drafts[len(calls) - 1], ensure_ascii=False)
+
+    memory = StoryRoomMemory(tmp_path / "room.db")
+    packet = AutonomousWritersRoom(generator=generator, memory=memory).plan(request(), context())
+
+    assert packet.title.endswith("repaired")
+    assert len(calls) == 2
+    assert calls[1]["deterministic_review"]["issues"][0]["code"] == "schema.invalid"
+    assert calls[1]["previous_draft"]["scenes"][0]["dialogue"][0]["speaker"] == "aden"
+    assert calls[1]["required_response_shape"]["scenes"][0]["dialogue"][0]["speaker_character_id"]
+    assert memory.attempt_count(next(iter(_run_ids(memory)))) == 2
+
+
+def _run_ids(memory):
+    with memory._connect() as conn:
+        return [row[0] for row in conn.execute("SELECT DISTINCT run_id FROM attempts")]
+
+
+def test_room_repairs_json_fenced_provider_response(tmp_path):
+    fenced = "```json\n" + json.dumps(payload(), ensure_ascii=False) + "\n```"
+    packet = AutonomousWritersRoom(
+        generator=lambda _: fenced, memory=StoryRoomMemory(tmp_path / "room.db")
+    ).plan(request(), context())
+    assert packet.title == "Uçurtma Dostları"
+
+
+def test_room_fails_closed_after_repeated_schema_errors(tmp_path):
+    malformed = json.dumps({"title": "Eksik"})
+    memory = StoryRoomMemory(tmp_path / "room.db")
+    room = AutonomousWritersRoom(
+        generator=lambda _: malformed,
+        memory=memory,
+        policy=StoryRoomPolicy(maximum_rounds=2),
+    )
+    with pytest.raises(StoryQualityRejected, match="schema.invalid"):
+        room.plan(request(), context())
+    assert sum(memory.attempt_count(run_id) for run_id in _run_ids(memory)) == 2
+
+
 def test_accepted_story_cannot_be_reused(tmp_path):
     memory = StoryRoomMemory(tmp_path / "room.db")
     AutonomousWritersRoom(generator=lambda _: json.dumps(payload(), ensure_ascii=False), memory=memory).plan(request(), context())

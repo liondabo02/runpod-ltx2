@@ -11,7 +11,7 @@ import argparse
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Mapping
 
 from .story_engine import (
     EpisodeProductionPacket,
@@ -157,6 +157,28 @@ class StoryRoomMemory:
                 ),
             )
 
+    def record_invalid_attempt(
+        self,
+        run_id: str,
+        round_number: int,
+        episode_id: str,
+        payload: object,
+        report: QualityReport,
+    ) -> None:
+        """Persist malformed provider output without pretending it is a valid packet."""
+        with self._connect() as conn:
+            conn.execute(
+                "INSERT INTO attempts VALUES (?, ?, ?, ?, ?, ?)",
+                (
+                    run_id,
+                    round_number,
+                    episode_id,
+                    _stable_json(payload),
+                    _stable_json(report.to_payload()),
+                    _utc_now(),
+                ),
+            )
+
     def accept(self, packet: EpisodeProductionPacket) -> None:
         synopsis = " ".join(
             [packet.logline]
@@ -274,13 +296,21 @@ class AutonomousWritersRoom:
         run_id = hashlib.sha256(f"{request.episode_id}:{_utc_now()}".encode()).hexdigest()[:20]
         packet: EpisodeProductionPacket | None = None
         report: QualityReport | None = None
+        previous_draft: object | None = None
         for round_number in range(1, self.policy.maximum_rounds + 1):
-            raw = self.generator(json.dumps(self._contract(request, context, packet, report, round_number), ensure_ascii=False, indent=2))
+            raw = self.generator(json.dumps(self._contract(request, context, previous_draft, report, round_number), ensure_ascii=False, indent=2))
             try:
-                payload = json.loads(raw)
-            except json.JSONDecodeError as exc:
-                raise InvalidStoryPlanError(f"writers room returned invalid JSON: {exc}") from exc
-            packet = _packet_from_mapping(payload, request)
+                payload = self._decode_payload(raw)
+                packet = _packet_from_mapping(payload, request)
+            except (json.JSONDecodeError, InvalidStoryPlanError, KeyError, TypeError, ValueError) as exc:
+                previous_draft = self._recoverable_draft(raw)
+                report = self._schema_report(exc)
+                self.memory.record_invalid_attempt(
+                    run_id, round_number, request.episode_id, previous_draft, report
+                )
+                packet = None
+                continue
+            previous_draft = packet.to_payload()
             report = self.gate.evaluate(packet, context, duplicate=self.memory.is_duplicate(packet))
             self.memory.record_attempt(run_id, round_number, packet, report)
             if report.passed:
@@ -289,6 +319,39 @@ class AutonomousWritersRoom:
         assert report is not None
         summary = "; ".join(f"{issue.code}: {issue.message}" for issue in report.issues)
         raise StoryQualityRejected(f"story failed quality gate after {self.policy.maximum_rounds} rounds (score={report.score}): {summary}")
+
+    @staticmethod
+    def _decode_payload(raw: str) -> Mapping[str, object]:
+        text = raw.strip()
+        if text.startswith("```"):
+            lines = text.splitlines()
+            if lines and lines[-1].strip() == "```":
+                text = "\n".join(lines[1:-1])
+        payload = json.loads(text)
+        if not isinstance(payload, Mapping):
+            raise InvalidStoryPlanError("writers room response must be a JSON object")
+        return payload
+
+    @staticmethod
+    def _recoverable_draft(raw: str) -> object:
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError:
+            return {"raw_response": raw[:20000]}
+
+    @staticmethod
+    def _schema_report(exc: Exception) -> QualityReport:
+        if isinstance(exc, json.JSONDecodeError):
+            detail = f"Invalid JSON at line {exc.lineno}, column {exc.colno}: {exc.msg}"
+        elif isinstance(exc, KeyError):
+            detail = f"Required field is missing: {exc.args[0]}"
+        else:
+            detail = str(exc) or exc.__class__.__name__
+        return QualityReport(
+            0,
+            False,
+            (QualityIssue("schema.invalid", "blocker", "provider_response", detail),),
+        )
 
     def _contract(self, request, context, prior, report, round_number) -> dict[str, object]:
         return {
@@ -318,8 +381,27 @@ class AutonomousWritersRoom:
             "canon_facts": list(context.canon_facts),
             "continuity_events": list(context.recent_continuity_events),
             "avoid_prior_stories": list(self.memory.accepted_summaries()),
-            "previous_draft": prior.to_payload() if prior else None,
+            "previous_draft": prior,
             "deterministic_review": report.to_payload() if report else None,
+            "required_response_shape": {
+                "title": "string",
+                "logline": "string",
+                "continuity_notes": ["string"],
+                "beats": [{
+                    "beat_id": "string", "purpose": "string", "summary": "string",
+                    "emotional_value": "string", "learning_value": "string",
+                }],
+                "scenes": [{
+                    "scene_id": "string", "title": "string", "setting": "string",
+                    "cast_ids": ["allowed_character_id"], "duration_seconds": "integer",
+                    "objective": "string", "action_summary": "string",
+                    "dialogue": [{
+                        "speaker_character_id": "allowed_character_id",
+                        "text": "string", "intent": "string",
+                    }],
+                }],
+                "owner_approved": False,
+            },
             "hard_requirements": {
                 "minimum_scenes": self.policy.minimum_scenes,
                 "minimum_dialogue_lines": self.policy.minimum_dialogue_lines,
