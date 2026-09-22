@@ -8,6 +8,7 @@ import sqlite3
 import urllib.error
 import urllib.request
 import argparse
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -426,6 +427,9 @@ class OpenAICompatibleStoryGenerator:
         estimated_cost_per_call_usd: float = 0.0,
         daily_budget_usd: float = 0.0,
         timeout_seconds: float = 120.0,
+        retry_attempts: int = 3,
+        retry_delay_seconds: float = 2.0,
+        progress: Callable[[str], None] | None = None,
         gateway: ModelGateway | None = None,
     ) -> None:
         self.plan = (gateway or ModelGateway()).plan(
@@ -442,6 +446,13 @@ class OpenAICompatibleStoryGenerator:
         if not allow_external:
             raise StoryProviderError("external story generation is disabled")
         self.timeout_seconds = timeout_seconds
+        if retry_attempts < 1:
+            raise ValueError("retry_attempts must be >= 1")
+        if retry_delay_seconds < 0:
+            raise ValueError("retry_delay_seconds must be >= 0")
+        self.retry_attempts = retry_attempts
+        self.retry_delay_seconds = retry_delay_seconds
+        self.progress = progress
         self.cost_per_call = estimated_cost_per_call_usd
         self.cost_guard = CostGuard(daily_budget_usd=daily_budget_usd)
 
@@ -468,11 +479,31 @@ class OpenAICompatibleStoryGenerator:
             headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
             method="POST",
         )
-        try:
-            with urllib.request.urlopen(request, timeout=self.timeout_seconds) as response:
-                payload = json.loads(response.read().decode("utf-8"))
-        except (OSError, urllib.error.URLError, json.JSONDecodeError) as exc:
-            raise StoryProviderError(f"story provider request failed: {exc}") from exc
+        payload = None
+        last_error: Exception | None = None
+        for attempt in range(1, self.retry_attempts + 1):
+            if self.progress is not None:
+                self.progress(
+                    f"OpenRouter request attempt {attempt}/{self.retry_attempts} "
+                    f"(timeout {self.timeout_seconds:g}s)"
+                )
+            try:
+                with urllib.request.urlopen(request, timeout=self.timeout_seconds) as response:
+                    payload = json.loads(response.read().decode("utf-8"))
+                break
+            except (OSError, urllib.error.URLError, json.JSONDecodeError) as exc:
+                last_error = exc
+                if attempt < self.retry_attempts:
+                    if self.progress is not None:
+                        self.progress(
+                            f"Provider attempt {attempt} failed: {exc.__class__.__name__}; retrying"
+                        )
+                    time.sleep(self.retry_delay_seconds * attempt)
+        if payload is None:
+            assert last_error is not None
+            raise StoryProviderError(
+                f"story provider failed after {self.retry_attempts} attempts: {last_error}"
+            ) from last_error
         try:
             content = payload["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError) as exc:
@@ -499,6 +530,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--owner-approved-paid", action="store_true")
     parser.add_argument("--estimated-cost-per-call-usd", type=float, default=0.0)
     parser.add_argument("--daily-budget-usd", type=float, default=0.0)
+    parser.add_argument("--provider-timeout-seconds", type=float, default=180.0)
+    parser.add_argument("--provider-retry-attempts", type=int, default=3)
     args = parser.parse_args(argv)
 
     output = Path(args.output)
@@ -518,6 +551,8 @@ def main(argv: list[str] | None = None) -> int:
         owner_approved_paid=args.owner_approved_paid,
         estimated_cost_per_call_usd=args.estimated_cost_per_call_usd,
         daily_budget_usd=args.daily_budget_usd,
+        timeout_seconds=args.provider_timeout_seconds,
+        retry_attempts=args.provider_retry_attempts,
     )
     memory = StoryRoomMemory(output / "story-room.db")
     episodes = EpisodePlanningStore(output / "episodes.db")

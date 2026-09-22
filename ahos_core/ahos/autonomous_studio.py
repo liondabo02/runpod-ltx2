@@ -259,6 +259,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--owner-approved-paid", action="store_true")
     parser.add_argument("--estimated-cost-per-call-usd", type=float, default=0.0)
     parser.add_argument("--daily-budget-usd", type=float, default=0.0)
+    parser.add_argument("--provider-timeout-seconds", type=float, default=180.0)
+    parser.add_argument("--provider-retry-attempts", type=int, default=3)
     args = parser.parse_args(argv)
     request = EpisodeRequest(
         args.season,
@@ -275,6 +277,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         owner_approved_paid=args.owner_approved_paid,
         estimated_cost_per_call_usd=args.estimated_cost_per_call_usd,
         daily_budget_usd=args.daily_budget_usd,
+        timeout_seconds=args.provider_timeout_seconds,
+        retry_attempts=args.provider_retry_attempts,
+        progress=_progress,
     )
     result = run_autonomous_studio(
         args.output,

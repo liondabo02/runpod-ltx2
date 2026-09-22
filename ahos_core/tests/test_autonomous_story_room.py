@@ -1,6 +1,7 @@
 import json
 
 import pytest
+import urllib.error
 
 from ahos.autonomous_story_room import (
     AutonomousWritersRoom,
@@ -8,6 +9,7 @@ from ahos.autonomous_story_room import (
     StoryQualityRejected,
     StoryRoomMemory,
     StoryRoomPolicy,
+    OpenAICompatibleStoryGenerator,
 )
 from ahos.story_engine import EpisodeRequest, StoryCharacterContext, StoryContext, _packet_from_mapping
 
@@ -136,3 +138,41 @@ def test_accepted_story_cannot_be_reused(tmp_path):
     room = AutonomousWritersRoom(generator=lambda _: json.dumps(payload(), ensure_ascii=False), memory=memory, policy=StoryRoomPolicy(maximum_rounds=1))
     with pytest.raises(StoryQualityRejected, match="originality.duplicate"):
         room.plan(request(), context())
+
+
+def test_provider_retries_transient_timeout(monkeypatch):
+    calls = []
+    progress = []
+
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+        def read(self):
+            return json.dumps(
+                {"choices": [{"message": {"content": "{}"}}]}
+            ).encode()
+
+    def urlopen(*_, **__):
+        calls.append(True)
+        if len(calls) == 1:
+            raise TimeoutError("temporary free-model queue timeout")
+        return Response()
+
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+    monkeypatch.setattr("ahos.autonomous_story_room.urllib.request.urlopen", urlopen)
+    monkeypatch.setattr("ahos.autonomous_story_room.time.sleep", lambda _: None)
+    generator = OpenAICompatibleStoryGenerator(
+        model_id="openrouter/free",
+        allow_external=True,
+        retry_attempts=3,
+        retry_delay_seconds=0,
+        progress=progress.append,
+    )
+
+    assert generator("prompt") == "{}"
+    assert len(calls) == 2
+    assert any("retrying" in message for message in progress)
