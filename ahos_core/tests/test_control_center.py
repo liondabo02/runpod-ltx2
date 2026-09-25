@@ -2,6 +2,8 @@ from pathlib import Path
 
 from ahos.autonomous_company import PersistentMissionQueue, QueueStatus
 from ahos.control_center import ControlCenterState, render_dashboard
+from ahos.coding_supervisor import CodingSupervisorStore
+from ahos.coding_worker import CodingBacklogItem
 from ahos.mission_orchestrator import MissionResult, MissionStatus, MissionStepSpec
 from ahos.owner_approval import OwnerApprovalInbox
 
@@ -93,3 +95,19 @@ def test_dashboard_html_contains_control_surfaces(tmp_path: Path):
     assert "Mission Queue" in body
     assert "Virtual Workforce" in body
     assert "KILL SWITCH" in body
+    assert "Coding Supervisor" in body
+
+
+def test_snapshot_exposes_coding_queue_read_only_status(tmp_path: Path):
+    state = ControlCenterState(tmp_path / "runtime")
+    repository = tmp_path / "repo"
+    repository.mkdir()
+    CodingSupervisorStore(state.coding_queue_path).enqueue(
+        CodingBacklogItem(
+            task_id="CODE-9", title="queued change", repository=repository,
+            allowed_paths=("src",),
+        )
+    )
+    coding = state.snapshot()["coding_supervisor"]
+    assert coding["counts"]["queued"] == 1
+    assert coding["tasks"][0]["task_id"] == "CODE-9"

@@ -119,6 +119,19 @@ class AutonomousCodingWorker:
                         tuple(tests_run),
                     )
 
+            # Tests are code too: they may create or modify files. Re-evaluate
+            # the complete diff after every test before producing evidence.
+            changed = self._changed_files(worktree)
+            outside = tuple(path for path in changed if not self._is_allowed(path, item.allowed_paths))
+            if outside:
+                return self._blocked(
+                    item,
+                    f"tests changed files outside approved scope: {', '.join(outside)}",
+                    worktree,
+                    changed,
+                    tuple(tests_run),
+                )
+
             # Intent-to-add makes new files visible to ``git diff`` without
             # staging their contents or creating a commit.
             untracked = self._git(

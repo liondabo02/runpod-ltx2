@@ -15,6 +15,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, quote, urlparse
 
 from .autonomous_company import PersistentMissionQueue, QueueStatus
+from .coding_supervisor import CodingSupervisorStore
 from .owner_approval import ApprovalStatus, OwnerApprovalInbox
 from .virtual_workforce import default_virtual_workforce
 
@@ -45,6 +46,10 @@ class ControlCenterState:
     @property
     def heartbeat_path(self) -> Path:
         return self.runtime_dir / "company-service-heartbeat.json"
+
+    @property
+    def coding_queue_path(self) -> Path:
+        return self.runtime_dir / "coding-supervisor-queue.json"
 
     @property
     def stop_path(self) -> Path:
@@ -112,6 +117,7 @@ class ControlCenterState:
         ]
 
         last_activity = self._worker_last_activity(missions)
+        coding = CodingSupervisorStore(self.coding_queue_path).status()
         workers = []
         for profile in default_virtual_workforce():
             activity = last_activity.get(profile.worker_id, {})
@@ -164,6 +170,7 @@ class ControlCenterState:
             "worker_count": len(workers),
             "workers": workers,
             "kill_switch_active": self.stop_path.exists(),
+            "coding_supervisor": coding,
         }
 
     def approve(self, request_id: str) -> str:
@@ -275,6 +282,8 @@ def _badge(status: str) -> str:
 def render_dashboard(snapshot: dict[str, object], message: str = "") -> str:
     hb = snapshot["heartbeat"]
     counts = snapshot["mission_counts"]
+    coding = snapshot.get("coding_supervisor", {"counts": {}, "tasks": []})
+    coding_counts = coding.get("counts", {})
 
     cards = "".join(
         f'<div class="card"><div class="label">{_esc(k)}</div><div class="value">{_esc(v)}</div></div>'
@@ -285,6 +294,8 @@ def render_dashboard(snapshot: dict[str, object], message: str = "") -> str:
             ("Queued", counts.get("pending", 0)),
             ("Waiting Approval", snapshot["waiting_approval_count"]),
             ("Blocked / Failed", counts.get("blocked", 0) + counts.get("failed", 0)),
+            ("Coding Queue", coding_counts.get("queued", 0)),
+            ("Code Approval", coding_counts.get("waiting_owner_approval", 0)),
         )
     )
 
@@ -323,6 +334,13 @@ def render_dashboard(snapshot: dict[str, object], message: str = "") -> str:
         for w in snapshot["workers"]
     )
 
+    coding_html = "".join(
+        f'<tr><td>{_esc(t["task_id"])}</td><td>{_badge(t["status"])}</td>'
+        f'<td>{_esc(str(t["attempts"]) + "/" + str(t["max_attempts"]))}</td>'
+        f'<td class="wide">{_esc(t["last_error"] or t["patch_file"] or t["title"])}</td></tr>'
+        for t in coding.get("tasks", [])
+    ) or '<tr><td colspan="4">No coding tasks yet.</td></tr>'
+
     notice = f'<div class="notice">{_esc(message)}</div>' if message else ""
 
     return f'''<!doctype html>
@@ -354,6 +372,7 @@ th{{color:var(--muted)}} .wide{{max-width:520px;color:var(--muted)}} .badge{{dis
 </div></div>
 <div class="section"><h2>Approval Inbox</h2><table><thead><tr><th>Request</th><th>Mission</th><th>Status</th><th>Est. Cost</th><th>Action</th></tr></thead><tbody>{approval_html}</tbody></table></div>
 <div class="section"><h2>Mission Queue</h2><table><thead><tr><th>Mission</th><th>Department</th><th>Status</th><th>Attempts</th><th>Objective / Error</th></tr></thead><tbody>{mission_html}</tbody></table></div>
+<div class="section"><h2>Coding Supervisor</h2><table><thead><tr><th>Task</th><th>Status</th><th>Attempts</th><th>Blocker / Artifact</th></tr></thead><tbody>{coding_html}</tbody></table></div>
 <div class="section"><h2>Virtual Workforce</h2><table><thead><tr><th>Worker</th><th>Department</th><th>Role</th><th>Status</th><th>Last Mission</th><th>Last Stage</th><th>Paid AI</th></tr></thead><tbody>{worker_html}</tbody></table></div>
 </main></body></html>'''
 

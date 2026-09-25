@@ -97,6 +97,36 @@ def test_worker_blocks_failed_tests_without_patch(tmp_path: Path) -> None:
     assert result.patch_file is None
 
 
+def test_worker_rechecks_scope_after_tests_mutate_worktree(tmp_path: Path) -> None:
+    repository = _repository(tmp_path)
+    item = CodingBacklogItem(
+        task_id="BACKLOG-TEST-ESCAPE",
+        title="Test command must remain in scope",
+        repository=repository,
+        allowed_paths=("src",),
+        test_commands=(
+            (
+                sys.executable,
+                "-c",
+                "from pathlib import Path; Path('protected.txt').write_text('changed by test\\n')",
+            ),
+        ),
+    )
+
+    def builder(_prompt: str, worktree: Path):
+        (worktree / "src" / "feature.py").write_text("VALUE = 2\n", encoding="utf-8")
+
+    result = AutonomousCodingWorker(
+        runner=builder, workspace_root=tmp_path / "workers"
+    ).run(item, "dev-01")
+
+    assert result.status is CodingWorkerStatus.BLOCKED
+    assert "tests changed files outside approved scope" in result.reason
+    assert result.changed_files == ("protected.txt", "src/feature.py")
+    assert result.patch_file is None
+    assert result.approval_file is None
+
+
 def test_worker_patch_contains_new_files(tmp_path: Path) -> None:
     repository = _repository(tmp_path)
 
