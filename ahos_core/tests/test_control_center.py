@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from ahos.autonomous_company import PersistentMissionQueue, QueueStatus
@@ -6,6 +7,8 @@ from ahos.coding_supervisor import CodingSupervisorStore
 from ahos.coding_worker import CodingBacklogItem
 from ahos.mission_orchestrator import MissionResult, MissionStatus, MissionStepSpec
 from ahos.owner_approval import OwnerApprovalInbox
+from ahos.studio_approval import _hash
+from ahos.studio_executor import StudioExecutor
 
 
 def make_waiting(queue: PersistentMissionQueue, mission_id: str = "m1"):
@@ -95,7 +98,29 @@ def test_dashboard_html_contains_control_surfaces(tmp_path: Path):
     assert "Mission Queue" in body
     assert "Virtual Workforce" in body
     assert "KILL SWITCH" in body
+    assert "Studio Execution" in body
     assert "Coding Supervisor" in body
+
+
+def test_snapshot_exposes_persisted_studio_execution(tmp_path: Path):
+    runtime = tmp_path / "runtime"
+    studio = runtime / "episodes" / "S01E009"
+    studio.mkdir(parents=True)
+    decision = {
+        "episode_id": "S01E009", "owner_approved": True,
+        "paid_execution_enabled": True, "external_execution_enabled": True,
+        "publishing_enabled": False, "max_budget_usd": 2.0,
+    }
+    decision["decision_hash"] = _hash(decision)
+    (studio / "OWNER-DECISION.json").write_text(json.dumps(decision), encoding="utf-8")
+    (studio / "EXECUTION-PREFLIGHT.json").write_text(json.dumps({
+        "episode_id": "S01E009", "approval_ready": True,
+        "cost_estimate": {"recommended_budget_ceiling": 1.0},
+    }), encoding="utf-8")
+    StudioExecutor(studio, {}).initialize()
+    snapshot = ControlCenterState(runtime).snapshot()
+    assert snapshot["studio_executions"][0]["episode_id"] == "S01E009"
+    assert "Studio Execution" in render_dashboard(snapshot)
 
 
 def test_snapshot_exposes_coding_queue_read_only_status(tmp_path: Path):

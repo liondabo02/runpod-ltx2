@@ -60,3 +60,18 @@ def test_stop_file_is_honored(tmp_path: Path) -> None:
         poll_seconds=0.01,
     )
     assert service.should_stop() is True
+
+
+def test_service_runs_automation_steps_while_mission_queue_is_idle(tmp_path: Path) -> None:
+    queue = PersistentMissionQueue(tmp_path / "missions.db")
+    calls = []
+    service = CompanyService(
+        loop=CompanyLoop(queue=queue, executor=_completed),
+        heartbeat_path=tmp_path / "heartbeat.json",
+        stop_path=tmp_path / "stop",
+        automation_steps=(lambda: calls.append("coding-dispatch") or "coding:1",),
+    )
+    assert service.run_once() == "idle"
+    payload = json.loads((tmp_path / "heartbeat.json").read_text(encoding="utf-8"))
+    assert calls == ["coding-dispatch"]
+    assert payload["automation_results"] == ["coding:1"]

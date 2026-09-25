@@ -6,6 +6,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Callable
 
 from .autonomous_company import CompanyLoop
 
@@ -20,6 +21,7 @@ class CompanyService:
     heartbeat_path: Path
     stop_path: Path
     poll_seconds: float = 2.0
+    automation_steps: tuple[Callable[[], str], ...] = ()
 
     def __post_init__(self) -> None:
         self.heartbeat_path = Path(self.heartbeat_path)
@@ -38,15 +40,19 @@ class CompanyService:
 
     def run_once(self) -> str:
         self.write_heartbeat("polling")
+        automation_results: list[str] = []
+        for step in self.automation_steps:
+            automation_results.append(str(step()))
         mission = self.loop.run_once()
         if mission is None:
-            self.write_heartbeat("idle")
+            self.write_heartbeat("idle", automation_results=automation_results)
             return "idle"
         self.write_heartbeat(
             "processed",
             mission_id=mission.mission_id,
             mission_status=mission.status.value,
             attempts=mission.attempts,
+            automation_results=automation_results,
         )
         return mission.status.value
 

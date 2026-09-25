@@ -19,6 +19,8 @@ ahos-studio-approval = "ahos.studio_approval:main"
 ahos-studio-preflight = "ahos.studio_preflight:main"
 ahos-studio-readiness = "ahos.studio_readiness:main"
 ahos-coding-supervisor = "ahos.coding_supervisor:main"
+ahos-coding-dispatch = "ahos.work_order_coding_bridge:main"
+ahos-studio-executor = "ahos.studio_executor:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
