@@ -6,9 +6,10 @@ import json
 import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Sequence
+from typing import Callable, Sequence
 
 from .audio_pipeline import DEFAULT_LANGUAGE_POLICIES
+from .autonomous_localization import AutonomousLocalizationPipeline
 from .autonomous_story_room import (
     AutonomousWritersRoom,
     OpenAICompatibleStoryGenerator,
@@ -60,6 +61,7 @@ def run_autonomous_studio(
     characters_db: str | Path,
     request: EpisodeRequest,
     generator: OpenAICompatibleStoryGenerator,
+    localization_generator: Callable[[str], str] | None = None,
 ) -> AutonomousStudioResult:
     """Run every zero-cost/pre-approval studio department in one transaction.
 
@@ -176,12 +178,27 @@ def run_autonomous_studio(
                         else "translation_required",
                     }
                 )
-    localization_payload = {
+    localization_payload: dict[str, object] = {
         "schema": "ahos.localization-work-package.v1",
         "episode_id": episode.episode_id,
         "languages": [item.code for item in DEFAULT_LANGUAGE_POLICIES],
+        "status": "translation_required",
+        "fail_closed": True,
         "units": units,
     }
+    if localization_generator is not None:
+        localized = AutonomousLocalizationPipeline(
+            generator=localization_generator
+        ).localize(
+            units,
+            languages=[item.code for item in DEFAULT_LANGUAGE_POLICIES],
+            character_name_locks={
+                character_id: characters.get_profile(character_id).display_name
+                for character_id in request.cast_ids
+                if characters.get_profile(character_id) is not None
+            },
+        )
+        localization_payload.update(localized)
     _write_json(artifacts / "localization-plan.json", localization_payload)
 
     _progress("7/7 Studio QA: assembling the single owner decision packet")
@@ -286,6 +303,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         characters_db=args.characters_db,
         request=request,
         generator=generator,
+        localization_generator=generator,
     )
     print(
         json.dumps(

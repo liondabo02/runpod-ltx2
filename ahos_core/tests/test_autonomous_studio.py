@@ -33,11 +33,31 @@ def test_autonomous_studio_prepares_every_department_for_one_owner_gate(tmp_path
     ).build_context(request)
     story = ProfessionalPilotStoryPlanner().plan(request, context).to_payload()
 
+    def localization_generator(prompt_text):
+        prompt = json.loads(prompt_text)
+        return json.dumps(
+            {
+                "translations": [
+                    {
+                        "unit_id": unit["unit_id"],
+                        "localized_text": (
+                            unit["source_text"]
+                            if unit["target_language"] == unit["source_language"]
+                            else f"{unit['target_language']} çeviri: {unit['source_text']}"
+                        ),
+                    }
+                    for unit in prompt["units"]
+                ]
+            },
+            ensure_ascii=False,
+        )
+
     result = run_autonomous_studio(
         tmp_path / "studio",
         characters_db=character_db,
         request=request,
         generator=lambda _: json.dumps(story, ensure_ascii=False),
+        localization_generator=localization_generator,
     )
 
     assert result.status == "waiting_owner_approval"
@@ -47,6 +67,13 @@ def test_autonomous_studio_prepares_every_department_for_one_owner_gate(tmp_path
     assert approval["external_execution_enabled"] is False
     assert approval["evidence"]["render_job_count"] == 10
     assert approval["evidence"]["localization_unit_count"] > 0
+    localization = json.loads(
+        (tmp_path / "studio" / "artifacts" / "localization-plan.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert localization["status"] == "machine_qa_approved"
+    assert all(unit["localized_text"] for unit in localization["units"])
     completed = {
         item["department"]
         for item in approval["evidence"]["department_statuses"]
