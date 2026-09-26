@@ -12,6 +12,7 @@ def test_provider_config_fails_closed_when_secrets_or_budget_are_missing(monkeyp
     for name in (
         "RUNPOD_API_KEY", "KURDISH_TTS_API_KEY", "RUNPOD_LTX2_ENDPOINT_ID",
         "RUNPOD_CHATTERBOX_ENDPOINT_ID", "AHOS_RENDER_COST_CEILING_USD",
+        "RUNPOD_OPENVOICE_ENDPOINT_ID",
         "AHOS_TTS_COST_CEILING_USD",
     ):
         monkeypatch.delenv(name, raising=False)
@@ -26,6 +27,7 @@ def test_provider_config_reads_only_secret_presence(monkeypatch):
     monkeypatch.setenv("KURDISH_TTS_API_KEY", "also-secret")
     monkeypatch.setenv("RUNPOD_LTX2_ENDPOINT_ID", "ltx")
     monkeypatch.setenv("RUNPOD_CHATTERBOX_ENDPOINT_ID", "tts")
+    monkeypatch.setenv("RUNPOD_OPENVOICE_ENDPOINT_ID", "voice-transfer")
     monkeypatch.setenv("AHOS_RENDER_COST_CEILING_USD", "1.25")
     monkeypatch.setenv("AHOS_TTS_COST_CEILING_USD", "0.75")
     config = ProductionProviderConfig.from_environment()

@@ -8,12 +8,14 @@ from pathlib import Path
 from typing import Mapping
 
 from .age_voice_policy import AgeVoicePolicy, AgeVoicePolicyError
+from .infant_vocalization_library import InfantVocalizationLibrary, VALID_CUES
 from .kurmanji_tts import (
     KurdishTTSConfig,
     KurdishTTSExecutionApproval,
     KurdishTTSProvider,
 )
 from .runpod_chatterbox import RunPodChatterboxConfig, RunPodChatterboxProvider
+from .runpod_openvoice import RunPodOpenVoiceConfig, RunPodOpenVoiceProvider
 from .runpod_ltx2 import PaidExecutionApproval, RunPodLTX2Config, RunPodLTX2Provider
 from .studio_approval import _atomic_write, _read_object
 from .studio_executor import StageHandler, StageResult
@@ -28,6 +30,7 @@ class StudioProviderConfigurationError(RuntimeError):
 class ProductionProviderConfig:
     ltx2_endpoint_id: str
     chatterbox_endpoint_id: str
+    voice_conversion_endpoint_id: str
     runpod_api_key_env: str = "RUNPOD_API_KEY"
     kurmanji_api_key_env: str = "KURDISH_TTS_API_KEY"
     render_cost_ceiling_usd: float = 0.0
@@ -48,6 +51,7 @@ class ProductionProviderConfig:
         return cls(
             ltx2_endpoint_id=os.getenv("RUNPOD_LTX2_ENDPOINT_ID", "").strip(),
             chatterbox_endpoint_id=os.getenv("RUNPOD_CHATTERBOX_ENDPOINT_ID", "").strip(),
+            voice_conversion_endpoint_id=os.getenv("RUNPOD_OPENVOICE_ENDPOINT_ID", "").strip(),
             runpod_api_key_env=os.getenv("AHOS_RUNPOD_API_KEY_ENV", "RUNPOD_API_KEY").strip(),
             kurmanji_api_key_env=os.getenv("AHOS_KURMANJI_API_KEY_ENV", "KURDISH_TTS_API_KEY").strip(),
             render_cost_ceiling_usd=money("AHOS_RENDER_COST_CEILING_USD"),
@@ -60,6 +64,8 @@ class ProductionProviderConfig:
             missing.append("RUNPOD_LTX2_ENDPOINT_ID")
         if not self.chatterbox_endpoint_id:
             missing.append("RUNPOD_CHATTERBOX_ENDPOINT_ID")
+        if not self.voice_conversion_endpoint_id:
+            missing.append("RUNPOD_OPENVOICE_ENDPOINT_ID")
         if not os.getenv(self.runpod_api_key_env, "").strip():
             missing.append(self.runpod_api_key_env)
         if not os.getenv(self.kurmanji_api_key_env, "").strip():
@@ -77,6 +83,7 @@ class ProductionProviderConfig:
         return {
             "ltx2_endpoint_present": bool(self.ltx2_endpoint_id),
             "chatterbox_endpoint_present": bool(self.chatterbox_endpoint_id),
+            "voice_conversion_endpoint_present": bool(self.voice_conversion_endpoint_id),
             "runpod_api_key_present": bool(os.getenv(self.runpod_api_key_env, "").strip()),
             "kurmanji_api_key_present": bool(os.getenv(self.kurmanji_api_key_env, "").strip()),
             "render_cost_ceiling_usd": self.render_cost_ceiling_usd,
@@ -133,6 +140,7 @@ def build_production_handlers(
     ltx2: RunPodLTX2Provider | None = None,
     chatterbox: RunPodChatterboxProvider | None = None,
     kurmanji: KurdishTTSProvider | None = None,
+    voice_converter: RunPodOpenVoiceProvider | None = None,
 ) -> tuple[dict[str, StageHandler], dict[str, float]]:
     """Bind real paid providers to the first two executor stages.
 
@@ -151,6 +159,11 @@ def build_production_handlers(
     ))
     kurmanji = kurmanji or KurdishTTSProvider(KurdishTTSConfig(
         api_key_env=config.kurmanji_api_key_env, request_timeout_seconds=300.0,
+    ))
+    voice_converter = voice_converter or RunPodOpenVoiceProvider(RunPodOpenVoiceConfig(
+        endpoint_id=config.voice_conversion_endpoint_id,
+        api_key_env=config.runpod_api_key_env,
+        request_timeout_seconds=900.0,
     ))
 
     def render(root: Path, ledger: Mapping[str, object]) -> StageResult:
@@ -214,25 +227,15 @@ def build_production_handlers(
         artifacts: list[str] = []
         paid = _paid_approval(ledger)
         kurdish_approval = KurdishTTSExecutionApproval(True, True, True, True)
+        infant_library = InfantVocalizationLibrary(root)
         for raw in raw_units:
             if not isinstance(raw, Mapping):
                 raise StudioProviderConfigurationError("localization unit must be an object")
-            text = str(raw.get("localized_text") or "").strip()
-            if not text:
-                raise StudioProviderConfigurationError(
-                    f"translation is missing: {raw.get('unit_id')}"
-                )
             character_id = str(raw.get("speaker_character_id") or "")
             voice = voices.get(character_id)
             if not isinstance(voice, Mapping):
                 raise StudioProviderConfigurationError(f"voice casting missing: {character_id}")
             language = str(raw.get("target_language") or "")
-            voice_ids = voice.get("voice_ids")
-            if not isinstance(voice_ids, Mapping) or not str(voice_ids.get(language) or "").strip():
-                raise StudioProviderConfigurationError(
-                    f"approved {language} voice_id missing for {character_id}"
-                )
-            voice_id = str(voice_ids[language])
             raw_policy = voice.get("age_voice_policy")
             if not isinstance(raw_policy, Mapping):
                 raise StudioProviderConfigurationError(
@@ -256,34 +259,82 @@ def build_production_handlers(
                 )
                 if policy.character_id != character_id:
                     raise AgeVoicePolicyError("character/policy identity mismatch")
-                policy.validate_text(text)
             except (KeyError, TypeError, ValueError, AgeVoicePolicyError) as exc:
                 raise StudioProviderConfigurationError(
                     f"age voice policy rejected {character_id}: {exc}"
                 ) from exc
-            if language == "ku-latn":
-                audio = kurmanji.synthesize(text=text, voice_id=voice_id,
-                                             approval=kurdish_approval).body
-                provider_id = kurmanji.provider_id
-            else:
-                reference_uri = str(voice.get("reference_audio_uri") or "")
-                reference = _local_file(root, reference_uri, label="voice reference")
-                encoded = base64.b64encode(reference.read_bytes()).decode("ascii")
-                audio = chatterbox.synthesize(text=text, language_id=language,
-                                               voice_id=voice_id,
-                                               reference_audio_base64=encoded,
-                                               approval=paid,
-                                               exaggeration=policy.exaggeration,
-                                               cfg_weight=policy.cfg_weight,
-                                               temperature=policy.temperature)
-                provider_id = chatterbox.provider_id
             safe_id = str(raw.get("unit_id") or "unit").replace(":", "_").replace("/", "_")
             target = output_dir / f"{safe_id}.wav"
+            if policy.speech_mode == "infant_vocalization":
+                cue = str(raw.get("vocalization_cue") or "").strip().lower()
+                if cue not in VALID_CUES:
+                    intent = str(raw.get("intent") or "").lower()
+                    cue = (
+                        "tiny_laugh" if any(word in intent for word in ("happy", "laugh", "play", "joy"))
+                        else "gentle_cry" if any(word in intent for word in ("cry", "hurt", "sad"))
+                        else "soft_fuss" if any(word in intent for word in ("fuss", "worry", "uneasy"))
+                        else "sleepy_breath" if any(word in intent for word in ("sleep", "tired"))
+                        else "coo"
+                    )
+                selected = infant_library.materialize(character_id, cue, target)
+                audio = target.read_bytes()
+                provider_id = "canonical-infant-vocalization-library"
+                provider_chain = [provider_id]
+                identity_evidence = selected.sha256
+            else:
+                text = str(raw.get("localized_text") or "").strip()
+                if not text:
+                    raise StudioProviderConfigurationError(
+                        f"translation is missing: {raw.get('unit_id')}"
+                    )
+                try:
+                    policy.validate_text(text)
+                except AgeVoicePolicyError as exc:
+                    raise StudioProviderConfigurationError(
+                        f"age voice policy rejected {character_id}: {exc}"
+                    ) from exc
+                voice_ids = voice.get("voice_ids")
+                if not isinstance(voice_ids, Mapping) or not str(voice_ids.get(language) or "").strip():
+                    raise StudioProviderConfigurationError(
+                        f"approved {language} voice_id missing for {character_id}"
+                    )
+                voice_id = str(voice_ids[language])
+                reference_uri = str(voice.get("reference_audio_uri") or "")
+                reference = _local_file(root, reference_uri, label="voice reference")
+                reference_audio = reference.read_bytes()
+                encoded = base64.b64encode(reference_audio).decode("ascii")
+                if language == "ku-latn":
+                    source = kurmanji.synthesize(
+                        text=text, voice_id=voice_id, approval=kurdish_approval
+                    ).body
+                    audio = voice_converter.convert(
+                        source_audio=source,
+                        target_reference_audio=reference_audio,
+                        character_id=character_id,
+                        approval=paid,
+                    )
+                    provider_id = voice_converter.provider_id
+                    provider_chain = [kurmanji.provider_id, voice_converter.provider_id]
+                    identity_evidence = str(voice.get("reference_sha256") or "")
+                else:
+                    audio = chatterbox.synthesize(text=text, language_id=language,
+                                                   voice_id=voice_id,
+                                                   reference_audio_base64=encoded,
+                                                   approval=paid,
+                                                   exaggeration=policy.exaggeration,
+                                                   cfg_weight=policy.cfg_weight,
+                                                   temperature=policy.temperature)
+                    provider_id = chatterbox.provider_id
+                    provider_chain = [provider_id]
+                    identity_evidence = str(voice.get("reference_sha256") or "")
             target.write_bytes(audio)
             relative = target.relative_to(root).as_posix()
             artifacts.append(relative)
             outputs.append({"unit_id": raw.get("unit_id"), "language": language,
-                            "provider_id": provider_id, "path": relative})
+                            "provider_id": provider_id,
+                            "provider_chain": provider_chain,
+                            "identity_evidence": identity_evidence,
+                            "path": relative})
         evidence_path = output_dir / "tts-evidence.json"
         _atomic_write(evidence_path, {"schema": "ahos.tts-execution-evidence.v1",
                                       "episode_id": ledger["episode_id"], "outputs": outputs})
