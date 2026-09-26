@@ -1,4 +1,7 @@
 from pathlib import Path
+import math
+import struct
+import wave
 
 import pytest
 
@@ -46,3 +49,32 @@ def test_infant_generation_is_rejected(tmp_path):
     lab.prepare(plan(tmp_path / "plan.json"))
     with pytest.raises(VoiceCandidateLabError, match="vocalization library"):
         lab.generate("ramin", FakeProvider())
+
+
+def write_wav(path: Path, amplitude: int) -> None:
+    sample_rate = 16_000
+    samples = [int(amplitude * math.sin(2 * math.pi * 220 * i / sample_rate)) for i in range(sample_rate)]
+    with wave.open(str(path), "wb") as wav:
+        wav.setnchannels(1)
+        wav.setsampwidth(2)
+        wav.setframerate(sample_rate)
+        wav.writeframes(struct.pack(f"<{len(samples)}h", *samples))
+
+
+def test_auto_select_records_delegated_policy_and_technical_ranking(tmp_path):
+    lab = VoiceCandidateLab(tmp_path / "lab")
+    manifest = lab.prepare(plan(tmp_path / "plan.json"), candidates_per_character=2)
+    aden = manifest["characters"][0]
+    audio_dir = lab.root / "audio" / "aden"
+    audio_dir.mkdir(parents=True)
+    for candidate, amplitude in zip(aden["candidates"], (4000, 20000), strict=True):
+        target = audio_dir / f'{candidate["candidate_id"]}.wav'
+        write_wav(target, amplitude)
+        candidate.update({"status": "generated", "audio_path": target.relative_to(lab.root).as_posix(), "sha256": __import__("hashlib").sha256(target.read_bytes()).hexdigest()})
+    aden["status"] = "awaiting_owner_approval"
+    lab.manifest_path.write_text(__import__("json").dumps(manifest), encoding="utf-8")
+    record = lab.auto_select("aden")
+    assert record["owner_approved"] is True
+    assert record["owner_selection_delegated"] is True
+    assert record["human_character_fit_approved"] is False
+    assert record["selection"]["technical_qa_passed"] is True
