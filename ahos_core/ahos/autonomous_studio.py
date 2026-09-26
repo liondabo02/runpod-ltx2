@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Callable, Sequence
 
 from .audio_pipeline import DEFAULT_LANGUAGE_POLICIES
+from .age_voice_policy import core_age_voice_policy
 from .autonomous_localization import AutonomousLocalizationPipeline
 from .autonomous_story_room import (
     AutonomousWritersRoom,
@@ -150,7 +151,11 @@ def run_autonomous_studio(
         "episode_id": episode.episode_id,
         "execution_enabled": False,
         "characters": [
-            asdict(voice_by_character[character_id])
+            {
+                **asdict(voice_by_character[character_id]),
+                "age_voice_policy": core_age_voice_policy(character_id).to_payload(),
+                "approval_status": "awaiting_owner_voice_approval",
+            }
             for character_id in request.cast_ids
         ],
     }

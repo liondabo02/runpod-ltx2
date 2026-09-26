@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping
 
+from .age_voice_policy import AgeVoicePolicy, AgeVoicePolicyError
 from .kurmanji_tts import (
     KurdishTTSConfig,
     KurdishTTSExecutionApproval,
@@ -232,6 +233,34 @@ def build_production_handlers(
                     f"approved {language} voice_id missing for {character_id}"
                 )
             voice_id = str(voice_ids[language])
+            raw_policy = voice.get("age_voice_policy")
+            if not isinstance(raw_policy, Mapping):
+                raise StudioProviderConfigurationError(
+                    f"approved age voice policy missing for {character_id}"
+                )
+            try:
+                policy = AgeVoicePolicy(
+                    character_id=str(raw_policy["character_id"]),
+                    age_stage=str(raw_policy["age_stage"]),
+                    speech_mode=str(raw_policy["speech_mode"]),
+                    sentence_tts_allowed=bool(raw_policy["sentence_tts_allowed"]),
+                    maximum_words_per_utterance=(
+                        int(raw_policy["maximum_words_per_utterance"])
+                        if raw_policy.get("maximum_words_per_utterance") is not None else None
+                    ),
+                    synthetic_reference_required=bool(raw_policy["synthetic_reference_required"]),
+                    exaggeration=float(raw_policy["exaggeration"]),
+                    cfg_weight=float(raw_policy["cfg_weight"]),
+                    temperature=float(raw_policy["temperature"]),
+                    direction=str(raw_policy["direction"]),
+                )
+                if policy.character_id != character_id:
+                    raise AgeVoicePolicyError("character/policy identity mismatch")
+                policy.validate_text(text)
+            except (KeyError, TypeError, ValueError, AgeVoicePolicyError) as exc:
+                raise StudioProviderConfigurationError(
+                    f"age voice policy rejected {character_id}: {exc}"
+                ) from exc
             if language == "ku-latn":
                 audio = kurmanji.synthesize(text=text, voice_id=voice_id,
                                              approval=kurdish_approval).body
@@ -243,7 +272,10 @@ def build_production_handlers(
                 audio = chatterbox.synthesize(text=text, language_id=language,
                                                voice_id=voice_id,
                                                reference_audio_base64=encoded,
-                                               approval=paid)
+                                               approval=paid,
+                                               exaggeration=policy.exaggeration,
+                                               cfg_weight=policy.cfg_weight,
+                                               temperature=policy.temperature)
                 provider_id = chatterbox.provider_id
             safe_id = str(raw.get("unit_id") or "unit").replace(":", "_").replace("/", "_")
             target = output_dir / f"{safe_id}.wav"

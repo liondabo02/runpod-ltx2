@@ -74,6 +74,16 @@ def test_autonomous_studio_prepares_every_department_for_one_owner_gate(tmp_path
     )
     assert localization["status"] == "machine_qa_approved"
     assert all(unit["localized_text"] for unit in localization["units"])
+    voice = json.loads(
+        (tmp_path / "studio" / "artifacts" / "voice-casting.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    aden_voice = next(item for item in voice["characters"] if item["character_id"] == "aden")
+    kaan_voice = next(item for item in voice["characters"] if item["character_id"] == "kaan")
+    assert aden_voice["age_voice_policy"]["age_stage"] == "preschool"
+    assert kaan_voice["age_voice_policy"]["maximum_words_per_utterance"] == 8
+    assert aden_voice["approval_status"] == "awaiting_owner_voice_approval"
     completed = {
         item["department"]
         for item in approval["evidence"]["department_statuses"]
