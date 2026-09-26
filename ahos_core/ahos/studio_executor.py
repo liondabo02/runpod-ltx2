@@ -270,16 +270,31 @@ def execution_status(studio_directory: str | Path) -> dict[str, object]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Inspect or initialize studio execution")
+    parser = argparse.ArgumentParser(description="Inspect or run owner-approved studio execution")
     parser.add_argument("--studio-dir", required=True)
-    parser.add_argument("command", choices=("status", "initialize"))
+    parser.add_argument("command", choices=("status", "provider-status", "initialize", "run-next"))
     args = parser.parse_args()
     if args.command == "status":
         result = execution_status(args.studio_dir)
+    elif args.command == "provider-status":
+        from .studio_provider_handlers import ProductionProviderConfig
+        result = ProductionProviderConfig.from_environment().status()
     else:
-        # Initialization performs validation and reservation only. Actual
-        # execution requires the service's configured provider handlers.
-        result = StudioExecutor(args.studio_dir, {}).initialize()
+        if args.command == "initialize":
+            # Initialization performs validation and reservation only.
+            result = StudioExecutor(args.studio_dir, {}).initialize()
+        else:
+            from .studio_provider_handlers import (
+                ProductionProviderConfig,
+                build_production_handlers,
+            )
+            config = ProductionProviderConfig.from_environment()
+            handlers, estimates = build_production_handlers(config)
+            executor = StudioExecutor(args.studio_dir, handlers,
+                                      stage_cost_estimates=estimates)
+            if executor.store.read() is None:
+                executor.initialize()
+            result = executor.run_once()
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0
 
