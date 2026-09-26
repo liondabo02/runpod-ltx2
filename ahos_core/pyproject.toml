@@ -21,6 +21,7 @@ ahos-studio-readiness = "ahos.studio_readiness:main"
 ahos-coding-supervisor = "ahos.coding_supervisor:main"
 ahos-coding-dispatch = "ahos.work_order_coding_bridge:main"
 ahos-studio-executor = "ahos.studio_executor:main"
+ahos-voice-candidate-lab = "ahos.voice_candidate_lab:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
