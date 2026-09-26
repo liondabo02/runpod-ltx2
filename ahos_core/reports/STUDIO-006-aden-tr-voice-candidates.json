@@ -1,0 +1,35 @@
+{
+  "studio_step": "STUDIO-006 Aden Turkish voice candidate audition",
+  "status": "REJECTED_CHARACTER_FIT",
+  "character_id": "aden",
+  "character_requirements": {
+    "age_years": 3,
+    "gender_presentation": "girl",
+    "voice_target": "preschool-age child voice; bright, playful, natural, not adult or falsetto"
+  },
+  "canonical_binding_created": false,
+  "human_selection_required": false,
+  "rejection_reason": "All three trial candidates were derived from adult Kokoro voices and are therefore unsuitable for a 3-year-old girl character. They must never be canonically enrolled for Aden.",
+  "candidates": {
+    "A": {
+      "status": "rejected",
+      "reason": "adult-source voice"
+    },
+    "B": {
+      "status": "rejected",
+      "reason": "adult female-source voice"
+    },
+    "C": {
+      "status": "rejected",
+      "reason": "adult male-source voice"
+    }
+  },
+  "corrective_plan": {
+    "voice_design_source": "Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+    "design_language": "English",
+    "design_instruction": "Fictional preschool-age girl, about three years old, bright, playful, warm, innocent, short natural phrases, clear articulation for children's animation, no adult timbre, no falsetto imitation, no resemblance to a real person.",
+    "turkish_render_path": "Generate a fully synthetic child-like reference voice, then use Chatterbox Multilingual V3 cross-language voice cloning for Turkish.",
+    "reason": "Qwen3-TTS VoiceDesign can create voices from natural-language descriptions but its official VoiceDesign language list does not include Turkish; Chatterbox V3 supports Turkish and cross-language cloning."
+  },
+  "paid_retry_required": false
+}

@@ -1,0 +1,48 @@
+{
+  "schema": "ahos.research-benchmark.v1",
+  "id": "RESEARCH-008-DEEPSEEK-HARNESS",
+  "evaluated_at": "2026-09-20T13:56:00Z",
+  "candidate": {
+    "repository": "deepseek-ai/deepseek-harness",
+    "commit": "ddefc45fbc7f8e46dd73185e68295696d1297887",
+    "version": "0.1.6-alpha.2",
+    "license": "MIT",
+    "maturity": "developer-preview"
+  },
+  "execution": {
+    "environment": "ephemeral GitHub-hosted ubuntu-24.04 runner",
+    "workflow_run_id": 35514914411,
+    "workflow_run_url": "https://github.com/liondabo02/runpod-ltx2/actions/runs/35514914411",
+    "conclusion": "success",
+    "repository_permissions": "contents: read",
+    "secrets_exposed": false,
+    "api_keys_present": false,
+    "telemetry_disabled": true,
+    "install_lifecycle_scripts_executed": false,
+    "paid_calls": 0,
+    "production_changes": 0
+  },
+  "checks": [
+    "pinned upstream commit verified",
+    "MIT license verified",
+    "upstream unaudited/developer-preview safety declarations verified",
+    "frozen lockfile installation completed with lifecycle scripts disabled",
+    "upstream approval-policy tests passed"
+  ],
+  "decision": {
+    "verdict": "sandbox_candidate_only",
+    "suitable_roles": [
+      "software-factory benchmark worker",
+      "plugin architecture reference",
+      "agent-team comparison candidate"
+    ],
+    "prohibited_roles": [
+      "AHOS owner",
+      "policy authority",
+      "production controller",
+      "credential holder"
+    ],
+    "production_integration_approved": false,
+    "next_gate": "separate owner approval after comparative OpenHands/Miniverse benchmark and security review"
+  }
+}

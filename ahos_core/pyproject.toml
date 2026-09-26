@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ahos-core"
+version = "0.1.0"
+description = "Safety-first autonomous holding operating system core"
+requires-python = ">=3.12,<3.15"
+
+[project.optional-dependencies]
+test = ["pytest>=9.1,<10"]
+
+[project.scripts]
+ahos-studio-rehearsal = "ahos.production_rehearsal:main"
+ahos-story-room = "ahos.autonomous_story_room:main"
+ahos-autonomous-studio = "ahos.autonomous_studio:main"
+ahos-studio-approval = "ahos.studio_approval:main"
+ahos-studio-preflight = "ahos.studio_preflight:main"
+ahos-studio-readiness = "ahos.studio_readiness:main"
+ahos-coding-supervisor = "ahos.coding_supervisor:main"
+ahos-coding-dispatch = "ahos.work_order_coding_bridge:main"
+ahos-studio-executor = "ahos.studio_executor:main"
+ahos-voice-candidate-lab = "ahos.voice_candidate_lab:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ahos*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

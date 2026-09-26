@@ -1,0 +1,23 @@
+{
+  "profile": "public-read-only",
+  "sandbox_required": true,
+  "allowed_channels": ["web", "rss", "youtube", "public_github", "v2ex"],
+  "blocked_channels": [
+    "twitter",
+    "reddit",
+    "facebook",
+    "instagram",
+    "xiaohongshu",
+    "linkedin_authenticated",
+    "xueqiu_authenticated",
+    "boss",
+    "private_github"
+  ],
+  "allow_browser_cookies": false,
+  "allow_credentials": false,
+  "allow_external_writes": false,
+  "allow_proxy_purchase": false,
+  "allow_system_install": false,
+  "allowed_install_mode": "dry-run",
+  "promotion_to_production": false
+}

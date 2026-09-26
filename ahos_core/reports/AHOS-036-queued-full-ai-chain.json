@@ -1,0 +1,88 @@
+{
+  "mission_id": "AHOS-036-queued-full-ai",
+  "queue_status": "completed",
+  "attempts": 1,
+  "ai_manager_plan": {
+    "steps": [
+      {
+        "step_id": "research-brief",
+        "title": "Research local automation prototype options and write RESEARCH_BRIEF.md",
+        "department": "research",
+        "required_capabilities": [
+          "research"
+        ],
+        "depends_on": [],
+        "estimated_cost_usd": 0.0,
+        "external_side_effect": false,
+        "destructive": false,
+        "touches_secrets": false,
+        "requires_owner_approval": false
+      },
+      {
+        "step_id": "prototype-plan",
+        "title": "Use RESEARCH_BRIEF.md to create the local automation prototype plan in PROTOTYPE_PLAN.md",
+        "department": "software",
+        "required_capabilities": [
+          "automation"
+        ],
+        "depends_on": [
+          "research-brief"
+        ],
+        "estimated_cost_usd": 0.0,
+        "external_side_effect": false,
+        "destructive": false,
+        "touches_secrets": false,
+        "requires_owner_approval": false
+      }
+    ]
+  },
+  "queue_result": {
+    "mission_id": "AHOS-036-queued-full-ai",
+    "objective": "Create a tiny local-only automation prototype plan.\nThe AI manager must choose exactly two steps: research first, software second.\nThe research worker must produce RESEARCH_BRIEF.md.\nThe software worker must depend on and use the research result, then produce\nPROTOTYPE_PLAN.md. No customer contact, publishing, deployment, purchases, payments,\ncredential access, destructive actions, or external business systems.",
+    "manager_id": "mgr-software-01",
+    "status": "completed",
+    "reason": "all mission steps completed and passed QA",
+    "steps": [
+      {
+        "step_id": "research-brief",
+        "department": "research",
+        "worker_id": "research-01",
+        "stage": "completed",
+        "worker_summary": "Added the single required RESEARCH_BRIEF.md artifact with three safe local-only automation constraints.\n\nVerified downstream research handoff:\n# Local-Only Automation Prototype — Research Brief\n\n1. **Use a small Python 3 standard-library CLI:** Prefer a manually invoked, deterministic script over a service, daemon, container, or hosted integration; it must perform no network requests and require no credentials.\n\n2. **Keep I/O inside an explicit workspace allowlist:** Read only declared local inputs and write only a new result file beneath the workspace; reject path traversal and never delete, overwrite source inputs, publish, deploy, purchase, send, or modify external systems.\n\n3. **Fail closed and remain reversible:** Default to dry-run, validate inputs before processing, enforce bounded execution, emit clear success/error status, and make the only committed output disposable so each run can be inspected or removed locally.",
+        "qa_summary": "verified RESEARCH_BRIEF.md",
+        "reason": "QA passed"
+      },
+      {
+        "step_id": "prototype-plan",
+        "department": "software",
+        "worker_id": "dev-01",
+        "stage": "completed",
+        "worker_summary": "Added one markdown artifact describing the safe local automation prototype implementation and verification plan.",
+        "qa_summary": "verified PROTOTYPE_PLAN.md",
+        "reason": "QA passed"
+      }
+    ]
+  },
+  "research_to_developer_handoff_verified": true,
+  "research_artifact": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\control_plane_v2\\runtime\\workspaces\\ahos-live-queued-company\\AHOS-036-queued-full-ai_research-brief\\RESEARCH_BRIEF.md",
+  "developer_artifact": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\control_plane_v2\\runtime\\workspaces\\ahos-live-queued-company\\AHOS-036-queued-full-ai_prototype-plan\\PROTOTYPE_PLAN.md",
+  "reported_costs": [
+    {
+      "actor": "manager",
+      "estimated_cost_usd": 0.00683334
+    },
+    {
+      "actor": "researcher",
+      "estimated_cost_usd": 0.013668019999999998
+    },
+    {
+      "actor": "developer",
+      "estimated_cost_usd": 0.008985739999999999
+    }
+  ],
+  "reported_estimated_total_cost_usd": 0.029487099999999995,
+  "external_publish_actions": 0,
+  "external_message_actions": 0,
+  "payment_actions": 0,
+  "deployment_actions": 0
+}
