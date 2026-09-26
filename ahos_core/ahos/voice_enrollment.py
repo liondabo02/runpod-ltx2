@@ -193,9 +193,9 @@ class VoiceEnrollmentStore:
             raise VoiceReferenceRightsError(
                 "recorded-human references require explicit speaker consent"
             )
-        if not human_similarity_approved:
+        if reference_origin == "recorded-human" and not human_similarity_approved:
             raise VoiceEnrollmentApprovalError(
-                "human speaker-similarity approval is required"
+                "recorded-human references require human speaker-similarity approval"
             )
         if not owner_approved:
             raise VoiceEnrollmentApprovalError(

@@ -81,7 +81,27 @@ def test_recorded_human_reference_requires_speaker_consent(tmp_path):
         )
 
 
-def test_human_similarity_approval_is_required(tmp_path):
+def test_synthetic_reference_does_not_claim_human_similarity_approval(tmp_path):
+    _, _, enrollments = stores(tmp_path)
+
+    enrollment, _ = enrollments.enroll(
+        character_id="aden",
+        language="tr",
+        provider_id="chatterbox-multilingual",
+        voice_id="aden-tr-v1",
+        speaking_style="warm",
+        reference_audio_uri="private://voices/aden/tr/reference.wav",
+        reference_sha256=SHA,
+        reference_origin="synthetic",
+        rights_confirmed=True,
+        speaker_consent_confirmed=False,
+        human_similarity_approved=False,
+        owner_approved=True,
+    )
+    assert enrollment.human_similarity_approved is False
+
+
+def test_recorded_human_reference_requires_similarity_approval(tmp_path):
     _, _, enrollments = stores(tmp_path)
 
     with pytest.raises(VoiceEnrollmentApprovalError):
@@ -93,9 +113,9 @@ def test_human_similarity_approval_is_required(tmp_path):
             speaking_style="warm",
             reference_audio_uri="private://voices/aden/tr/reference.wav",
             reference_sha256=SHA,
-            reference_origin="synthetic",
+            reference_origin="recorded-human",
             rights_confirmed=True,
-            speaker_consent_confirmed=False,
+            speaker_consent_confirmed=True,
             human_similarity_approved=False,
             owner_approved=True,
         )
