@@ -25,3 +25,17 @@ with an explicit builder argv and test-executable allowlist. This is intentional
 not generated automatically because the builder can invoke an external or paid
 agent. Repository merge, push, deployment, publishing, credentials, purchases,
 and paid media generation remain owner-gated.
+
+For the built-in free OpenRouter worker, keep `OPENROUTER_API_KEY` in the
+current-user environment and generate the configuration with:
+
+```powershell
+.\ahos_core\scripts\Configure-AHOS-CodingWorker.ps1 `
+  -RuntimeDir ".\runtime" `
+  -PythonExe "C:\path\to\.venv\Scripts\python.exe" `
+  -Model "openrouter/free"
+```
+
+The builder sends only explicitly allowed source paths as context, accepts
+strict full-file JSON replacements, rejects traversal, `.git`, symlinks and
+out-of-scope writes, and leaves integration at the owner approval gate.
