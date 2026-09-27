@@ -146,3 +146,15 @@ def test_enqueue_cli_accepts_windows_utf8_bom(tmp_path: Path, monkeypatch) -> No
 
     assert main() == 0
     assert CodingSupervisorStore(queue).get("WINDOWS-BOM").status is CodingTaskStatus.QUEUED
+
+
+def test_run_once_cli_accepts_builder_argv_with_nested_options(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(sys, "argv", [
+        "ahos.coding_supervisor", "--queue", str(tmp_path / "queue.json"), "run-once",
+        "--workspace", str(tmp_path / "workers"), "--worker-id", "dev-01",
+        "--builder-command-json",
+        json.dumps([sys.executable, "-m", "builder", "--model", "openrouter/free"]),
+        "--allow-test-executable", sys.executable,
+    ])
+
+    assert main() == 0

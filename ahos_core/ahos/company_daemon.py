@@ -51,7 +51,9 @@ def _coding_step(runtime_dir: Path, config: Mapping[str, object]):
         sys.executable, "-m", "ahos.coding_supervisor",
         "--queue", str(queue), "run-once",
         "--workspace", str(workspace), "--worker-id", worker_id,
-        "--builder-command", *builder,
+        # Encode the nested argv as one value. Builder options such as
+        # ``--model`` must not be parsed as coding-supervisor options.
+        "--builder-command-json", json.dumps(builder),
     ]
     for executable in allowed:
         command.extend(("--allow-test-executable", executable))

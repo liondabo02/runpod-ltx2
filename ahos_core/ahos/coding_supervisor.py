@@ -367,7 +367,12 @@ def main() -> int:
     run = sub.add_parser("run-once")
     run.add_argument("--workspace", required=True)
     run.add_argument("--worker-id", required=True)
-    run.add_argument("--builder-command", nargs="+", required=True)
+    builder_group = run.add_mutually_exclusive_group(required=True)
+    builder_group.add_argument("--builder-command", nargs="+")
+    builder_group.add_argument(
+        "--builder-command-json",
+        help="Builder argv encoded as a JSON string; preserves nested option arguments",
+    )
     run.add_argument("--allow-test-executable", action="append", required=True)
     args = parser.parse_args()
     store = CodingSupervisorStore(args.queue)
@@ -390,11 +395,19 @@ def main() -> int:
         print(json.dumps(asdict(record) | {"status": record.status.value}, indent=2))
         return 0
 
+    if args.builder_command_json is not None:
+        builder_command = json.loads(args.builder_command_json)
+        if (not isinstance(builder_command, list) or not builder_command or
+                not all(isinstance(value, str) and value for value in builder_command)):
+            raise ValueError("builder-command-json must be a non-empty JSON string array")
+    else:
+        builder_command = args.builder_command
+
     class _BuilderResult:
         success = True
 
     def builder(prompt: str, worktree: Path) -> _BuilderResult:
-        completed = subprocess.run(args.builder_command, cwd=worktree, input=prompt,
+        completed = subprocess.run(builder_command, cwd=worktree, input=prompt,
                                    text=True, check=False)
         if completed.returncode:
             raise RuntimeError(f"builder exited with {completed.returncode}")
