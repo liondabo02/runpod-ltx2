@@ -245,7 +245,10 @@ def test_panel_creates_natural_language_coding_task_with_safe_scope(tmp_path: Pa
     assert "coding task queued" in message
     task = CodingSupervisorStore(state.coding_queue_path).all()[0]
     assert task.title == "Add a health indicator"
-    assert task.allowed_paths == ("ahos_core",)
+    assert task.allowed_paths == (
+        "ahos_core/ahos", "ahos_core/tests", "ahos_core/docs",
+        "ahos_core/README.md", "ahos_core/pyproject.toml",
+    )
     assert task.test_commands[0][1:] == ("-m", "pytest", "-q", "ahos_core/tests")
 
 

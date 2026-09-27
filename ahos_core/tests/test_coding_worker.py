@@ -189,6 +189,41 @@ def test_worker_uses_scoped_checkout_first_on_guarded_platform(tmp_path: Path) -
     assert result.status is CodingWorkerStatus.WAITING_OWNER_APPROVAL
 
 
+def test_guarded_checkout_excludes_unapproved_administrative_scripts(tmp_path: Path) -> None:
+    repository = tmp_path / "repo"
+    repository.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=repository, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=repository, check=True)
+    subprocess.run(["git", "config", "user.name", "AHOS Test"], cwd=repository, check=True)
+    (repository / "ahos_core" / "ahos").mkdir(parents=True)
+    (repository / "ahos_core" / "tests").mkdir()
+    (repository / "ahos_core" / "scripts").mkdir()
+    (repository / "ahos_core" / "ahos" / "app.py").write_text("VALUE = 1\n", encoding="utf-8")
+    (repository / "ahos_core" / "tests" / "test_app.py").write_text("# test\n", encoding="utf-8")
+    (repository / "ahos_core" / "scripts" / "Install.ps1").write_text("admin\n", encoding="utf-8")
+    subprocess.run(["git", "add", "."], cwd=repository, check=True)
+    subprocess.run(["git", "commit", "-qm", "initial"], cwd=repository, check=True)
+    item = CodingBacklogItem(
+        task_id="SCOPED-CORE", title="safe core edit", repository=repository,
+        allowed_paths=("ahos_core/ahos", "ahos_core/tests"),
+    )
+
+    class GuardedPlatformWorker(AutonomousCodingWorker):
+        @staticmethod
+        def _prefer_scoped_checkout() -> bool:
+            return True
+
+    def builder(_prompt: str, worktree: Path):
+        assert not (worktree / "ahos_core" / "scripts" / "Install.ps1").exists()
+        (worktree / "ahos_core" / "ahos" / "app.py").write_text("VALUE = 2\n", encoding="utf-8")
+
+    result = GuardedPlatformWorker(
+        runner=builder, workspace_root=tmp_path / "workers",
+    ).run(item, "dev-01")
+
+    assert result.status is CodingWorkerStatus.WAITING_OWNER_APPROVAL
+
+
 def test_backlog_scope_rejects_parent_traversal(tmp_path: Path) -> None:
     try:
         CodingBacklogItem(

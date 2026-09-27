@@ -350,7 +350,16 @@ class ControlCenterState:
         if len(objective) > 4000:
             raise ValueError("task objective is too long")
         scopes = {
-            "core": ("ahos_core",),
+            # Keep Windows worker checkouts away from administrative launcher
+            # scripts that endpoint security may quarantine. Product code,
+            # tests, docs and project metadata remain available to the worker.
+            "core": (
+                "ahos_core/ahos",
+                "ahos_core/tests",
+                "ahos_core/docs",
+                "ahos_core/README.md",
+                "ahos_core/pyproject.toml",
+            ),
             "github": (".github",),
             "docs": ("README.md", "ahos_core/docs"),
         }
