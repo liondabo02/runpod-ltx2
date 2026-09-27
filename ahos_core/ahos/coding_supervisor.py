@@ -362,9 +362,12 @@ class CodingSupervisor:
                 reason="test command rejected by supervisor policy",
             )
         # A separate root per attempt prevents failed attempts from contaminating retries.
+        # The nonce also prevents an abandoned or quarantined Windows checkout
+        # from blocking a later owner-authorized retry whose attempt counter was reset.
+        attempt_name = f"attempt-{claimed.attempts}-{uuid.uuid4().hex[:8]}"
         attempt_worker = AutonomousCodingWorker(
             runner=self.worker.runner,
-            workspace_root=self.worker.workspace_root / claimed.task_id / f"attempt-{claimed.attempts}",
+            workspace_root=self.worker.workspace_root / claimed.task_id / attempt_name,
         )
         try:
             result = attempt_worker.run(claimed.backlog_item(), self.worker_id)

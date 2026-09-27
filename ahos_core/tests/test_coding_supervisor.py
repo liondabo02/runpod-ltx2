@@ -96,6 +96,30 @@ def test_owner_can_explicitly_retry_an_exhausted_task(tmp_path: Path) -> None:
     assert retried.last_error is None
 
 
+def test_owner_retry_uses_a_fresh_workspace_when_old_attempt_remains(tmp_path: Path) -> None:
+    repo = _repo(tmp_path)
+    store = CodingSupervisorStore(tmp_path / "queue.json")
+    store.enqueue(_item(repo), max_attempts=1)
+    first = store.claim("worker")
+    store.finish(first.task_id, "worker", success=False, reason="temporary failure")
+    store.retry("CODE-1")
+    stale = tmp_path / "workers" / "CODE-1" / "attempt-1" / "CODE-1"
+    stale.mkdir(parents=True)
+
+    def builder(_prompt: str, worktree: Path):
+        (worktree / "src" / "app.py").write_text("VALUE = 2\n", encoding="utf-8")
+
+    result = CodingSupervisor(
+        store=store,
+        worker=AutonomousCodingWorker(runner=builder, workspace_root=tmp_path / "workers"),
+        worker_id="worker",
+        test_command_policy=_allow_python,
+    ).run_once()
+
+    assert result.status is CodingTaskStatus.WAITING_OWNER_APPROVAL
+    assert Path(result.worktree) != stale
+
+
 def test_retry_cli_requeues_exhausted_task(tmp_path: Path, monkeypatch) -> None:
     repo = _repo(tmp_path)
     queue = tmp_path / "queue.json"
