@@ -9,6 +9,7 @@ from ahos.coding_worker import (
     AutonomousCodingWorker,
     CodingBacklogItem,
     CodingWorkerStatus,
+    GitCommandError,
 )
 
 
@@ -140,6 +141,29 @@ def test_worker_patch_contains_new_files(tmp_path: Path) -> None:
 
     assert result.status is CodingWorkerStatus.WAITING_OWNER_APPROVAL
     assert result.patch_file and b"ENABLED = True" in result.patch_file.read_bytes()
+
+
+def test_worker_falls_back_to_scoped_checkout_when_full_checkout_fails(tmp_path: Path) -> None:
+    repository = _repository(tmp_path)
+
+    class FullCheckoutFailsOnce(AutonomousCodingWorker):
+        failed = False
+
+        def _git(self, repository: Path, *args: str) -> str:
+            if args[:3] == ("worktree", "add", "--detach") and not self.failed:
+                self.failed = True
+                raise GitCommandError(args, 128, "unable to stat quarantined file")
+            return super()._git(repository, *args)
+
+    def builder(_prompt: str, worktree: Path):
+        (worktree / "src" / "feature.py").write_text("VALUE = 2\n", encoding="utf-8")
+
+    result = FullCheckoutFailsOnce(
+        runner=builder, workspace_root=tmp_path / "workers"
+    ).run(_item(repository), "dev-01")
+
+    assert result.status is CodingWorkerStatus.WAITING_OWNER_APPROVAL
+    assert result.changed_files == ("src/feature.py",)
 
 
 def test_backlog_scope_rejects_parent_traversal(tmp_path: Path) -> None:

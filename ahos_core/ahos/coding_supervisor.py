@@ -270,6 +270,33 @@ class CodingSupervisorStore:
             self._save(records)
             return updated
 
+    def retry(self, task_id: str) -> CodingTaskRecord:
+        """Explicitly requeue one exhausted task without weakening owner gates."""
+        with self._locked():
+            records = self._load()
+            current = records.get(task_id)
+            if current is None:
+                raise KeyError(task_id)
+            if current.status is not CodingTaskStatus.RETRIES_EXHAUSTED:
+                raise ValueError("only a retries_exhausted task can be retried")
+            updated = replace(
+                current,
+                status=CodingTaskStatus.QUEUED,
+                attempts=0,
+                claimed_by=None,
+                lease_expires_at=None,
+                last_error=None,
+                worktree=None,
+                patch_file=None,
+                approval_file=None,
+                evidence_sha256=None,
+                owner_decision_at=None,
+                updated_at=_iso(),
+            )
+            records[task_id] = updated
+            self._save(records)
+            return updated
+
     def all(self) -> tuple[CodingTaskRecord, ...]:
         with self._locked():
             records = self._load()
@@ -364,6 +391,8 @@ def main() -> int:
     enqueue.add_argument("--idempotency-key")
     enqueue.add_argument("--max-attempts", type=int, default=2)
     enqueue.add_argument("--priority", type=int, default=0)
+    retry = sub.add_parser("retry")
+    retry.add_argument("--task-id", required=True)
     run = sub.add_parser("run-once")
     run.add_argument("--workspace", required=True)
     run.add_argument("--worker-id", required=True)
@@ -392,6 +421,10 @@ def main() -> int:
         )
         record = store.enqueue(item, idempotency_key=args.idempotency_key,
                                max_attempts=args.max_attempts, priority=args.priority)
+        print(json.dumps(asdict(record) | {"status": record.status.value}, indent=2))
+        return 0
+    if args.command == "retry":
+        record = store.retry(args.task_id)
         print(json.dumps(asdict(record) | {"status": record.status.value}, indent=2))
         return 0
 

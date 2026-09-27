@@ -82,6 +82,36 @@ def test_bounded_retries_and_policy_is_fail_closed(tmp_path: Path) -> None:
     assert store.get("CODE-1").attempts == 2
 
 
+def test_owner_can_explicitly_retry_an_exhausted_task(tmp_path: Path) -> None:
+    repo = _repo(tmp_path)
+    store = CodingSupervisorStore(tmp_path / "queue.json")
+    store.enqueue(_item(repo), max_attempts=1)
+    claimed = store.claim("worker")
+    store.finish(claimed.task_id, "worker", success=False, reason="temporary failure")
+
+    retried = store.retry("CODE-1")
+
+    assert retried.status is CodingTaskStatus.QUEUED
+    assert retried.attempts == 0
+    assert retried.last_error is None
+
+
+def test_retry_cli_requeues_exhausted_task(tmp_path: Path, monkeypatch) -> None:
+    repo = _repo(tmp_path)
+    queue = tmp_path / "queue.json"
+    store = CodingSupervisorStore(queue)
+    store.enqueue(_item(repo), max_attempts=1)
+    claimed = store.claim("worker")
+    store.finish(claimed.task_id, "worker", success=False, reason="temporary failure")
+    monkeypatch.setattr(sys, "argv", [
+        "ahos.coding_supervisor", "--queue", str(queue), "retry",
+        "--task-id", "CODE-1",
+    ])
+
+    assert main() == 0
+    assert store.get("CODE-1").status is CodingTaskStatus.QUEUED
+
+
 def test_owner_decision_rejects_modified_patch(tmp_path: Path) -> None:
     repo = _repo(tmp_path)
     store = CodingSupervisorStore(tmp_path / "queue.json")

@@ -18,6 +18,19 @@ class CodingWorkerStatus(str, Enum):
     WAITING_OWNER_APPROVAL = "waiting_owner_approval"
 
 
+class GitCommandError(RuntimeError):
+    """Git failure with the diagnostic output preserved for operators."""
+
+    def __init__(self, args: Sequence[str], returncode: int, detail: str) -> None:
+        self.args_argv = tuple(args)
+        self.returncode = returncode
+        self.detail = detail
+        super().__init__(
+            f"git {' '.join(args)} failed ({returncode})"
+            + (f": {detail}" if detail else "")
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class CodingBacklogItem:
     task_id: str
@@ -78,7 +91,7 @@ class AutonomousCodingWorker:
 
         try:
             base_commit = self._git(repository, "rev-parse", item.base_ref).strip()
-            self._git(repository, "worktree", "add", "--detach", str(worktree), base_commit)
+            self._create_worktree(repository, worktree, base_commit, item.allowed_paths)
             prompt = self._prompt(item, worker_id, worktree)
             builder_result = self.runner(prompt, worktree)
             if not bool(getattr(builder_result, "success", True)):
@@ -182,14 +195,59 @@ class AutonomousCodingWorker:
                 tests_run=tuple(tests_run),
                 reason="implementation and tests complete; owner approval required before integration",
             )
-        except (OSError, subprocess.CalledProcessError, ValueError) as exc:
+        except (OSError, subprocess.CalledProcessError, ValueError, GitCommandError) as exc:
             return self._blocked(item, f"coding pipeline failed: {type(exc).__name__}: {exc}", worktree if worktree.exists() else None)
+
+    def _create_worktree(
+        self,
+        repository: Path,
+        worktree: Path,
+        base_commit: str,
+        allowed_paths: Sequence[str],
+    ) -> None:
+        try:
+            self._git(repository, "worktree", "add", "--detach", str(worktree), base_commit)
+            return
+        except GitCommandError as initial_error:
+            # Endpoint-security products on Windows can quarantine an unrelated
+            # PowerShell file while Git is checking out the complete tree. The
+            # failed tree has never reached the builder, so it is safe to remove
+            # and retry with only the owner-approved task scope materialized.
+            subprocess.run(
+                ["git", "worktree", "remove", "--force", str(worktree)],
+                cwd=repository,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if worktree.exists():
+                raise initial_error
+            self._git(
+                repository,
+                "worktree",
+                "add",
+                "--no-checkout",
+                "--detach",
+                str(worktree),
+                base_commit,
+            )
+            patterns: list[str] = []
+            for value in allowed_paths:
+                normalized = value.replace("\\", "/").strip("/")
+                patterns.extend((f"/{normalized}", f"/{normalized}/"))
+            self._git(worktree, "sparse-checkout", "init", "--no-cone")
+            self._git(worktree, "sparse-checkout", "set", "--no-cone", "--", *patterns)
+            self._git(worktree, "reset", "--hard", base_commit)
 
     @staticmethod
     def _git(repository: Path, *args: str) -> str:
-        return subprocess.run(
-            ["git", *args], cwd=repository, capture_output=True, text=True, check=True
-        ).stdout
+        completed = subprocess.run(
+            ["git", *args], cwd=repository, capture_output=True, text=True, check=False
+        )
+        if completed.returncode:
+            detail = (completed.stderr or completed.stdout).strip()[-2000:]
+            raise GitCommandError(args, completed.returncode, detail)
+        return completed.stdout
 
     def _changed_files(self, worktree: Path) -> tuple[str, ...]:
         tracked = self._git(worktree, "diff", "--name-only", "HEAD", "--").splitlines()
