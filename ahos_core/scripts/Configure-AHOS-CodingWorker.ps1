@@ -23,5 +23,7 @@ $Config = @{
     }
 }
 $ConfigPath = Join-Path $RuntimeDir "company-service-config.json"
-$Config | ConvertTo-Json -Depth 8 | Set-Content -Path $ConfigPath -Encoding utf8
+$Json = $Config | ConvertTo-Json -Depth 8
+$Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+[IO.File]::WriteAllText($ConfigPath, $Json, $Utf8NoBom)
 Write-Output "Configured owner-gated OpenRouter coding worker: $ConfigPath"

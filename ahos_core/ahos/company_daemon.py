@@ -21,7 +21,9 @@ class _MonitorLoop:
 def _read_config(path: Path) -> dict[str, object]:
     if not path.exists():
         return {}
-    value = json.loads(path.read_text(encoding="utf-8"))
+    # Windows PowerShell 5.1 may prefix JSON written with ``-Encoding utf8``
+    # with a BOM. Accept it while keeping ordinary UTF-8 files unchanged.
+    value = json.loads(path.read_text(encoding="utf-8-sig"))
     if not isinstance(value, dict):
         raise ValueError("company service config must contain a JSON object")
     return value
