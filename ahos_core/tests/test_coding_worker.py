@@ -166,6 +166,29 @@ def test_worker_falls_back_to_scoped_checkout_when_full_checkout_fails(tmp_path:
     assert result.changed_files == ("src/feature.py",)
 
 
+def test_worker_uses_scoped_checkout_first_on_guarded_platform(tmp_path: Path) -> None:
+    repository = _repository(tmp_path)
+
+    class GuardedPlatformWorker(AutonomousCodingWorker):
+        @staticmethod
+        def _prefer_scoped_checkout() -> bool:
+            return True
+
+        def _git(self, repository: Path, *args: str) -> str:
+            if args[:3] == ("worktree", "add", "--detach"):
+                raise AssertionError("full checkout must not run")
+            return super()._git(repository, *args)
+
+    def builder(_prompt: str, worktree: Path):
+        (worktree / "src" / "feature.py").write_text("VALUE = 2\n", encoding="utf-8")
+
+    result = GuardedPlatformWorker(
+        runner=builder, workspace_root=tmp_path / "workers"
+    ).run(_item(repository), "dev-01")
+
+    assert result.status is CodingWorkerStatus.WAITING_OWNER_APPROVAL
+
+
 def test_backlog_scope_rejects_parent_traversal(tmp_path: Path) -> None:
     try:
         CodingBacklogItem(

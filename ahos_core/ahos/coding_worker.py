@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
+import shutil
 import subprocess
 from dataclasses import dataclass
 from enum import Enum
@@ -205,6 +207,14 @@ class AutonomousCodingWorker:
         base_commit: str,
         allowed_paths: Sequence[str],
     ) -> None:
+        # On Windows, endpoint-security software may quarantine unrelated
+        # administrative PowerShell files during a full checkout. Start with a
+        # scoped checkout there instead of knowingly triggering that failure.
+        if self._prefer_scoped_checkout():
+            self._create_scoped_worktree(
+                repository, worktree, base_commit, allowed_paths
+            )
+            return
         try:
             self._git(repository, "worktree", "add", "--detach", str(worktree), base_commit)
             return
@@ -221,23 +231,42 @@ class AutonomousCodingWorker:
                 check=False,
             )
             if worktree.exists():
-                raise initial_error
-            self._git(
-                repository,
-                "worktree",
-                "add",
-                "--no-checkout",
-                "--detach",
-                str(worktree),
-                base_commit,
+                # This directory was absent immediately before this method and
+                # the builder has not run, so it can only contain Git's partial
+                # failed checkout. Remove it without touching user worktrees.
+                shutil.rmtree(worktree)
+            self._git(repository, "worktree", "prune")
+            self._create_scoped_worktree(
+                repository, worktree, base_commit, allowed_paths
             )
-            patterns: list[str] = []
-            for value in allowed_paths:
-                normalized = value.replace("\\", "/").strip("/")
-                patterns.extend((f"/{normalized}", f"/{normalized}/"))
-            self._git(worktree, "sparse-checkout", "init", "--no-cone")
-            self._git(worktree, "sparse-checkout", "set", "--no-cone", "--", *patterns)
-            self._git(worktree, "reset", "--hard", base_commit)
+
+    @staticmethod
+    def _prefer_scoped_checkout() -> bool:
+        return os.name == "nt"
+
+    def _create_scoped_worktree(
+        self,
+        repository: Path,
+        worktree: Path,
+        base_commit: str,
+        allowed_paths: Sequence[str],
+    ) -> None:
+        self._git(
+            repository,
+            "worktree",
+            "add",
+            "--no-checkout",
+            "--detach",
+            str(worktree),
+            base_commit,
+        )
+        patterns: list[str] = []
+        for value in allowed_paths:
+            normalized = value.replace("\\", "/").strip("/")
+            patterns.extend((f"/{normalized}", f"/{normalized}/"))
+        self._git(worktree, "sparse-checkout", "init", "--no-cone")
+        self._git(worktree, "sparse-checkout", "set", "--no-cone", "--", *patterns)
+        self._git(worktree, "reset", "--hard", base_commit)
 
     @staticmethod
     def _git(repository: Path, *args: str) -> str:
