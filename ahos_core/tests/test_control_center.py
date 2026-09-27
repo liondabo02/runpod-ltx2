@@ -1,10 +1,12 @@
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 from ahos.autonomous_company import PersistentMissionQueue, QueueStatus
 from ahos.control_center import ControlCenterState, render_dashboard
-from ahos.coding_supervisor import CodingSupervisorStore
-from ahos.coding_worker import CodingBacklogItem
+from ahos.coding_supervisor import CodingSupervisor, CodingSupervisorStore, CodingTaskStatus
+from ahos.coding_worker import AutonomousCodingWorker, CodingBacklogItem
 from ahos.mission_orchestrator import MissionResult, MissionStatus, MissionStepSpec
 from ahos.owner_approval import OwnerApprovalInbox
 from ahos.studio_approval import _hash
@@ -136,3 +138,96 @@ def test_snapshot_exposes_coding_queue_read_only_status(tmp_path: Path):
     coding = state.snapshot()["coding_supervisor"]
     assert coding["counts"]["queued"] == 1
     assert coding["tasks"][0]["task_id"] == "CODE-9"
+
+
+def _waiting_coding_task(state: ControlCenterState, tmp_path: Path):
+    bare = tmp_path / "remote.git"
+    subprocess.run(["git", "init", "--bare", "-q", str(bare)], check=True)
+    repository = tmp_path / "repo"
+    repository.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=repository, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=repository, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=repository, check=True)
+    (repository / "src").mkdir()
+    (repository / "src" / "value.py").write_text("VALUE = 1\n", encoding="utf-8")
+    subprocess.run(["git", "add", "."], cwd=repository, check=True)
+    subprocess.run(["git", "commit", "-qm", "initial"], cwd=repository, check=True)
+    subprocess.run(["git", "remote", "add", "origin", str(bare)], cwd=repository, check=True)
+    subprocess.run(["git", "push", "-qu", "origin", "HEAD:main"], cwd=repository, check=True)
+    subprocess.run(["git", "branch", "--set-upstream-to=origin/main"], cwd=repository, check=True)
+
+    store = CodingSupervisorStore(state.coding_queue_path)
+    store.enqueue(CodingBacklogItem(
+        task_id="CODE-PANEL", title="panel-approved edit", repository=repository,
+        allowed_paths=("src",), test_commands=((sys.executable, "-c", "assert True"),),
+    ))
+
+    def builder(_prompt: str, worktree: Path):
+        (worktree / "src" / "value.py").write_text("VALUE = 2\n", encoding="utf-8")
+
+    result = CodingSupervisor(
+        store=store,
+        worker=AutonomousCodingWorker(runner=builder, workspace_root=tmp_path / "workers"),
+        worker_id="dev-01",
+        test_command_policy=lambda command: command[0] == sys.executable,
+    ).run_once()
+    assert result.status is CodingTaskStatus.WAITING_OWNER_APPROVAL
+    return repository, bare, store
+
+
+def test_dashboard_can_reject_coding_task_without_touching_repository(tmp_path: Path):
+    state = ControlCenterState(tmp_path / "runtime")
+    repository, _bare, store = _waiting_coding_task(state, tmp_path)
+    before = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repository,
+                            text=True, capture_output=True, check=True).stdout
+
+    assert "coding task rejected" in state.decide_coding_task("CODE-PANEL", approved=False)
+    assert store.get("CODE-PANEL").status is CodingTaskStatus.OWNER_REJECTED
+    after = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repository,
+                           text=True, capture_output=True, check=True).stdout
+    assert after == before
+
+
+def test_dashboard_approval_applies_tests_commits_and_pushes(tmp_path: Path):
+    state = ControlCenterState(tmp_path / "runtime")
+    repository, bare, store = _waiting_coding_task(state, tmp_path)
+
+    message = state.decide_coding_task("CODE-PANEL", approved=True)
+
+    assert "approved, tested, committed and pushed" in message
+    assert store.get("CODE-PANEL").status is CodingTaskStatus.OWNER_APPROVED
+    assert (repository / "src" / "value.py").read_text(encoding="utf-8") == "VALUE = 2\n"
+    local = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repository,
+                           text=True, capture_output=True, check=True).stdout.strip()
+    remote = subprocess.run(["git", "--git-dir", str(bare), "rev-parse", "main"],
+                            text=True, capture_output=True, check=True).stdout.strip()
+    assert remote == local
+    assert "Approve &amp; Publish" not in render_dashboard(state.snapshot())
+
+
+def test_dashboard_approval_refuses_tracked_owner_changes(tmp_path: Path):
+    state = ControlCenterState(tmp_path / "runtime")
+    repository, _bare, store = _waiting_coding_task(state, tmp_path)
+    (repository / "src" / "value.py").write_text("OWNER = True\n", encoding="utf-8")
+
+    try:
+        state.decide_coding_task("CODE-PANEL", approved=True)
+    except ValueError as exc:
+        assert "tracked changes" in str(exc)
+    else:
+        raise AssertionError("dirty repository was accepted")
+    assert store.get("CODE-PANEL").status is CodingTaskStatus.WAITING_OWNER_APPROVAL
+
+
+def test_dashboard_reconciles_patch_that_owner_already_integrated(tmp_path: Path):
+    state = ControlCenterState(tmp_path / "runtime")
+    repository, _bare, store = _waiting_coding_task(state, tmp_path)
+    task = store.get("CODE-PANEL")
+    subprocess.run(["git", "apply", task.patch_file], cwd=repository, check=True)
+    subprocess.run(["git", "add", "src/value.py"], cwd=repository, check=True)
+    subprocess.run(["git", "commit", "-qm", "owner integrated"], cwd=repository, check=True)
+
+    message = state.decide_coding_task("CODE-PANEL", approved=True)
+
+    assert "already integrated" in message
+    assert store.get("CODE-PANEL").status is CodingTaskStatus.OWNER_APPROVED

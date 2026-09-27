@@ -15,7 +15,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, quote, urlparse
 
 from .autonomous_company import PersistentMissionQueue, QueueStatus
-from .coding_supervisor import CodingSupervisorStore
+from .coding_supervisor import CodingSupervisorStore, CodingTaskStatus
 from .owner_approval import ApprovalStatus, OwnerApprovalInbox
 from .studio_executor import execution_status
 from .virtual_workforce import default_virtual_workforce
@@ -231,6 +231,107 @@ class ControlCenterState:
             return f"rejected {request_id}; mission blocked"
         return f"rejected {request_id}"
 
+    def decide_coding_task(self, task_id: str, *, approved: bool) -> str:
+        """Apply and publish an owner-approved coding patch, or reject it.
+
+        The integration is deliberately fail-closed: tracked repository changes,
+        modified evidence, a patch that no longer applies, failed tests, or a
+        missing upstream all leave the task waiting for owner approval.
+        """
+        store = CodingSupervisorStore(self.coding_queue_path)
+        if not approved:
+            store.record_owner_decision(task_id, approved=False)
+            return f"coding task rejected: {task_id}"
+
+        task = store.get(task_id)
+        if task is None:
+            raise KeyError(task_id)
+        if task.status is not CodingTaskStatus.WAITING_OWNER_APPROVAL:
+            raise ValueError("coding task is not waiting for owner approval")
+        if not task.patch_file or not task.approval_file:
+            raise ValueError("coding task evidence is incomplete")
+
+        repository = Path(task.repository).resolve()
+        patch_file = Path(task.patch_file).resolve()
+        if not repository.is_dir() or not (repository / ".git").exists():
+            raise ValueError("coding task repository is not a Git working tree")
+
+        def git(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+            return subprocess.run(
+                ["git", "-C", str(repository), *args], text=True,
+                capture_output=True, check=check,
+            )
+
+        # Untracked runtime output is harmless, but tracked owner changes must
+        # never be overwritten or accidentally included in an AI commit.
+        if git("status", "--porcelain", "--untracked-files=no").stdout.strip():
+            raise ValueError("repository has tracked changes; commit or restore them first")
+
+        approval = json.loads(Path(task.approval_file).read_text(encoding="utf-8"))
+        base_commit = str(approval.get("base_commit") or "")
+        if not base_commit:
+            raise ValueError("approval evidence has no base commit")
+        ancestry = git("merge-base", "--is-ancestor", base_commit, "HEAD", check=False)
+        if ancestry.returncode != 0:
+            raise ValueError("coding task base commit is not an ancestor of HEAD")
+        checked = git("apply", "--check", str(patch_file), check=False)
+        if checked.returncode:
+            already_applied = git(
+                "apply", "--reverse", "--check", str(patch_file), check=False,
+            )
+            if already_applied.returncode == 0:
+                store.record_owner_decision(task_id, approved=True)
+                return f"coding task was already integrated; approval recorded: {task_id}"
+            raise ValueError("coding patch no longer applies cleanly")
+
+        before = git("rev-parse", "HEAD").stdout.strip()
+        applied = False
+        committed = False
+        try:
+            git("apply", "--index", str(patch_file))
+            applied = True
+            changed = tuple(
+                line.strip().replace("\\", "/")
+                for line in git("diff", "--cached", "--name-only").stdout.splitlines()
+                if line.strip()
+            )
+            expected = tuple(
+                str(value).replace("\\", "/")
+                for value in approval.get("changed_files", ())
+            )
+            if not changed or set(changed) != set(expected):
+                raise ValueError("staged files do not match owner approval evidence")
+
+            for command in task.test_commands:
+                completed = subprocess.run(
+                    list(command), cwd=repository, text=True,
+                    capture_output=True, check=False,
+                )
+                if completed.returncode:
+                    detail = (completed.stderr or completed.stdout).strip()[-1200:]
+                    raise RuntimeError(f"approved test failed: {detail}")
+
+            git("commit", "-m", f"feat(autonomous): {task.title}")
+            committed = True
+            upstream = git(
+                "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}",
+                check=False,
+            )
+            if upstream.returncode or "/" not in upstream.stdout.strip():
+                raise ValueError("current branch has no Git upstream")
+            remote, branch = upstream.stdout.strip().split("/", 1)
+            git("push", remote, f"HEAD:{branch}")
+            store.record_owner_decision(task_id, approved=True)
+            return f"coding task approved, tested, committed and pushed: {task_id}"
+        except Exception:
+            # Nothing is removed from runtime and untracked files are preserved.
+            # Only this transaction's tracked/index changes are rolled back.
+            if committed:
+                git("reset", "--hard", before, check=False)
+            elif applied:
+                git("reset", "--hard", "HEAD", check=False)
+            raise
+
     def activate_kill_switch(self) -> str:
         self.stop_path.write_text(
             f"owner kill switch at {_utc_now()}",
@@ -352,12 +453,26 @@ def render_dashboard(snapshot: dict[str, object], message: str = "") -> str:
         for w in snapshot["workers"]
     )
 
-    coding_html = "".join(
-        f'<tr><td>{_esc(t["task_id"])}</td><td>{_badge(t["status"])}</td>'
-        f'<td>{_esc(str(t["attempts"]) + "/" + str(t["max_attempts"]))}</td>'
-        f'<td class="wide">{_esc(t["last_error"] or t["patch_file"] or t["title"])}</td></tr>'
-        for t in coding.get("tasks", [])
-    ) or '<tr><td colspan="4">No coding tasks yet.</td></tr>'
+    coding_rows = []
+    for t in coding.get("tasks", []):
+        actions = "-"
+        if t["status"] == "waiting_owner_approval":
+            tid = _esc(t["task_id"])
+            actions = (
+                '<form class="inline" method="post" action="/action/code-approve">'
+                f'<input type="hidden" name="task_id" value="{tid}">'
+                '<button class="approve">Approve &amp; Publish</button></form>'
+                '<form class="inline" method="post" action="/action/code-reject">'
+                f'<input type="hidden" name="task_id" value="{tid}">'
+                '<button class="reject">Reject</button></form>'
+            )
+        coding_rows.append(
+            f'<tr><td>{_esc(t["task_id"])}</td><td>{_badge(t["status"])}</td>'
+            f'<td>{_esc(str(t["attempts"]) + "/" + str(t["max_attempts"]))}</td>'
+            f'<td class="wide">{_esc(t["last_error"] or t["patch_file"] or t["title"])}</td>'
+            f'<td>{actions}</td></tr>'
+        )
+    coding_html = "".join(coding_rows) or '<tr><td colspan="5">No coding tasks yet.</td></tr>'
 
     studio_html = "".join(
         f'<tr><td>{_esc(item.get("episode_id") or "-")}</td>'
@@ -398,7 +513,7 @@ th{{color:var(--muted)}} .wide{{max-width:520px;color:var(--muted)}} .badge{{dis
 </div></div>
 <div class="section"><h2>Approval Inbox</h2><table><thead><tr><th>Request</th><th>Mission</th><th>Status</th><th>Est. Cost</th><th>Action</th></tr></thead><tbody>{approval_html}</tbody></table></div>
 <div class="section"><h2>Mission Queue</h2><table><thead><tr><th>Mission</th><th>Department</th><th>Status</th><th>Attempts</th><th>Objective / Error</th></tr></thead><tbody>{mission_html}</tbody></table></div>
-<div class="section"><h2>Coding Supervisor</h2><table><thead><tr><th>Task</th><th>Status</th><th>Attempts</th><th>Blocker / Artifact</th></tr></thead><tbody>{coding_html}</tbody></table></div>
+<div class="section"><h2>Coding Supervisor</h2><table><thead><tr><th>Task</th><th>Status</th><th>Attempts</th><th>Blocker / Artifact</th><th>Owner Action</th></tr></thead><tbody>{coding_html}</tbody></table></div>
 <div class="section"><h2>Studio Execution</h2><table><thead><tr><th>Episode</th><th>Status</th><th>Cost / Budget</th><th>Stages</th></tr></thead><tbody>{studio_html}</tbody></table></div>
 <div class="section"><h2>Virtual Workforce</h2><table><thead><tr><th>Worker</th><th>Department</th><th>Role</th><th>Status</th><th>Last Mission</th><th>Last Stage</th><th>Paid AI</th></tr></thead><tbody>{worker_html}</tbody></table></div>
 </main></body></html>'''
@@ -440,6 +555,7 @@ def build_handler(state: ControlCenterState):
                 length = int(self.headers.get("Content-Length", "0"))
                 form = parse_qs(self.rfile.read(length).decode("utf-8"))
                 rid = form.get("request_id", [""])[0]
+                task_id = form.get("task_id", [""])[0]
 
                 if self.path == "/action/approve":
                     if not rid:
@@ -455,6 +571,14 @@ def build_handler(state: ControlCenterState):
                     msg = state.start_company_service()
                 elif self.path == "/action/backup":
                     msg = state.create_backup()
+                elif self.path == "/action/code-approve":
+                    if not task_id:
+                        raise ValueError("task_id required")
+                    msg = state.decide_coding_task(task_id, approved=True)
+                elif self.path == "/action/code-reject":
+                    if not task_id:
+                        raise ValueError("task_id required")
+                    msg = state.decide_coding_task(task_id, approved=False)
                 else:
                     self._send(404, b"not found", "text/plain; charset=utf-8")
                     return
