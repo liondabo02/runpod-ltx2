@@ -586,7 +586,7 @@ def render_dashboard(snapshot: dict[str, object], message: str = "") -> str:
     notice = f'<div class="notice">{_esc(message)}</div>' if message else ""
 
     return f'''<!doctype html>
-<html><head><meta charset="utf-8"><meta http-equiv="refresh" content="5">
+<html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AHOS Holding Control Center</title>
 <style>
@@ -612,8 +612,8 @@ th{{color:var(--muted)}} .wide{{max-width:520px;color:var(--muted)}} .badge{{dis
 <form method="post" action="/action/backup"><button class="neutral">Create Backup</button></form>
 <form method="post" action="/action/kill"><button class="kill">KILL SWITCH</button></form>
 </div></div>
-<div class="section"><h2>Create Coding Task</h2><form method="post" action="/action/code-create" class="task-form">
-<div class="toolbar"><input name="objective" maxlength="4000" required placeholder="Describe the result you want..." style="flex:1;min-width:320px;padding:10px;border-radius:8px;border:1px solid var(--line)">
+<div class="section"><h2>Create Coding Task</h2><form id="coding-task-form" method="post" action="/action/code-create" class="task-form">
+<div class="toolbar"><textarea id="coding-objective" name="objective" maxlength="4000" required placeholder="Describe the result you want..." rows="3" style="flex:1;min-width:320px;padding:10px;border-radius:8px;border:1px solid var(--line);resize:vertical"></textarea>
 <select name="scope" style="padding:10px;border-radius:8px"><option value="core">Core system</option><option value="github">GitHub automation</option><option value="docs">Documentation</option></select>
 <button class="neutral">Queue Task</button></div></form></div>
 <div class="section"><h2>Approval Inbox</h2><table><thead><tr><th>Request</th><th>Mission</th><th>Status</th><th>Est. Cost</th><th>Action</th></tr></thead><tbody>{approval_html}</tbody></table></div>
@@ -621,7 +621,20 @@ th{{color:var(--muted)}} .wide{{max-width:520px;color:var(--muted)}} .badge{{dis
 <div class="section"><h2>Coding Supervisor</h2><table><thead><tr><th>Task</th><th>Status</th><th>Attempts</th><th>Blocker / Artifact</th><th>Owner Action</th></tr></thead><tbody>{coding_html}</tbody></table></div>
 <div class="section"><h2>Studio Execution</h2><table><thead><tr><th>Episode</th><th>Status</th><th>Cost / Budget</th><th>Stages</th></tr></thead><tbody>{studio_html}</tbody></table></div>
 <div class="section"><h2>Virtual Workforce</h2><table><thead><tr><th>Worker</th><th>Department</th><th>Role</th><th>Status</th><th>Last Mission</th><th>Last Stage</th><th>Paid AI</th></tr></thead><tbody>{worker_html}</tbody></table></div>
-</main></body></html>'''
+</main><script>
+const objective = document.getElementById('coding-objective');
+const taskForm = document.getElementById('coding-task-form');
+const draftKey = 'ahos-coding-objective-draft';
+const savedDraft = localStorage.getItem(draftKey);
+if (savedDraft && objective) objective.value = savedDraft;
+if (objective) objective.addEventListener('input', () => localStorage.setItem(draftKey, objective.value));
+if (taskForm) taskForm.addEventListener('submit', () => localStorage.removeItem(draftKey));
+window.setInterval(() => {{
+  const hasDraft = objective && objective.value.trim().length > 0;
+  const isEditing = objective && document.activeElement === objective;
+  if (!hasDraft && !isEditing && !document.hidden) window.location.reload();
+}}, 5000);
+</script></body></html>'''
 
 
 def build_handler(state: ControlCenterState):

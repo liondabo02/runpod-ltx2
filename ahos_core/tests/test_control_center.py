@@ -103,6 +103,9 @@ def test_dashboard_html_contains_control_surfaces(tmp_path: Path):
     assert "Studio Execution" in body
     assert "Coding Supervisor" in body
     assert "Create Coding Task" in body
+    assert 'meta http-equiv="refresh"' not in body
+    assert "ahos-coding-objective-draft" in body
+    assert "document.activeElement === objective" in body
 
 
 def test_snapshot_exposes_persisted_studio_execution(tmp_path: Path):
