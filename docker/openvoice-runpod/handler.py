@@ -28,7 +28,11 @@ def _converter() -> ToneColorConverter:
     with _LOCK:
         if _CONVERTER is None:
             device = "cuda:0" if torch.cuda.is_available() else "cpu"
-            model = ToneColorConverter(str(CHECKPOINT_DIR / "config.json"), device=device)
+            model = ToneColorConverter(
+                str(CHECKPOINT_DIR / "config.json"),
+                device=device,
+                enable_watermark=False,
+            )
             model.load_ckpt(str(CHECKPOINT_DIR / "checkpoint.pth"))
             _CONVERTER = model
     return _CONVERTER

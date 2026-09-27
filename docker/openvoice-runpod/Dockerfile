@@ -11,15 +11,20 @@ ENV DEBIAN_FRONTEND=noninteractive \
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      ca-certificates ffmpeg git libsndfile1 unzip wget \
+      build-essential ca-certificates ffmpeg git libsndfile1 unzip wget \
     && rm -rf /var/lib/apt/lists/*
 
-RUN python -m pip install --upgrade pip setuptools wheel \
-    && python -m pip install "runpod>=1.7,<2" \
-    && git clone https://github.com/myshell-ai/OpenVoice.git /opt/openvoice \
+COPY requirements.txt /app/requirements.txt
+COPY openvoice-worker.patch /app/openvoice-worker.patch
+
+RUN python -m pip install --upgrade "pip<26" setuptools wheel \
+    && python -m pip install --prefer-binary -r /app/requirements.txt
+
+RUN git clone --filter=blob:none https://github.com/myshell-ai/OpenVoice.git /opt/openvoice \
     && cd /opt/openvoice \
     && git checkout "${OPENVOICE_COMMIT}" \
-    && python -m pip install -e .
+    && git apply /app/openvoice-worker.patch \
+    && python -m pip install --no-deps -e .
 
 RUN wget -q https://myshell-public-repo-host.s3.amazonaws.com/openvoice/checkpoints_v2_0417.zip \
       -O /tmp/openvoice-checkpoints.zip \
@@ -29,6 +34,7 @@ RUN wget -q https://myshell-public-repo-host.s3.amazonaws.com/openvoice/checkpoi
     && rm /tmp/openvoice-checkpoints.zip
 
 COPY handler.py /app/handler.py
-RUN python -m py_compile /app/handler.py
+RUN python -m py_compile /app/handler.py \
+    && python -c "from openvoice import se_extractor; from openvoice.api import ToneColorConverter"
 
 CMD ["python", "-u", "/app/handler.py"]
