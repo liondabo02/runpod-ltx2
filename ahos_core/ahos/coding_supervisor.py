@@ -444,9 +444,13 @@ def main() -> int:
 
     def builder(prompt: str, worktree: Path) -> _BuilderResult:
         completed = subprocess.run(builder_command, cwd=worktree, input=prompt,
-                                   text=True, check=False)
+                                   text=True, capture_output=True, check=False)
         if completed.returncode:
-            raise RuntimeError(f"builder exited with {completed.returncode}")
+            detail = (completed.stderr or completed.stdout).strip()[-2000:]
+            raise RuntimeError(
+                f"builder exited with {completed.returncode}"
+                + (f": {detail}" if detail else "")
+            )
         return _BuilderResult()
 
     allowed = {str(Path(value).resolve()) for value in args.allow_test_executable}

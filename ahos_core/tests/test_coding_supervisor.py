@@ -212,3 +212,24 @@ def test_run_once_cli_accepts_builder_argv_with_nested_options(tmp_path: Path, m
     ])
 
     assert main() == 0
+
+
+def test_run_once_cli_records_builder_stderr(tmp_path: Path, monkeypatch) -> None:
+    repo = _repo(tmp_path)
+    queue = tmp_path / "queue.json"
+    store = CodingSupervisorStore(queue)
+    store.enqueue(_item(repo), max_attempts=2)
+    monkeypatch.setattr(sys, "argv", [
+        "ahos.coding_supervisor", "--queue", str(queue), "run-once",
+        "--workspace", str(tmp_path / "workers"), "--worker-id", "dev-01",
+        "--builder-command-json", json.dumps([
+            sys.executable, "-c",
+            "import sys; sys.stderr.write('builder diagnostic detail'); raise SystemExit(7)",
+        ]),
+        "--allow-test-executable", sys.executable,
+    ])
+
+    assert main() == 2
+    record = store.get("CODE-1")
+    assert record.status is CodingTaskStatus.QUEUED
+    assert "builder diagnostic detail" in record.last_error

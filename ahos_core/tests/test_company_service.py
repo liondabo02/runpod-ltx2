@@ -88,3 +88,10 @@ def test_windows_service_scripts_resolve_relative_paths_from_powershell_location
         body = (scripts / name).read_text(encoding="utf-8")
         assert "GetUnresolvedProviderPathFromPSPath($RuntimeDir)" in body
         assert "[IO.Path]::GetFullPath($RuntimeDir)" not in body
+
+
+def test_coding_worker_uses_builder_script_independent_of_worktree_imports() -> None:
+    script = Path(__file__).parents[1] / "scripts" / "Configure-AHOS-CodingWorker.ps1"
+    body = script.read_text(encoding="utf-8")
+    assert 'Join-Path $ProjectRoot "ahos_core\\ahos\\openrouter_coding_builder.py"' in body
+    assert 'builder_command = @($PythonExe, $BuilderScript, "--model", $Model)' in body

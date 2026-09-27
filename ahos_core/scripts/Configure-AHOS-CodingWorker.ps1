@@ -9,6 +9,10 @@ if (-not $RuntimeDir) { $RuntimeDir = Join-Path $ProjectRoot "runtime" }
 if (-not $PythonExe) { $PythonExe = (Get-Command python.exe -ErrorAction Stop).Source }
 $RuntimeDir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($RuntimeDir)
 $PythonExe = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($PythonExe)
+$BuilderScript = Join-Path $ProjectRoot "ahos_core\ahos\openrouter_coding_builder.py"
+if (-not (Test-Path -LiteralPath $BuilderScript -PathType Leaf)) {
+    throw "OpenRouter coding builder script is missing: $BuilderScript"
+}
 if (-not $env:OPENROUTER_API_KEY) { throw "OPENROUTER_API_KEY is missing in this PowerShell session" }
 [IO.Directory]::CreateDirectory($RuntimeDir) | Out-Null
 $Config = @{
@@ -18,7 +22,10 @@ $Config = @{
         workspace = (Join-Path $RuntimeDir "coding-worktrees")
         worker_id = "dev-01"
         timeout_seconds = 900
-        builder_command = @($PythonExe, "-m", "ahos.openrouter_coding_builder", "--model", $Model)
+        # Use an absolute script path: the builder runs with the isolated
+        # worktree as its current directory, where the ahos package may not be
+        # materialized by the Windows scoped checkout.
+        builder_command = @($PythonExe, $BuilderScript, "--model", $Model)
         allowed_test_executables = @($PythonExe)
     }
 }
