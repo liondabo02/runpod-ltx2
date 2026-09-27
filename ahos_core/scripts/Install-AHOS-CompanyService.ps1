@@ -7,6 +7,10 @@ $ProjectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $Launcher = Join-Path $PSScriptRoot "Start-AHOS-CompanyService.ps1"
 if (-not $RuntimeDir) { $RuntimeDir = Join-Path $ProjectRoot "runtime" }
 if (-not $PythonExe) { $PythonExe = (Get-Command python.exe -ErrorAction Stop).Source }
+$RuntimeDir = [IO.Path]::GetFullPath($RuntimeDir)
+$PythonExe = [IO.Path]::GetFullPath($PythonExe)
+$Launcher = [IO.Path]::GetFullPath($Launcher)
+[IO.Directory]::CreateDirectory($RuntimeDir) | Out-Null
 $TaskName = "AHOS-Holding-Service"
 $ActionArgs = "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$Launcher`" -RuntimeDir `"$RuntimeDir`" -PythonExe `"$PythonExe`""
 $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument $ActionArgs
