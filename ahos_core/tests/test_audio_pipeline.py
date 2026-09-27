@@ -99,18 +99,19 @@ def test_multilingual_commercial_selection_prefers_chatterbox(tmp_path: Path):
     assert job.provider_id == "chatterbox-multilingual"
 
 
-def test_kurmanji_is_required_but_unverified_tts_fails_closed():
+def test_kurmanji_uses_verified_openvoice_identity_transfer_chain():
     required = tuple(policy.code for policy in DEFAULT_LANGUAGE_POLICIES if policy.required)
     assert required == ("tr", "ku-latn", "de", "ar", "fr", "es", "en")
 
-    with pytest.raises(UnsupportedLanguageError):
-        default_audio_provider_registry().choose(
-            language="ku-latn",
-            capability="tts",
-            allow_paid=True,
-            allow_external=True,
-            commercial_use=True,
-        )
+    provider = default_audio_provider_registry().choose(
+        language="ku-latn",
+        capability="tts",
+        allow_paid=True,
+        allow_external=True,
+        commercial_use=True,
+    )
+    assert provider.provider_id == "openvoice-v2-tone-transfer"
+    assert "voice_conversion" in provider.capabilities
 
 
 def test_translation_required_blocks_tts(tmp_path: Path):

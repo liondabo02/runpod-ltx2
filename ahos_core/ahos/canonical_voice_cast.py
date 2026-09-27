@@ -10,10 +10,12 @@ from typing import Mapping
 from .character_memory import CharacterBibleStore
 from .voice_continuity import VoiceContinuityStore
 from .voice_enrollment import VoiceEnrollment, VoiceEnrollmentStore
+from .voice_readiness import CoreCastVoiceReadinessAuditor, export_voice_readiness
 
 
-DEFAULT_LANGUAGES = ("tr", "de", "ar", "fr", "es", "en")
-PROVIDER_ID = "chatterbox-multilingual"
+DEFAULT_LANGUAGES = ("tr", "ku-latn", "de", "ar", "fr", "es", "en")
+DEFAULT_PROVIDER_ID = "chatterbox-multilingual"
+LANGUAGE_PROVIDER_IDS = {"ku-latn": "openvoice-v2-tone-transfer"}
 
 
 class CanonicalVoiceCastError(RuntimeError):
@@ -89,6 +91,7 @@ class CanonicalVoiceCastBinder:
         self.manifest_path = self.root / "VOICE-CANDIDATES.json"
         self.casting_report_path = self.root / "AUTOMATIC-CASTING-REPORT.json"
         self.report_path = self.root / "CANONICAL-VOICE-BINDING-REPORT.json"
+        self.readiness_path = self.root / "VOICE-READINESS.json"
 
     def bind(
         self,
@@ -144,10 +147,11 @@ class CanonicalVoiceCastBinder:
             reference_uri = str(audio)
 
             for language in normalized_languages:
+                provider_id = LANGUAGE_PROVIDER_IDS.get(language, DEFAULT_PROVIDER_ID)
                 current = self.enrollments.get(character_id, language)
                 if current is not None and _same_enrollment(
                     current,
-                    provider_id=PROVIDER_ID,
+                    provider_id=provider_id,
                     voice_id=voice_id,
                     speaking_style=speaking_style,
                     reference_audio_uri=reference_uri,
@@ -167,7 +171,7 @@ class CanonicalVoiceCastBinder:
                 enrollment, binding = self.enrollments.enroll(
                     character_id=character_id,
                     language=language,
-                    provider_id=PROVIDER_ID,
+                    provider_id=provider_id,
                     voice_id=voice_id,
                     speaking_style=speaking_style,
                     reference_audio_uri=reference_uri,
@@ -183,6 +187,7 @@ class CanonicalVoiceCastBinder:
                     "language": language,
                     "enrollment_version": enrollment.version,
                     "binding_version": binding.version,
+                    "provider_id": provider_id,
                     "voice_id": voice_id,
                     "reference_sha256": expected_sha,
                 })
@@ -208,16 +213,27 @@ class CanonicalVoiceCastBinder:
                 ledger["canonical_binding_report"] = self.report_path.name
                 _write(path, ledger)
 
+        readiness = CoreCastVoiceReadinessAuditor(self.enrollments).audit(
+            required_languages=normalized_languages
+        )
+        export_voice_readiness(readiness, self.readiness_path)
         report: dict[str, object] = {
             "schema": "ahos.canonical-voice-binding-report.v1",
             "completed_at": _now(),
-            "provider_id": PROVIDER_ID,
+            "provider_by_language": {
+                language: LANGUAGE_PROVIDER_IDS.get(language, DEFAULT_PROVIDER_ID)
+                for language in normalized_languages
+            },
             "languages_bound": list(normalized_languages),
             "bound": bound,
             "unchanged": unchanged,
             "infant_vocalization_library_required": infants,
-            "pending_language_bindings": {
-                "ku-latn": "identity-preserving Kurmanji voice transfer is required"
+            "pending_language_bindings": {},
+            "readiness": {
+                "ready": readiness.ready,
+                "missing": list(readiness.missing),
+                "report": self.readiness_path.name,
+                "report_hash": readiness.report_hash,
             },
             "canonical_binding_created": True,
         }

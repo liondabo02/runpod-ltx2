@@ -10,10 +10,13 @@ owner-approved canonical enrollment in every language. Infant-vocalization
 characters are explicitly exempt from sentence-TTS enrollment and remain routed
 to age-appropriate vocal effects.
 
-Kurdish enrollment accepts a rights-cleared human studio performance. It does
-not imply that the configured automatic TTS providers support Kurmanji; provider
-selection remains capability-checked and fails closed when support is absent.
+Kurdish enrollment uses the verified OpenVoice V2 identity-transfer provider
+with the same approved synthetic character reference. The other six production
+languages use Chatterbox Multilingual. Provider selection remains
+capability-checked and fails closed when a required provider is absent.
 
 The auditor is read-only. It never synthesizes a voice, grants approval, changes
 an enrollment, calls a provider, or spends money. Its deterministic JSON report
 lists every missing character/language pair and carries a reproducible hash.
+The canonical cast binder exports this report automatically after every binding,
+so incomplete cast coverage cannot be mistaken for production readiness.

@@ -188,6 +188,16 @@ def default_audio_provider_registry() -> AudioProviderRegistry:
                 priority=20,
             ),
             AudioProviderDescriptor(
+                provider_id="openvoice-v2-tone-transfer",
+                name="Kurmanji TTS with OpenVoice V2 identity transfer",
+                supported_languages=frozenset({"ku-latn"}),
+                capabilities=frozenset({"tts", "voice_cloning", "voice_conversion"}),
+                paid=True,
+                external=True,
+                commercial_default=True,
+                priority=20,
+            ),
+            AudioProviderDescriptor(
                 provider_id="fish-speech-s2",
                 name="Fish Speech S2",
                 supported_languages=frozenset(

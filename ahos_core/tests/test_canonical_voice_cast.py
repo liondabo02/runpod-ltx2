@@ -55,14 +55,17 @@ def setup_binder(tmp_path: Path):
 def test_bind_hash_locks_all_supported_languages_and_is_idempotent(tmp_path):
     binder, enrollments, _ = setup_binder(tmp_path)
     first = binder.bind()
-    assert len(first["bound"]) == 6
+    assert len(first["bound"]) == 7
     assert first["infant_vocalization_library_required"] == ["ramin"]
-    assert first["pending_language_bindings"]["ku-latn"]
+    assert first["pending_language_bindings"] == {}
+    assert first["provider_by_language"]["ku-latn"] == "openvoice-v2-tone-transfer"
+    assert enrollments.get("aden", "ku-latn").provider_id == "openvoice-v2-tone-transfer"
+    assert binder.readiness_path.is_file()
     assert enrollments.get("aden", "tr").human_similarity_approved is False
 
     second = binder.bind()
     assert second["bound"] == []
-    assert len(second["unchanged"]) == 6
+    assert len(second["unchanged"]) == 7
     assert len(enrollments.history("aden", "tr")) == 1
 
 
@@ -83,7 +86,10 @@ def test_bind_refuses_silent_voice_override(tmp_path):
         binder.bind(languages=("tr",))
 
 
-def test_kurmanji_is_not_falsely_bound_to_unsupported_provider(tmp_path):
-    binder, _, _ = setup_binder(tmp_path)
-    with pytest.raises(CanonicalVoiceCastError, match="not configured"):
-        binder.bind(languages=("ku-latn",))
+def test_kurmanji_is_bound_only_to_verified_identity_transfer_provider(tmp_path):
+    binder, enrollments, _ = setup_binder(tmp_path)
+    report = binder.bind(languages=("ku-latn",))
+    assert report["provider_by_language"] == {
+        "ku-latn": "openvoice-v2-tone-transfer"
+    }
+    assert enrollments.get("aden", "ku-latn").provider_id == "openvoice-v2-tone-transfer"
