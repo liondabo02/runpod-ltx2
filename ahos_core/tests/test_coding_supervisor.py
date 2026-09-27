@@ -3,11 +3,12 @@ from __future__ import annotations
 import subprocess
 import sys
 import time
+import json
 from pathlib import Path
 
 import pytest
 
-from ahos.coding_supervisor import CodingSupervisor, CodingSupervisorStore, CodingTaskStatus
+from ahos.coding_supervisor import CodingSupervisor, CodingSupervisorStore, CodingTaskStatus, main
 from ahos.coding_worker import AutonomousCodingWorker, CodingBacklogItem
 
 
@@ -125,3 +126,23 @@ def test_store_recovers_abandoned_stale_lock(tmp_path: Path) -> None:
     time.sleep(0.02)
     assert store.status()["counts"]["queued"] == 0
     assert not store.lock_path.exists()
+
+
+def test_enqueue_cli_accepts_windows_utf8_bom(tmp_path: Path, monkeypatch) -> None:
+    repo = _repo(tmp_path)
+    task = tmp_path / "task.json"
+    task.write_text(json.dumps({
+        "task_id": "WINDOWS-BOM",
+        "title": "accept PowerShell JSON",
+        "repository": str(repo),
+        "allowed_paths": ["src"],
+        "test_commands": [],
+    }), encoding="utf-8-sig")
+    queue = tmp_path / "queue.json"
+    monkeypatch.setattr(sys, "argv", [
+        "ahos.coding_supervisor", "--queue", str(queue), "enqueue",
+        "--task-json", str(task),
+    ])
+
+    assert main() == 0
+    assert CodingSupervisorStore(queue).get("WINDOWS-BOM").status is CodingTaskStatus.QUEUED

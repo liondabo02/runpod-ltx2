@@ -375,7 +375,10 @@ def main() -> int:
         print(json.dumps(store.status(), indent=2, sort_keys=True))
         return 0
     if args.command == "enqueue":
-        raw = json.loads(Path(args.task_json).read_text(encoding="utf-8"))
+        # Windows PowerShell 5.1 writes a UTF-8 BOM for ``Set-Content
+        # -Encoding UTF8``. Accept it at this operator-facing boundary while
+        # continuing to write AHOS-owned JSON as ordinary UTF-8.
+        raw = json.loads(Path(args.task_json).read_text(encoding="utf-8-sig"))
         item = CodingBacklogItem(
             task_id=raw["task_id"], title=raw["title"], repository=Path(raw["repository"]),
             base_ref=raw.get("base_ref", "HEAD"),
