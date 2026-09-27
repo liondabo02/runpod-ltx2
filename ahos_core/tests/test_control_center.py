@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 from ahos.autonomous_company import PersistentMissionQueue, QueueStatus
-from ahos.control_center import ControlCenterState, render_dashboard
+from ahos.control_center import ControlCenterState, render_coding_review, render_dashboard
 from ahos.coding_supervisor import CodingSupervisor, CodingSupervisorStore, CodingTaskStatus
 from ahos.coding_worker import AutonomousCodingWorker, CodingBacklogItem
 from ahos.mission_orchestrator import MissionResult, MissionStatus, MissionStepSpec
@@ -102,6 +102,7 @@ def test_dashboard_html_contains_control_surfaces(tmp_path: Path):
     assert "KILL SWITCH" in body
     assert "Studio Execution" in body
     assert "Coding Supervisor" in body
+    assert "Create Coding Task" in body
 
 
 def test_snapshot_exposes_persisted_studio_execution(tmp_path: Path):
@@ -231,3 +232,31 @@ def test_dashboard_reconciles_patch_that_owner_already_integrated(tmp_path: Path
 
     assert "already integrated" in message
     assert store.get("CODE-PANEL").status is CodingTaskStatus.OWNER_APPROVED
+
+
+def test_panel_creates_natural_language_coding_task_with_safe_scope(tmp_path: Path):
+    repository = tmp_path / "repo"
+    repository.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=repository, check=True)
+    state = ControlCenterState(repository / "runtime")
+
+    message = state.create_coding_task("Add a health indicator", "core")
+
+    assert "coding task queued" in message
+    task = CodingSupervisorStore(state.coding_queue_path).all()[0]
+    assert task.title == "Add a health indicator"
+    assert task.allowed_paths == ("ahos_core",)
+    assert task.test_commands[0][1:] == ("-m", "pytest", "-q", "ahos_core/tests")
+
+
+def test_code_review_renders_patch_evidence_and_actions(tmp_path: Path):
+    state = ControlCenterState(tmp_path / "runtime")
+    _repository, _bare, _store = _waiting_coding_task(state, tmp_path)
+
+    review = state.coding_review("CODE-PANEL")
+    body = render_coding_review(review)
+
+    assert "VALUE = 2" in body
+    assert "patch_sha256" in body
+    assert "Approve &amp; Publish" in body
+    assert "python" in body.lower()

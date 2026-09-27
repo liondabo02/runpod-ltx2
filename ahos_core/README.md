@@ -73,6 +73,33 @@ If the backlog becomes empty, the controller may periodically ask Miniverse to i
 
 ## Run tests
 
+### Owner control center and autonomous coding
+
+The localhost-only control center creates scoped coding tasks from natural
+language, displays generated patches and approval evidence, and performs the
+owner-authorized test, commit, and push transaction. The continuously running
+company service polls the coding queue; paid or external work still stops at an
+owner gate.
+
+```powershell
+python -m ahos.control_center --runtime-dir "..\runtime" --port 8766
+```
+
+Open `http://127.0.0.1:8766/`, use **Create Coding Task**, and inspect the task
+through **Review** before selecting **Approve & Publish** or **Reject**.
+
+For Windows logon autostart, first persist the already-configured key for the
+current Windows user. The key is never written to AHOS JSON or Git.
+
+```powershell
+[Environment]::SetEnvironmentVariable("OPENROUTER_API_KEY", $env:OPENROUTER_API_KEY, "User")
+.\ahos_core\scripts\Install-AHOS-CompanyService.ps1 -RuntimeDir ".\runtime" -PythonExe "C:\path\to\python.exe"
+```
+
+The installer fails closed if the coding-worker configuration or user-level key
+is missing. The scheduled task starts the service at logon and restarts it after
+transient failures.
+
 ```powershell
 python -m pytest ahos_core/tests -q
 ```

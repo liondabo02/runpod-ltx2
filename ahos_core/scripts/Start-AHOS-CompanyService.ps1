@@ -8,6 +8,10 @@ if (-not $RuntimeDir) { $RuntimeDir = Join-Path $ProjectRoot "runtime" }
 if (-not $PythonExe) { $PythonExe = (Get-Command python.exe -ErrorAction Stop).Source }
 $RuntimeDir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($RuntimeDir)
 [IO.Directory]::CreateDirectory($RuntimeDir) | Out-Null
+$PersistedOpenRouterKey = [Environment]::GetEnvironmentVariable("OPENROUTER_API_KEY", "User")
+if (-not $env:OPENROUTER_API_KEY -and $PersistedOpenRouterKey) {
+    $env:OPENROUTER_API_KEY = $PersistedOpenRouterKey
+}
 $StopFile = Join-Path $RuntimeDir "company-service.stop"
 Remove-Item $StopFile -Force -ErrorAction SilentlyContinue
 $LogFile = Join-Path $RuntimeDir "company-service.log"

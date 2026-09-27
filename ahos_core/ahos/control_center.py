@@ -7,6 +7,8 @@ import os
 import shutil
 import sqlite3
 import subprocess
+import sys
+import uuid
 from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -16,6 +18,7 @@ from urllib.parse import parse_qs, quote, urlparse
 
 from .autonomous_company import PersistentMissionQueue, QueueStatus
 from .coding_supervisor import CodingSupervisorStore, CodingTaskStatus
+from .coding_worker import CodingBacklogItem
 from .owner_approval import ApprovalStatus, OwnerApprovalInbox
 from .studio_executor import execution_status
 from .virtual_workforce import default_virtual_workforce
@@ -35,6 +38,10 @@ class ControlCenterState:
         self.runtime_dir.mkdir(parents=True, exist_ok=True)
         if self.service_launcher is not None:
             self.service_launcher = Path(self.service_launcher)
+        else:
+            candidate = Path(__file__).resolve().parent.parent / "scripts" / "Start-AHOS-CompanyService.ps1"
+            if candidate.is_file():
+                self.service_launcher = candidate
 
     @property
     def queue_db(self) -> Path:
@@ -51,6 +58,10 @@ class ControlCenterState:
     @property
     def coding_queue_path(self) -> Path:
         return self.runtime_dir / "coding-supervisor-queue.json"
+
+    @property
+    def repository_root(self) -> Path:
+        return self.runtime_dir.parent.resolve()
 
     @property
     def stop_path(self) -> Path:
@@ -332,6 +343,64 @@ class ControlCenterState:
                 git("reset", "--hard", "HEAD", check=False)
             raise
 
+    def create_coding_task(self, objective: str, scope: str = "core") -> str:
+        objective = " ".join(objective.split()).strip()
+        if not objective:
+            raise ValueError("task objective is required")
+        if len(objective) > 4000:
+            raise ValueError("task objective is too long")
+        scopes = {
+            "core": ("ahos_core",),
+            "github": (".github",),
+            "docs": ("README.md", "ahos_core/docs"),
+        }
+        if scope not in scopes:
+            raise ValueError("unknown coding task scope")
+        repository = self.repository_root
+        if not (repository / ".git").exists():
+            raise ValueError("runtime directory is not inside the AHOS Git repository")
+        task_id = f"CODE-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}"
+        test_command = (
+            str(Path(sys.executable).resolve()), "-m", "pytest", "-q", "ahos_core/tests",
+        )
+        CodingSupervisorStore(self.coding_queue_path).enqueue(
+            CodingBacklogItem(
+                task_id=task_id,
+                title=objective,
+                repository=repository,
+                base_ref="HEAD",
+                allowed_paths=scopes[scope],
+                test_commands=(test_command,),
+            ),
+            idempotency_key=f"panel:{task_id}",
+            max_attempts=2,
+            priority=10,
+        )
+        return f"coding task queued: {task_id}"
+
+    def coding_review(self, task_id: str) -> dict[str, object]:
+        task = CodingSupervisorStore(self.coding_queue_path).get(task_id)
+        if task is None:
+            raise KeyError(task_id)
+        approval: dict[str, object] = {}
+        patch = ""
+        if task.approval_file and Path(task.approval_file).is_file():
+            approval = json.loads(Path(task.approval_file).read_text(encoding="utf-8"))
+        if task.patch_file and Path(task.patch_file).is_file():
+            patch = Path(task.patch_file).read_text(encoding="utf-8", errors="replace")
+            if len(patch) > 250_000:
+                patch = patch[:250_000] + "\n[patch display truncated]"
+        return {
+            "task_id": task.task_id,
+            "title": task.title,
+            "status": task.status.value,
+            "repository": task.repository,
+            "allowed_paths": task.allowed_paths,
+            "test_commands": task.test_commands,
+            "approval": approval,
+            "patch": patch,
+        }
+
     def activate_kill_switch(self) -> str:
         self.stop_path.write_text(
             f"owner kill switch at {_utc_now()}",
@@ -396,6 +465,28 @@ def _badge(status: str) -> str:
     return f'<span class="badge {css}">{_esc(status)}</span>'
 
 
+def render_coding_review(review: dict[str, object]) -> str:
+    tests = "\n".join(" ".join(command) for command in review["test_commands"]) or "No tests declared"
+    approval = json.dumps(review["approval"], indent=2, ensure_ascii=False)
+    return f'''<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AHOS Code Review</title><style>
+body{{font-family:Segoe UI,Arial,sans-serif;background:#0b1020;color:#e9eefc;margin:0;padding:24px}}
+a{{color:#7aa2ff}} .panel{{background:#141b2d;border:1px solid #26324b;border-radius:12px;padding:18px;margin-top:16px}}
+pre{{white-space:pre-wrap;word-break:break-word;background:#090d18;padding:16px;border-radius:8px;overflow:auto}}
+.badge{{color:#f6c85f}} button{{border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}}
+.approve{{background:#33d17a}} .reject{{background:#ff6b6b}} form{{display:inline;margin-right:8px}}
+</style></head><body><a href="/">← Control Center</a>
+<h1>{_esc(review["task_id"])}</h1><p>{_esc(review["title"])}</p>
+<div class="panel"><b>Status:</b> <span class="badge">{_esc(review["status"])}</span><br>
+<b>Allowed paths:</b> {_esc(", ".join(review["allowed_paths"]))}</div>
+<div class="panel"><h2>Approved tests</h2><pre>{_esc(tests)}</pre></div>
+<div class="panel"><h2>Approval evidence</h2><pre>{_esc(approval)}</pre></div>
+<div class="panel"><h2>Proposed patch</h2><pre>{_esc(review["patch"] or "Patch not generated yet.")}</pre></div>
+{('<div class="panel"><form method="post" action="/action/code-approve"><input type="hidden" name="task_id" value="' + _esc(review["task_id"]) + '"><button class="approve">Approve &amp; Publish</button></form><form method="post" action="/action/code-reject"><input type="hidden" name="task_id" value="' + _esc(review["task_id"]) + '"><button class="reject">Reject</button></form></div>') if review["status"] == "waiting_owner_approval" else ""}
+</body></html>'''
+
+
 def render_dashboard(snapshot: dict[str, object], message: str = "") -> str:
     hb = snapshot["heartbeat"]
     counts = snapshot["mission_counts"]
@@ -456,6 +547,7 @@ def render_dashboard(snapshot: dict[str, object], message: str = "") -> str:
     coding_rows = []
     for t in coding.get("tasks", []):
         actions = "-"
+        review_link = f'<a href="/coding/{quote(str(t["task_id"]))}">Review</a>'
         if t["status"] == "waiting_owner_approval":
             tid = _esc(t["task_id"])
             actions = (
@@ -470,7 +562,7 @@ def render_dashboard(snapshot: dict[str, object], message: str = "") -> str:
             f'<tr><td>{_esc(t["task_id"])}</td><td>{_badge(t["status"])}</td>'
             f'<td>{_esc(str(t["attempts"]) + "/" + str(t["max_attempts"]))}</td>'
             f'<td class="wide">{_esc(t["last_error"] or t["patch_file"] or t["title"])}</td>'
-            f'<td>{actions}</td></tr>'
+            f'<td>{review_link} &nbsp; {actions}</td></tr>'
         )
     coding_html = "".join(coding_rows) or '<tr><td colspan="5">No coding tasks yet.</td></tr>'
 
@@ -511,6 +603,10 @@ th{{color:var(--muted)}} .wide{{max-width:520px;color:var(--muted)}} .badge{{dis
 <form method="post" action="/action/backup"><button class="neutral">Create Backup</button></form>
 <form method="post" action="/action/kill"><button class="kill">KILL SWITCH</button></form>
 </div></div>
+<div class="section"><h2>Create Coding Task</h2><form method="post" action="/action/code-create" class="task-form">
+<div class="toolbar"><input name="objective" maxlength="4000" required placeholder="Describe the result you want..." style="flex:1;min-width:320px;padding:10px;border-radius:8px;border:1px solid var(--line)">
+<select name="scope" style="padding:10px;border-radius:8px"><option value="core">Core system</option><option value="github">GitHub automation</option><option value="docs">Documentation</option></select>
+<button class="neutral">Queue Task</button></div></form></div>
 <div class="section"><h2>Approval Inbox</h2><table><thead><tr><th>Request</th><th>Mission</th><th>Status</th><th>Est. Cost</th><th>Action</th></tr></thead><tbody>{approval_html}</tbody></table></div>
 <div class="section"><h2>Mission Queue</h2><table><thead><tr><th>Mission</th><th>Department</th><th>Status</th><th>Attempts</th><th>Objective / Error</th></tr></thead><tbody>{mission_html}</tbody></table></div>
 <div class="section"><h2>Coding Supervisor</h2><table><thead><tr><th>Task</th><th>Status</th><th>Attempts</th><th>Blocker / Artifact</th><th>Owner Action</th></tr></thead><tbody>{coding_html}</tbody></table></div>
@@ -548,6 +644,11 @@ def build_handler(state: ControlCenterState):
                 body = render_dashboard(state.snapshot(), message).encode("utf-8")
                 self._send(200, body, "text/html; charset=utf-8")
                 return
+            if parsed.path.startswith("/coding/"):
+                task_id = parsed.path.removeprefix("/coding/")
+                body = render_coding_review(state.coding_review(task_id)).encode("utf-8")
+                self._send(200, body, "text/html; charset=utf-8")
+                return
             self._send(404, b"not found", "text/plain; charset=utf-8")
 
         def do_POST(self) -> None:
@@ -556,6 +657,8 @@ def build_handler(state: ControlCenterState):
                 form = parse_qs(self.rfile.read(length).decode("utf-8"))
                 rid = form.get("request_id", [""])[0]
                 task_id = form.get("task_id", [""])[0]
+                objective = form.get("objective", [""])[0]
+                scope = form.get("scope", ["core"])[0]
 
                 if self.path == "/action/approve":
                     if not rid:
@@ -579,6 +682,8 @@ def build_handler(state: ControlCenterState):
                     if not task_id:
                         raise ValueError("task_id required")
                     msg = state.decide_coding_task(task_id, approved=False)
+                elif self.path == "/action/code-create":
+                    msg = state.create_coding_task(objective, scope)
                 else:
                     self._send(404, b"not found", "text/plain; charset=utf-8")
                     return

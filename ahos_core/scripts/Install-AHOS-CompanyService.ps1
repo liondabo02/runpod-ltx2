@@ -11,6 +11,14 @@ $RuntimeDir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromP
 $PythonExe = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($PythonExe)
 $Launcher = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Launcher)
 [IO.Directory]::CreateDirectory($RuntimeDir) | Out-Null
+$ConfigPath = Join-Path $RuntimeDir "company-service-config.json"
+if (-not (Test-Path -LiteralPath $ConfigPath -PathType Leaf)) {
+    throw "Configure the coding worker before installing autostart: $ConfigPath"
+}
+$PersistedOpenRouterKey = [Environment]::GetEnvironmentVariable("OPENROUTER_API_KEY", "User")
+if (-not $PersistedOpenRouterKey) {
+    throw "OPENROUTER_API_KEY is not stored for the Windows user. Persist it explicitly before installing autostart."
+}
 $TaskName = "AHOS-Holding-Service"
 $ActionArgs = "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$Launcher`" -RuntimeDir `"$RuntimeDir`" -PythonExe `"$PythonExe`""
 $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument $ActionArgs
