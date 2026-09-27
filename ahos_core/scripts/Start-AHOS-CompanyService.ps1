@@ -6,7 +6,7 @@ $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 if (-not $RuntimeDir) { $RuntimeDir = Join-Path $ProjectRoot "runtime" }
 if (-not $PythonExe) { $PythonExe = (Get-Command python.exe -ErrorAction Stop).Source }
-$RuntimeDir = [IO.Path]::GetFullPath($RuntimeDir)
+$RuntimeDir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($RuntimeDir)
 [IO.Directory]::CreateDirectory($RuntimeDir) | Out-Null
 $StopFile = Join-Path $RuntimeDir "company-service.stop"
 Remove-Item $StopFile -Force -ErrorAction SilentlyContinue

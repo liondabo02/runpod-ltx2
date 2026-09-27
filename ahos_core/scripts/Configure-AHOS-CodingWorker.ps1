@@ -7,8 +7,8 @@ $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 if (-not $RuntimeDir) { $RuntimeDir = Join-Path $ProjectRoot "runtime" }
 if (-not $PythonExe) { $PythonExe = (Get-Command python.exe -ErrorAction Stop).Source }
-$RuntimeDir = [IO.Path]::GetFullPath($RuntimeDir)
-$PythonExe = [IO.Path]::GetFullPath($PythonExe)
+$RuntimeDir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($RuntimeDir)
+$PythonExe = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($PythonExe)
 if (-not $env:OPENROUTER_API_KEY) { throw "OPENROUTER_API_KEY is missing in this PowerShell session" }
 [IO.Directory]::CreateDirectory($RuntimeDir) | Out-Null
 $Config = @{

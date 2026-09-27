@@ -75,3 +75,16 @@ def test_service_runs_automation_steps_while_mission_queue_is_idle(tmp_path: Pat
     payload = json.loads((tmp_path / "heartbeat.json").read_text(encoding="utf-8"))
     assert calls == ["coding-dispatch"]
     assert payload["automation_results"] == ["coding:1"]
+
+
+def test_windows_service_scripts_resolve_relative_paths_from_powershell_location() -> None:
+    scripts = Path(__file__).parents[1] / "scripts"
+    for name in (
+        "Start-AHOS-CompanyService.ps1",
+        "Stop-AHOS-CompanyService.ps1",
+        "Configure-AHOS-CodingWorker.ps1",
+        "Install-AHOS-CompanyService.ps1",
+    ):
+        body = (scripts / name).read_text(encoding="utf-8")
+        assert "GetUnresolvedProviderPathFromPSPath($RuntimeDir)" in body
+        assert "[IO.Path]::GetFullPath($RuntimeDir)" not in body
