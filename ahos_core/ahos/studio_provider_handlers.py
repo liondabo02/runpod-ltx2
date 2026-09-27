@@ -20,6 +20,11 @@ from .runpod_ltx2 import PaidExecutionApproval, RunPodLTX2Config, RunPodLTX2Prov
 from .studio_approval import _atomic_write, _read_object
 from .studio_executor import StageHandler, StageResult
 from .visual_pipeline import RenderJob
+from .voice_audio_quality import (
+    VoiceAudioQualityError,
+    prepare_openvoice_reference,
+    validate_generated_voice,
+)
 
 
 class StudioProviderConfigurationError(RuntimeError):
@@ -265,6 +270,9 @@ def build_production_handlers(
                 ) from exc
             safe_id = str(raw.get("unit_id") or "unit").replace(":", "_").replace("/", "_")
             target = output_dir / f"{safe_id}.wav"
+            reference_prepared = False
+            reference_quality: dict[str, object] | None = None
+            output_quality: dict[str, object] | None = None
             if policy.speech_mode == "infant_vocalization":
                 cue = str(raw.get("vocalization_cue") or "").strip().lower()
                 if cue not in VALID_CUES:
@@ -302,8 +310,16 @@ def build_production_handlers(
                 reference_uri = str(voice.get("reference_audio_uri") or "")
                 reference = _local_file(root, reference_uri, label="voice reference")
                 reference_audio = reference.read_bytes()
-                encoded = base64.b64encode(reference_audio).decode("ascii")
                 if language == "ku-latn":
+                    try:
+                        reference_audio, quality, reference_prepared = (
+                            prepare_openvoice_reference(reference_audio)
+                        )
+                        reference_quality = quality.as_dict()
+                    except VoiceAudioQualityError as exc:
+                        raise StudioProviderConfigurationError(
+                            f"OpenVoice reference rejected for {character_id}: {exc}"
+                        ) from exc
                     source = kurmanji.synthesize(
                         text=text, voice_id=voice_id, approval=kurdish_approval
                     ).body
@@ -317,6 +333,7 @@ def build_production_handlers(
                     provider_chain = [kurmanji.provider_id, voice_converter.provider_id]
                     identity_evidence = str(voice.get("reference_sha256") or "")
                 else:
+                    encoded = base64.b64encode(reference_audio).decode("ascii")
                     audio = chatterbox.synthesize(text=text, language_id=language,
                                                    voice_id=voice_id,
                                                    reference_audio_base64=encoded,
@@ -327,6 +344,12 @@ def build_production_handlers(
                     provider_id = chatterbox.provider_id
                     provider_chain = [provider_id]
                     identity_evidence = str(voice.get("reference_sha256") or "")
+                try:
+                    output_quality = validate_generated_voice(audio).as_dict()
+                except VoiceAudioQualityError as exc:
+                    raise StudioProviderConfigurationError(
+                        f"generated voice rejected for {character_id}/{language}: {exc}"
+                    ) from exc
             target.write_bytes(audio)
             relative = target.relative_to(root).as_posix()
             artifacts.append(relative)
@@ -334,6 +357,9 @@ def build_production_handlers(
                             "provider_id": provider_id,
                             "provider_chain": provider_chain,
                             "identity_evidence": identity_evidence,
+                            "reference_prepared": reference_prepared,
+                            "reference_quality": reference_quality,
+                            "output_quality": output_quality,
                             "path": relative})
         evidence_path = output_dir / "tts-evidence.json"
         _atomic_write(evidence_path, {"schema": "ahos.tts-execution-evidence.v1",
