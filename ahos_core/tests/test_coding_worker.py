@@ -14,7 +14,7 @@ from ahos.coding_worker import (
 
 
 def test_core_test_process_receives_package_on_pythonpath(tmp_path: Path) -> None:
-    repo = _repo(tmp_path)
+    repo = _repository(tmp_path)
     (repo / "ahos_core").mkdir()
     (repo / "ahos_core" / "marker_module.py").write_text("VALUE = 7\n", encoding="utf-8")
     subprocess.run(["git", "add", "."], cwd=repo, check=True)
