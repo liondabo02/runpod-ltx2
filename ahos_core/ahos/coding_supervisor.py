@@ -25,6 +25,28 @@ def _iso(value: datetime | None = None) -> str:
     return (value or _now()).isoformat()
 
 
+def _run_builder_command(
+    command: Sequence[str], prompt: str, worktree: Path
+) -> subprocess.CompletedProcess[str]:
+    """Run a coding builder over an explicitly UTF-8 text boundary.
+
+    Windows services commonly inherit a legacy ANSI console encoding.  Passing
+    ``text=True`` alone makes Python use that encoding for stdin, which rejects
+    ordinary Turkish task text such as ``ğ`` and ``ı`` before the builder even
+    starts.  The builder protocol is UTF-8 regardless of the host console.
+    """
+    return subprocess.run(
+        command,
+        cwd=worktree,
+        input=prompt,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        capture_output=True,
+        check=False,
+    )
+
+
 class CodingTaskStatus(str, Enum):
     QUEUED = "queued"
     RUNNING = "running"
@@ -443,8 +465,7 @@ def main() -> int:
         success = True
 
     def builder(prompt: str, worktree: Path) -> _BuilderResult:
-        completed = subprocess.run(builder_command, cwd=worktree, input=prompt,
-                                   text=True, capture_output=True, check=False)
+        completed = _run_builder_command(builder_command, prompt, worktree)
         if completed.returncode:
             detail = (completed.stderr or completed.stdout).strip()[-2000:]
             raise RuntimeError(

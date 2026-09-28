@@ -121,6 +121,8 @@ class AutonomousCodingWorker:
                     cwd=worktree,
                     capture_output=True,
                     text=True,
+                    encoding="utf-8",
+                    errors="replace",
                     check=False,
                 )
                 tests_run.append(" ".join(command))
@@ -271,7 +273,13 @@ class AutonomousCodingWorker:
     @staticmethod
     def _git(repository: Path, *args: str) -> str:
         completed = subprocess.run(
-            ["git", *args], cwd=repository, capture_output=True, text=True, check=False
+            ["git", *args],
+            cwd=repository,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
         )
         if completed.returncode:
             detail = (completed.stderr or completed.stdout).strip()[-2000:]

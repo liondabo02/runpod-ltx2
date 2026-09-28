@@ -8,7 +8,13 @@ from pathlib import Path
 
 import pytest
 
-from ahos.coding_supervisor import CodingSupervisor, CodingSupervisorStore, CodingTaskStatus, main
+from ahos.coding_supervisor import (
+    CodingSupervisor,
+    CodingSupervisorStore,
+    CodingTaskStatus,
+    _run_builder_command,
+    main,
+)
 from ahos.coding_worker import AutonomousCodingWorker, CodingBacklogItem
 
 
@@ -35,6 +41,26 @@ def _item(repo: Path, task_id: str = "CODE-1") -> CodingBacklogItem:
 
 def _allow_python(command) -> bool:
     return tuple(command[:1]) == (sys.executable,)
+
+
+def test_builder_process_uses_utf8_for_turkish_task_text(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    captured = {}
+
+    def fake_run(command, **kwargs):
+        captured["command"] = command
+        captured.update(kwargs)
+        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    _run_builder_command(["builder"], "sağlık ışığı", tmp_path)
+
+    assert captured["input"] == "sağlık ışığı"
+    assert captured["text"] is True
+    assert captured["encoding"] == "utf-8"
+    assert captured["errors"] == "replace"
 
 
 def test_supervisor_persists_idempotent_task_and_stops_at_owner_gate(tmp_path: Path) -> None:
