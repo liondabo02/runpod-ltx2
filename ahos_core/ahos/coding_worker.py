@@ -116,9 +116,16 @@ class AutonomousCodingWorker:
 
             tests_run: list[str] = []
             for command in item.test_commands:
+                test_env = os.environ.copy()
+                test_env["PYTHONDONTWRITEBYTECODE"] = "1"
+                core_path = worktree / "ahos_core"
+                if core_path.is_dir():
+                    existing = test_env.get("PYTHONPATH", "")
+                    test_env["PYTHONPATH"] = str(core_path) + (os.pathsep + existing if existing else "")
                 completed = subprocess.run(
                     command,
                     cwd=worktree,
+                    env=test_env,
                     capture_output=True,
                     text=True,
                     encoding="utf-8",

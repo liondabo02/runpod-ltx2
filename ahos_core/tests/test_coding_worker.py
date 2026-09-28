@@ -13,6 +13,27 @@ from ahos.coding_worker import (
 )
 
 
+def test_core_test_process_receives_package_on_pythonpath(tmp_path: Path) -> None:
+    repo = _repo(tmp_path)
+    (repo / "ahos_core").mkdir()
+    (repo / "ahos_core" / "marker_module.py").write_text("VALUE = 7\n", encoding="utf-8")
+    subprocess.run(["git", "add", "."], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-qm", "add core"], cwd=repo, check=True)
+    item = CodingBacklogItem(
+        task_id="PYTHONPATH-1",
+        title="test core import",
+        repository=repo,
+        allowed_paths=("src",),
+        test_commands=((sys.executable, "-c", "import marker_module; assert marker_module.VALUE == 7"),),
+    )
+
+    def builder(_prompt: str, worktree: Path):
+        (worktree / "src" / "app.py").write_text("VALUE = 2\n", encoding="utf-8")
+
+    result = AutonomousCodingWorker(runner=builder, workspace_root=tmp_path / "workers").run(item, "worker")
+    assert result.status is CodingWorkerStatus.WAITING_OWNER_APPROVAL
+
+
 def _repository(tmp_path: Path) -> Path:
     repository = tmp_path / "repo"
     repository.mkdir()

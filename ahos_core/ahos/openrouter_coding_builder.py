@@ -6,6 +6,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path, PurePosixPath
@@ -77,24 +78,37 @@ def _request(*, prompt: str, context: str, model: str, timeout: float) -> dict[s
         headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
         method="POST",
     )
-    try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-        content = payload["choices"][0]["message"]["content"]
-        if not isinstance(content, str):
-            raise TypeError("message content is not text")
-        # Keep compatibility with already configured JSON-capable models while
-        # preferring a compact diff. Full-file JSON frequently gets truncated
-        # or malformed when a large source file contains many quoted strings.
+    attempts = 3 if model == "openrouter/free" else 1
+    last_error: Exception | None = None
+    for attempt in range(attempts):
         try:
-            result = json.loads(content)
-        except json.JSONDecodeError:
-            marker = content.find("diff --git ")
-            if marker < 0:
-                raise
-            result = {"patch": content[marker:].strip() + "\n"}
-    except (OSError, urllib.error.URLError, json.JSONDecodeError, KeyError, IndexError, TypeError) as exc:
-        raise CodingBuilderError(f"OpenRouter returned an invalid coding response: {exc}") from exc
+            with urllib.request.urlopen(request, timeout=timeout) as response:
+                raw = response.read().decode("utf-8-sig").strip()
+            if not raw:
+                raise ValueError("empty HTTP response")
+            payload = json.loads(raw)
+            content = payload["choices"][0]["message"]["content"]
+            if not isinstance(content, str) or not content.strip():
+                raise TypeError("message content is empty or not text")
+            # Keep compatibility with already configured JSON-capable models
+            # while preferring a compact diff.
+            try:
+                result = json.loads(content)
+            except json.JSONDecodeError:
+                marker = content.find("diff --git ")
+                if marker < 0:
+                    raise ValueError("model returned neither JSON nor a Git diff")
+                result = {"patch": content[marker:].strip() + "\n"}
+            break
+        except (OSError, urllib.error.URLError, json.JSONDecodeError, KeyError, IndexError, TypeError, ValueError) as exc:
+            last_error = exc
+            if attempt + 1 < attempts:
+                time.sleep(attempt + 1)
+    else:
+        assert last_error is not None
+        raise CodingBuilderError(
+            f"OpenRouter returned an invalid coding response after {attempts} attempt(s): {last_error}"
+        ) from last_error
     if not isinstance(result, dict):
         raise CodingBuilderError("coding response must be a JSON object")
     return result
