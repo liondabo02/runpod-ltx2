@@ -23,7 +23,7 @@ def test_core_test_process_receives_package_on_pythonpath(tmp_path: Path) -> Non
         task_id="PYTHONPATH-1",
         title="test core import",
         repository=repo,
-        allowed_paths=("src",),
+        allowed_paths=("src", "ahos_core"),
         test_commands=((sys.executable, "-c", "import marker_module; assert marker_module.VALUE == 7"),),
     )
 
