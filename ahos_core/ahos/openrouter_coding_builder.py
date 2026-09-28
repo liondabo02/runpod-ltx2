@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 import urllib.error
 import urllib.request
@@ -56,10 +57,11 @@ def _request(*, prompt: str, context: str, model: str, timeout: float) -> dict[s
         raise CodingBuilderError("OPENROUTER_API_KEY is missing")
     system = (
         "You are an AHOS coding worker operating in an isolated Git worktree. "
-        "Return strict JSON only: {\"files\":[{\"path\":\"relative/path\","
-        "\"content\":\"complete replacement text\"}]}. Edit only allowed paths. "
-        "Never include .git, secrets, commands, explanations, markdown, commits, pushes, "
-        "dependency installation, or partial snippets. Keep changes minimal and tested."
+        "Return only a standard unified Git diff beginning with 'diff --git'. "
+        "Include the smallest complete patch needed for the task; do not return entire "
+        "unchanged files. Edit only allowed paths. Never include .git, secrets, commands, "
+        "explanations, markdown fences, commits, pushes, dependency installation, binary "
+        "files, symlinks, or file-mode changes."
     )
     body = json.dumps({
         "model": model,
@@ -67,8 +69,8 @@ def _request(*, prompt: str, context: str, model: str, timeout: float) -> dict[s
             {"role": "system", "content": system},
             {"role": "user", "content": prompt + "\n\nRepository context:\n" + context},
         ],
-        "response_format": {"type": "json_object"},
         "temperature": 0.1,
+        "max_tokens": 16_000,
     }).encode("utf-8")
     request = urllib.request.Request(
         "https://openrouter.ai/api/v1/chat/completions", data=body,
@@ -78,7 +80,19 @@ def _request(*, prompt: str, context: str, model: str, timeout: float) -> dict[s
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
             payload = json.loads(response.read().decode("utf-8"))
-        result = json.loads(payload["choices"][0]["message"]["content"])
+        content = payload["choices"][0]["message"]["content"]
+        if not isinstance(content, str):
+            raise TypeError("message content is not text")
+        # Keep compatibility with already configured JSON-capable models while
+        # preferring a compact diff. Full-file JSON frequently gets truncated
+        # or malformed when a large source file contains many quoted strings.
+        try:
+            result = json.loads(content)
+        except json.JSONDecodeError:
+            marker = content.find("diff --git ")
+            if marker < 0:
+                raise
+            result = {"patch": content[marker:].strip() + "\n"}
     except (OSError, urllib.error.URLError, json.JSONDecodeError, KeyError, IndexError, TypeError) as exc:
         raise CodingBuilderError(f"OpenRouter returned an invalid coding response: {exc}") from exc
     if not isinstance(result, dict):
@@ -87,6 +101,9 @@ def _request(*, prompt: str, context: str, model: str, timeout: float) -> dict[s
 
 
 def apply_response(worktree: Path, roots: tuple[PurePosixPath, ...], result: dict[str, object]) -> tuple[str, ...]:
+    patch = result.get("patch")
+    if isinstance(patch, str):
+        return _apply_patch_response(worktree, roots, patch)
     files = result.get("files")
     if not isinstance(files, list) or not files:
         raise CodingBuilderError("coding response contains no files")
@@ -104,6 +121,40 @@ def apply_response(worktree: Path, roots: tuple[PurePosixPath, ...], result: dic
         destination.write_text(item["content"], encoding="utf-8")
         written.append(relative.as_posix())
     return tuple(written)
+
+
+def _apply_patch_response(
+    worktree: Path, roots: tuple[PurePosixPath, ...], patch: str
+) -> tuple[str, ...]:
+    forbidden = ("GIT binary patch", "Binary files ", "old mode ", "new mode ", "new file mode 120000")
+    if any(value in patch for value in forbidden):
+        raise CodingBuilderError("coding patch contains a forbidden binary, symlink, or mode change")
+    paths: list[str] = []
+    for old, new in re.findall(r"^diff --git a/(\S+) b/(\S+)$", patch, re.MULTILINE):
+        if old != new:
+            raise CodingBuilderError("coding patch may not rename files")
+        relative = PurePosixPath(new.replace("\\", "/"))
+        if relative.is_absolute() or ".." in relative.parts or ".git" in relative.parts or not _is_allowed(relative, roots):
+            raise CodingBuilderError(f"model attempted an out-of-scope write: {relative}")
+        destination = worktree.joinpath(*relative.parts)
+        if destination.is_symlink():
+            raise CodingBuilderError(f"refusing to modify symlink: {relative}")
+        paths.append(relative.as_posix())
+    if not paths:
+        raise CodingBuilderError("coding response contains no valid diff entries")
+    encoded = patch.encode("utf-8")
+    for extra in (("--check",), tuple()):
+        completed = subprocess.run(
+            ["git", "apply", *extra, "--recount", "--whitespace=error-all", "-"],
+            cwd=worktree,
+            input=encoded,
+            capture_output=True,
+            check=False,
+        )
+        if completed.returncode:
+            detail = (completed.stderr or completed.stdout).decode("utf-8", errors="replace").strip()[-2000:]
+            raise CodingBuilderError(f"coding patch could not be applied: {detail}")
+    return tuple(dict.fromkeys(paths))
 
 
 def main() -> int:
