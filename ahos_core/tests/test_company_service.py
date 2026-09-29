@@ -94,4 +94,6 @@ def test_coding_worker_uses_builder_script_independent_of_worktree_imports() -> 
     script = Path(__file__).parents[1] / "scripts" / "Configure-AHOS-CodingWorker.ps1"
     body = script.read_text(encoding="utf-8")
     assert 'Join-Path $ProjectRoot "ahos_core\\ahos\\openrouter_coding_builder.py"' in body
-    assert 'builder_command = @($PythonExe, $BuilderScript, "--model", $Model)' in body
+    assert '$BuilderCommand = @($PythonExe, $BuilderScript, "--model", $Model)' in body
+    assert '$BuilderCommand += @("--fallback-model", $FallbackModel)' in body
+    assert 'builder_command = $BuilderCommand' in body

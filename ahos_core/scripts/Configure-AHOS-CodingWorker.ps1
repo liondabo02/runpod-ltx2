@@ -1,7 +1,8 @@
 param(
     [string]$RuntimeDir = "",
     [string]$PythonExe = "",
-    [string]$Model = "openrouter/free"
+    [string]$Model = "openrouter/free",
+    [string[]]$FallbackModels = @()
 )
 $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
@@ -15,6 +16,12 @@ if (-not (Test-Path -LiteralPath $BuilderScript -PathType Leaf)) {
 }
 if (-not $env:OPENROUTER_API_KEY) { throw "OPENROUTER_API_KEY is missing in this PowerShell session" }
 [IO.Directory]::CreateDirectory($RuntimeDir) | Out-Null
+$BuilderCommand = @($PythonExe, $BuilderScript, "--model", $Model)
+foreach ($FallbackModel in $FallbackModels) {
+    if (-not [string]::IsNullOrWhiteSpace($FallbackModel)) {
+        $BuilderCommand += @("--fallback-model", $FallbackModel)
+    }
+}
 $Config = @{
     coding_supervisor = @{
         enabled = $true
@@ -25,7 +32,7 @@ $Config = @{
         # Use an absolute script path: the builder runs with the isolated
         # worktree as its current directory, where the ahos package may not be
         # materialized by the Windows scoped checkout.
-        builder_command = @($PythonExe, $BuilderScript, "--model", $Model)
+        builder_command = $BuilderCommand
         allowed_test_executables = @($PythonExe)
     }
 }

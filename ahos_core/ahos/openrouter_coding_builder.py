@@ -52,7 +52,52 @@ def _context(worktree: Path, roots: tuple[PurePosixPath, ...], limit: int) -> st
     return "".join(blocks)
 
 
-def _request(*, prompt: str, context: str, model: str, timeout: float) -> dict[str, object]:
+def _message_text(content: object) -> str:
+    if isinstance(content, str):
+        return content.strip()
+    if isinstance(content, list):
+        return "\n".join(
+            item["text"] for item in content
+            if isinstance(item, dict) and isinstance(item.get("text"), str)
+        ).strip()
+    return ""
+
+
+def _response_result(content: str) -> dict[str, object]:
+    candidates = [content.strip()]
+    candidates.extend(
+        match.group(1).strip()
+        for match in re.finditer(r"```(?:json)?\s*([\s\S]*?)```", content, re.IGNORECASE)
+    )
+    decoder = json.JSONDecoder()
+    for candidate in candidates:
+        try:
+            value = json.loads(candidate)
+            if isinstance(value, dict) and ("patch" in value or "files" in value):
+                return value
+        except json.JSONDecodeError:
+            pass
+        for match in re.finditer(r"\{", candidate):
+            try:
+                value, _end = decoder.raw_decode(candidate[match.start():])
+            except json.JSONDecodeError:
+                continue
+            if isinstance(value, dict) and ("patch" in value or "files" in value):
+                return value
+    marker = content.find("diff --git ")
+    if marker >= 0:
+        patch = content[marker:].strip()
+        fence = patch.find("```")
+        if fence >= 0:
+            patch = patch[:fence].rstrip()
+        return {"patch": patch + "\n"}
+    raise ValueError("model returned neither a scoped JSON edit nor a Git diff")
+
+
+def _request(
+    *, prompt: str, context: str, model: str, timeout: float,
+    fallback_models: tuple[str, ...] = (),
+) -> dict[str, object]:
     key = os.environ.get("OPENROUTER_API_KEY", "").strip()
     if not key:
         raise CodingBuilderError("OPENROUTER_API_KEY is missing")
@@ -64,54 +109,56 @@ def _request(*, prompt: str, context: str, model: str, timeout: float) -> dict[s
         "explanations, markdown fences, commits, pushes, dependency installation, binary "
         "files, symlinks, or file-mode changes."
     )
-    body = json.dumps({
-        "model": model,
-        "messages": [
+    models = tuple(dict.fromkeys(value.strip() for value in (model, *fallback_models) if value.strip()))
+    last_error: Exception | None = None
+    total_attempts = 0
+    for selected_model in models:
+        attempts = 3 if selected_model == "openrouter/free" else 1
+        messages: list[dict[str, str]] = [
             {"role": "system", "content": system},
             {"role": "user", "content": prompt + "\n\nRepository context:\n" + context},
-        ],
-        "temperature": 0.1,
-        "max_tokens": 16_000,
-    }).encode("utf-8")
-    request = urllib.request.Request(
-        "https://openrouter.ai/api/v1/chat/completions", data=body,
-        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
-        method="POST",
-    )
-    attempts = 3 if model == "openrouter/free" else 1
-    last_error: Exception | None = None
-    for attempt in range(attempts):
-        try:
-            with urllib.request.urlopen(request, timeout=timeout) as response:
-                raw = response.read().decode("utf-8-sig").strip()
-            if not raw:
-                raise ValueError("empty HTTP response")
-            payload = json.loads(raw)
-            content = payload["choices"][0]["message"]["content"]
-            if not isinstance(content, str) or not content.strip():
-                raise TypeError("message content is empty or not text")
-            # Keep compatibility with already configured JSON-capable models
-            # while preferring a compact diff.
+        ]
+        for attempt in range(attempts):
+            total_attempts += 1
+            content = ""
+            body = json.dumps({
+                "model": selected_model,
+                "messages": messages,
+                "temperature": 0.1,
+                "max_tokens": 16_000,
+            }).encode("utf-8")
+            request = urllib.request.Request(
+                "https://openrouter.ai/api/v1/chat/completions", data=body,
+                headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+                method="POST",
+            )
             try:
-                result = json.loads(content)
-            except json.JSONDecodeError:
-                marker = content.find("diff --git ")
-                if marker < 0:
-                    raise ValueError("model returned neither JSON nor a Git diff")
-                result = {"patch": content[marker:].strip() + "\n"}
-            break
-        except (OSError, urllib.error.URLError, json.JSONDecodeError, KeyError, IndexError, TypeError, ValueError) as exc:
-            last_error = exc
-            if attempt + 1 < attempts:
-                time.sleep(attempt + 1)
-    else:
-        assert last_error is not None
-        raise CodingBuilderError(
-            f"OpenRouter returned an invalid coding response after {attempts} attempt(s): {last_error}"
-        ) from last_error
-    if not isinstance(result, dict):
-        raise CodingBuilderError("coding response must be a JSON object")
-    return result
+                with urllib.request.urlopen(request, timeout=timeout) as response:
+                    raw = response.read().decode("utf-8-sig").strip()
+                if not raw:
+                    raise ValueError("empty HTTP response")
+                payload = json.loads(raw)
+                content = _message_text(payload["choices"][0]["message"]["content"])
+                if not content:
+                    raise TypeError("message content is empty or not text")
+                return _response_result(content)
+            except (OSError, urllib.error.URLError, json.JSONDecodeError, KeyError, IndexError, TypeError, ValueError) as exc:
+                last_error = exc
+                if content:
+                    messages.extend((
+                        {"role": "assistant", "content": content[-12_000:]},
+                        {"role": "user", "content": (
+                            "Your previous answer was invalid. Return only the corrected scoped JSON edit "
+                            "or unified Git diff requested by the system message. Do not explain."
+                        )},
+                    ))
+                if attempt + 1 < attempts:
+                    time.sleep(attempt + 1)
+    assert last_error is not None
+    raise CodingBuilderError(
+        f"OpenRouter returned an invalid coding response after {total_attempts} attempt(s) "
+        f"across {len(models)} model(s): {last_error}"
+    ) from last_error
 
 
 def apply_response(worktree: Path, roots: tuple[PurePosixPath, ...], result: dict[str, object]) -> tuple[str, ...]:
@@ -174,6 +221,7 @@ def _apply_patch_response(
 def main() -> int:
     parser = argparse.ArgumentParser(description="Scoped OpenRouter coding builder")
     parser.add_argument("--model", default="openrouter/free")
+    parser.add_argument("--fallback-model", action="append", default=[])
     parser.add_argument("--timeout-seconds", type=float, default=180.0)
     parser.add_argument("--context-chars", type=int, default=120_000)
     args = parser.parse_args()
@@ -182,7 +230,13 @@ def main() -> int:
     prompt = sys.stdin.read()
     roots = _allowed_paths(prompt)
     worktree = Path.cwd().resolve()
-    result = _request(prompt=prompt, context=_context(worktree, roots, args.context_chars), model=args.model, timeout=args.timeout_seconds)
+    result = _request(
+        prompt=prompt,
+        context=_context(worktree, roots, args.context_chars),
+        model=args.model,
+        timeout=args.timeout_seconds,
+        fallback_models=tuple(args.fallback_model),
+    )
     print(json.dumps({"written": apply_response(worktree, roots, result)}))
     return 0
 
