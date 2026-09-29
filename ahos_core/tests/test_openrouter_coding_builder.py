@@ -59,6 +59,40 @@ def test_retry_tells_model_to_repair_invalid_response(monkeypatch: pytest.Monkey
 
     assert bodies[1]["messages"][-2]["content"] == "not a patch"
     assert "previous answer was invalid" in bodies[1]["messages"][-1]["content"]
+    assert bodies[1]["reasoning"] == {"max_tokens": 2_000, "exclude": True}
+
+
+def test_reasoning_budget_can_be_overridden(monkeypatch: pytest.MonkeyPatch) -> None:
+    bodies = []
+
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def read(self):
+            return json.dumps({
+                "choices": [{
+                    "finish_reason": "stop",
+                    "message": {"content": "diff --git a/src/app.py b/src/app.py\n"},
+                }]
+            }).encode()
+
+    def urlopen(request, **_kwargs):
+        bodies.append(json.loads(request.data))
+        return Response()
+
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+    monkeypatch.setattr("urllib.request.urlopen", urlopen)
+
+    _request(
+        prompt="task", context="ctx", model="openrouter/free", timeout=1,
+        reasoning_max_tokens=1_000,
+    )
+
+    assert bodies[0]["reasoning"] == {"max_tokens": 1_000, "exclude": True}
 
 
 def test_falls_back_to_next_configured_model(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -97,6 +97,7 @@ def _response_result(content: str) -> dict[str, object]:
 def _request(
     *, prompt: str, context: str, model: str, timeout: float,
     fallback_models: tuple[str, ...] = (),
+    reasoning_max_tokens: int = 2_000,
 ) -> dict[str, object]:
     key = os.environ.get("OPENROUTER_API_KEY", "").strip()
     if not key:
@@ -126,6 +127,10 @@ def _request(
                 "messages": messages,
                 "temperature": 0.1,
                 "max_tokens": 16_000,
+                "reasoning": {
+                    "max_tokens": reasoning_max_tokens,
+                    "exclude": True,
+                },
             }).encode("utf-8")
             request = urllib.request.Request(
                 "https://openrouter.ai/api/v1/chat/completions", data=body,
@@ -138,9 +143,15 @@ def _request(
                 if not raw:
                     raise ValueError("empty HTTP response")
                 payload = json.loads(raw)
-                content = _message_text(payload["choices"][0]["message"]["content"])
+                choice = payload["choices"][0]
+                message = choice["message"]
+                content = _message_text(message["content"])
                 if not content:
-                    raise TypeError("message content is empty or not text")
+                    raise TypeError(
+                        "message content is empty or not text "
+                        f"(finish_reason={choice.get('finish_reason', 'unknown')}, "
+                        f"reasoning_present={bool(message.get('reasoning'))})"
+                    )
                 return _response_result(content)
             except (OSError, urllib.error.URLError, json.JSONDecodeError, KeyError, IndexError, TypeError, ValueError) as exc:
                 last_error = exc
@@ -222,11 +233,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Scoped OpenRouter coding builder")
     parser.add_argument("--model", default="openrouter/free")
     parser.add_argument("--fallback-model", action="append", default=[])
+    parser.add_argument("--reasoning-max-tokens", type=int, default=2_000)
     parser.add_argument("--timeout-seconds", type=float, default=180.0)
     parser.add_argument("--context-chars", type=int, default=120_000)
     args = parser.parse_args()
-    if args.timeout_seconds <= 0 or args.context_chars < 1:
-        raise SystemExit("timeout-seconds and context-chars must be positive")
+    if args.timeout_seconds <= 0 or args.context_chars < 1 or args.reasoning_max_tokens < 1:
+        raise SystemExit("timeout-seconds, context-chars and reasoning-max-tokens must be positive")
     prompt = sys.stdin.read()
     roots = _allowed_paths(prompt)
     worktree = Path.cwd().resolve()
@@ -236,6 +248,7 @@ def main() -> int:
         model=args.model,
         timeout=args.timeout_seconds,
         fallback_models=tuple(args.fallback_model),
+        reasoning_max_tokens=args.reasoning_max_tokens,
     )
     print(json.dumps({"written": apply_response(worktree, roots, result)}))
     return 0
