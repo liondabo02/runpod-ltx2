@@ -120,8 +120,13 @@ class AutonomousCodingWorker:
                 test_env["PYTHONDONTWRITEBYTECODE"] = "1"
                 core_path = worktree / "ahos_core"
                 if core_path.is_dir():
-                    existing = test_env.get("PYTHONPATH", "")
-                    test_env["PYTHONPATH"] = str(core_path) + (os.pathsep + existing if existing else "")
+                    # The long-running daemon is normally launched from the
+                    # owner checkout and may therefore carry that checkout in
+                    # PYTHONPATH.  Appending it lets an isolated test import a
+                    # mixture of the candidate worktree and owner code.  Tests
+                    # must resolve the package exclusively from the candidate.
+                    test_env["PYTHONPATH"] = str(core_path)
+                    test_env["PYTHONNOUSERSITE"] = "1"
                 completed = subprocess.run(
                     command,
                     cwd=worktree,

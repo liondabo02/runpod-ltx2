@@ -13,7 +13,9 @@ from ahos.coding_worker import (
 )
 
 
-def test_core_test_process_receives_package_on_pythonpath(tmp_path: Path) -> None:
+def test_core_test_process_receives_only_candidate_package_on_pythonpath(
+    tmp_path: Path, monkeypatch
+) -> None:
     repo = _repository(tmp_path)
     (repo / "ahos_core").mkdir()
     (repo / "ahos_core" / "marker_module.py").write_text("VALUE = 7\n", encoding="utf-8")
@@ -24,8 +26,18 @@ def test_core_test_process_receives_package_on_pythonpath(tmp_path: Path) -> Non
         title="test core import",
         repository=repo,
         allowed_paths=("src", "ahos_core"),
-        test_commands=((sys.executable, "-c", "import marker_module; assert marker_module.VALUE == 7"),),
+        test_commands=((
+            sys.executable,
+            "-c",
+            (
+                "import os; from pathlib import Path; import marker_module; "
+                "assert marker_module.VALUE == 7; "
+                "assert os.environ['PYTHONPATH'] == str(Path.cwd() / 'ahos_core'); "
+                "assert os.environ['PYTHONNOUSERSITE'] == '1'"
+            ),
+        ),),
     )
+    monkeypatch.setenv("PYTHONPATH", str(tmp_path / "owner-checkout"))
 
     def builder(_prompt: str, worktree: Path):
         (worktree / "src" / "app.py").write_text("VALUE = 2\n", encoding="utf-8")
