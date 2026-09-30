@@ -60,6 +60,7 @@ def test_retry_tells_model_to_repair_invalid_response(monkeypatch: pytest.Monkey
     assert bodies[1]["messages"][-2]["content"] == "not a patch"
     assert "previous answer was invalid" in bodies[1]["messages"][-1]["content"]
     assert bodies[1]["reasoning"] == {"max_tokens": 2_000, "exclude": True}
+    assert bodies[1]["response_format"] == {"type": "json_object"}
 
 
 def test_reasoning_budget_can_be_overridden(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -141,6 +142,23 @@ def test_extracts_diff_without_trailing_markdown_fence() -> None:
         "```diff\ndiff --git a/src/app.py b/src/app.py\n--- a/src/app.py\n+++ b/src/app.py\n```"
     )
     assert result["patch"].endswith("+++ b/src/app.py\n")
+
+
+def test_extracts_markdown_file_blocks_with_explicit_paths() -> None:
+    result = _response_result(
+        "### `src/app.py`\n```python\nVALUE = 2\n```\n"
+        "```text path=tests/test_app.py\ndef test_value():\n    assert True\n```"
+    )
+    assert result["files"] == [
+        {"path": "src/app.py", "content": "VALUE = 2\n"},
+        {"path": "tests/test_app.py", "content": "def test_value():\n    assert True\n"},
+    ]
+
+
+def test_markdown_file_block_still_obeys_scope_guard(tmp_path: Path) -> None:
+    result = _response_result("```python path=../escape.py\nbad = True\n```")
+    with pytest.raises(CodingBuilderError, match="out-of-scope"):
+        apply_response(tmp_path, (PurePosixPath("src"),), result)
 
 
 def test_allowed_paths_are_read_from_supervisor_prompt() -> None:

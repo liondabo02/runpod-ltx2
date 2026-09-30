@@ -91,6 +91,37 @@ def _response_result(content: str) -> dict[str, object]:
         if fence >= 0:
             patch = patch[:fence].rstrip()
         return {"patch": patch + "\n"}
+    markdown_files: list[dict[str, str]] = []
+    fence_pattern = re.compile(
+        r"```(?P<info>[^\r\n`]*)\r?\n(?P<body>[\s\S]*?)```",
+        re.MULTILINE,
+    )
+    for match in fence_pattern.finditer(content):
+        info = match.group("info").strip()
+        path: str | None = None
+        explicit = re.search(
+            r"(?:^|\s)(?:path|file)\s*=\s*[\"']?([^\s\"']+)", info, re.IGNORECASE
+        )
+        if explicit:
+            path = explicit.group(1)
+        else:
+            tokens = info.split()
+            if tokens and ("/" in tokens[-1] or "." in PurePosixPath(tokens[-1]).name):
+                path = tokens[-1]
+        if path is None:
+            prefix = content[max(0, match.start() - 300):match.start()]
+            heading = re.search(
+                r"(?:^|\n)\s*(?:#{1,6}\s*|(?:file|path)\s*:\s*)"
+                r"`?([^`\r\n]+?)`?\s*$",
+                prefix,
+                re.IGNORECASE,
+            )
+            if heading:
+                path = heading.group(1).strip()
+        if path:
+            markdown_files.append({"path": path.strip("` "), "content": match.group("body")})
+    if markdown_files:
+        return {"files": markdown_files}
     raise ValueError("model returned neither a scoped JSON edit nor a Git diff")
 
 
@@ -104,11 +135,12 @@ def _request(
         raise CodingBuilderError("OPENROUTER_API_KEY is missing")
     system = (
         "You are an AHOS coding worker operating in an isolated Git worktree. "
-        "Return only a standard unified Git diff beginning with 'diff --git'. "
-        "Include the smallest complete patch needed for the task; do not return entire "
-        "unchanged files. Edit only allowed paths. Never include .git, secrets, commands, "
-        "explanations, markdown fences, commits, pushes, dependency installation, binary "
-        "files, symlinks, or file-mode changes."
+        "Return only one JSON object with this exact shape: "
+        '{"files":[{"path":"relative/path","content":"complete UTF-8 file content"}]}. '
+        "Include only files that must change and preserve all unrelated behavior. "
+        "Edit only allowed paths. Never include .git, secrets, commands, explanations, "
+        "markdown fences, commits, pushes, dependency installation, binary files, "
+        "symlinks, or file-mode changes."
     )
     models = tuple(dict.fromkeys(value.strip() for value in (model, *fallback_models) if value.strip()))
     last_error: Exception | None = None
@@ -127,6 +159,7 @@ def _request(
                 "messages": messages,
                 "temperature": 0.1,
                 "max_tokens": 16_000,
+                "response_format": {"type": "json_object"},
                 "reasoning": {
                     "max_tokens": reasoning_max_tokens,
                     "exclude": True,
@@ -159,8 +192,9 @@ def _request(
                     messages.extend((
                         {"role": "assistant", "content": content[-12_000:]},
                         {"role": "user", "content": (
-                            "Your previous answer was invalid. Return only the corrected scoped JSON edit "
-                            "or unified Git diff requested by the system message. Do not explain."
+                            "Your previous answer was invalid. Return only the corrected JSON object "
+                            "requested by the system message. It must contain a non-empty files array; "
+                            "each item must contain path and complete file content strings. Do not explain."
                         )},
                     ))
                 if attempt + 1 < attempts:
