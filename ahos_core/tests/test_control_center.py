@@ -1,6 +1,7 @@
 import json
 import subprocess
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 from ahos.autonomous_company import PersistentMissionQueue, QueueStatus
@@ -207,6 +208,28 @@ def test_dashboard_approval_applies_tests_commits_and_pushes(tmp_path: Path):
                             text=True, capture_output=True, check=True).stdout.strip()
     assert remote == local
     assert "Approve &amp; Publish" not in render_dashboard(state.snapshot())
+
+
+def test_dashboard_approval_exposes_ahos_package_to_tests(tmp_path: Path):
+    state = ControlCenterState(tmp_path / "runtime")
+    repository, _bare, store = _waiting_coding_task(state, tmp_path)
+    (repository / "ahos_core" / "ahos").mkdir(parents=True)
+    (repository / "ahos_core" / "ahos" / "__init__.py").write_text(
+        "VALUE = 7\n", encoding="utf-8"
+    )
+    subprocess.run(["git", "add", "."], cwd=repository, check=True)
+    subprocess.run(["git", "commit", "-qm", "add package"], cwd=repository, check=True)
+    task = store.get("CODE-PANEL")
+    records = store._load()
+    records["CODE-PANEL"] = replace(
+        task,
+        test_commands=((sys.executable, "-c", "import ahos; assert ahos.VALUE == 7"),),
+    )
+    store._save(records)
+
+    message = state.decide_coding_task("CODE-PANEL", approved=True)
+
+    assert "approved, tested, committed and pushed" in message
 
 
 def test_dashboard_approval_refuses_tracked_owner_changes(tmp_path: Path):

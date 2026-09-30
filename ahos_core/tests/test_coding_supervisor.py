@@ -108,6 +108,28 @@ def test_bounded_retries_and_policy_is_fail_closed(tmp_path: Path) -> None:
     assert store.get("CODE-1").attempts == 2
 
 
+def test_automatic_retry_receives_previous_failure_diagnostic(tmp_path: Path) -> None:
+    repo = _repo(tmp_path)
+    store = CodingSupervisorStore(tmp_path / "queue.json")
+    store.enqueue(_item(repo), max_attempts=2)
+    prompts: list[str] = []
+
+    def builder(prompt: str, _worktree: Path):
+        prompts.append(prompt)
+
+    supervisor = CodingSupervisor(
+        store=store,
+        worker=AutonomousCodingWorker(runner=builder, workspace_root=tmp_path / "workers"),
+        worker_id="s", test_command_policy=_allow_python,
+    )
+
+    assert supervisor.run_once().status is CodingTaskStatus.QUEUED
+    assert supervisor.run_once().status is CodingTaskStatus.RETRIES_EXHAUSTED
+    assert "Previous attempt failed the deterministic gate" not in prompts[0]
+    assert "Previous attempt failed the deterministic gate" in prompts[1]
+    assert "worker produced no tracked changes" in prompts[1]
+
+
 def test_owner_can_explicitly_retry_an_exhausted_task(tmp_path: Path) -> None:
     repo = _repo(tmp_path)
     store = CodingSupervisorStore(tmp_path / "queue.json")

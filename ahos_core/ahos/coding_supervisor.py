@@ -391,8 +391,25 @@ class CodingSupervisor:
             runner=self.worker.runner,
             workspace_root=self.worker.workspace_root / claimed.task_id / attempt_name,
         )
+        backlog_item = claimed.backlog_item()
+        if claimed.last_error:
+            # A retry must be a repair attempt, not a blind repetition of the
+            # same prompt. Keep the persisted owner request unchanged while
+            # giving the builder the previous gate diagnostic as bounded,
+            # untrusted context.
+            diagnostic = claimed.last_error[-4000:]
+            backlog_item = replace(
+                backlog_item,
+                title=(
+                    f"{backlog_item.title}\n\n"
+                    "Previous attempt failed the deterministic gate. Repair "
+                    "the implementation so the failure below no longer occurs; "
+                    "do not weaken, delete, or skip tests:\n"
+                    f"{diagnostic}"
+                ),
+            )
         try:
-            result = attempt_worker.run(claimed.backlog_item(), self.worker_id)
+            result = attempt_worker.run(backlog_item, self.worker_id)
             ok = result.status is CodingWorkerStatus.WAITING_OWNER_APPROVAL
             return self.store.finish(
                 claimed.task_id, self.worker_id, success=ok, reason=result.reason,

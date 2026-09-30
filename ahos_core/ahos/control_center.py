@@ -314,9 +314,17 @@ class ControlCenterState:
                 raise ValueError("staged files do not match owner approval evidence")
 
             for command in task.test_commands:
+                test_env = os.environ.copy()
+                test_env["PYTHONDONTWRITEBYTECODE"] = "1"
+                core_path = repository / "ahos_core"
+                if core_path.is_dir():
+                    existing = test_env.get("PYTHONPATH", "")
+                    test_env["PYTHONPATH"] = str(core_path) + (
+                        os.pathsep + existing if existing else ""
+                    )
                 completed = subprocess.run(
                     list(command), cwd=repository, text=True,
-                    capture_output=True, check=False,
+                    env=test_env, capture_output=True, check=False,
                 )
                 if completed.returncode:
                     detail = (completed.stderr or completed.stdout).strip()[-1200:]
