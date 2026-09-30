@@ -4,7 +4,8 @@ from pathlib import Path, PurePosixPath
 import pytest
 
 from ahos.openrouter_coding_builder import (
-    CodingBuilderError, _allowed_paths, _request, _response_result, apply_response,
+    CodingBuilderError, DEFAULT_FREE_CODING_FALLBACKS, _allowed_paths,
+    _configured_fallbacks, _request, _response_result, apply_response,
 )
 
 
@@ -128,6 +129,46 @@ def test_falls_back_to_next_configured_model(monkeypatch: pytest.MonkeyPatch) ->
 
     assert models == ["primary/model", "fallback/model"]
     assert result["patch"].startswith("diff --git")
+
+
+def test_direct_free_fallback_omits_unsupported_response_format(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    bodies = []
+
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def read(self):
+            return json.dumps({
+                "choices": [{"message": {
+                    "content": "diff --git a/src/app.py b/src/app.py\n"
+                }}]
+            }).encode()
+
+    def urlopen(request, **_kwargs):
+        bodies.append(json.loads(request.data))
+        return Response()
+
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+    monkeypatch.setattr("urllib.request.urlopen", urlopen)
+
+    _request(
+        prompt="task", context="ctx", model=DEFAULT_FREE_CODING_FALLBACKS[0],
+        timeout=1,
+    )
+
+    assert "response_format" not in bodies[0]
+
+
+def test_free_router_gets_resilient_default_fallbacks() -> None:
+    assert _configured_fallbacks("openrouter/free", []) == DEFAULT_FREE_CODING_FALLBACKS
+    assert _configured_fallbacks("primary/model", []) == ()
+    assert _configured_fallbacks("openrouter/free", ["owner/model"]) == ("owner/model",)
 
 
 def test_extracts_json_edit_from_markdown_fence_and_surrounding_text() -> None:

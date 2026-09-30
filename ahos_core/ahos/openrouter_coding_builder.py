@@ -16,6 +16,20 @@ class CodingBuilderError(RuntimeError):
     pass
 
 
+DEFAULT_FREE_CODING_FALLBACKS = (
+    "poolside/laguna-s-2.1:free",
+    "cohere/north-mini-code:free",
+    "nvidia/nemotron-3-ultra-550b-a55b:free",
+)
+
+
+def _configured_fallbacks(model: str, values: list[str]) -> tuple[str, ...]:
+    configured = tuple(value for value in values if value.strip())
+    if model == "openrouter/free" and not configured:
+        return DEFAULT_FREE_CODING_FALLBACKS
+    return configured
+
+
 def _allowed_paths(prompt: str) -> tuple[PurePosixPath, ...]:
     match = re.search(r"^Allowed paths:\s*(.+)$", prompt, re.MULTILINE)
     if not match:
@@ -154,17 +168,22 @@ def _request(
         for attempt in range(attempts):
             total_attempts += 1
             content = ""
-            body = json.dumps({
+            request_payload: dict[str, object] = {
                 "model": selected_model,
                 "messages": messages,
                 "temperature": 0.1,
                 "max_tokens": 16_000,
-                "response_format": {"type": "json_object"},
                 "reasoning": {
                     "max_tokens": reasoning_max_tokens,
                     "exclude": True,
                 },
-            }).encode("utf-8")
+            }
+            # The free router can select a provider that supports enforced JSON.
+            # Current direct free coding fallbacks do not accept response_format;
+            # their output still passes through _response_result and scope guards.
+            if selected_model == "openrouter/free":
+                request_payload["response_format"] = {"type": "json_object"}
+            body = json.dumps(request_payload).encode("utf-8")
             request = urllib.request.Request(
                 "https://openrouter.ai/api/v1/chat/completions", data=body,
                 headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
@@ -276,12 +295,13 @@ def main() -> int:
     prompt = sys.stdin.read()
     roots = _allowed_paths(prompt)
     worktree = Path.cwd().resolve()
+    fallback_models = _configured_fallbacks(args.model, args.fallback_model)
     result = _request(
         prompt=prompt,
         context=_context(worktree, roots, args.context_chars),
         model=args.model,
         timeout=args.timeout_seconds,
-        fallback_models=tuple(args.fallback_model),
+        fallback_models=fallback_models,
         reasoning_max_tokens=args.reasoning_max_tokens,
     )
     print(json.dumps({"written": apply_response(worktree, roots, result)}))
