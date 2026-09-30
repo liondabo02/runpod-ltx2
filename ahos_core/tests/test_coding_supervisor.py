@@ -130,6 +130,35 @@ def test_automatic_retry_receives_previous_failure_diagnostic(tmp_path: Path) ->
     assert "worker produced no tracked changes" in prompts[1]
 
 
+def test_automatic_retry_receives_previous_candidate_source(tmp_path: Path) -> None:
+    repo = _repo(tmp_path)
+    item = CodingBacklogItem(
+        task_id="CODE-REPAIR", title="repair candidate", repository=repo,
+        allowed_paths=("src",),
+        test_commands=((sys.executable, "-c", "raise SystemExit('gate failure')"),),
+    )
+    store = CodingSupervisorStore(tmp_path / "queue.json")
+    store.enqueue(item, max_attempts=2)
+    prompts: list[str] = []
+
+    def builder(prompt: str, worktree: Path):
+        prompts.append(prompt)
+        (worktree / "src" / "app.py").write_text(
+            "VALUE = 'candidate needing repair'\n", encoding="utf-8"
+        )
+
+    supervisor = CodingSupervisor(
+        store=store,
+        worker=AutonomousCodingWorker(runner=builder, workspace_root=tmp_path / "workers"),
+        worker_id="s", test_command_policy=_allow_python,
+    )
+
+    assert supervisor.run_once().status is CodingTaskStatus.QUEUED
+    assert supervisor.run_once().status is CodingTaskStatus.RETRIES_EXHAUSTED
+    assert "Previous candidate source follows" in prompts[1]
+    assert "candidate needing repair" in prompts[1]
+
+
 def test_owner_can_explicitly_retry_an_exhausted_task(tmp_path: Path) -> None:
     repo = _repo(tmp_path)
     store = CodingSupervisorStore(tmp_path / "queue.json")
@@ -141,7 +170,8 @@ def test_owner_can_explicitly_retry_an_exhausted_task(tmp_path: Path) -> None:
 
     assert retried.status is CodingTaskStatus.QUEUED
     assert retried.attempts == 0
-    assert retried.last_error is None
+    assert retried.max_attempts == 4
+    assert retried.last_error == "temporary failure"
 
 
 def test_owner_retry_uses_a_fresh_workspace_when_old_attempt_remains(tmp_path: Path) -> None:

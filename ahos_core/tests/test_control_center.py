@@ -276,6 +276,7 @@ def test_panel_creates_natural_language_coding_task_with_safe_scope(tmp_path: Pa
         "ahos_core/README.md", "ahos_core/pyproject.toml",
     )
     assert task.test_commands[0][1:] == ("-m", "pytest", "-q", "ahos_core/tests")
+    assert task.max_attempts == 4
 
 
 def test_code_review_renders_patch_evidence_and_actions(tmp_path: Path):

@@ -390,7 +390,7 @@ class ControlCenterState:
                 test_commands=(test_command,),
             ),
             idempotency_key=f"panel:{task_id}",
-            max_attempts=2,
+            max_attempts=4,
             priority=10,
         )
         return f"coding task queued: {task_id}"
