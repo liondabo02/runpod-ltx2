@@ -173,16 +173,18 @@ def _request(
                 "messages": messages,
                 "temperature": 0.1,
                 "max_tokens": 16_000,
-                "reasoning": {
-                    "max_tokens": reasoning_max_tokens,
-                    "exclude": True,
-                },
             }
             # The free router can select a provider that supports enforced JSON.
-            # Current direct free coding fallbacks do not accept response_format;
-            # their output still passes through _response_result and scope guards.
+            # Current direct free coding fallbacks have differing support for
+            # response_format and reasoning controls. Keep their request to the
+            # common chat-completions subset; output still passes through
+            # _response_result and the deterministic scope guards.
             if selected_model == "openrouter/free":
                 request_payload["response_format"] = {"type": "json_object"}
+                request_payload["reasoning"] = {
+                    "max_tokens": reasoning_max_tokens,
+                    "exclude": True,
+                }
             body = json.dumps(request_payload).encode("utf-8")
             request = urllib.request.Request(
                 "https://openrouter.ai/api/v1/chat/completions", data=body,
@@ -205,6 +207,17 @@ def _request(
                         f"reasoning_present={bool(message.get('reasoning'))})"
                     )
                 return _response_result(content)
+            except urllib.error.HTTPError as exc:
+                try:
+                    detail = exc.read().decode("utf-8", errors="replace").strip()
+                except OSError:
+                    detail = ""
+                last_error = CodingBuilderError(
+                    f"HTTP {exc.code} {exc.reason}"
+                    + (f": {detail[-2000:]}" if detail else "")
+                )
+                if attempt + 1 < attempts:
+                    time.sleep(attempt + 1)
             except (OSError, urllib.error.URLError, json.JSONDecodeError, KeyError, IndexError, TypeError, ValueError) as exc:
                 last_error = exc
                 if content:

@@ -163,6 +163,7 @@ def test_direct_free_fallback_omits_unsupported_response_format(
     )
 
     assert "response_format" not in bodies[0]
+    assert "reasoning" not in bodies[0]
 
 
 def test_free_router_gets_resilient_default_fallbacks() -> None:
