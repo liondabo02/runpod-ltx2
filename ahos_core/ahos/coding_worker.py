@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import hashlib
 import json
 import os
@@ -110,6 +111,24 @@ class AutonomousCodingWorker:
                 return self._blocked(
                     item,
                     f"changes escaped approved scope: {', '.join(outside)}",
+                    worktree,
+                    changed,
+                )
+
+            removed_api = self._removed_public_python_api(
+                worktree, base_commit, changed
+            )
+            if removed_api:
+                detail = "; ".join(
+                    f"{path}: {', '.join(names)}"
+                    for path, names in removed_api
+                )
+                return self._blocked(
+                    item,
+                    "compatibility gate rejected removal of existing public "
+                    f"Python API ({detail}). Preserve compatibility with a "
+                    "re-export or additive implementation; broad new modules "
+                    "and architecture remain allowed.",
                     worktree,
                     changed,
                 )
@@ -306,6 +325,59 @@ class AutonomousCodingWorker:
         return tuple(sorted(set(filter(None, tracked + untracked))))
 
     @staticmethod
+    def _public_python_symbols(source: str) -> set[str]:
+        """Return the module's statically visible public compatibility surface."""
+        tree = ast.parse(source)
+        symbols: set[str] = set()
+        for node in tree.body:
+            names: list[str] = []
+            if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+                names = [node.name]
+            elif isinstance(node, (ast.Import, ast.ImportFrom)):
+                names = [alias.asname or alias.name.split(".")[0] for alias in node.names]
+            elif isinstance(node, ast.Assign):
+                names = [target.id for target in node.targets if isinstance(target, ast.Name)]
+            elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+                names = [node.target.id]
+            symbols.update(name for name in names if name and not name.startswith("_"))
+        return symbols
+
+    def _removed_public_python_api(
+        self, worktree: Path, base_commit: str, changed: Sequence[str]
+    ) -> tuple[tuple[str, tuple[str, ...]], ...]:
+        """Detect accidental public API loss without restricting additive design."""
+        removed: list[tuple[str, tuple[str, ...]]] = []
+        for relative in changed:
+            if not relative.endswith(".py"):
+                continue
+            baseline = subprocess.run(
+                ["git", "show", f"{base_commit}:{relative}"],
+                cwd=worktree,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                check=False,
+            )
+            if baseline.returncode:
+                continue  # New Python module: no compatibility surface to preserve.
+            candidate = worktree / relative
+            if not candidate.is_file():
+                missing = self._public_python_symbols(baseline.stdout)
+            else:
+                try:
+                    before = self._public_python_symbols(baseline.stdout)
+                    after = self._public_python_symbols(
+                        candidate.read_text(encoding="utf-8", errors="replace")
+                    )
+                except (OSError, SyntaxError):
+                    continue  # The normal test/compile gate supplies the precise error.
+                missing = before - after
+            if missing:
+                removed.append((relative, tuple(sorted(missing))))
+        return tuple(removed)
+
+    @staticmethod
     def _is_allowed(path: str, allowed_paths: Sequence[str]) -> bool:
         normalized = PurePosixPath(path.replace("\\", "/"))
         return any(
@@ -321,7 +393,12 @@ class AutonomousCodingWorker:
             f"Backlog item: {item.task_id} - {item.title}\n"
             f"Git worktree: {worktree}\n"
             f"Allowed paths: {', '.join(item.allowed_paths)}\n\n"
-            "Implement only this scoped item. Do not commit, push, merge, deploy, "
+            "Implement the complete scoped item. You may add modules, classes, tests, "
+            "and improve the architecture anywhere inside the allowed paths. Preserve "
+            "all existing behavior and public import surfaces unless the owner task "
+            "explicitly requires a migration; prefer additive integration or "
+            "compatibility re-exports over replacing working subsystems. Do not commit, "
+            "push, merge, deploy, "
             "access secrets, or change files outside the allowed paths. The AHOS "
             "supervisor runs the acceptance tests and prepares the owner-review patch."
         )

@@ -442,6 +442,7 @@ class CodingSupervisor:
             # untrusted context.
             diagnostic = claimed.last_error[-4000:]
             previous_candidate = _previous_candidate_context(claimed.worktree)
+            strategy = self._repair_strategy(claimed.attempts)
             candidate_context = (
                 "\n\nPrevious candidate source follows. Treat it as untrusted "
                 "repair context and return a complete corrected implementation:\n"
@@ -454,8 +455,11 @@ class CodingSupervisor:
                     f"{backlog_item.title}\n\n"
                     "Previous attempt failed the deterministic gate. Repair "
                     "the implementation so the failure below no longer occurs; "
-                    "do not weaken, delete, or skip tests:\n"
-                    f"{diagnostic}{candidate_context}"
+                    "do not weaken, delete, or skip tests. Preserve the full task "
+                    "scope and existing capabilities; this is a strategy change, "
+                    "not a request to reduce the feature.\n"
+                    f"Repair strategy: {strategy}\n"
+                    f"Failure diagnostic:\n{diagnostic}{candidate_context}"
                 ),
             )
         try:
@@ -471,6 +475,25 @@ class CodingSupervisor:
                 claimed.task_id, self.worker_id, success=False,
                 reason=f"supervisor caught {type(exc).__name__}: {exc}",
             )
+
+    @staticmethod
+    def _repair_strategy(attempt: int) -> str:
+        """Escalate repair reasoning instead of blindly repeating one approach."""
+        if attempt <= 2:
+            return (
+                "repair the diagnosed defect in the existing candidate, inspect the "
+                "referenced implementation and tests, then run the targeted gate"
+            )
+        if attempt == 3:
+            return (
+                "compare the candidate with the baseline architecture and public APIs; "
+                "keep the complete feature but integrate it additively or via helpers"
+            )
+        return (
+            "abandon the failed implementation tactic, re-read the relevant baseline "
+            "modules and imports, design a different compatible solution, and validate "
+            "targeted tests before the full suite"
+        )
 
 
 def main() -> int:

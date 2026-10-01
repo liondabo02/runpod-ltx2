@@ -128,6 +128,16 @@ def test_automatic_retry_receives_previous_failure_diagnostic(tmp_path: Path) ->
     assert "Previous attempt failed the deterministic gate" not in prompts[0]
     assert "Previous attempt failed the deterministic gate" in prompts[1]
     assert "worker produced no tracked changes" in prompts[1]
+    assert "Preserve the full task scope and existing capabilities" in prompts[1]
+    assert "Repair strategy:" in prompts[1]
+
+
+def test_repair_strategy_escalates_without_reducing_feature_scope() -> None:
+    assert "repair the diagnosed defect" in CodingSupervisor._repair_strategy(2)
+    assert "integrate it additively" in CodingSupervisor._repair_strategy(3)
+    final = CodingSupervisor._repair_strategy(4)
+    assert "different compatible solution" in final
+    assert "targeted tests before the full suite" in final
 
 
 def test_automatic_retry_receives_previous_candidate_source(tmp_path: Path) -> None:
