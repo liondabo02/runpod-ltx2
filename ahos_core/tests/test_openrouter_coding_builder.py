@@ -5,7 +5,8 @@ import pytest
 
 from ahos.openrouter_coding_builder import (
     CodingBuilderError, DEFAULT_FREE_CODING_FALLBACKS, _allowed_paths,
-    _configured_fallbacks, _request, _response_result, apply_response,
+    _configured_fallbacks, _request, _response_result, _validate_edit_result,
+    apply_response,
 )
 
 
@@ -62,6 +63,58 @@ def test_retry_tells_model_to_repair_invalid_response(monkeypatch: pytest.Monkey
     assert "previous answer was invalid" in bodies[1]["messages"][-1]["content"]
     assert bodies[1]["reasoning"] == {"max_tokens": 2_000, "exclude": True}
     assert bodies[1]["response_format"] == {"type": "json_object"}
+
+
+def test_empty_files_response_is_repaired_inside_model_retry_loop(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    responses = iter((
+        '{"files": []}',
+        '{"files": [{"path": "src/app.py", "content": "VALUE = 2\\n"}]}',
+    ))
+    bodies = []
+
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def read(self):
+            return json.dumps({
+                "choices": [{"message": {"content": next(responses)}}]
+            }).encode()
+
+    def urlopen(request, **_kwargs):
+        bodies.append(json.loads(request.data))
+        return Response()
+
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+    monkeypatch.setattr("urllib.request.urlopen", urlopen)
+    monkeypatch.setattr("time.sleep", lambda _seconds: None)
+
+    result = _request(
+        prompt="task", context="ctx", model="openrouter/free", timeout=1
+    )
+
+    assert result["files"][0]["path"] == "src/app.py"
+    assert len(bodies) == 2
+    assert "non-empty files array" in bodies[1]["messages"][-1]["content"]
+
+
+@pytest.mark.parametrize(
+    "result",
+    (
+        {"files": []},
+        {"files": [{}]},
+        {"files": [{"path": "", "content": "x"}]},
+        {"patch": ""},
+    ),
+)
+def test_edit_validation_rejects_unusable_results(result) -> None:
+    with pytest.raises(ValueError):
+        _validate_edit_result(result)
 
 
 def test_reasoning_budget_can_be_overridden(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -139,6 +139,25 @@ def _response_result(content: str) -> dict[str, object]:
     raise ValueError("model returned neither a scoped JSON edit nor a Git diff")
 
 
+def _validate_edit_result(result: dict[str, object]) -> dict[str, object]:
+    """Reject empty/malformed edits while the model retry loop is still active."""
+    patch = result.get("patch")
+    if isinstance(patch, str) and "diff --git " in patch:
+        return result
+    files = result.get("files")
+    if not isinstance(files, list) or not files:
+        raise ValueError("coding response contains no files")
+    for item in files:
+        if (
+            not isinstance(item, dict)
+            or not isinstance(item.get("path"), str)
+            or not item["path"].strip()
+            or not isinstance(item.get("content"), str)
+        ):
+            raise ValueError("coding response contains an invalid file entry")
+    return result
+
+
 def _request(
     *, prompt: str, context: str, model: str, timeout: float,
     fallback_models: tuple[str, ...] = (),
@@ -206,7 +225,7 @@ def _request(
                         f"(finish_reason={choice.get('finish_reason', 'unknown')}, "
                         f"reasoning_present={bool(message.get('reasoning'))})"
                     )
-                return _response_result(content)
+                return _validate_edit_result(_response_result(content))
             except urllib.error.HTTPError as exc:
                 try:
                     detail = exc.read().decode("utf-8", errors="replace").strip()
