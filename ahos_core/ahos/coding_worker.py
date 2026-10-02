@@ -325,20 +325,18 @@ class AutonomousCodingWorker:
         return tuple(sorted(set(filter(None, tracked + untracked))))
 
     @staticmethod
-    def _public_python_symbols(source: str) -> set[str]:
-        """Return the module's statically visible public compatibility surface."""
+    def _public_python_symbols(
+        source: str, *, include_imports: bool = False
+    ) -> set[str]:
+        """Return public callable/type contracts, optionally including re-exports."""
         tree = ast.parse(source)
         symbols: set[str] = set()
         for node in tree.body:
             names: list[str] = []
             if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
                 names = [node.name]
-            elif isinstance(node, (ast.Import, ast.ImportFrom)):
+            elif include_imports and isinstance(node, (ast.Import, ast.ImportFrom)):
                 names = [alias.asname or alias.name.split(".")[0] for alias in node.names]
-            elif isinstance(node, ast.Assign):
-                names = [target.id for target in node.targets if isinstance(target, ast.Name)]
-            elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
-                names = [node.target.id]
             symbols.update(name for name in names if name and not name.startswith("_"))
         return symbols
 
@@ -368,7 +366,8 @@ class AutonomousCodingWorker:
                 try:
                     before = self._public_python_symbols(baseline.stdout)
                     after = self._public_python_symbols(
-                        candidate.read_text(encoding="utf-8", errors="replace")
+                        candidate.read_text(encoding="utf-8", errors="replace"),
+                        include_imports=True,
                     )
                 except (OSError, SyntaxError):
                     continue  # The normal test/compile gate supplies the precise error.

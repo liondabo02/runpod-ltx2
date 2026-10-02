@@ -44,25 +44,40 @@ def _is_allowed(path: PurePosixPath, roots: tuple[PurePosixPath, ...]) -> bool:
     return any(path == root or root in path.parents for root in roots)
 
 
-def _context(worktree: Path, roots: tuple[PurePosixPath, ...], limit: int) -> str:
+def _context(
+    worktree: Path,
+    roots: tuple[PurePosixPath, ...],
+    limit: int,
+    *,
+    prompt: str = "",
+) -> str:
     blocks: list[str] = []
     used = 0
+    prompt_tokens = {
+        token for token in re.findall(r"[a-z0-9]+", prompt.lower().replace("_", "-"))
+        if len(token) >= 4
+    }
+    ranked: list[tuple[int, str, Path]] = []
     for root in roots:
         target = worktree / root
         candidates = [target] if target.is_file() else sorted(target.rglob("*")) if target.exists() else []
         for path in candidates:
             if not path.is_file() or path.is_symlink() or ".git" in path.parts:
                 continue
-            try:
-                content = path.read_text(encoding="utf-8")
-            except (OSError, UnicodeDecodeError):
-                continue
             relative = path.relative_to(worktree).as_posix()
-            block = f"\n--- FILE: {relative} ---\n{content}\n"
-            if used + len(block) > limit:
-                return "".join(blocks)
-            blocks.append(block)
-            used += len(block)
+            searchable = relative.lower().replace("_", "-")
+            score = sum(1 for token in prompt_tokens if token in searchable)
+            ranked.append((-score, relative, path))
+    for _negative_score, relative, path in sorted(ranked):
+        try:
+            content = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        block = f"\n--- FILE: {relative} ---\n{content}\n"
+        if used + len(block) > limit:
+            continue
+        blocks.append(block)
+        used += len(block)
     return "".join(blocks)
 
 
@@ -330,7 +345,7 @@ def main() -> int:
     fallback_models = _configured_fallbacks(args.model, args.fallback_model)
     result = _request(
         prompt=prompt,
-        context=_context(worktree, roots, args.context_chars),
+        context=_context(worktree, roots, args.context_chars, prompt=prompt),
         model=args.model,
         timeout=args.timeout_seconds,
         fallback_models=fallback_models,

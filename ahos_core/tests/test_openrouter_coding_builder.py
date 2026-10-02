@@ -5,7 +5,7 @@ import pytest
 
 from ahos.openrouter_coding_builder import (
     CodingBuilderError, DEFAULT_FREE_CODING_FALLBACKS, _allowed_paths,
-    _configured_fallbacks, _request, _response_result, _validate_edit_result,
+    _configured_fallbacks, _context, _request, _response_result, _validate_edit_result,
     apply_response,
 )
 
@@ -223,6 +223,24 @@ def test_free_router_gets_resilient_default_fallbacks() -> None:
     assert _configured_fallbacks("openrouter/free", []) == DEFAULT_FREE_CODING_FALLBACKS
     assert _configured_fallbacks("primary/model", []) == ()
     assert _configured_fallbacks("openrouter/free", ["owner/model"]) == ("owner/model",)
+
+
+def test_repository_context_prioritizes_files_named_by_the_task(tmp_path: Path) -> None:
+    source = tmp_path / "src"
+    source.mkdir()
+    (source / "a_large_unrelated.py").write_text("X = '" + "x" * 500 + "'\n")
+    (source / "control_center.py").write_text("class ControlCenterState:\n    pass\n")
+
+    context = _context(
+        tmp_path,
+        (PurePosixPath("src"),),
+        150,
+        prompt="Add System Health to the Control Center dashboard",
+    )
+
+    assert "FILE: src/control_center.py" in context
+    assert "ControlCenterState" in context
+    assert "a_large_unrelated.py" not in context
 
 
 def test_extracts_json_edit_from_markdown_fence_and_surrounding_text() -> None:

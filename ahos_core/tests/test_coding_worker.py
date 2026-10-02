@@ -236,6 +236,28 @@ def test_worker_allows_broad_additive_architecture_and_compatibility_reexports(
     assert result.changed_files == ("src/feature.py", "src/health.py")
 
 
+def test_compatibility_gate_ignores_incidental_imports_and_constants(tmp_path: Path) -> None:
+    repository = _repository(tmp_path)
+    (repository / "src" / "feature.py").write_text(
+        "import argparse\nPUBLIC_CONSTANT = 1\n\nclass StableApi:\n    pass\n",
+        encoding="utf-8",
+    )
+    subprocess.run(["git", "add", "."], cwd=repository, check=True)
+    subprocess.run(["git", "commit", "-qm", "api with internals"], cwd=repository, check=True)
+
+    def builder(_prompt: str, worktree: Path):
+        (worktree / "src" / "feature.py").write_text(
+            "VALUE = 2\n\nclass StableApi:\n    pass\n\nclass NewCapability:\n    pass\n",
+            encoding="utf-8",
+        )
+
+    result = AutonomousCodingWorker(
+        runner=builder, workspace_root=tmp_path / "workers"
+    ).run(_item(repository), "dev-01")
+
+    assert result.status is CodingWorkerStatus.WAITING_OWNER_APPROVAL
+
+
 def test_worker_falls_back_to_scoped_checkout_when_full_checkout_fails(tmp_path: Path) -> None:
     repository = _repository(tmp_path)
 
