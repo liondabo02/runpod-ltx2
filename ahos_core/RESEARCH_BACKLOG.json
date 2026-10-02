@@ -1,0 +1,151 @@
+{
+  "schema": "ahos.research-backlog.v1",
+  "purpose": "Holding-wide technology discovery, evaluation, and safe integration; film studio is one business unit only.",
+  "policy": {
+    "mode": "read-only-dry-run-first",
+    "auto_merge": false,
+    "auto_install": false,
+    "auto_execute_upstream": false,
+    "owner_approval_required": [
+      "paid",
+      "external_write",
+      "critical",
+      "production",
+      "license_exception"
+    ]
+  },
+  "items": [
+    {
+      "id": "RESEARCH-001",
+      "title": "Read-only GitHub discovery adapter",
+      "status": "completed",
+      "authority": "B",
+      "requires_owner_approval": false,
+      "deliverables": [
+        "github_research.py",
+        "allowlisted queries",
+        "rate-limit and pagination evidence",
+        "tests"
+      ],
+      "completed_commit": "bc0e98d0dcd002f0af25a014769c7c25c693fbfb"
+    },
+    {
+      "id": "RESEARCH-002",
+      "title": "Deterministic technology and license evaluation",
+      "status": "completed",
+      "authority": "B",
+      "requires_owner_approval": false,
+      "depends_on": [
+        "RESEARCH-001"
+      ],
+      "deliverables": [
+        "technology_evaluation.py",
+        "fail-closed license policy",
+        "security and maintenance scoring",
+        "tests"
+      ],
+      "completed_commit": "bc0e98d0dcd002f0af25a014769c7c25c693fbfb"
+    },
+    {
+      "id": "RESEARCH-003",
+      "title": "Append-only candidate evidence store",
+      "status": "completed",
+      "authority": "B",
+      "requires_owner_approval": false,
+      "depends_on": [
+        "RESEARCH-001"
+      ],
+      "deliverables": [
+        "research_store.py",
+        "repo plus immutable commit provenance",
+        "deduplication tests"
+      ],
+      "completed_commit": "bc0e98d0dcd002f0af25a014769c7c25c693fbfb"
+    },
+    {
+      "id": "RESEARCH-004",
+      "title": "Integration proposal generator",
+      "status": "completed",
+      "authority": "B",
+      "requires_owner_approval": false,
+      "depends_on": [
+        "RESEARCH-002",
+        "RESEARCH-003"
+      ],
+      "deliverables": [
+        "integration_proposal.py",
+        "test, sandbox, cost, rollback and approval fields"
+      ],
+      "completed_commit": "bc0e98d0dcd002f0af25a014769c7c25c693fbfb"
+    },
+    {
+      "id": "RESEARCH-005",
+      "title": "Ephemeral sandbox evaluator",
+      "status": "completed_verified",
+      "authority": "C",
+      "requires_owner_approval": true,
+      "depends_on": [
+        "RESEARCH-004"
+      ],
+      "completed_commit": "560fbe64e529815cb6fd39c7db624db65a61475e",
+      "execution_requires_separate_owner_approval": true,
+      "windows_proof": {
+        "targeted_tests": "8 passed in 0.13s",
+        "full_regression": "298 passed in 5.98s",
+        "paid_calls": 0,
+        "external_code_executed": false
+      }
+    },
+    {
+      "id": "RESEARCH-006",
+      "title": "GitHub hardening and supply-chain CI",
+      "status": "active_waiting_first_manual_run",
+      "authority": "C",
+      "requires_owner_approval": true,
+      "deliverables": [
+        "CODEOWNERS",
+        "Dependabot",
+        "CodeQL",
+        "dependency review",
+        "SBOM",
+        "branch protection"
+      ],
+      "preparation_commit": "f10d91427a8d421a4900d42345451b1d88db27bf",
+      "activation_commit": "1f958e78b769abcd61798455ce4150f876ab39f8",
+      "template_cleanup_commit": "3ba185af55802b93f9596249347e886ffcefe47b",
+      "notes": "Security workflow activated as manual workflow_dispatch with read-only contents permission and pinned actions. Branch protection remains unapplied; automatic merge remains disabled."
+    },
+    {
+      "id": "RESEARCH-007",
+      "title": "LangGraph orchestration pilot behind feature flag",
+      "status": "planned",
+      "authority": "C",
+      "requires_owner_approval": true,
+      "depends_on": [
+        "RESEARCH-002",
+        "RESEARCH-003"
+      ]
+    },
+    {
+      "id": "RESEARCH-008",
+      "title": "OpenHands isolated developer sandbox benchmark",
+      "status": "in_progress",
+      "authority": "C",
+      "requires_owner_approval": true,
+      "depends_on": [
+        "RESEARCH-005"
+      ],
+      "candidate_benchmarks": [
+        {
+          "candidate": "deepseek-ai/deepseek-harness",
+          "upstream_commit": "ddefc45fbc7f8e46dd73185e68295696d1297887",
+          "result": "sandbox_policy_benchmark_passed",
+          "workflow_run_id": 35514914411,
+          "evidence": "reports/RESEARCH-008-deepseek-harness-benchmark.json",
+          "production_integration": false
+        }
+      ],
+      "notes": "DeepSeek Harness passed a credential-free ephemeral policy benchmark. It remains sandbox-only; OpenHands and Miniverse comparative benchmarks are still pending."
+    }
+  ]
+}

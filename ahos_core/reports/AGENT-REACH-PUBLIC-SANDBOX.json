@@ -1,0 +1,31 @@
+{
+  "source": "https://github.com/Panniantong/Agent-Reach",
+  "source_commit": "a19a171fa980a0785849596492e0af4db800c82f",
+  "license": "MIT",
+  "execution_mode": "ephemeral isolated HOME; no system install",
+  "commands": [
+    "agent-reach install --env=server --dry-run",
+    "agent-reach doctor --json"
+  ],
+  "security_tests": {
+    "scope": [
+      "doctor credential boundaries",
+      "home isolation",
+      "private file permissions",
+      "cookie security",
+      "URL security",
+      "public web channels"
+    ],
+    "passed": 242,
+    "failed": 0
+  },
+  "observed_without_credentials": {
+    "available": ["web via Jina Reader", "RSS/Atom", "V2EX public API", "Bilibili public search API"],
+    "limited": ["YouTube backend installed but JS runtime configuration missing", "GitHub public access needs gh CLI in this sandbox"],
+    "blocked": ["all login/cookie-dependent social channels", "private GitHub", "external writes"]
+  },
+  "decision": "PASS_PUBLIC_READ_ONLY_SANDBOX",
+  "production_enabled": false,
+  "credentials_used": false,
+  "paid_spend_usd": 0
+}

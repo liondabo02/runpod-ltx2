@@ -1,0 +1,29 @@
+{
+  "schema": "ahos.kurmanji-production-profile.v1",
+  "language": "ku-latn",
+  "display_name": "Kurmancî / Kurdî",
+  "script": "Latin",
+  "register": "neutral-southeast-kurmanji-childrens-animation",
+  "regional_coverage": [
+    "Adiyaman-Kahta",
+    "Diyarbakir",
+    "Sanliurfa",
+    "Batman",
+    "Mardin"
+  ],
+  "editorial_policy": {
+    "audience": "children and families",
+    "avoid_overly_local_terms": true,
+    "preserve_character_names": true,
+    "native_reviewer_required": true,
+    "terminology_approval_required": true,
+    "pronunciation_approval_required": true,
+    "timing_approval_required": true,
+    "child_register_approval_required": true
+  },
+  "voice_policy": {
+    "unverified_tts_forbidden": true,
+    "rights_cleared_human_performance_allowed": true,
+    "final_native_listening_approval_required": true
+  }
+}

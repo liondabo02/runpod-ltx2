@@ -1,0 +1,88 @@
+{
+  "mission_id": "AHOS-033-ai-manager-routing-live",
+  "status": "completed",
+  "manager_id": "mgr-software-01",
+  "capability_catalog": {
+    "research": [
+      "analysis",
+      "research",
+      "source_review",
+      "summarization"
+    ],
+    "software": [
+      "api",
+      "automation",
+      "backend",
+      "git",
+      "python",
+      "testing"
+    ],
+    "finance": [
+      "budgeting",
+      "cost_tracking",
+      "finance",
+      "reporting"
+    ]
+  },
+  "ai_plan": {
+    "steps": [
+      {
+        "step_id": "analyze-constraints",
+        "title": "Define the minimum local-only prototype requirements and constraints",
+        "department": "research",
+        "required_capabilities": [
+          "analysis"
+        ],
+        "depends_on": [],
+        "estimated_cost_usd": 0.0,
+        "external_side_effect": false,
+        "destructive": false,
+        "touches_secrets": false,
+        "requires_owner_approval": false
+      },
+      {
+        "step_id": "implement-prototype",
+        "title": "Implement and locally test the minimal reversible automation prototype",
+        "department": "software",
+        "required_capabilities": [
+          "automation",
+          "testing"
+        ],
+        "depends_on": [
+          "analyze-constraints"
+        ],
+        "estimated_cost_usd": 0.0,
+        "external_side_effect": false,
+        "destructive": false,
+        "touches_secrets": false,
+        "requires_owner_approval": false
+      }
+    ]
+  },
+  "executed_steps": [
+    {
+      "step_id": "analyze-constraints",
+      "department": "research",
+      "required_capabilities": [
+        "analysis"
+      ],
+      "worker_id": "research-01",
+      "stage": "completed",
+      "qa_summary": "local deterministic QA passed"
+    },
+    {
+      "step_id": "implement-prototype",
+      "department": "software",
+      "required_capabilities": [
+        "automation",
+        "testing"
+      ],
+      "worker_id": "dev-01",
+      "stage": "completed",
+      "qa_summary": "local deterministic QA passed"
+    }
+  ],
+  "manager_estimated_cost_usd": 0.006436409999999999,
+  "worker_ai_calls_in_this_test": 0,
+  "external_business_actions": 0
+}

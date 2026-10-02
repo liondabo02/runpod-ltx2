@@ -1,0 +1,92 @@
+{
+    "mission_id":  "AHOS-042-final-acceptance",
+    "queue_status":  "completed",
+    "attempts":  1,
+    "ai_manager_plan":  {
+                            "steps":  [
+                                          {
+                                              "step_id":  "research-studio-requirements",
+                                              "title":  "Research and write STUDIO_RESEARCH_BRIEF.md with exactly three requirements for a safe, repeatable AI animation episode pipeline",
+                                              "department":  "research",
+                                              "required_capabilities":  [
+                                                                            "research"
+                                                                        ],
+                                              "depends_on":  [
+
+                                                             ],
+                                              "estimated_cost_usd":  0.0,
+                                              "external_side_effect":  false,
+                                              "destructive":  false,
+                                              "touches_secrets":  false,
+                                              "requires_owner_approval":  false
+                                          },
+                                          {
+                                              "step_id":  "software-studio-automation-plan",
+                                              "title":  "Use STUDIO_RESEARCH_BRIEF.md to write STUDIO_AUTOMATION_PLAN.md for a tiny local-only, reversible animation-studio automation plan",
+                                              "department":  "software",
+                                              "required_capabilities":  [
+                                                                            "automation"
+                                                                        ],
+                                              "depends_on":  [
+                                                                 "research-studio-requirements"
+                                                             ],
+                                              "estimated_cost_usd":  0.0,
+                                              "external_side_effect":  false,
+                                              "destructive":  false,
+                                              "touches_secrets":  false,
+                                              "requires_owner_approval":  false
+                                          }
+                                      ]
+                        },
+    "queue_result":  {
+                         "mission_id":  "AHOS-042-final-acceptance",
+                         "objective":  "Run the final acceptance mission for the AHOS holding core using a tiny\nlocal-only animation-studio automation planning task.\nThe AI manager must choose exactly two steps: research first, software second.\nThe research worker must produce STUDIO_RESEARCH_BRIEF.md with three requirements for a\nsafe repeatable AI animation episode pipeline. The software worker must depend\non and use that research result, then produce STUDIO_AUTOMATION_PLAN.md. No video generation\nis required in this acceptance test. No customer contact, publishing, deployment,\npurchases, payments, credential access, destructive actions, or external systems.",
+                         "manager_id":  "mgr-software-01",
+                         "status":  "completed",
+                         "reason":  "all mission steps completed and passed QA",
+                         "steps":  [
+                                       {
+                                           "step_id":  "research-studio-requirements",
+                                           "department":  "research",
+                                           "worker_id":  "research-01",
+                                           "stage":  "completed",
+                                           "worker_summary":  "Added three constraints covering local-only operation, repeatability/auditability, and preflight/post-render safety checks.\n\nVerified downstream research handoff:\n1. Keep all episode inputs, models, scripts, renders, and metadata in the approved local workspace; require no credentials, network access, external publishing, or destructive file operations.\n2. Make runs repeatable and auditable by versioning prompts, configurations, assets, and model identifiers, recording seeds and manifests, and using checkpoints with deterministic, idempotent reruns.\n3. Enforce preflight and post-render checks for asset provenance, content safety, paths, resource limits, and output integrity; preserve logs and never overwrite prior approved outputs without explicit local approval.",
+                                           "qa_summary":  "verified STUDIO_RESEARCH_BRIEF.md",
+                                           "reason":  "QA passed"
+                                       },
+                                       {
+                                           "step_id":  "software-studio-automation-plan",
+                                           "department":  "software",
+                                           "worker_id":  "dev-01",
+                                           "stage":  "completed",
+                                           "worker_summary":  "Added a concise implementation plan for a tiny, reversible, auditable local animation episode pipeline. No production systems, credentials, external services, or files outside the isolated workspace were modified.",
+                                           "qa_summary":  "verified STUDIO_AUTOMATION_PLAN.md",
+                                           "reason":  "QA passed"
+                                       }
+                                   ]
+                     },
+    "research_to_developer_handoff_verified":  true,
+    "research_artifact":  "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\control_plane_v2\\runtime\\workspaces\\ahos-final-holding\\AHOS-042-final-acceptance_research-studio-requirements\\STUDIO_RESEARCH_BRIEF.md",
+    "developer_artifact":  "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\control_plane_v2\\runtime\\workspaces\\ahos-final-holding\\AHOS-042-final-acceptance_software-studio-automation-plan\\STUDIO_AUTOMATION_PLAN.md",
+    "reported_costs":  [
+                           {
+                               "actor":  "manager",
+                               "estimated_cost_usd":  0.0118665
+                           },
+                           {
+                               "actor":  "researcher",
+                               "estimated_cost_usd":  0.00488017
+                           },
+                           {
+                               "actor":  "developer",
+                               "estimated_cost_usd":  0.011220670000000002
+                           }
+                       ],
+    "reported_estimated_total_cost_usd":  0.02796734,
+    "external_publish_actions":  0,
+    "external_message_actions":  0,
+    "payment_actions":  0,
+    "deployment_actions":  0,
+    "core_acceptance":  true,
+    "dashboard_visibility_verified":  true
+}

@@ -1,0 +1,36 @@
+{
+  "mission_id": "AHOS-031-live-team",
+  "status": "completed",
+  "manager_id": "mgr-software-01",
+  "objective": "Prove that an AHOS department manager can route a real multi-worker mission from Researcher to Developer with QA and downstream handoff.",
+  "steps": [
+    {
+      "step_id": "research",
+      "worker_id": "research-01",
+      "stage": "completed",
+      "worker_summary": "RESEARCH_HANDOFF_READY",
+      "qa_summary": "verified RESEARCH_NOTE.txt exact content"
+    },
+    {
+      "step_id": "build",
+      "worker_id": "dev-01",
+      "stage": "completed",
+      "worker_summary": "Added the single required handoff marker file; no other files were modified.",
+      "qa_summary": "verified DEV_NOTE.txt exact content"
+    }
+  ],
+  "reported_costs": [
+    {
+      "worker": "research-01",
+      "estimated_cost_usd": 0.00535361
+    },
+    {
+      "worker": "dev-01",
+      "estimated_cost_usd": 0.00435666
+    }
+  ],
+  "reported_estimated_total_cost_usd": 0.00971027,
+  "research_artifact_verified": true,
+  "developer_artifact_verified": true,
+  "external_business_actions": 0
+}

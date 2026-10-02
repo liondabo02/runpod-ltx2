@@ -1,0 +1,30 @@
+{
+  "source": "https://github.com/remotion-dev/remotion",
+  "official_docs": "https://www.remotion.dev/docs/renderer",
+  "license": "Remotion custom Free License / Company License",
+  "facts": {
+    "is_generative_ai_model": false,
+    "is_programmatic_video_renderer": true,
+    "local_render_supported": true,
+    "batch_render_supported": true,
+    "unlimited_output_claim": "No platform generation quota when self-rendering, but CPU, storage and electricity are still consumed.",
+    "free_license_eligibility": "Individuals, non-profits, evaluation, and for-profit organizations with up to 3 employees; recheck current license before commercial production.",
+    "cloud_render_is_free": false
+  },
+  "ahos_fit": {
+    "decision": "PASS_LOCAL_SANDBOX",
+    "best_roles": [
+      "episode assembly",
+      "opening and credits",
+      "subtitles and captions",
+      "multi-language variants",
+      "motion graphics",
+      "aspect-ratio variants",
+      "deterministic batch rendering"
+    ],
+    "not_a_replacement_for": ["LTX-2.5", "LongCat-Video", "character animation generation"],
+    "production_enabled": false,
+    "license_recheck_required": true,
+    "paid_spend_usd": 0
+  }
+}

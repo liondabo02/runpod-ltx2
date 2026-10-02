@@ -1,0 +1,14 @@
+{
+  "studio_step": "STUDIO-008",
+  "phase": "free_acceptance_preflight",
+  "status": "BLOCKED_EXPECTED",
+  "known_blockers": [
+    "STUDIO-006 remains in_progress",
+    "human voice-similarity approval must be recorded",
+    "explicit owner approval for the paid acceptance episode has not been granted"
+  ],
+  "paid_execution_requested": false,
+  "render_calls": 0,
+  "paid_api_spend_usd": 0,
+  "publish_actions": 0
+}

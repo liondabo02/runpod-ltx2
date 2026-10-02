@@ -1,0 +1,81 @@
+name: RESEARCH-008 DeepSeek Harness Sandbox Benchmark
+
+on:
+  push:
+    branches:
+      - feature/ahos-autopilot
+    paths:
+      - '.github/workflows/research-008-deepseek-harness-benchmark.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: research-008-deepseek-harness
+  cancel-in-progress: true
+
+jobs:
+  isolated-benchmark:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      DSH_TELEMETRY_DISABLED: '1'
+      DEEPSEEK_API_KEY: ''
+      OPENAI_API_KEY: ''
+      ANTHROPIC_API_KEY: ''
+      UPSTREAM_REPOSITORY: deepseek-ai/deepseek-harness
+      UPSTREAM_COMMIT: ddefc45fbc7f8e46dd73185e68295696d1297887
+    steps:
+      - name: Checkout AHOS evidence target
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.19.0'
+
+      - name: Acquire pinned upstream source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init upstream
+          git -C upstream remote add origin "https://github.com/${UPSTREAM_REPOSITORY}.git"
+          git -C upstream fetch --depth 1 origin "${UPSTREAM_COMMIT}"
+          git -C upstream checkout --detach FETCH_HEAD
+          test "$(git -C upstream rev-parse HEAD)" = "${UPSTREAM_COMMIT}"
+          test -f upstream/SAFETY.md
+          test -f upstream/LICENSE
+
+      - name: Verify license and safety declarations
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q "MIT License" upstream/LICENSE
+          grep -q "has not undergone a security audit" upstream/SAFETY.md
+          grep -q "must not be treated as secure or production-ready" upstream/SAFETY.md
+          node -e "const p=require('./upstream/package.json'); if(p.version!=='0.1.6-alpha.2') process.exit(1)"
+
+      - name: Enable pinned package manager
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@11.7.0 --activate
+          pnpm --version
+
+      - name: Install without lifecycle scripts
+        working-directory: upstream
+        shell: bash
+        run: pnpm install --ignore-scripts --frozen-lockfile
+
+      - name: Run upstream approval-policy tests
+        working-directory: upstream
+        shell: bash
+        run: pnpm run test:approval-policy
+
+      - name: Record benchmark evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n'             "RESEARCH_008=PASS"             "UPSTREAM_REPOSITORY=${UPSTREAM_REPOSITORY}"             "UPSTREAM_COMMIT=${UPSTREAM_COMMIT}"             "UPSTREAM_VERSION=0.1.6-alpha.2"             "INSTALL_SCRIPTS_EXECUTED=NO"             "API_KEYS_PRESENT=NO"             "TELEMETRY_DISABLED=YES"             "AHOS_REPOSITORY_WRITE=NO"             "PRODUCTION_INTEGRATION=NO"             "PAID_CALLS=0"

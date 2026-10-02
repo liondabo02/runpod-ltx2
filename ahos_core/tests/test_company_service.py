@@ -1,0 +1,99 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from ahos.autonomous_company import CompanyLoop, PersistentMissionQueue
+from ahos.company_service import CompanyService
+from ahos.mission_orchestrator import MissionResult, MissionStatus
+
+
+def _completed(mission):
+    return MissionResult(
+        mission_id=mission.mission_id,
+        objective=mission.objective,
+        manager_id="mgr-software-01",
+        status=MissionStatus.COMPLETED,
+        steps=(),
+        reason="done",
+    )
+
+
+def test_service_writes_idle_heartbeat(tmp_path: Path) -> None:
+    queue = PersistentMissionQueue(tmp_path / "missions.db")
+    service = CompanyService(
+        loop=CompanyLoop(queue=queue, executor=_completed),
+        heartbeat_path=tmp_path / "heartbeat.json",
+        stop_path=tmp_path / "stop",
+        poll_seconds=0.01,
+    )
+    state = service.run_once()
+    payload = json.loads((tmp_path / "heartbeat.json").read_text(encoding="utf-8"))
+    assert state == "idle"
+    assert payload["state"] == "idle"
+
+
+def test_service_processes_mission(tmp_path: Path) -> None:
+    queue = PersistentMissionQueue(tmp_path / "missions.db")
+    queue.enqueue(mission_id="m1", objective="local mission", primary_department="software")
+    service = CompanyService(
+        loop=CompanyLoop(queue=queue, executor=_completed),
+        heartbeat_path=tmp_path / "heartbeat.json",
+        stop_path=tmp_path / "stop",
+        poll_seconds=0.01,
+    )
+    state = service.run_once()
+    payload = json.loads((tmp_path / "heartbeat.json").read_text(encoding="utf-8"))
+    assert state == "completed"
+    assert payload["state"] == "processed"
+    assert payload["mission_id"] == "m1"
+
+
+def test_stop_file_is_honored(tmp_path: Path) -> None:
+    queue = PersistentMissionQueue(tmp_path / "missions.db")
+    stop = tmp_path / "stop"
+    stop.write_text("stop", encoding="utf-8")
+    service = CompanyService(
+        loop=CompanyLoop(queue=queue, executor=_completed),
+        heartbeat_path=tmp_path / "heartbeat.json",
+        stop_path=stop,
+        poll_seconds=0.01,
+    )
+    assert service.should_stop() is True
+
+
+def test_service_runs_automation_steps_while_mission_queue_is_idle(tmp_path: Path) -> None:
+    queue = PersistentMissionQueue(tmp_path / "missions.db")
+    calls = []
+    service = CompanyService(
+        loop=CompanyLoop(queue=queue, executor=_completed),
+        heartbeat_path=tmp_path / "heartbeat.json",
+        stop_path=tmp_path / "stop",
+        automation_steps=(lambda: calls.append("coding-dispatch") or "coding:1",),
+    )
+    assert service.run_once() == "idle"
+    payload = json.loads((tmp_path / "heartbeat.json").read_text(encoding="utf-8"))
+    assert calls == ["coding-dispatch"]
+    assert payload["automation_results"] == ["coding:1"]
+
+
+def test_windows_service_scripts_resolve_relative_paths_from_powershell_location() -> None:
+    scripts = Path(__file__).parents[1] / "scripts"
+    for name in (
+        "Start-AHOS-CompanyService.ps1",
+        "Stop-AHOS-CompanyService.ps1",
+        "Configure-AHOS-CodingWorker.ps1",
+        "Install-AHOS-CompanyService.ps1",
+    ):
+        body = (scripts / name).read_text(encoding="utf-8")
+        assert "GetUnresolvedProviderPathFromPSPath($RuntimeDir)" in body
+        assert "[IO.Path]::GetFullPath($RuntimeDir)" not in body
+
+
+def test_coding_worker_uses_builder_script_independent_of_worktree_imports() -> None:
+    script = Path(__file__).parents[1] / "scripts" / "Configure-AHOS-CodingWorker.ps1"
+    body = script.read_text(encoding="utf-8")
+    assert 'Join-Path $ProjectRoot "ahos_core\\ahos\\openrouter_coding_builder.py"' in body
+    assert '$BuilderCommand = @($PythonExe, $BuilderScript, "--model", $Model)' in body
+    assert '$BuilderCommand += @("--fallback-model", $FallbackModel)' in body
+    assert 'builder_command = $BuilderCommand' in body
