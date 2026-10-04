@@ -219,6 +219,14 @@ def _request(
                     "max_tokens": reasoning_max_tokens,
                     "exclude": True,
                 }
+            # Diagnostics or model replies can contain orphaned UTF-16
+            # surrogates. JSON permits escaping them, but providers reject
+            # those escapes. Preserve valid pairs and replace only invalid
+            # Unicode before serializing every request, including repairs.
+            for message in messages:
+                message["content"] = message["content"].encode(
+                    "utf-16-le", errors="surrogatepass"
+                ).decode("utf-16-le", errors="replace")
             body = json.dumps(request_payload).encode("utf-8")
             request = urllib.request.Request(
                 "https://openrouter.ai/api/v1/chat/completions", data=body,

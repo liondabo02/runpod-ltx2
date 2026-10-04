@@ -323,3 +323,33 @@ def test_response_rejects_out_of_scope_paths(tmp_path: Path, path: str) -> None:
         apply_response(tmp_path, (PurePosixPath("src"),), {
             "files": [{"path": path, "content": "bad"}]
         })
+
+
+def test_requests_normalize_orphan_surrogates_and_preserve_unicode(monkeypatch):
+    bodies = []
+
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def read(self):
+            return json.dumps({"choices": [{"message": {
+                "content": "diff --git a/src/app.py b/src/app.py\n"
+            }}]}).encode()
+
+    def urlopen(request, **_kwargs):
+        payload = json.loads(request.data)
+        content = payload["messages"][1]["content"]
+        content.encode("utf-8", errors="strict")
+        bodies.append(content)
+        return Response()
+
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+    monkeypatch.setattr("urllib.request.urlopen", urlopen)
+    _request(prompt="Türkçe \ud83d\ude00 \ud83d", context="Kurmancî \udc00",
+             model="openrouter/free", timeout=1)
+    assert "Türkçe 😀 �" in bodies[0]
+    assert "Kurmancî �" in bodies[0]
