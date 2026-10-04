@@ -58,3 +58,29 @@ def test_missing_credential_fails_before_network(monkeypatch):
     monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
     with pytest.raises(DepartmentProviderError, match="missing"):
         build_department_generator(DepartmentProviderConfig(allow_external=True))("work")
+
+
+@pytest.mark.parametrize("header, expected", [("120", 120), ("0", 60), ("nan", 300), ("invalid", 300), ("999999", 86400)])
+def test_429_preserves_only_safe_status_and_bounded_retry_header(monkeypatch, header, expected):
+    from urllib.error import HTTPError
+    from ahos.department_provider import DepartmentRateLimited
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-secret")
+    def fail(*args, **kwargs):
+        raise HTTPError("https://provider", 429, "test-secret", {"Retry-After": header}, None)
+    monkeypatch.setattr("urllib.request.urlopen", fail)
+    with pytest.raises(DepartmentRateLimited) as error:
+        build_department_generator(DepartmentProviderConfig(allow_external=True))("work")
+    assert error.value.retry_after_seconds == expected
+    assert "429" in str(error.value)
+    assert "test-secret" not in str(error.value)
+
+
+def test_other_http_errors_keep_status_without_remote_text(monkeypatch):
+    from urllib.error import HTTPError
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-secret")
+    def fail(*args, **kwargs):
+        raise HTTPError("https://provider", 401, "test-secret", {}, None)
+    monkeypatch.setattr("urllib.request.urlopen", fail)
+    with pytest.raises(DepartmentProviderError, match="HTTP 401") as error:
+        build_department_generator(DepartmentProviderConfig(allow_external=True))("work")
+    assert "test-secret" not in str(error.value)

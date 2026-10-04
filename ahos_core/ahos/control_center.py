@@ -562,7 +562,7 @@ def render_dashboard(snapshot: dict[str, object], message: str = "") -> str:
     department_rows = "".join(
         f'<tr><td>{_esc(t["department"])}</td><td>{_esc(t["task_id"])}</td>'
         f'<td>{_badge(t["status"])}</td><td>{_esc(t["attempts"])}/{_esc(t["max_attempts"])}</td>'
-        f'<td>{_esc(t["last_error"] or t["objective"])}</td>'
+        f'<td>{_esc(t["last_error"] or t["objective"])}<br>Next retry (UTC): {_esc(t.get("next_retry_at", "—"))}</td>'
         f'<td><a href="/department/{quote(str(t["task_id"]))}">Review draft</a></td></tr>'
         for t in departments.get("tasks", [])
     ) or '<tr><td colspan="6">No department tasks queued.</td></tr>'

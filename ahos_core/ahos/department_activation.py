@@ -59,8 +59,12 @@ def main() -> int:
     parser.add_argument("--allow-external", action="store_true")
     parser.add_argument("--model", default="openrouter/free")
     parser.add_argument("--max-workers", type=int, default=3)
+    parser.add_argument("--retry-failed-provider", action="store_true")
     args = parser.parse_args()
     print(json.dumps(activate_departments(Path(args.runtime_dir), allow_external=args.allow_external, model=args.model, max_workers=args.max_workers)))
+    if args.retry_failed_provider:
+        from .department_runtime import DepartmentRuntime
+        print(json.dumps({"provider_tasks_requeued": DepartmentRuntime(Path(args.runtime_dir) / "departments").retry_failed_providers()}))
     return 0
 
 

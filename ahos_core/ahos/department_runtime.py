@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Callable, Iterator
 
 from .department_structure import CORE_DEPARTMENTS
+from .department_provider import DepartmentRateLimited
 
 DELIVERABLES = {
     "software": "implementation specification and coding handoff with acceptance tests; do not claim code was executed",
@@ -156,9 +157,12 @@ class DepartmentRuntime:
             data = self._load()
         counts: dict[str, int] = {}
         for task in data["tasks"].values():
+            if task["status"] == "waiting_provider":
+                effective = max(task.get("retry_at", 0), data.get("provider_retry_at", 0))
+                task["next_retry_at"] = datetime.fromtimestamp(effective, timezone.utc).isoformat()
             counts[task["status"]] = counts.get(task["status"], 0) + 1
         return {"schema": data["schema"], "tasks": list(data["tasks"].values()),
-                "counts": counts, "provider_configured": self.generator is not None,
+                "counts": counts, "provider_retry_at": data.get("provider_retry_at"), "provider_configured": self.generator is not None,
                 "external_execution_enabled": False, "publishing_enabled": False}
 
     def supersede_bootstrap(self) -> int:
@@ -177,12 +181,27 @@ class DepartmentRuntime:
                 self._save(data)
         return changed
 
+    def retry_failed_providers(self) -> int:
+        """Explicit migration of exhausted provider failures, preserving all evidence."""
+        changed = 0
+        with self._lock():
+            data = self._load()
+            for task in data["tasks"].values():
+                if task["status"] == "retries_exhausted" and task.get("last_error") == "DepartmentProviderError" and not task.get("artifact"):
+                    task.update(status="queued", attempts=0, updated_at=_stamp())
+                    changed += 1
+            self._save(data)
+        return changed
+
     def retry(self, task_id: str) -> None:
         with self._lock():
             data = self._load()
             task = data["tasks"][task_id]
             if task["status"] == "running":
                 raise ValueError("cannot retry a running task")
+            task.pop("retry_at", None)
+            task.pop("next_retry_at", None)
+            task.pop("rate_limit_events", None)
             task.update(status="queued", attempts=0, updated_at=_stamp(), owner_approved=False,
                         artifact=None)
             self._save(data)
@@ -230,8 +249,12 @@ class DepartmentRuntime:
         with self._lock():
             data = self._load()
             tasks = data["tasks"]
+            now = time.time()
+            cooling = data.get("provider_retry_at", 0) > now
             for task in tasks.values():
-                if task["status"] not in {"queued", "blocked"}:
+                if task["status"] == "waiting_provider" and not cooling and task.get("retry_at", 0) <= now:
+                    task["status"] = "queued"
+                if cooling or task["status"] not in {"queued", "blocked"}:
                     continue
                 dependencies = [tasks[d] for d in task["dependencies"]]
                 if any(d["status"] in {"retries_exhausted", "owner_rejected"} for d in dependencies):
@@ -300,6 +323,14 @@ class DepartmentRuntime:
             path.write_bytes(body)
             update = {"status": "waiting_owner_approval", "artifact": relative,
                       "artifact_hash": hashlib.sha256(body).hexdigest(), "last_error": ""}
+        except DepartmentRateLimited as exc:
+            events = task.get("rate_limit_events", 0) + 1
+            delay = min(86400, max(exc.retry_after_seconds, 300 * 2 ** min(events - 1, 8)))
+            retry_at = time.time() + delay
+            update = {"status": "waiting_provider", "attempts": max(0, task["attempts"] - 1),
+                      "last_error": "HTTP 429: provider rate limit; automatic retry scheduled",
+                      "rate_limit_events": events, "retry_at": retry_at,
+                      "next_retry_at": datetime.fromtimestamp(retry_at, timezone.utc).isoformat()}
         except Exception as exc:
             # Provider errors can contain credentials; persist only the class and
             # bounded local validation diagnostics, never arbitrary exception text.
@@ -310,6 +341,11 @@ class DepartmentRuntime:
             data = self._load()
             current = data["tasks"][task["task_id"]]
             if current.get("claim") == task["claim"] and current["status"] == "running":
+                if update["status"] == "waiting_provider":
+                    data["provider_retry_at"] = max(data.get("provider_retry_at", 0), update["retry_at"])
+                else:
+                    current.pop("retry_at", None)
+                    current.pop("next_retry_at", None)
                 current.update(**update, updated_at=_stamp())
                 current.pop("claim", None)
                 current.pop("lease_until", None)

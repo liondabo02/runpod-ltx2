@@ -64,3 +64,30 @@ project brief. Activation is idempotent and does not reset coding tasks.
 
 Grounding improves task relevance; structural checks do not constitute semantic
 quality approval. The owner must still review whether proposals match the project.
+
+## Provider rate limits and recovery
+
+HTTP 429 now persists `waiting_provider`, `next_retry_at` (UTC), and a shared
+queue cooldown. It does not consume a draft attempt. Retry-After seconds or an
+HTTP date is honored within 60 seconds to 24 hours; absent/invalid headers use
+five minutes. Repeated limits increase the wait exponentially, capped at 24
+hours. The scheduler resumes automatically after the persisted deadline, even
+following restart. This does not bypass provider quotas or guarantee capacity.
+In-flight requests already claimed can finish; later batches pause. Coding's
+separate provider traffic is not governed by this department queue cooldown.
+Only numeric HTTP status and locally generated diagnostics are saved, not raw
+provider responses or credentials. Non-429 errors still use bounded attempts.
+
+After installing this change, restart the department process to load the code:
+`scripts/Restart-AHOS-Departments.ps1 -PythonExe <existing-python>`.
+The script waits for a verified department process to stop gracefully and leaves
+coding workers and the panel alone. If a request has not finished within 120
+seconds it stops with an error instead of killing unrelated processes.
+Restart the panel separately to load its updated retry-time display.
+
+Explicitly requeue old exhausted provider failures with
+`python -m ahos.department_activation --runtime-dir ../runtime --allow-external --retry-failed-provider`.
+Only exhausted tasks whose old diagnostic is exactly `DepartmentProviderError`
+and have no artifact are reset; approved/rejected/superseded drafts and coding
+tasks remain unchanged. This is an explicit recovery operation, not automatic
+approval or confirmation that the old failure was a 429.

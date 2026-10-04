@@ -11,12 +11,35 @@ import json
 import math
 import os
 import urllib.request
+import urllib.error
+from email.utils import parsedate_to_datetime
+from datetime import datetime, timezone
 
 from .model_gateway import DataSensitivity, ModelGateway, ModelRouteRequest
 
 
 class DepartmentProviderError(RuntimeError):
     pass
+
+
+class DepartmentRateLimited(DepartmentProviderError):
+    """Safe local diagnostic: no provider response text or credentials."""
+
+    def __init__(self, retry_after_seconds: float = 300) -> None:
+        self.retry_after_seconds = retry_after_seconds
+        super().__init__("HTTP 429: provider rate limit; automatic retry scheduled")
+
+
+def _retry_delay(value: str | None) -> float:
+    try:
+        delay = float(value)
+    except (TypeError, ValueError):
+        try:
+            target = parsedate_to_datetime(value)
+            delay = (target - datetime.now(timezone.utc)).total_seconds()
+        except (TypeError, ValueError, OverflowError):
+            return 300.0
+    return min(86400.0, max(60.0, delay)) if math.isfinite(delay) else 300.0
 
 
 @dataclass(frozen=True)
@@ -82,6 +105,10 @@ class DepartmentGenerator:
             if not isinstance(content, str) or not content.strip():
                 raise ValueError("empty response")
             json.loads(content)
+        except urllib.error.HTTPError as exc:
+            if exc.code == 429:
+                raise DepartmentRateLimited(_retry_delay(exc.headers.get("Retry-After") if exc.headers else None)) from None
+            raise DepartmentProviderError(f"department provider HTTP {exc.code}") from None
         except (OSError, ValueError, KeyError, IndexError, TypeError) as exc:
             # Do not persist exception text or response bodies: either can contain
             # credentials supplied by a remote server.
