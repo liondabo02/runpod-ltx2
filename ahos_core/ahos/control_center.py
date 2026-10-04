@@ -142,6 +142,8 @@ class ControlCenterState:
         except (OSError, ValueError, KeyError, TypeError):
             service_status = {"status": "not_started"}
         departments["service"] = service_status
+        from .department_overview import department_overview
+        departments["overview"] = department_overview(departments["tasks"])
         brain_reports = {}
         for key, filename in (("brain", "holding-brain.json"), ("upstream", "holding-upstream-watch.json")):
             try:
@@ -566,6 +568,15 @@ def render_dashboard(snapshot: dict[str, object], message: str = "") -> str:
     studio_executions = snapshot.get("studio_executions", [])
     departments = snapshot.get("departments", {"tasks": [], "counts": {}})
     from .department_structure import CORE_DEPARTMENTS
+    from .department_overview import department_overview
+    overview = departments.get("overview", department_overview(departments.get("tasks", [])))
+    overview_rows = "".join(
+        '<tr>' + ''.join(f'<td>{_esc(row.get(key) if row.get(key) is not None else "—")}</td>'
+                        for key in ("department", "queued", "running", "waiting_provider", "blocked",
+                                    "waiting_owner_approval", "owner_approved", "failed", "artifact_count",
+                                    "next_retry_at", "production_readiness")) + '</tr>'
+        for row in overview
+    )
     department_options = "".join(f'<option value="{_esc(d)}">{_esc(d)}</option>' for d in CORE_DEPARTMENTS)
     department_rows = "".join(
         f'<tr><td>{_esc(t["department"])}</td><td>{_esc(t["task_id"])}</td>'
@@ -701,6 +712,8 @@ th{{color:var(--muted)}} .wide{{max-width:520px;color:var(--muted)}} .badge{{dis
 <div class="section"><h2>Mission Queue</h2><table><thead><tr><th>Mission</th><th>Department</th><th>Status</th><th>Attempts</th><th>Objective / Error</th></tr></thead><tbody>{mission_html}</tbody></table></div>
 <div class="section"><h2>Coding Supervisor</h2><table><thead><tr><th>Task</th><th>Status</th><th>Attempts</th><th>Blocker / Artifact</th><th>Owner Action</th></tr></thead><tbody>{coding_html}</tbody></table></div>
 <div class="section"><h2>Department Work — Drafts and Review</h2>
+<p>Department evidence overview: approved drafts are not proof of live business execution or production readiness.</p>
+<table><thead><tr><th>Department</th><th>Queued</th><th>Running</th><th>Provider wait</th><th>Blocked</th><th>Review wait</th><th>Approved drafts</th><th>Failed</th><th>Recorded artifacts</th><th>Next retry (UTC)</th><th>Production readiness</th></tr></thead><tbody>{overview_rows}</tbody></table>
 <form id="department-task-form" method="post" action="/action/department-create"><div class="toolbar">
 <textarea id="department-objective" name="objective" maxlength="20000" required rows="3" placeholder="Describe a department deliverable..." style="flex:1;min-width:280px"></textarea>
 <select name="department">{department_options}</select><button class="neutral">Queue Department Task</button></div></form>

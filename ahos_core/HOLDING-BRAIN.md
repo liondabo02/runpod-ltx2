@@ -1,5 +1,16 @@
 # Holding brain: evidence coordination and self-improvement
 
+## Department evidence on the dashboard
+
+The Department Work section and JSON snapshot now summarize every core department:
+queued/running tasks, provider cooldowns, blocked dependencies/configuration,
+draft review waits, approved drafts, failures and recorded artifact hashes.
+The earliest provider deadline is shown in UTC. Artifact counts describe persisted
+records; they do not verify file contents or establish production readiness.
+Production readiness stays `not_audited` until actual acceptance evidence exists.
+This read-only overview neither dispatches tasks nor changes existing owner decisions.
+Restart the control-center process after installation to display the new table.
+
 `ahos.holding_brain` observes persisted coding and department queues, records concrete failures and recommends repair handoffs. It preserves the full holding requirements in its report; those requirements are `not_audited`, not assumed missing or complete. Queue counts never establish that the holding or a film is production ready.
 
 From the repository's `ahos_core` directory:
