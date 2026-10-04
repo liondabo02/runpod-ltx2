@@ -90,6 +90,7 @@ def _previous_candidate_context(worktree: str | None, *, limit: int = 12000) -> 
 class CodingTaskStatus(str, Enum):
     QUEUED = "queued"
     RUNNING = "running"
+    WAITING_PROVIDER = "waiting_provider"
     WAITING_OWNER_APPROVAL = "waiting_owner_approval"
     OWNER_APPROVED = "owner_approved"
     OWNER_REJECTED = "owner_rejected"
@@ -120,6 +121,9 @@ class CodingTaskRecord:
     owner_decision_at: str | None
     created_at: str
     updated_at: str
+
+    next_retry_at: str | None = None
+    provider_waits: int = 0
 
     def backlog_item(self) -> CodingBacklogItem:
         return CodingBacklogItem(
@@ -194,6 +198,7 @@ class CodingSupervisorStore:
                 evidence_sha256=item.get("evidence_sha256"),
                 owner_decision_at=item.get("owner_decision_at"),
                 created_at=item["created_at"], updated_at=item["updated_at"],
+                next_retry_at=item.get("next_retry_at"), provider_waits=int(item.get("provider_waits", 0)),
             )
         return records
 
@@ -260,6 +265,14 @@ class CodingSupervisorStore:
                         records[key] = replace(record, status=status, claimed_by=None,
                                                lease_expires_at=None,
                                                last_error="worker lease expired", updated_at=_iso(now))
+            cooling = [r for r in records.values() if r.status is CodingTaskStatus.WAITING_PROVIDER
+                       and r.next_retry_at and datetime.fromisoformat(r.next_retry_at) > now]
+            if cooling:
+                self._save(records)
+                return None
+            for key, record in tuple(records.items()):
+                if record.status is CodingTaskStatus.WAITING_PROVIDER:
+                    records[key] = replace(record, status=CodingTaskStatus.QUEUED, next_retry_at=None)
             candidates = [r for r in records.values() if r.status is CodingTaskStatus.QUEUED]
             if not candidates:
                 self._save(records)
@@ -303,6 +316,40 @@ class CodingSupervisorStore:
             records[task_id] = updated
             self._save(records)
             return updated
+
+    def defer_provider(self, task_id: str, worker_id: str, seconds: int = 300) -> CodingTaskRecord:
+        with self._locked():
+            records = self._load()
+            current = records[task_id]
+            if current.status is not CodingTaskStatus.RUNNING or current.claimed_by != worker_id:
+                raise ValueError("task is not claimed by this worker")
+            waits = current.provider_waits + 1
+            delay = max(seconds, min(86400, 300 * 2 ** min(waits - 1, 9)))
+            updated = replace(current, status=CodingTaskStatus.WAITING_PROVIDER,
+                              attempts=max(0, current.attempts - 1), claimed_by=None,
+                              lease_expires_at=None, provider_waits=waits,
+                              next_retry_at=_iso(_now() + timedelta(seconds=delay)),
+                              last_error="HTTP 429: provider cooldown", updated_at=_iso())
+            records[task_id] = updated
+            self._save(records)
+            return updated
+
+    def recover_provider_failures(self) -> int:
+        """Migrate only legacy exhausted HTTP 429 failures without approval artifacts."""
+        with self._locked():
+            records = self._load()
+            changed = 0
+            for key, current in tuple(records.items()):
+                if (current.status is CodingTaskStatus.RETRIES_EXHAUSTED
+                        and "CodingBuilderError: HTTP 429" in (current.last_error or "")
+                        and not current.patch_file and not current.approval_file):
+                    records[key] = replace(current, status=CodingTaskStatus.WAITING_PROVIDER,
+                        attempts=max(0, current.attempts - 1), provider_waits=1,
+                        next_retry_at=_iso(_now() + timedelta(seconds=300)),
+                        last_error="HTTP 429: provider cooldown", updated_at=_iso())
+                    changed += 1
+            self._save(records)
+            return changed
 
     def record_owner_decision(self, task_id: str, *, approved: bool) -> CodingTaskRecord:
         """Record a decision only; intentionally does not integrate or publish."""
@@ -395,11 +442,18 @@ class CodingSupervisorStore:
             "tasks": [
                 {"task_id": r.task_id, "title": r.title, "status": r.status.value,
                  "attempts": r.attempts, "max_attempts": r.max_attempts,
+                 "next_retry_at": r.next_retry_at, "provider_waits": r.provider_waits,
                  "last_error": r.last_error, "patch_file": r.patch_file,
                  "approval_file": r.approval_file, "updated_at": r.updated_at}
                 for r in records
             ],
         }
+
+
+class CodingProviderDeferred(RuntimeError):
+    def __init__(self, seconds: int):
+        self.seconds = seconds
+        super().__init__("provider cooldown")
 
 
 class CodingSupervisor:
@@ -470,6 +524,8 @@ class CodingSupervisor:
                 worktree=result.worktree, patch_file=result.patch_file,
                 approval_file=result.approval_file,
             )
+        except CodingProviderDeferred as exc:
+            return self.store.defer_provider(claimed.task_id, self.worker_id, exc.seconds)
         except Exception as exc:
             return self.store.finish(
                 claimed.task_id, self.worker_id, success=False,
@@ -501,6 +557,7 @@ def main() -> int:
     parser.add_argument("--queue", required=True, help="Persistent queue JSON path")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("status")
+    sub.add_parser("recover-provider")
     enqueue = sub.add_parser("enqueue")
     enqueue.add_argument("--task-json", required=True)
     enqueue.add_argument("--idempotency-key")
@@ -520,6 +577,9 @@ def main() -> int:
     run.add_argument("--allow-test-executable", action="append", required=True)
     args = parser.parse_args()
     store = CodingSupervisorStore(args.queue)
+    if args.command == "recover-provider":
+        print(json.dumps({"recovered": store.recover_provider_failures()}))
+        return 0
     if args.command == "status":
         print(json.dumps(store.status(), indent=2, sort_keys=True))
         return 0
@@ -556,6 +616,11 @@ def main() -> int:
 
     def builder(prompt: str, worktree: Path) -> _BuilderResult:
         completed = _run_builder_command(builder_command, prompt, worktree)
+        if completed.returncode == 75:
+            import re
+            marker = re.fullmatch(r"AHOS_PROVIDER_WAIT:429:([0-9]{1,9})", completed.stderr.strip())
+            if marker:
+                raise CodingProviderDeferred(max(300, int(marker.group(1))))
         if completed.returncode:
             detail = (completed.stderr or completed.stdout).strip()[-2000:]
             raise RuntimeError(

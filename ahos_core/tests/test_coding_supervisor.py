@@ -321,3 +321,71 @@ def test_run_once_cli_records_builder_stderr(tmp_path: Path, monkeypatch) -> Non
     record = store.get("CODE-1")
     assert record.status is CodingTaskStatus.QUEUED
     assert "builder diagnostic detail" in record.last_error
+
+
+def test_provider_wait_survives_restart_blocks_other_tasks_and_resumes(tmp_path, monkeypatch):
+    from datetime import datetime, timedelta, timezone
+    now = datetime.now(timezone.utc)
+    monkeypatch.setattr('ahos.coding_supervisor._now', lambda: now)
+    store = CodingSupervisorStore(tmp_path / 'queue.json')
+    repo = _repo(tmp_path)
+    store.enqueue(_item(repo), max_attempts=1)
+    claimed = store.claim('w')
+    waiting = store.defer_provider(claimed.task_id, 'w', 900)
+    assert waiting.attempts == 0
+    assert waiting.status is CodingTaskStatus.WAITING_PROVIDER
+    store = CodingSupervisorStore(store.path)
+    store.enqueue(_item(repo, 'CODE-2'))
+    assert store.claim('w') is None
+    now += timedelta(seconds=901)
+    reclaimed = store.claim('w')
+    assert reclaimed.task_id == 'CODE-1'
+    assert reclaimed.attempts == 1
+    waiting = store.defer_provider('CODE-1', 'w')
+    assert waiting.provider_waits == 2
+    assert datetime.fromisoformat(waiting.next_retry_at) == now + timedelta(seconds=600)
+
+
+def test_legacy_provider_recovery_preserves_real_failures(tmp_path):
+    repo = _repo(tmp_path)
+    store = CodingSupervisorStore(tmp_path / 'queue.json')
+    for task_id, reason in [('RATE', 'supervisor caught RuntimeError: builder exited with 1: CodingBuilderError: HTTP 429'), ('CODE', 'worker produced no tracked changes')]:
+        store.enqueue(_item(repo, task_id), max_attempts=1)
+        store.claim('w')
+        store.finish(task_id, 'w', success=False, reason=reason)
+    assert store.recover_provider_failures() == 1
+    assert store.get('RATE').status is CodingTaskStatus.WAITING_PROVIDER
+    assert store.get('CODE').status is CodingTaskStatus.RETRIES_EXHAUSTED
+    assert store.recover_provider_failures() == 0
+
+
+def test_supervisor_defers_typed_provider_failure(tmp_path):
+    from ahos.coding_supervisor import CodingProviderDeferred
+    repo = _repo(tmp_path)
+    store = CodingSupervisorStore(tmp_path / 'queue.json')
+    store.enqueue(_item(repo), max_attempts=1)
+    def builder(*args):
+        raise CodingProviderDeferred(300)
+    supervisor = CodingSupervisor(store=store,
+        worker=AutonomousCodingWorker(runner=builder, workspace_root=tmp_path / 'workers'),
+        worker_id='w', test_command_policy=lambda command: True)
+    result = supervisor.run_once()
+    assert result.status is CodingTaskStatus.WAITING_PROVIDER
+    assert result.attempts == 0
+
+
+def test_cli_transports_provider_wait_without_traceback_retry(tmp_path, monkeypatch, capsys):
+    repo = _repo(tmp_path)
+    queue = tmp_path / 'queue.json'
+    store = CodingSupervisorStore(queue)
+    store.enqueue(_item(repo), max_attempts=1)
+    monkeypatch.setattr('ahos.coding_supervisor._run_builder_command',
+        lambda *args: subprocess.CompletedProcess([], 75, stdout='', stderr='AHOS_PROVIDER_WAIT:429:900\n'))
+    monkeypatch.setattr(sys, 'argv', ['supervisor', '--queue', str(queue), 'run-once',
+        '--workspace', str(tmp_path / 'workers'), '--worker-id', 'w',
+        '--builder-command-json', '["builder"]', '--allow-test-executable', sys.executable])
+    main()
+    result = json.loads(capsys.readouterr().out)
+    assert result['status'] == 'waiting_provider'
+    assert result['attempts'] == 0
+    assert result['provider_waits'] == 1

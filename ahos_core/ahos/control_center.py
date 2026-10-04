@@ -643,7 +643,7 @@ def render_dashboard(snapshot: dict[str, object], message: str = "") -> str:
         coding_rows.append(
             f'<tr><td>{_esc(t["task_id"])}</td><td>{_badge(t["status"])}</td>'
             f'<td>{_esc(str(t["attempts"]) + "/" + str(t["max_attempts"]))}</td>'
-            f'<td class="wide">{_esc(t["last_error"] or t["patch_file"] or t["title"])}</td>'
+            f'<td class="wide">{_esc(t["last_error"] or t["patch_file"] or t["title"])} {"Next retry (UTC): " + _esc(t.get("next_retry_at")) if t.get("next_retry_at") else ""}</td>'
             f'<td>{review_link} &nbsp; {actions}</td></tr>'
         )
     coding_html = "".join(coding_rows) or '<tr><td colspan="5">No coding tasks yet.</td></tr>'

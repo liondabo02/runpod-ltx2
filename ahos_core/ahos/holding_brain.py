@@ -64,7 +64,8 @@ class HoldingBrain:
             gaps.append({'kind': 'department_exhausted', 'count': len(failed),
                          'source_ids': [_safe_id(t['task_id']) for t in failed],
                          'recommendation': 'Departman hatalarının nedenini kanıttan belirleyin; aynı isteği körlemesine tekrarlamayın.'})
-        waiting = department['counts'].get('waiting_provider', 0)
+        waiting = department['counts'].get('waiting_provider', 0) + sum(
+            t.status is CodingTaskStatus.WAITING_PROVIDER for t in coding)
         if waiting:
             gaps.append({'kind': 'provider_cooldown', 'count': waiting,
                          'recommendation': 'Sağlayıcının bekleme süresini koruyun; ücretli modele kendiliğinden geçmeyin.'})

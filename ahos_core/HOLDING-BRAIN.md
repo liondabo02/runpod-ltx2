@@ -39,3 +39,26 @@ installs nor copies upstream code. License and exact revision must be reviewed
 before adoption. See `docs/HOLDING-UPSTREAM-REVIEW.md` for integration tradeoffs.
 Builder failures now save bounded, redacted diagnostics beside the attempt
 worktree, outside the directory whose changes become the proposed patch.
+
+## Coding provider rate limits
+
+HTTP 429 is now a persisted `waiting_provider` state, not a failed code repair.
+The OpenRouter builder exits immediately with a controlled status instead of
+retrying every fallback model. The supervisor pauses coding claims across the
+queue until the provider deadline. It respects numeric/date Retry-After headers,
+uses a minimum five-minute delay and increases repeated cooldowns up to a day
+(the provider can request a longer wait). Rate-limited attempts are refunded;
+code/test failures still consume their normal attempt budget. No paid fallback
+is introduced. The panel displays the next UTC retry time.
+
+After gracefully stopping the company service, migrate previously exhausted
+429 tasks with the same Python environment:
+
+```powershell
+& $python -m ahos.coding_supervisor --queue "..\runtime\coding-supervisor-queue.json" recover-provider
+```
+
+Only exhausted records containing the legacy builder's explicit HTTP 429 error
+and no approval/patch artifacts are recovered. Other failures and owner decisions
+are unchanged. Restart the company service afterwards; tasks remain waiting for
+at least five minutes. A new rate limit extends the wait; success is not promised.

@@ -463,3 +463,19 @@ def test_empty_response_diagnostic_has_no_reasoning_content(tmp_path, monkeypatc
     assert record["content_empty"] is True
     assert record["response_excerpt"] == ""
     assert record["reasoning_present"] is True
+
+
+def test_429_stops_fallbacks_and_preserves_retry_after(monkeypatch):
+    import urllib.error
+    from ahos.openrouter_coding_builder import CodingProviderWait
+    monkeypatch.setenv('OPENROUTER_API_KEY', 'test-secret')
+    calls = []
+    def limited(*args, **kwargs):
+        calls.append(1)
+        raise urllib.error.HTTPError('https://example.test', 429, 'limited', {'Retry-After': '900'}, None)
+    monkeypatch.setattr('urllib.request.urlopen', limited)
+    with pytest.raises(CodingProviderWait) as caught:
+        _request(prompt='task', context='', model='openrouter/free', timeout=1,
+                 fallback_models=('qwen/test:free',))
+    assert caught.value.seconds == 900
+    assert len(calls) == 1

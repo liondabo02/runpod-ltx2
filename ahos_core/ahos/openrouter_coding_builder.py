@@ -13,6 +13,12 @@ import urllib.request
 from pathlib import Path, PurePosixPath
 
 
+class CodingProviderWait(RuntimeError):
+    def __init__(self, seconds: int = 300):
+        self.seconds = max(300, seconds)
+        super().__init__("HTTP 429: provider cooldown")
+
+
 class CodingBuilderError(RuntimeError):
     pass
 
@@ -371,6 +377,18 @@ def _request(
                 return result
             except urllib.error.HTTPError as exc:
                 # Remote error bodies can echo credentials or request text.
+                if exc.code == 429:
+                    from email.utils import parsedate_to_datetime
+                    from datetime import datetime, timezone
+                    delay = exc.headers.get("Retry-After", "300") if exc.headers else "300"
+                    try:
+                        seconds = int(delay)
+                    except (ValueError, TypeError):
+                        try:
+                            seconds = int((parsedate_to_datetime(delay) - datetime.now(timezone.utc)).total_seconds())
+                        except (ValueError, TypeError, OverflowError):
+                            seconds = 300
+                    raise CodingProviderWait(seconds) from None
                 last_error = CodingBuilderError(f"HTTP {exc.code}")
                 if attempt + 1 < attempts:
                     time.sleep(attempt + 1)
@@ -462,15 +480,19 @@ def main() -> int:
     roots = _allowed_paths(prompt)
     worktree = Path.cwd().resolve()
     fallback_models = _configured_fallbacks(args.model, args.fallback_model)
-    result = _request(
-        prompt=prompt,
-        context=_context(worktree, roots, args.context_chars, prompt=prompt),
-        model=args.model,
-        timeout=args.timeout_seconds,
-        fallback_models=fallback_models,
-        reasoning_max_tokens=args.reasoning_max_tokens,
-        worktree=worktree, roots=roots,
-    )
+    try:
+        result = _request(
+            prompt=prompt,
+            context=_context(worktree, roots, args.context_chars, prompt=prompt),
+            model=args.model,
+            timeout=args.timeout_seconds,
+            fallback_models=fallback_models,
+            reasoning_max_tokens=args.reasoning_max_tokens,
+            worktree=worktree, roots=roots,
+        )
+    except CodingProviderWait as exc:
+        print(f"AHOS_PROVIDER_WAIT:429:{exc.seconds}", file=sys.stderr)
+        return 75
     print(json.dumps({"written": apply_response(worktree, roots, result)}))
     return 0
 
