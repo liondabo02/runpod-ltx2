@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import os
 import re
@@ -102,7 +103,7 @@ def _response_result(content: str) -> dict[str, object]:
     for candidate in candidates:
         try:
             value = json.loads(candidate)
-            if isinstance(value, dict) and ("patch" in value or "files" in value):
+            if isinstance(value, dict) and ("patch" in value or "files" in value or "edits" in value):
                 return value
         except json.JSONDecodeError:
             pass
@@ -111,7 +112,7 @@ def _response_result(content: str) -> dict[str, object]:
                 value, _end = decoder.raw_decode(candidate[match.start():])
             except json.JSONDecodeError:
                 continue
-            if isinstance(value, dict) and ("patch" in value or "files" in value):
+            if isinstance(value, dict) and ("patch" in value or "files" in value or "edits" in value):
                 return value
     marker = content.find("diff --git ")
     if marker >= 0:
@@ -159,8 +160,16 @@ def _validate_edit_result(result: dict[str, object]) -> dict[str, object]:
     patch = result.get("patch")
     if isinstance(patch, str) and "diff --git " in patch:
         return result
-    files = result.get("files")
-    if not isinstance(files, list) or not files:
+    edits = result.get("edits", [])
+    if edits:
+        if not isinstance(edits, list) or any(
+            not isinstance(item, dict) or not isinstance(item.get("path"), str)
+            or not isinstance(item.get("search"), str) or not item["search"]
+            or not isinstance(item.get("replace"), str) for item in edits
+        ):
+            raise ValueError("coding response contains an invalid exact edit")
+    files = result.get("files", [])
+    if not isinstance(files, list) or (not files and not edits):
         raise ValueError("coding response contains no files")
     for item in files:
         if (
@@ -173,10 +182,61 @@ def _validate_edit_result(result: dict[str, object]) -> dict[str, object]:
     return result
 
 
+def _prepare_file_edits(worktree, roots, result):
+    """Prepare and validate all JSON edits before changing any file."""
+    _validate_edit_result(result)
+    prepared = {}
+    def destination(raw):
+        relative = PurePosixPath(raw.replace("\\", "/"))
+        if relative.is_absolute() or ".." in relative.parts or ".git" in relative.parts or not _is_allowed(relative, roots):
+            raise ValueError(f"out-of-scope edit: {relative}")
+        path = worktree.joinpath(*relative.parts)
+        if path.is_symlink() or not path.resolve().is_relative_to(worktree.resolve()):
+            raise ValueError(f"unsafe edit path: {relative}")
+        return relative.as_posix(), path
+    for item in result.get("files", []):
+        name, path = destination(item["path"])
+        if name in prepared:
+            raise ValueError(f"duplicate full file: {name}")
+        prepared[name] = item["content"]
+    for item in result.get("edits", []):
+        name, path = destination(item["path"])
+        source = prepared.get(name)
+        if source is None:
+            source = path.read_text(encoding="utf-8")
+        if source.count(item["search"]) != 1:
+            raise ValueError(f"exact edit search must match once: {name}")
+        prepared[name] = source.replace(item["search"], item["replace"], 1)
+    from .coding_worker import AutonomousCodingWorker
+    for name, source in prepared.items():
+        path = worktree / name
+        source.encode("utf-8")
+        if name.endswith(".py"):
+            after = ast.parse(source)
+            if path.exists():
+                baseline = subprocess.run(
+                    ["git", "show", f"HEAD:{name}"], cwd=worktree,
+                    text=True, encoding="utf-8", capture_output=True, check=False,
+                )
+                old = baseline.stdout if baseline.returncode == 0 else path.read_text(encoding="utf-8")
+                missing = AutonomousCodingWorker._public_python_symbols(old) - AutonomousCodingWorker._public_python_symbols(source, include_imports=True)
+                if missing:
+                    raise ValueError(f"restore existing public definitions in {name}: {', '.join(sorted(missing))}")
+                if "tests" in PurePosixPath(name).parts:
+                    # Existing tests remain independent evidence; add new tests.
+                    previous = {n.name: ast.dump(n) for n in ast.parse(old).body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))}
+                    current = {n.name: ast.dump(n) for n in after.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))}
+                    changed = [n for n, body in previous.items() if current.get(n) != body]
+                    if changed:
+                        raise ValueError(f"preserve existing tests in {name}: {', '.join(changed)}; add new tests instead")
+    return prepared
+
+
 def _request(
     *, prompt: str, context: str, model: str, timeout: float,
     fallback_models: tuple[str, ...] = (),
     reasoning_max_tokens: int = 2_000,
+    worktree: Path | None = None, roots: tuple[PurePosixPath, ...] = (),
 ) -> dict[str, object]:
     key = os.environ.get("OPENROUTER_API_KEY", "").strip()
     if not key:
@@ -184,7 +244,8 @@ def _request(
     system = (
         "You are an AHOS coding worker operating in an isolated Git worktree. "
         "Return only one JSON object with this exact shape: "
-        '{"files":[{"path":"relative/path","content":"complete UTF-8 file content"}]}. '
+        '{"edits":[{"path":"relative/path","search":"exact unique existing text","replace":"replacement text"}],"files":[{"path":"new/file","content":"complete UTF-8 file content"}]}. '
+        "Use exact edits for existing files; use files for new files. Preserve all existing functions, methods and tests. Add new tests separately. Never abbreviate or rebuild unrelated code. "
         "Include only files that must change and preserve all unrelated behavior. "
         "Edit only allowed paths. Never include .git, secrets, commands, explanations, "
         "markdown fences, commits, pushes, dependency installation, binary files, "
@@ -248,7 +309,10 @@ def _request(
                         f"(finish_reason={choice.get('finish_reason', 'unknown')}, "
                         f"reasoning_present={bool(message.get('reasoning'))})"
                     )
-                return _validate_edit_result(_response_result(content))
+                result = _validate_edit_result(_response_result(content))
+                if worktree is not None and "patch" not in result:
+                    _prepare_file_edits(worktree, roots, result)
+                return result
             except urllib.error.HTTPError as exc:
                 try:
                     detail = exc.read().decode("utf-8", errors="replace").strip()
@@ -267,8 +331,8 @@ def _request(
                         {"role": "assistant", "content": content[-12_000:]},
                         {"role": "user", "content": (
                             "Your previous answer was invalid. Return only the corrected JSON object "
-                            "requested by the system message. It must contain a non-empty files array; "
-                            "each item must contain path and complete file content strings. Do not explain."
+                            "requested by the system message, with a non-empty files array or non-empty exact edits array. "
+                            f"Repair this validation failure: {str(exc)[-3000:]}. Preserve all existing definitions and tests. Do not explain."
                         )},
                     ))
                 if attempt + 1 < attempts:
@@ -284,23 +348,15 @@ def apply_response(worktree: Path, roots: tuple[PurePosixPath, ...], result: dic
     patch = result.get("patch")
     if isinstance(patch, str):
         return _apply_patch_response(worktree, roots, patch)
-    files = result.get("files")
-    if not isinstance(files, list) or not files:
-        raise CodingBuilderError("coding response contains no files")
-    written: list[str] = []
-    for item in files:
-        if not isinstance(item, dict) or not isinstance(item.get("path"), str) or not isinstance(item.get("content"), str):
-            raise CodingBuilderError("coding response contains an invalid file entry")
-        relative = PurePosixPath(item["path"].replace("\\", "/"))
-        if relative.is_absolute() or ".." in relative.parts or ".git" in relative.parts or not _is_allowed(relative, roots):
-            raise CodingBuilderError(f"model attempted an out-of-scope write: {relative}")
-        destination = worktree.joinpath(*relative.parts)
+    try:
+        prepared = _prepare_file_edits(worktree, roots, result)
+    except (ValueError, OSError) as exc:
+        raise CodingBuilderError(str(exc)) from exc
+    for name, content in prepared.items():
+        destination = worktree / name
         destination.parent.mkdir(parents=True, exist_ok=True)
-        if destination.is_symlink():
-            raise CodingBuilderError(f"refusing to replace symlink: {relative}")
-        destination.write_text(item["content"], encoding="utf-8")
-        written.append(relative.as_posix())
-    return tuple(written)
+        destination.write_text(content, encoding="utf-8")
+    return tuple(prepared)
 
 
 def _apply_patch_response(
@@ -358,6 +414,7 @@ def main() -> int:
         timeout=args.timeout_seconds,
         fallback_models=fallback_models,
         reasoning_max_tokens=args.reasoning_max_tokens,
+        worktree=worktree, roots=roots,
     )
     print(json.dumps({"written": apply_response(worktree, roots, result)}))
     return 0

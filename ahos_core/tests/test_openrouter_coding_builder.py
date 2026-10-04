@@ -353,3 +353,62 @@ def test_requests_normalize_orphan_surrogates_and_preserve_unicode(monkeypatch):
              model="openrouter/free", timeout=1)
     assert "Türkçe 😀 �" in bodies[0]
     assert "Kurmancî �" in bodies[0]
+
+
+def test_exact_edits_preserve_unrelated_functions(tmp_path):
+    source = "def keep():\n    return 1\n\ndef change():\n    return 2\n"
+    (tmp_path / "app.py").write_text(source)
+    result = _response_result(json.dumps({"edits": [{"path": "app.py", "search": "    return 2", "replace": "    return 3"}]}))
+    assert apply_response(tmp_path, (PurePosixPath("app.py"),), result) == ("app.py",)
+    assert (tmp_path / "app.py").read_text() == source.replace("return 2", "return 3")
+
+
+def test_exact_edits_validate_whole_batch_before_writes(tmp_path):
+    (tmp_path / "app.py").write_text("VALUE = 1\n")
+    with pytest.raises(CodingBuilderError, match="match once"):
+        apply_response(tmp_path, (PurePosixPath("app.py"),), {"edits": [
+            {"path": "app.py", "search": "VALUE = 1", "replace": "VALUE = 2"},
+            {"path": "app.py", "search": "missing", "replace": "bad"},
+        ]})
+    assert (tmp_path / "app.py").read_text() == "VALUE = 1\n"
+
+
+def test_existing_tests_cannot_be_rewritten_by_json_edits(tmp_path):
+    (tmp_path / "tests").mkdir()
+    path = tmp_path / "tests/test_app.py"
+    old = "def test_existing():\n    assert 1 == 1\n"
+    path.write_text(old)
+    with pytest.raises(CodingBuilderError, match="preserve existing tests"):
+        apply_response(tmp_path, (PurePosixPath("tests"),), {"files": [{
+            "path": "tests/test_app.py", "content": old.replace("assert 1 == 1", "pass")
+        }]})
+    assert path.read_text() == old
+    apply_response(tmp_path, (PurePosixPath("tests"),), {"files": [{
+        "path": "tests/test_app.py", "content": old + "\ndef test_new():\n    assert True\n"
+    }]})
+
+
+def test_removed_definitions_are_repaired_before_write(monkeypatch, tmp_path):
+    path = tmp_path / "app.py"
+    old = "def existing():\n    return 1\n"
+    path.write_text(old)
+    responses = iter([{"files": [{"path": "app.py", "content": "VALUE = 2\n"}]},
+                      {"edits": [{"path": "app.py", "search": "return 1", "replace": "return 2"}]}])
+    requests = []
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *_args): return False
+        def read(self):
+            return json.dumps({"choices": [{"message": {"content": json.dumps(next(responses))}}]}).encode()
+    def urlopen(request, **_kwargs):
+        requests.append(json.loads(request.data))
+        assert path.read_text() == old
+        return Response()
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+    monkeypatch.setattr("urllib.request.urlopen", urlopen)
+    monkeypatch.setattr("time.sleep", lambda _: None)
+    result = _request(prompt="task", context=old, model="openrouter/free", timeout=1,
+                      worktree=tmp_path, roots=(PurePosixPath("app.py"),))
+    assert "restore existing public definitions" in requests[1]["messages"][-1]["content"]
+    apply_response(tmp_path, (PurePosixPath("app.py"),), result)
+    assert path.read_text() == old.replace("return 1", "return 2")
