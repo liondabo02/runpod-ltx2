@@ -130,6 +130,18 @@ class ControlCenterState:
 
         last_activity = self._worker_last_activity(missions)
         coding = CodingSupervisorStore(self.coding_queue_path).status()
+        from .department_runtime import DepartmentRuntime
+        departments = DepartmentRuntime(self.runtime_dir / "departments").snapshot()
+        status_path = self.runtime_dir / "department-service-status.json"
+        try:
+            service_status = json.loads(status_path.read_text(encoding="utf-8"))
+            stamp = datetime.fromisoformat(service_status["timestamp"])
+            age = (datetime.now(timezone.utc) - stamp).total_seconds()
+            if age > 300 or age < -30:
+                service_status["status"] = "stale"
+        except (OSError, ValueError, KeyError, TypeError):
+            service_status = {"status": "not_started"}
+        departments["service"] = service_status
         studio_executions = []
         for ledger in sorted(self.runtime_dir.rglob("EXECUTION-LEDGER.json")):
             try:
@@ -198,7 +210,41 @@ class ControlCenterState:
             "kill_switch_active": self.stop_path.exists(),
             "coding_supervisor": coding,
             "studio_executions": studio_executions,
+            "departments": departments,
         }
+
+    def create_department_task(self, objective: str, department: str) -> str:
+        from .department_runtime import DepartmentRuntime, DepartmentTask
+        task_id = "DEPT-" + uuid.uuid4().hex[:16]
+        DepartmentRuntime(self.runtime_dir / "departments").enqueue(
+            DepartmentTask(task_id, department, objective.strip())
+        )
+        return f"Department draft task queued: {task_id}"
+
+    def department_review(self, task_id: str) -> dict[str, object]:
+        import hashlib
+        from .department_runtime import DepartmentRuntime
+        runtime = DepartmentRuntime(self.runtime_dir / "departments")
+        task = next((t for t in runtime.snapshot()["tasks"] if t["task_id"] == task_id), None)
+        if task is None:
+            raise ValueError("unknown department task")
+        artifact = None
+        if task.get("artifact"):
+            path = (runtime.root / task["artifact"]).resolve()
+            if not path.is_relative_to(runtime.root):
+                raise ValueError("artifact escapes department directory")
+            raw = path.read_bytes()
+            if hashlib.sha256(raw).hexdigest() != task.get("artifact_hash"):
+                raise ValueError("department evidence changed")
+            artifact = json.loads(raw)
+        return {"task": task, "artifact": artifact}
+
+    def decide_department_task(self, task_id: str, approved: bool, evidence_hash: str) -> str:
+        from .department_runtime import DepartmentRuntime
+        DepartmentRuntime(self.runtime_dir / "departments").decide(
+            task_id, approved=approved, evidence_hash=evidence_hash
+        )
+        return "Department draft approved; no external action authorized." if approved else "Department draft rejected."
 
     def approve(self, request_id: str) -> str:
         inbox = OwnerApprovalInbox(self.approvals_db)
@@ -510,6 +556,16 @@ def render_dashboard(snapshot: dict[str, object], message: str = "") -> str:
     coding = snapshot.get("coding_supervisor", {"counts": {}, "tasks": []})
     coding_counts = coding.get("counts", {})
     studio_executions = snapshot.get("studio_executions", [])
+    departments = snapshot.get("departments", {"tasks": [], "counts": {}})
+    from .department_structure import CORE_DEPARTMENTS
+    department_options = "".join(f'<option value="{_esc(d)}">{_esc(d)}</option>' for d in CORE_DEPARTMENTS)
+    department_rows = "".join(
+        f'<tr><td>{_esc(t["department"])}</td><td>{_esc(t["task_id"])}</td>'
+        f'<td>{_badge(t["status"])}</td><td>{_esc(t["attempts"])}/{_esc(t["max_attempts"])}</td>'
+        f'<td>{_esc(t["last_error"] or t["objective"])}</td>'
+        f'<td><a href="/department/{quote(str(t["task_id"]))}">Review draft</a></td></tr>'
+        for t in departments.get("tasks", [])
+    ) or '<tr><td colspan="6">No department tasks queued.</td></tr>'
 
     cards = "".join(
         f'<div class="card"><div class="label">{_esc(k)}</div><div class="value">{_esc(v)}</div></div>'
@@ -523,6 +579,7 @@ def render_dashboard(snapshot: dict[str, object], message: str = "") -> str:
             ("Coding Queue", coding_counts.get("queued", 0)),
             ("Code Approval", coding_counts.get("waiting_owner_approval", 0)),
             ("Studio Executions", len(studio_executions)),
+            ("Department Service", departments.get("service", {}).get("status", "not_started")),
         )
     )
 
@@ -627,6 +684,11 @@ th{{color:var(--muted)}} .wide{{max-width:520px;color:var(--muted)}} .badge{{dis
 <div class="section"><h2>Approval Inbox</h2><table><thead><tr><th>Request</th><th>Mission</th><th>Status</th><th>Est. Cost</th><th>Action</th></tr></thead><tbody>{approval_html}</tbody></table></div>
 <div class="section"><h2>Mission Queue</h2><table><thead><tr><th>Mission</th><th>Department</th><th>Status</th><th>Attempts</th><th>Objective / Error</th></tr></thead><tbody>{mission_html}</tbody></table></div>
 <div class="section"><h2>Coding Supervisor</h2><table><thead><tr><th>Task</th><th>Status</th><th>Attempts</th><th>Blocker / Artifact</th><th>Owner Action</th></tr></thead><tbody>{coding_html}</tbody></table></div>
+<div class="section"><h2>Department Work — Drafts and Review</h2>
+<form id="department-task-form" method="post" action="/action/department-create"><div class="toolbar">
+<textarea id="department-objective" name="objective" maxlength="20000" required rows="3" placeholder="Describe a department deliverable..." style="flex:1;min-width:280px"></textarea>
+<select name="department">{department_options}</select><button class="neutral">Queue Department Task</button></div></form>
+<table><thead><tr><th>Department</th><th>Task</th><th>Status</th><th>Attempts</th><th>Objective / Error</th><th>Review</th></tr></thead><tbody>{department_rows}</tbody></table></div>
 <div class="section"><h2>Studio Execution</h2><table><thead><tr><th>Episode</th><th>Status</th><th>Cost / Budget</th><th>Stages</th></tr></thead><tbody>{studio_html}</tbody></table></div>
 <div class="section"><h2>Virtual Workforce</h2><table><thead><tr><th>Worker</th><th>Department</th><th>Role</th><th>Status</th><th>Last Mission</th><th>Last Stage</th><th>Paid AI</th></tr></thead><tbody>{worker_html}</tbody></table></div>
 </main><script>
@@ -637,10 +699,18 @@ const savedDraft = localStorage.getItem(draftKey);
 if (savedDraft && objective) objective.value = savedDraft;
 if (objective) objective.addEventListener('input', () => localStorage.setItem(draftKey, objective.value));
 if (taskForm) taskForm.addEventListener('submit', () => localStorage.removeItem(draftKey));
+const departmentObjective = document.getElementById('department-objective');
+const departmentForm = document.getElementById('department-task-form');
+const departmentKey = 'ahos-department-objective-draft';
+if (departmentObjective) {{
+  departmentObjective.value = localStorage.getItem(departmentKey) || '';
+  departmentObjective.addEventListener('input', () => localStorage.setItem(departmentKey, departmentObjective.value));
+}}
+if (departmentForm) departmentForm.addEventListener('submit', () => localStorage.removeItem(departmentKey));
 window.setInterval(() => {{
   const hasDraft = objective && objective.value.trim().length > 0;
   const isEditing = objective && document.activeElement === objective;
-  if (!hasDraft && !isEditing && !document.hidden) window.location.reload();
+  if (!hasDraft && !isEditing && !(departmentObjective && departmentObjective.value.trim()) && !document.hidden) window.location.reload();
 }}, 5000);
 </script></body></html>'''
 
@@ -673,6 +743,19 @@ def build_handler(state: ControlCenterState):
                 message = parse_qs(parsed.query).get("message", [""])[0]
                 body = render_dashboard(state.snapshot(), message).encode("utf-8")
                 self._send(200, body, "text/html; charset=utf-8")
+                return
+            if parsed.path.startswith("/department/"):
+                try:
+                    review = state.department_review(parsed.path.removeprefix("/department/"))
+                    task = review["task"]
+                    actions = ""
+                    if task["status"] == "waiting_owner_approval":
+                        for decision in ("approve", "reject"):
+                            actions += f'<form method="post" action="/action/department-{decision}"><input type="hidden" name="task_id" value="{_esc(task["task_id"])}"><input type="hidden" name="evidence_hash" value="{_esc(task["artifact_hash"])}"><button>{decision.title()} draft</button></form>'
+                    body = (f'<!doctype html><html><head><meta charset="utf-8"><title>Department draft review</title><style>body{{background:#0b1020;color:#e9eefc;font-family:Segoe UI,Arial;padding:24px}}a{{color:#7aa2ff}}pre{{background:#141b2d;padding:18px;border-radius:12px}}button{{padding:10px;margin:6px}}</style></head><body><a href="/">Back to panel</a><h1>{_esc(task["task_id"])}</h1><p>Draft review only. Approval does not publish, spend, deploy or contact anyone.</p><pre style="white-space:pre-wrap">{_esc(json.dumps(review, ensure_ascii=False, indent=2))}</pre>{actions}</body></html>').encode("utf-8")
+                    self._send(200, body, "text/html; charset=utf-8")
+                except (ValueError, OSError) as exc:
+                    self._send(400, _esc(str(exc)).encode("utf-8"), "text/plain; charset=utf-8")
                 return
             if parsed.path.startswith("/coding/"):
                 task_id = parsed.path.removeprefix("/coding/")
@@ -712,6 +795,10 @@ def build_handler(state: ControlCenterState):
                     if not task_id:
                         raise ValueError("task_id required")
                     msg = state.decide_coding_task(task_id, approved=False)
+                elif self.path == "/action/department-create":
+                    msg = state.create_department_task(objective, form.get("department", [""])[0])
+                elif self.path in {"/action/department-approve", "/action/department-reject"}:
+                    msg = state.decide_department_task(task_id, self.path.endswith("-approve"), form.get("evidence_hash", [""])[0])
                 elif self.path == "/action/code-create":
                     msg = state.create_coding_task(objective, scope)
                 else:

@@ -5,6 +5,7 @@ import json
 import os
 import subprocess
 import sys
+import threading
 from pathlib import Path
 from typing import Mapping
 
@@ -71,14 +72,60 @@ def _coding_step(runtime_dir: Path, config: Mapping[str, object]):
     return run
 
 
+def _department_step(runtime_dir: Path, config_path: Path):
+    """Hot-read activation and run draft batches independently of coding."""
+    active: threading.Thread | None = None
+    result = "departments:disabled"
+    lock = threading.Lock()
+
+    def poll() -> str:
+        nonlocal active, result
+        if active is not None and active.is_alive():
+            return "departments:running"
+        config = _read_config(config_path)
+        raw = config.get("departments")
+        if not isinstance(raw, Mapping) or raw.get("enabled") is not True:
+            return "departments:disabled"
+
+        def run() -> None:
+            nonlocal result
+            try:
+                from .department_daemon import run_batch, write_status
+                write_status(runtime_dir, {"status": "running"})
+                status = run_batch(runtime_dir, config_path)
+                value = "departments:" + str(status["status"])
+            except Exception as exc:
+                value = "departments:error"
+                status = {"status": value, "error_type": type(exc).__name__}
+            from .department_daemon import write_status
+            write_status(runtime_dir, status)
+            with lock:
+                result = value
+
+        active = threading.Thread(target=run, name="AHOS-departments", daemon=True)
+        active.start()
+        with lock:
+            return result if result == "departments:error" else "departments:running"
+
+    return poll
+
+
 def build_service(runtime_dir: Path, config_path: Path, poll_seconds: float) -> CompanyService:
     config = _read_config(config_path)
+    department_step = _department_step(runtime_dir, config_path)
+
+    coding_step = _coding_step(runtime_dir, config)
+
+    def coding_with_departments() -> str:
+        department_step()
+        return coding_step()
+
     return CompanyService(
         loop=_MonitorLoop(),  # type: ignore[arg-type]
         heartbeat_path=runtime_dir / "company-service-heartbeat.json",
         stop_path=runtime_dir / "company-service.stop",
         poll_seconds=poll_seconds,
-        automation_steps=(_coding_step(runtime_dir, config),),
+        automation_steps=(coding_with_departments,),
     )
 
 

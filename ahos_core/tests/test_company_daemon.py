@@ -47,3 +47,24 @@ def test_daemon_preserves_nested_builder_options_as_json(tmp_path, monkeypatch):
     command = captured["command"]
     encoded = command[command.index("--builder-command-json") + 1]
     assert json.loads(encoded) == ["python", "-m", "builder", "--model", "openrouter/free"]
+
+
+def test_departments_hot_activate_before_blocking_coding(tmp_path, monkeypatch):
+    import threading
+    from ahos.company_daemon import _department_step
+    config = tmp_path / "company-service-config.json"
+    poll = _department_step(tmp_path, config)
+    assert poll() == "departments:disabled"
+    started, release = threading.Event(), threading.Event()
+
+    def run_batch(*_args):
+        started.set()
+        assert release.wait(2)
+        return {"status": "polled", "counts": {"waiting_owner_approval": 1}}
+
+    monkeypatch.setattr("ahos.department_daemon.run_batch", run_batch)
+    config.write_text(json.dumps({"departments": {"enabled": True, "allow_external": True}}))
+    assert poll() == "departments:running"
+    assert started.wait(1)
+    assert poll() == "departments:running"
+    release.set()
