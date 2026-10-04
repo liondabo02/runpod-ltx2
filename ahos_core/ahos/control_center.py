@@ -142,6 +142,13 @@ class ControlCenterState:
         except (OSError, ValueError, KeyError, TypeError):
             service_status = {"status": "not_started"}
         departments["service"] = service_status
+        brain_reports = {}
+        for key, filename in (("brain", "holding-brain.json"), ("upstream", "holding-upstream-watch.json")):
+            try:
+                report = json.loads((self.runtime_dir / filename).read_text(encoding="utf-8"))
+                brain_reports[key] = report if isinstance(report, dict) else {}
+            except (OSError, ValueError):
+                brain_reports[key] = {}
         studio_executions = []
         for ledger in sorted(self.runtime_dir.rglob("EXECUTION-LEDGER.json")):
             try:
@@ -208,6 +215,7 @@ class ControlCenterState:
             "worker_count": len(workers),
             "workers": workers,
             "kill_switch_active": self.stop_path.exists(),
+            "holding_brain": brain_reports,
             "coding_supervisor": coding,
             "studio_executions": studio_executions,
             "departments": departments,
@@ -648,6 +656,14 @@ def render_dashboard(snapshot: dict[str, object], message: str = "") -> str:
         for item in studio_executions
     ) or '<tr><td colspan="4">No studio execution initialized.</td></tr>'
 
+    brain_reports = snapshot.get("holding_brain", {})
+    brain = brain_reports.get("brain", {})
+    upstream = brain_reports.get("upstream", {})
+    brain_rows = "".join(
+        f"<tr><td>{_esc(gap.get('kind', 'unknown'))}</td><td>{_esc(gap.get('count', 0))}</td><td>{_esc(gap.get('recommendation', ''))}</td></tr>"
+        for gap in brain.get("gaps", []) if isinstance(gap, dict)
+    ) or '<tr><td colspan="3">No observed failures; this is not a complete readiness audit.</td></tr>'
+    brain_html = f"<div class='toolbar'>Last observation: {_esc(brain.get('observed_at', 'not_started'))} · Automatic repair dispatch: {_esc(brain.get('automatic_dispatch_enabled', False))} · GitHub watch: {_esc(upstream.get('status', 'not_started'))} · PC connection: not connected</div><table><thead><tr><th>Observation</th><th>Count</th><th>Recommendation</th></tr></thead><tbody>{brain_rows}</tbody></table>"
     notice = f'<div class="notice">{_esc(message)}</div>' if message else ""
 
     return f'''<!doctype html>
@@ -689,6 +705,7 @@ th{{color:var(--muted)}} .wide{{max-width:520px;color:var(--muted)}} .badge{{dis
 <textarea id="department-objective" name="objective" maxlength="20000" required rows="3" placeholder="Describe a department deliverable..." style="flex:1;min-width:280px"></textarea>
 <select name="department">{department_options}</select><button class="neutral">Queue Department Task</button></div></form>
 <table><thead><tr><th>Department</th><th>Task</th><th>Status</th><th>Attempts</th><th>Objective / Error</th><th>Review</th></tr></thead><tbody>{department_rows}</tbody></table></div>
+<div class="section"><h2>Holding Brain — Observations and Repair</h2>{brain_html}</div>
 <div class="section"><h2>Studio Execution</h2><table><thead><tr><th>Episode</th><th>Status</th><th>Cost / Budget</th><th>Stages</th></tr></thead><tbody>{studio_html}</tbody></table></div>
 <div class="section"><h2>Virtual Workforce</h2><table><thead><tr><th>Worker</th><th>Department</th><th>Role</th><th>Status</th><th>Last Mission</th><th>Last Stage</th><th>Paid AI</th></tr></thead><tbody>{worker_html}</tbody></table></div>
 </main><script>

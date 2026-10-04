@@ -38,7 +38,7 @@ def run_batch(runtime_dir: Path, config_path: Path) -> dict:
 
 
 @contextmanager
-def service_lock(path: Path):
+def service_lock(path: Path, label: str = "department"):
     """OS-held singleton lock, released even after process termination."""
     with path.open("a+b") as handle:
         if handle.tell() == 0:
@@ -53,7 +53,7 @@ def service_lock(path: Path):
                 import fcntl
                 fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
         except OSError as exc:
-            raise RuntimeError("department service is already running") from exc
+            raise RuntimeError(f"{label} service is already running") from exc
         try:
             yield
         finally:

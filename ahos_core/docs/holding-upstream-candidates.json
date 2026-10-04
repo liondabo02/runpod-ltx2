@@ -1,0 +1,105 @@
+{
+  "schema": "ahos.holding-upstream-candidates.v1",
+  "reviewed_at": "2026-10-04",
+  "repositories": [
+    {
+      "full_name": "Aider-AI/aider",
+      "purpose": "Scoped coding builder backend; repository map and edit-format comparison",
+      "license_spdx": "Apache-2.0",
+      "source_url": "https://github.com/Aider-AI/aider",
+      "license_url": "https://github.com/Aider-AI/aider/blob/main/LICENSE.txt",
+      "evidence_urls": [
+        "https://github.com/Aider-AI/aider-install",
+        "https://github.com/Aider-AI/aider/blob/main/CONTRIBUTING.md"
+      ],
+      "reviewed_at": "2026-10-04",
+      "windows_assessment": "Native Windows installer and Windows test workflow documented; AHOS integration untested",
+      "integration_tradeoff": "Evaluate first as optional builder in disposable worktrees; disable auto-commit and preserve AHOS gate",
+      "status": "candidate_not_integrated",
+      "pinned_commit": null,
+      "automatic_install_allowed": false
+    },
+    {
+      "full_name": "langchain-ai/langgraph",
+      "purpose": "Durable department graphs, checkpoints and interrupted owner review",
+      "license_spdx": "MIT",
+      "source_url": "https://github.com/langchain-ai/langgraph",
+      "license_url": "https://github.com/langchain-ai/langgraph/blob/main/LICENSE",
+      "evidence_urls": [
+        "https://github.com/langchain-ai/langgraph/blob/main/README.md",
+        "https://github.com/langchain-ai/langgraph/blob/main/libs/langgraph/pyproject.toml"
+      ],
+      "reviewed_at": "2026-10-04",
+      "windows_assessment": "Python package; AHOS Windows adapter not validated",
+      "integration_tradeoff": "Compare checkpoint/restart semantics against existing queues; do not replace working queues wholesale",
+      "status": "candidate_not_integrated",
+      "pinned_commit": null,
+      "automatic_install_allowed": false
+    },
+    {
+      "full_name": "microsoft/agent-framework",
+      "purpose": "Multi-agent department orchestration, handoffs, middleware and telemetry",
+      "license_spdx": "MIT",
+      "source_url": "https://github.com/microsoft/agent-framework",
+      "license_url": "https://github.com/microsoft/agent-framework/blob/main/LICENSE",
+      "evidence_urls": [
+        "https://github.com/microsoft/agent-framework/blob/main/README.md"
+      ],
+      "reviewed_at": "2026-10-04",
+      "windows_assessment": "Official Python installation notes explicitly mention Windows; AHOS adapter untested",
+      "integration_tradeoff": "Alternative orchestration experiment, not a second production scheduler; model access remains separately configured",
+      "status": "candidate_not_integrated",
+      "pinned_commit": null,
+      "automatic_install_allowed": false
+    },
+    {
+      "full_name": "OpenHands/OpenHands",
+      "purpose": "Optional separate coding agent control center and sandbox backend",
+      "license_spdx": "MIT",
+      "source_url": "https://github.com/OpenHands/OpenHands",
+      "license_url": "https://github.com/OpenHands/OpenHands/blob/main/LICENSE",
+      "evidence_urls": [
+        "https://github.com/OpenHands/OpenHands/blob/main/README.windows.md",
+        "https://github.com/OpenHands/OpenHands/blob/main/README.md"
+      ],
+      "reviewed_at": "2026-10-04",
+      "windows_assessment": "Official Windows Docker quickstart; multi-sandbox runtime requires WSL2 and is not native Windows",
+      "integration_tradeoff": "Higher deployment cost; current README is Agent Canvas with multiple repos; verify each selected component license and pin before integrating",
+      "status": "candidate_not_integrated",
+      "pinned_commit": null,
+      "automatic_install_allowed": false
+    },
+    {
+      "full_name": "microsoft/playwright-python",
+      "purpose": "Browser automation and panel acceptance tests",
+      "license_spdx": "Apache-2.0",
+      "source_url": "https://github.com/microsoft/playwright-python",
+      "license_url": "https://github.com/microsoft/playwright-python/blob/main/LICENSE",
+      "evidence_urls": [
+        "https://github.com/microsoft/playwright-python/blob/main/README.md"
+      ],
+      "reviewed_at": "2026-10-04",
+      "windows_assessment": "Official support matrix lists Windows browsers",
+      "integration_tradeoff": "Useful scoped local browser adapter; requires browser binaries and permission-bound session handling, not desktop access",
+      "status": "candidate_not_integrated",
+      "pinned_commit": null,
+      "automatic_install_allowed": false
+    },
+    {
+      "full_name": "pywinauto/pywinauto",
+      "purpose": "Native Windows application adapter using Win32/UIA",
+      "license_spdx": "BSD-3-Clause",
+      "source_url": "https://github.com/pywinauto/pywinauto",
+      "license_url": "https://github.com/pywinauto/pywinauto/blob/master/LICENSE",
+      "evidence_urls": [
+        "https://github.com/pywinauto/pywinauto/blob/master/README.md"
+      ],
+      "reviewed_at": "2026-10-04",
+      "windows_assessment": "Explicit Windows GUI library with Win32 and UIA backends",
+      "integration_tradeoff": "Windows-host installation and interactive session required; never expose arbitrary remote shell or unrestricted filesystem to model",
+      "status": "candidate_not_integrated",
+      "pinned_commit": null,
+      "automatic_install_allowed": false
+    }
+  ]
+}

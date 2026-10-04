@@ -412,3 +412,54 @@ def test_removed_definitions_are_repaired_before_write(monkeypatch, tmp_path):
     assert "restore existing public definitions" in requests[1]["messages"][-1]["content"]
     apply_response(tmp_path, (PurePosixPath("app.py"),), result)
     assert path.read_text() == old.replace("return 1", "return 2")
+
+
+def test_invalid_response_diagnostics_are_bounded_and_redacted(tmp_path, monkeypatch):
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def read(self):
+            return json.dumps({"choices": [{"finish_reason": "length", "message": {
+                "content": "Bearer test-key sk-unknownsecret api_key=other-secret " + "x" * 5000,
+                "reasoning": "private reasoning never persisted",
+            }}]}).encode()
+
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+    monkeypatch.setattr("urllib.request.urlopen", lambda *_a, **_k: Response())
+    monkeypatch.setattr("time.sleep", lambda _s: None)
+    with pytest.raises(CodingBuilderError):
+        _request(prompt="private prompt", context="private repository context", model="openrouter/free",
+                 timeout=1, worktree=tmp_path)
+    artifact = tmp_path.parent / (tmp_path.name + ".coding-diagnostics.json")
+    assert list(tmp_path.iterdir()) == []  # Never enter the candidate Git diff.
+    text = artifact.read_text()
+    for secret in ("test-key", "sk-unknownsecret", "other-secret", "private prompt", "private repository context", "private reasoning"):
+        assert secret not in text
+    records = json.loads(text)["attempts"]
+    assert len(records) == 3
+    assert records[-1]["finish_reason"] == "length"
+    assert records[-1]["reasoning_present"] is True
+    assert len(records[-1]["response_excerpt"]) <= 2000
+    assert records[-1]["content_chars"] > 5000
+
+
+def test_empty_response_diagnostic_has_no_reasoning_content(tmp_path, monkeypatch):
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *_args): return False
+        def read(self):
+            return json.dumps({"choices": [{"finish_reason": "stop", "message": {
+                "content": "", "reasoning": "do not persist this",
+            }}]}).encode()
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+    monkeypatch.setattr("urllib.request.urlopen", lambda *_a, **_k: Response())
+    with pytest.raises(CodingBuilderError):
+        _request(prompt="task", context="ctx", model="direct/free", timeout=1, worktree=tmp_path)
+    record = json.loads((tmp_path.parent / (tmp_path.name + ".coding-diagnostics.json")).read_text())["attempts"][0]
+    assert record["content_empty"] is True
+    assert record["response_excerpt"] == ""
+    assert record["reasoning_present"] is True

@@ -6,6 +6,7 @@ import os
 import subprocess
 import sys
 import threading
+import time
 from pathlib import Path
 from typing import Mapping
 
@@ -115,8 +116,10 @@ def build_service(runtime_dir: Path, config_path: Path, poll_seconds: float) -> 
     department_step = _department_step(runtime_dir, config_path)
 
     coding_step = _coding_step(runtime_dir, config)
+    brain_step = _brain_step(runtime_dir, config_path)
 
     def coding_with_departments() -> str:
+        brain_step()
         department_step()
         return coding_step()
 
@@ -127,6 +130,43 @@ def build_service(runtime_dir: Path, config_path: Path, poll_seconds: float) -> 
         poll_seconds=poll_seconds,
         automation_steps=(coding_with_departments,),
     )
+
+
+def _brain_step(runtime_dir: Path, config_path: Path):
+    """Bounded independent observation; optional dispatch never bypasses review."""
+    active: threading.Thread | None = None
+    next_poll = 0.0
+
+    def poll() -> str:
+        nonlocal active, next_poll
+        if active is not None and active.is_alive():
+            return "brain:running"
+        raw = _read_config(config_path).get("holding_brain", {})
+        if not isinstance(raw, dict) or raw.get("enabled") is not True:
+            return "brain:disabled"
+        if time.monotonic() < next_poll:
+            return "brain:waiting"
+        next_poll = time.monotonic() + max(30, float(raw.get("interval_seconds") or 300))
+
+        def run() -> None:
+            try:
+                from .holding_brain import run_brain_cycle
+                run_brain_cycle(runtime_dir, runtime_dir.parent,
+                                dispatch=raw.get("dispatch") is True)
+                if raw.get("watch_upstream") is True:
+                    from .upstream_watch import watch_upstream
+                    watch_upstream(runtime_dir, runtime_dir.parent,
+                                   allow_external=raw.get("allow_external") is True)
+            except Exception as exc:
+                # Persist the type only, never provider text or credentials.
+                path = runtime_dir / "holding-brain-error.json"
+                path.write_text(json.dumps({"error_type": type(exc).__name__}), encoding="utf-8")
+
+        active = threading.Thread(target=run, name="AHOS-brain", daemon=True)
+        active.start()
+        return "brain:running"
+
+    return poll
 
 
 def main() -> int:
@@ -141,12 +181,14 @@ def main() -> int:
     runtime = Path(args.runtime_dir).resolve()
     runtime.mkdir(parents=True, exist_ok=True)
     config = Path(args.config).resolve() if args.config else runtime / "company-service-config.json"
-    service = build_service(runtime, config, args.poll_seconds)
-    service.stop_path.unlink(missing_ok=True)
-    if args.once:
-        print(service.run_once())
-    else:
-        service.run_forever()
+    from .department_daemon import service_lock
+    with service_lock(runtime / "company-service.lock", "company"):
+        service = build_service(runtime, config, args.poll_seconds)
+        service.stop_path.unlink(missing_ok=True)
+        if args.once:
+            print(service.run_once())
+        else:
+            service.run_forever()
     return 0
 
 

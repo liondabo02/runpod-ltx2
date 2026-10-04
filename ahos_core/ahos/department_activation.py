@@ -60,8 +60,19 @@ def main() -> int:
     parser.add_argument("--model", default="openrouter/free")
     parser.add_argument("--max-workers", type=int, default=3)
     parser.add_argument("--retry-failed-provider", action="store_true")
+    parser.add_argument("--enable-brain", action="store_true",
+                        help="Enable local gap observation, repair dispatch and daily GitHub metadata checks")
     args = parser.parse_args()
     print(json.dumps(activate_departments(Path(args.runtime_dir), allow_external=args.allow_external, model=args.model, max_workers=args.max_workers)))
+    if args.enable_brain:
+        config_path = Path(args.runtime_dir) / "company-service-config.json"
+        config = json.loads(config_path.read_text(encoding="utf-8-sig"))
+        config["holding_brain"] = {"enabled": True, "dispatch": True,
+                                   "interval_seconds": 300, "watch_upstream": True,
+                                   "allow_external": args.allow_external}
+        temp = config_path.with_suffix(".json.tmp")
+        temp.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
+        temp.replace(config_path)
     if args.retry_failed_provider:
         from .department_runtime import DepartmentRuntime
         print(json.dumps({"provider_tasks_requeued": DepartmentRuntime(Path(args.runtime_dir) / "departments").retry_failed_providers()}))

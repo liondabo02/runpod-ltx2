@@ -290,3 +290,16 @@ def test_code_review_renders_patch_evidence_and_actions(tmp_path: Path):
     assert "patch_sha256" in body
     assert "Approve &amp; Publish" in body
     assert "python" in body.lower()
+
+
+def test_dashboard_shows_brain_evidence_and_escapes_recommendations(tmp_path):
+    state = ControlCenterState(tmp_path / 'runtime')
+    state.runtime_dir.mkdir(parents=True, exist_ok=True)
+    (state.runtime_dir / 'holding-brain.json').write_text(json.dumps({
+        'observed_at': '2026-10-04', 'automatic_dispatch_enabled': True,
+        'gaps': [{'kind': 'coding_exhausted', 'count': 1, 'recommendation': '<script>unsafe</script>'}],
+    }))
+    page = render_dashboard(state.snapshot())
+    assert 'Holding Brain' in page
+    assert '&lt;script&gt;unsafe&lt;/script&gt;' in page
+    assert 'PC connection: not connected' in page

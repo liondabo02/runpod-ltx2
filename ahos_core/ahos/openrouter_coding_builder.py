@@ -17,6 +17,58 @@ class CodingBuilderError(RuntimeError):
     pass
 
 
+def _redacted_diagnostic_text(value: str) -> str:
+    # Redact before truncation: a boundary must never expose part of a key.
+    for name, secret in os.environ.items():
+        if secret and re.search(r"KEY|TOKEN|SECRET|PASSWORD|CREDENTIAL", name, re.I):
+            value = value.replace(secret, "[REDACTED]")
+    value = re.sub(r"(?i)Bearer\s+[^\s\"']+", "Bearer [REDACTED]", value)
+    value = re.sub(r"\b(?:sk-|ghp_|github_pat_)[A-Za-z0-9_-]+", "[REDACTED]", value)
+    value = re.sub(r"(https?://)[^\s/@:]+:[^\s/@]+@", r"\1[REDACTED]@", value)
+    value = re.sub(
+        r"(?i)([\"']?(?:api[_-]?key|access[_-]?token|password|secret)[\"']?\s*[:=]\s*)([\"'])(.*?)\2",
+        r"\1[REDACTED]", value,
+    )
+    value = re.sub(
+        r"(?i)([\"']?(?:api[_-]?key|access[_-]?token|password|secret)[\"']?\s*[:=]\s*)([\"']?)[^\s,;\n]+",
+        r"\1[REDACTED]", value,
+    )
+    return value.encode("utf-8", errors="replace").decode("utf-8")[:2000]
+
+
+def _record_invalid_response(
+    worktree: Path | None, *, model: str, attempt: int, content: str,
+    error: Exception, finish_reason: object, reasoning_present: bool,
+) -> None:
+    if worktree is None:
+        return
+    # One bounded local artifact, deliberately separate from candidate code.
+    # Keep outside the source tree: the worker stages every untracked file.
+    path = worktree.parent / (worktree.name + ".coding-diagnostics.json")
+    try:
+        if path.is_symlink():
+            return
+        records = []
+        if attempt > 1 and path.is_file() and path.stat().st_size < 40_000:
+            previous = json.loads(path.read_text(encoding="utf-8"))
+            if isinstance(previous, dict) and isinstance(previous.get("attempts"), list):
+                records = previous["attempts"][-7:]
+        records.append({
+            "attempt": attempt,
+            "model": _redacted_diagnostic_text(model)[:160],
+            "error_type": type(error).__name__,
+            "content_chars": len(content),
+            "content_empty": not bool(content),
+            "finish_reason": finish_reason if finish_reason in ("stop", "length", "error", "tool_calls", "content_filter") else "unknown",
+            "reasoning_present": reasoning_present,
+            "response_excerpt": _redacted_diagnostic_text(content),
+        })
+        path.write_text(json.dumps({"schema": "ahos.coding-response-diagnostics.v1", "attempts": records}, ensure_ascii=True, indent=2), encoding="utf-8")
+    except (OSError, ValueError, TypeError):
+        # Diagnostic availability must not alter candidate validation/retries.
+        return
+
+
 DEFAULT_FREE_CODING_FALLBACKS = (
     "poolside/laguna-s-2.1:free",
     "cohere/north-mini-code:free",
@@ -263,6 +315,8 @@ def _request(
         for attempt in range(attempts):
             total_attempts += 1
             content = ""
+            finish_reason = None
+            reasoning_present = False
             request_payload: dict[str, object] = {
                 "model": selected_model,
                 "messages": messages,
@@ -302,6 +356,8 @@ def _request(
                 payload = json.loads(raw)
                 choice = payload["choices"][0]
                 message = choice["message"]
+                finish_reason = choice.get("finish_reason")
+                reasoning_present = bool(message.get("reasoning"))
                 content = _message_text(message["content"])
                 if not content:
                     raise TypeError(
@@ -314,18 +370,17 @@ def _request(
                     _prepare_file_edits(worktree, roots, result)
                 return result
             except urllib.error.HTTPError as exc:
-                try:
-                    detail = exc.read().decode("utf-8", errors="replace").strip()
-                except OSError:
-                    detail = ""
-                last_error = CodingBuilderError(
-                    f"HTTP {exc.code} {exc.reason}"
-                    + (f": {detail[-2000:]}" if detail else "")
-                )
+                # Remote error bodies can echo credentials or request text.
+                last_error = CodingBuilderError(f"HTTP {exc.code}")
                 if attempt + 1 < attempts:
                     time.sleep(attempt + 1)
             except (OSError, urllib.error.URLError, json.JSONDecodeError, KeyError, IndexError, TypeError, ValueError) as exc:
                 last_error = exc
+                _record_invalid_response(
+                    worktree, model=selected_model, attempt=total_attempts,
+                    content=content, error=exc, finish_reason=finish_reason,
+                    reasoning_present=reasoning_present,
+                )
                 if content:
                     messages.extend((
                         {"role": "assistant", "content": content[-12_000:]},
@@ -340,7 +395,7 @@ def _request(
     assert last_error is not None
     raise CodingBuilderError(
         f"OpenRouter returned an invalid coding response after {total_attempts} attempt(s) "
-        f"across {len(models)} model(s): {last_error}"
+        f"across {len(models)} model(s): {_redacted_diagnostic_text(str(last_error))}"
     ) from last_error
 
 

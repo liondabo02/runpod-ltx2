@@ -68,3 +68,14 @@ def test_departments_hot_activate_before_blocking_coding(tmp_path, monkeypatch):
     assert started.wait(1)
     assert poll() == "departments:running"
     release.set()
+
+
+def test_company_singleton_refuses_second_loop(tmp_path):
+    from ahos.department_daemon import service_lock
+    lock = tmp_path / 'company-service.lock'
+    with service_lock(lock, 'company'):
+        with pytest.raises(RuntimeError, match='company service is already running'):
+            with service_lock(lock, 'company'):
+                pass
+    with service_lock(lock, 'company'):
+        pass
