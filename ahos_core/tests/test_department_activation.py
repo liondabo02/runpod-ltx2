@@ -45,3 +45,26 @@ def test_panel_does_not_treat_old_department_status_as_live(tmp_path):
         'status': 'polled', 'timestamp': '2000-01-01T00:00:00+00:00', 'pid': 1,
     }))
     assert ControlCenterState(tmp_path).snapshot()['departments']['service']['status'] == 'stale'
+
+
+def test_grounded_activation_archives_old_drafts_and_keeps_evidence(tmp_path):
+    from ahos.department_runtime import DepartmentTask
+    runtime = DepartmentRuntime(tmp_path / 'departments', lambda _: json.dumps({
+        'title': 'Old draft', 'content': 'This is the original generated artifact kept for traceable owner review and audit. ' * 2,
+        'assumptions': [], 'acceptance_checks': ['Review'],
+    }))
+    runtime.enqueue(DepartmentTask('DEPT-BOOTSTRAP-software', 'software', 'Old objective'))
+    old = runtime.run_once()['tasks'][0]
+    artifact = runtime.root / old['artifact']
+    original = artifact.read_bytes()
+    activate_departments(tmp_path, allow_external=True)
+    records = {t['task_id']: t for t in runtime.snapshot()['tasks']}
+    assert records[old['task_id']]['status'] == 'superseded'
+    assert artifact.read_bytes() == original
+    grounded = records['DEPT-GROUNDED-software']['objective']
+    assert 'autonomous holding and animation studio' in grounded
+    assert 'http.server' in grounded
+    assert 'Do not invent an expansion' in grounded
+    assert 'CODING' in grounded and 'STUDIO' in grounded
+    assert records['DEPT-GROUNDED-quality']['dependencies'] == ['DEPT-GROUNDED-software', 'DEPT-GROUNDED-data', 'DEPT-GROUNDED-creative']
+    assert len(records) == 12

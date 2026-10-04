@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from .department_structure import CORE_DEPARTMENTS
+from .department_context import grounded_objective
 
 DEPARTMENT_OBJECTIVES = {
     "software": "Audit the supplied AHOS requirements and prepare an implementation backlog with acceptance criteria, dependencies and tests. Treat coding work as pending until verified changes exist.",
@@ -37,13 +38,14 @@ def activate_departments(runtime_dir: Path, *, allow_external: bool, model: str 
     if not isinstance(config, dict):
         raise ValueError("company config must be an object")
     department_runtime = DepartmentRuntime(runtime_dir / "departments", generator=None, max_workers=max_workers)
+    department_runtime.supersede_bootstrap()
     existing = {item["task_id"] for item in department_runtime.snapshot()["tasks"]}
     dependencies = {"quality": ("software", "data", "creative"), "marketing": ("creative", "research"), "sales": ("marketing", "finance"), "operations": ("infrastructure", "finance", "support")}
     order = ("software", "research", "infrastructure", "data", "creative", "finance", "support", "quality", "marketing", "sales", "operations")
     for department in order:
-        task_id = "DEPT-BOOTSTRAP-" + department
+        task_id = "DEPT-GROUNDED-" + department
         if task_id not in existing:
-            department_runtime.enqueue(DepartmentTask(task_id, department, DEPARTMENT_OBJECTIVES[department], dependencies=tuple("DEPT-BOOTSTRAP-" + d for d in dependencies.get(department, ()))))
+            department_runtime.enqueue(DepartmentTask(task_id, department, grounded_objective(DEPARTMENT_OBJECTIVES[department]), dependencies=tuple("DEPT-GROUNDED-" + d for d in dependencies.get(department, ()))))
     config["departments"] = {"enabled": True, "allow_external": True, "model": model, "max_workers": max_workers}
     temporary = config_path.with_suffix(".json.tmp")
     temporary.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")

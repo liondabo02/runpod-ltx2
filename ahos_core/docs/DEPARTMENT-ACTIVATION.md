@@ -48,3 +48,19 @@ Existing studio render/TTS/publishing and owner gates are preserved.
 This change makes departments useful in parallel at preparation work. Full
 end-to-end departmental execution still requires purpose-specific executors and
 validated outputs; it is not evidence that the complete holding is finished.
+
+## Project-grounded briefs
+
+Activation now embeds a curated AHOS brief in every objective: autonomous holding,
+Python/HTML panel, persistent tasks, isolated coding, recurring cartoon identities,
+seven-language planning and explicit evidence/owner gates. It names unknown inputs
+and forbids inventing an AHOS acronym or treating it as an asset-management ERP.
+The objective carries this context even when an older scheduler is still running.
+
+The old `DEPT-BOOTSTRAP-*` tasks are marked `superseded` unless already approved or
+rejected. Original artifacts and decisions are retained. New `DEPT-GROUNDED-*`
+tasks regenerate all departmental drafts and downstream dependencies from the
+project brief. Activation is idempotent and does not reset coding tasks.
+
+Grounding improves task relevance; structural checks do not constitute semantic
+quality approval. The owner must still review whether proposals match the project.

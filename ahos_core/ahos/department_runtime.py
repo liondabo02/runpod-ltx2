@@ -161,6 +161,22 @@ class DepartmentRuntime:
                 "counts": counts, "provider_configured": self.generator is not None,
                 "external_execution_enabled": False, "publishing_enabled": False}
 
+    def supersede_bootstrap(self) -> int:
+        """Archive ungrounded bootstrap drafts without deleting evidence or approvals."""
+        changed = 0
+        with self._lock():
+            data = self._load()
+            for task in data["tasks"].values():
+                if task["task_id"].startswith("DEPT-BOOTSTRAP-") and task["status"] not in {"owner_approved", "owner_rejected", "superseded"}:
+                    task.update(status="superseded", updated_at=_stamp(),
+                                last_error="Replaced by project-grounded draft tasks; original evidence retained")
+                    task.pop("claim", None)
+                    task.pop("lease_until", None)
+                    changed += 1
+            if changed:
+                self._save(data)
+        return changed
+
     def retry(self, task_id: str) -> None:
         with self._lock():
             data = self._load()
