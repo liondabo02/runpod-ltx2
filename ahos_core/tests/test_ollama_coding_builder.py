@@ -77,3 +77,38 @@ def test_failed_gate_is_reported_without_model_paths(tmp_path, monkeypatch, resu
     assert 'secret-token' not in str(error.value)
     assert 'no files written' in str(error.value)
     assert list(tmp_path.iterdir()) == []
+
+
+def test_exact_search_repair_reads_omitted_target_without_fuzzy_write(tmp_path, monkeypatch):
+    target = tmp_path / "src/app.py"
+    target.parent.mkdir()
+    target.write_text("VALUE = 1\n" + "# padding\n" * 200)
+    replies = iter([
+        response({"edits": [{"path": "src/app.py", "search": "VALUE=1", "replace": "VALUE=2"}]}),
+        response({"edits": [{"path": "src/app.py", "search": "VALUE = 1", "replace": "VALUE = 2"}]}),
+    ])
+    calls = []
+    def post(path, payload, timeout):
+        calls.append(json.loads(json.dumps(payload)))
+        assert target.read_text().startswith("VALUE = 1")
+        return next(replies)
+    monkeypatch.setattr(builder, "_post", post)
+    result = builder.request_edits("task", tmp_path, (PurePosixPath("src"),),
+        model="qwen2.5-coder:7b", timeout=1, context_chars=10, attempts=2)
+    assert "VALUE = 1" not in calls[0]["messages"][-1]["content"]
+    assert "Actual file: src/app.py" in calls[1]["messages"][-1]["content"]
+    assert "VALUE = 1" in calls[1]["messages"][-1]["content"]
+    builder.apply_response(tmp_path, (PurePosixPath("src"),), result)
+    assert target.read_text().startswith("VALUE = 2")
+
+
+def test_repair_context_rejects_outside_and_symlink_targets(tmp_path):
+    outside = tmp_path / "outside.txt"
+    outside.write_text("PRIVATE")
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src/link.txt").symlink_to(outside)
+    result = {"edits": [
+        {"path": "outside.txt", "search": "PRIVATE", "replace": "x"},
+        {"path": "src/link.txt", "search": "PRIVATE", "replace": "x"},
+    ]}
+    assert builder._repair_context(tmp_path, (PurePosixPath("src"),), result) == ""
