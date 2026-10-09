@@ -19,6 +19,30 @@ from ahos.openrouter_coding_builder import (
 ENDPOINT = "http://127.0.0.1:11434"
 
 
+def _validation_diagnostic(exc: Exception) -> str:
+    """Report the failed gate without logging model text or repository contents."""
+    if isinstance(exc, SyntaxError):
+        return "python_syntax: generated Python is invalid"
+    if isinstance(exc, FileNotFoundError):
+        return "missing_file: an exact edit targets a file that does not exist"
+    if isinstance(exc, OSError):
+        return "file_io: could not read or prepare an edit"
+    message = str(exc)
+    gates = {
+        "out-of-scope edit:": "scope: generated path is outside allowed paths",
+        "unsafe edit path:": "unsafe_path: generated path is unsafe",
+        "duplicate full file:": "duplicate_file: response repeats a full file",
+        "exact edit search must match once:": "exact_search: search text is missing or is not unique",
+        "restore existing public definitions": "public_definitions: response removes existing definitions",
+        "preserve existing tests": "existing_tests: response changes or removes existing tests",
+        "Ollama generation incomplete": "truncated: generation is incomplete or reached its output limit",
+    }
+    for prefix, diagnostic in gates.items():
+        if message.startswith(prefix):
+            return diagnostic
+    return "response_format: response does not satisfy the JSON edit contract"
+
+
 def _post(path: str, payload: dict, timeout: float) -> dict:
     request = urllib.request.Request(
         ENDPOINT + path, data=json.dumps(payload, ensure_ascii=True).encode("utf-8"),
@@ -68,12 +92,15 @@ def request_edits(prompt: str, worktree: Path, roots: tuple[PurePosixPath, ...],
                 raise ValueError("local builder requires JSON exact edits")
             _prepare_file_edits(worktree, roots, result)
             return result
-        except (ValueError, TypeError, KeyError, OSError) as exc:
+        except (ValueError, TypeError, KeyError, OSError, SyntaxError) as exc:
+            diagnostic = _validation_diagnostic(exc)
             if attempt + 1 == attempts:
-                raise CodingBuilderError("Local model failed scoped edit validation; no files written") from None
+                raise CodingBuilderError(
+                    "Local model failed scoped edit validation; no files written; " + diagnostic
+                ) from None
             messages.extend([
                 {"role": "assistant", "content": content[-6000:]},
-                {"role": "user", "content": "Repair the JSON edits; preserve all tests and functions. Validation: " + str(exc)[-1500:]},
+                {"role": "user", "content": "Repair the JSON edits; preserve all tests and functions. Validation: " + diagnostic},
             ])
     raise AssertionError("unreachable")
 

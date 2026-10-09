@@ -57,3 +57,12 @@ need better context selection or another suitable model later. No automatic
 cloud fallback exists. This adapter does not add a dashboard indicator or
 activate other departments. Continuous work still requires the actual company
 service to be running on an awake computer.
+
+### Failed validation diagnostics
+
+Failed local generations now report a bounded gate category (scope, exact-search,
+missing-file, Python syntax, existing tests, public definitions, or response format).
+Model-provided paths and repository contents are not included in that diagnostic.
+Syntax errors enter the same bounded repair loop; all edits still validate before writes.
+A diagnostic identifies a rejected attempt, not successful coding execution. Do not
+blindly retry an exhausted task before reviewing its reported gate.

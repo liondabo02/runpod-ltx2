@@ -61,3 +61,19 @@ def test_cloud_model_rejected_before_request(monkeypatch):
     monkeypatch.setattr(builder, '_post', lambda *a: pytest.fail('must not send'))
     with pytest.raises(SystemExit):
         builder.main()
+
+
+@pytest.mark.parametrize('result, gate', [
+    ({'files': [{'path': 'secret-token.py', 'content': 'bad'}]}, 'scope:'),
+    ({'files': [{'path': 'src/new.py', 'content': 'def broken('}]}, 'python_syntax:'),
+    ({'edits': [{'path': 'src/absent.py', 'search': 'x', 'replace': 'y'}]}, 'missing_file:'),
+])
+def test_failed_gate_is_reported_without_model_paths(tmp_path, monkeypatch, result, gate):
+    monkeypatch.setattr(builder, '_post', lambda *a: response(result))
+    with pytest.raises(builder.CodingBuilderError) as error:
+        builder.request_edits('task', tmp_path, (PurePosixPath('src'),),
+            model='qwen2.5-coder:7b', timeout=1, context_chars=1000, attempts=1)
+    assert gate in str(error.value)
+    assert 'secret-token' not in str(error.value)
+    assert 'no files written' in str(error.value)
+    assert list(tmp_path.iterdir()) == []
