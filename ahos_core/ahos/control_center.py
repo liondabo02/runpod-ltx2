@@ -23,6 +23,33 @@ from .owner_approval import ApprovalStatus, OwnerApprovalInbox
 from .studio_executor import execution_status
 from .virtual_workforce import default_virtual_workforce
 
+_LEDGER_SCAN_EXCLUDED = frozenset({
+    ".git", ".venv", "venv", "node_modules", "backups",
+    "coding-worktrees", "sandbox-image", "sandbox-acceptance",
+})
+
+
+def _studio_execution_ledgers(runtime_dir: Path) -> list[Path]:
+    """Discover episode ledgers without descending into operational workspaces.
+
+    Episode folders may have arbitrary names and nesting. Prune dependency,
+    source worktree and backup trees before traversal, not after a costly rglob.
+    Do not follow directory links into unrelated or cyclic filesystem trees.
+    """
+    ledgers: list[Path] = []
+    for root, directories, files in os.walk(runtime_dir, followlinks=False):
+        directories[:] = [name for name in directories
+                          if name.casefold() not in _LEDGER_SCAN_EXCLUDED
+                          and not (Path(root) / name).is_symlink()
+                          and not (hasattr(Path(root) / name, "is_junction")
+                                   and (Path(root) / name).is_junction())]
+        if "EXECUTION-LEDGER.json" in files:
+            candidate = Path(root) / "EXECUTION-LEDGER.json"
+            if not candidate.is_symlink():
+                ledgers.append(candidate)
+    return sorted(ledgers)
+
+
 
 def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -154,7 +181,7 @@ class ControlCenterState:
             except (OSError, ValueError):
                 brain_reports[key] = {}
         studio_executions = []
-        for ledger in sorted(self.runtime_dir.rglob("EXECUTION-LEDGER.json")):
+        for ledger in _studio_execution_ledgers(self.runtime_dir):
             try:
                 status = execution_status(ledger.parent)
             except (OSError, ValueError, json.JSONDecodeError):

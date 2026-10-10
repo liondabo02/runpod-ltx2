@@ -381,3 +381,26 @@ def test_system_health_malformed_evidence_is_controlled_and_panel_renders(tmp_pa
     result = system_health(snapshot, now=now)
     assert result["status"] == "Attention Required"
     assert "Company kill switch is active." in result["reasons"]
+
+
+def test_studio_ledger_discovery_prunes_operational_trees_before_descent(tmp_path, monkeypatch):
+    import ahos.control_center as module
+    runtime = tmp_path / "runtime"
+    real = runtime / "custom-project" / "season-any" / "episode-any"
+    real.mkdir(parents=True)
+    ledger = real / "EXECUTION-LEDGER.json"
+    ledger.write_text("{}")
+    excluded = (".git", ".venv", "node_modules", "backups", "coding-worktrees", "sandbox-image", "sandbox-acceptance")
+    for name in excluded:
+        nested = runtime / name / "deep" / "candidate"
+        nested.mkdir(parents=True)
+        (nested / "EXECUTION-LEDGER.json").write_text("{}")
+    visited = []
+    walk = module.os.walk
+    def observe(*args, **kwargs):
+        for entry in walk(*args, **kwargs):
+            visited.append(Path(entry[0]))
+            yield entry
+    monkeypatch.setattr(module.os, "walk", observe)
+    assert module._studio_execution_ledgers(runtime) == [ledger]
+    assert all(not any(part in excluded for part in path.relative_to(runtime).parts) for path in visited)
