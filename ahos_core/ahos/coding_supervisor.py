@@ -47,6 +47,30 @@ def _run_builder_command(
     )
 
 
+def _replace_queue_file(source: Path, destination: Path) -> None:
+    """Atomically publish JSON, preserving Windows destination file metadata.
+
+    ReplaceFileW handles existing files differently from MoveFileExW (used by
+    os.replace), including preserving destination ACLs. Never fall back to
+    truncating the live queue: a crash must leave either complete version.
+    """
+    if os.name != "nt" or not destination.exists():
+        os.replace(source, destination)
+        return
+    import ctypes
+    from ctypes import wintypes
+
+    replace_file = ctypes.WinDLL("kernel32", use_last_error=True).ReplaceFileW
+    replace_file.argtypes = (
+        wintypes.LPCWSTR, wintypes.LPCWSTR, wintypes.LPCWSTR,
+        wintypes.DWORD, wintypes.LPVOID, wintypes.LPVOID,
+    )
+    replace_file.restype = wintypes.BOOL
+    if not replace_file(str(destination.resolve()), str(source.resolve()), None,
+                        0, None, None):
+        raise ctypes.WinError(ctypes.get_last_error())
+
+
 def _previous_candidate_context(worktree: str | None, *, limit: int = 12000) -> str:
     """Return bounded, untrusted source context from the failed candidate."""
     if not worktree:
@@ -209,8 +233,24 @@ class CodingSupervisorStore:
             item["status"] = records[key].status.value
             body[key] = item
         tmp = self.path.with_name(f".{self.path.name}.{uuid.uuid4().hex}.tmp")
-        tmp.write_text(json.dumps(body, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        os.replace(tmp, self.path)
+        try:
+            with tmp.open("w", encoding="utf-8") as stream:
+                stream.write(json.dumps(body, indent=2, sort_keys=True) + "\n")
+                stream.flush()
+                os.fsync(stream.fileno())
+            # Antivirus/indexers and dashboard reads may briefly hold a Windows
+            # handle without delete sharing. Keep retries bounded under the lock.
+            deadline = time.monotonic() + 2.0
+            while True:
+                try:
+                    _replace_queue_file(tmp, self.path)
+                    break
+                except OSError as exc:
+                    if getattr(exc, "winerror", None) not in (5, 32, 33) or time.monotonic() >= deadline:
+                        raise
+                    time.sleep(0.05)
+        finally:
+            tmp.unlink(missing_ok=True)
 
     def enqueue(self, item: CodingBacklogItem, *, idempotency_key: str | None = None,
                 max_attempts: int = 2, priority: int = 0) -> CodingTaskRecord:

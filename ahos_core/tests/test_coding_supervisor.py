@@ -389,3 +389,92 @@ def test_cli_transports_provider_wait_without_traceback_retry(tmp_path, monkeypa
     assert result['status'] == 'waiting_provider'
     assert result['attempts'] == 0
     assert result['provider_waits'] == 1
+
+
+def test_queue_save_retries_transient_windows_sharing_error(tmp_path, monkeypatch):
+    import ahos.coding_supervisor as module
+
+    store = CodingSupervisorStore(tmp_path / "queue.json")
+    store._save({})
+    original_replace = module._replace_queue_file
+    calls = []
+
+    def busy_once(source, destination):
+        calls.append(1)
+        if len(calls) == 1:
+            error = PermissionError("sharing violation")
+            error.winerror = 32
+            raise error
+        original_replace(source, destination)
+
+    monkeypatch.setattr(module, "_replace_queue_file", busy_once)
+    monkeypatch.setattr(module.time, "sleep", lambda _seconds: None)
+    store._save({})
+    assert len(calls) == 2
+    assert json.loads(store.path.read_text()) == {}
+    assert not list(tmp_path.glob("*.tmp"))
+
+
+def test_queue_failed_atomic_save_preserves_previous_json_and_cleans_temp(tmp_path, monkeypatch):
+    import ahos.coding_supervisor as module
+
+    store = CodingSupervisorStore(tmp_path / "queue.json")
+    store.path.write_text('{"previous": true}\n')
+    previous = store.path.read_bytes()
+
+    def denied(_source, _destination):
+        raise PermissionError("permission denied")
+
+    monkeypatch.setattr(module, "_replace_queue_file", denied)
+    with pytest.raises(PermissionError):
+        store._save({})
+    assert store.path.read_bytes() == previous
+    assert not list(tmp_path.glob("*.tmp"))
+
+
+def test_existing_windows_queue_uses_replacefile_api(tmp_path, monkeypatch):
+    import ctypes
+    from types import SimpleNamespace
+    import ahos.coding_supervisor as module
+
+    destination = tmp_path / "queue.json"
+    source = tmp_path / "queue.tmp"
+    destination.write_text("old")
+    source.write_text("new")
+    calls = []
+
+    class ReplaceFile:
+        def __call__(self, *args):
+            calls.append(args)
+            return True
+
+    api = ReplaceFile()
+    monkeypatch.setattr(ctypes, "WinDLL", lambda *args, **kwargs: SimpleNamespace(ReplaceFileW=api), raising=False)
+    monkeypatch.setattr(module, "os", SimpleNamespace(name="nt"))
+    module._replace_queue_file(source, destination)
+    assert calls == [(str(destination.resolve()), str(source.resolve()), None, 0, None, None)]
+
+
+def test_queue_windows_sharing_retry_is_bounded(tmp_path, monkeypatch):
+    import ahos.coding_supervisor as module
+
+    store = CodingSupervisorStore(tmp_path / "queue.json")
+    store.path.write_text('{}\n')
+    previous = store.path.read_bytes()
+    clock = iter((0.0, 0.5, 2.0))
+    calls = []
+
+    def locked(_source, _destination):
+        calls.append(1)
+        error = PermissionError("sharing violation")
+        error.winerror = 32
+        raise error
+
+    monkeypatch.setattr(module, "_replace_queue_file", locked)
+    monkeypatch.setattr(module.time, "monotonic", lambda: next(clock))
+    monkeypatch.setattr(module.time, "sleep", lambda _seconds: None)
+    with pytest.raises(PermissionError):
+        store._save({})
+    assert len(calls) == 2
+    assert store.path.read_bytes() == previous
+    assert not list(tmp_path.glob("*.tmp"))
