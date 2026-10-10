@@ -69,3 +69,11 @@ Check `docker inspect harun-ollama --format '{{.State.OOMKilled}}'`, model logs,
 and actual search output before marking this integration ready. Resolve model
 memory requirements or provision enough memory; longer timeouts alone cannot
 fix an out-of-memory kill. Preserve coding-worker context and owner gates.
+
+The same audit verified native Windows Ollama could answer using the identical
+`qwen2.5-coder:7b` model with `num_ctx=32000`. For that installation Vane's
+provider baseURL is `http://host.docker.internal:11434`; install the embedding
+model in that native installation too. Docker and native model registries are
+separate. This avoids the Docker VM memory ceiling without changing model or
+task scope, but requires a real Vane search acceptance check and sufficient host
+memory. Do not run independent large-model jobs concurrently on this 16 GB host.
