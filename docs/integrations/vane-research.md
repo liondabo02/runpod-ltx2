@@ -46,3 +46,26 @@ Verification: local HTTP fixture tests exercise upstream request shape, actual
 CLI artifact creation, provenance integrity, authorization gates, provider/model
 selection, loopback restriction, redirect refusal and oversized responses.
 A real Vane service query remains an operational acceptance step after setup.
+
+## Docker Ollama routing and memory failures
+
+When Ollama runs in `harun-ollama`, start Vane with the existing AI-hub network:
+
+```powershell
+./ahos_core/scripts/Start-AHOS-Vane.ps1 -ImageDigest "itzcrazykns1337/vane@sha256:REVIEWED-DIGEST" -OllamaNetwork harun-ai-hub_default -OllamaBaseUrl http://harun-ollama:11434
+```
+
+Replace the digest placeholder with the reviewed installed image digest. The
+launcher checks the network exists and reconnects the existing Vane container
+when needed. Existing provider settings are preserved; in Vane, verify the
+Ollama provider's baseURL is `http://harun-ollama:11434`. The host endpoint can
+point at a different native Ollama installation with different downloaded models.
+
+On the audited 2026-10-10 deployment, an actual search failed and Docker reported
+`OOMKilled=true` for Ollama. The pinned upstream implementation requested
+`num_ctx: 32000`; the Docker VM had about 7.42 GiB total memory shared by all
+services. HTTP 200 from Vane therefore did not establish research readiness.
+Check `docker inspect harun-ollama --format '{{.State.OOMKilled}}'`, model logs,
+and actual search output before marking this integration ready. Resolve model
+memory requirements or provision enough memory; longer timeouts alone cannot
+fix an out-of-memory kill. Preserve coding-worker context and owner gates.
