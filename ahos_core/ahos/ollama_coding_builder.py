@@ -132,6 +132,11 @@ def _repair_context(worktree, roots, result, limit=6000):
         for index in matches[:2]:
             excerpt = "".join(lines[max(0, index - 8):index + 32])
             block = f"\nActual file: {relative.as_posix()}; search matches: {count}\n{excerpt}"
+            # JSON quoting makes whitespace and newlines explicit. This is
+            # source evidence only: the model must still produce an edit that
+            # passes the unchanged exact-match validator.
+            if excerpt and source.count(excerpt) == 1:
+                block += "\nUnique current-source search candidate (JSON string):\n" + json.dumps(excerpt, ensure_ascii=False) + "\n"
             block = block[:remaining]
             blocks.append(block)
             remaining -= len(block)

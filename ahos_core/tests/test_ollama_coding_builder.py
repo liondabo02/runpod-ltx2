@@ -115,6 +115,21 @@ def test_repair_context_rejects_outside_and_symlink_targets(tmp_path):
     assert builder._repair_context(tmp_path, (PurePosixPath("src"),), result) == ""
 
 
+def test_repair_candidate_preserves_whitespace_and_never_writes(tmp_path):
+    target = tmp_path / "src/app.py"
+    target.parent.mkdir()
+    source = "def first():\n    return 1\n\ndef second():\n    return 1\n"
+    target.write_text(source)
+    result = {"edits": [{"path": "src/app.py", "search": "    return 1", "replace": "    return 2"}]}
+    context = builder._repair_context(tmp_path, (PurePosixPath("src"),), result)
+    marker = "Unique current-source search candidate (JSON string):\n"
+    assert "search matches: 2" in context
+    candidate = json.loads(context.split(marker, 1)[1].splitlines()[0])
+    assert source.count(candidate) == 1
+    assert "    return 1\n" in candidate
+    assert target.read_text() == source
+
+
 @pytest.fixture(autouse=True)
 def repository_for_local_builder_tests(tmp_path):
     subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
