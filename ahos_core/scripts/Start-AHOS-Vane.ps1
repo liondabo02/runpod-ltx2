@@ -27,7 +27,7 @@ if ($existing) {
         --cpus 1 --memory 2g --pids-limit 256 `
         -p 127.0.0.1:3010:3000 `
         -v ahos-vane-data:/home/vane/data -v ahos-vane-uploads:/home/vane/uploads `
-        -e "OLLAMA_BASE_URL=$OllamaBaseUrl" $ImageDigest
+        -e 'HOSTNAME=0.0.0.0' -e "OLLAMA_BASE_URL=$OllamaBaseUrl" $ImageDigest
 }
 if ($LASTEXITCODE -ne 0) { throw 'Vane container failed to start.' }
 if ($OllamaNetwork) {

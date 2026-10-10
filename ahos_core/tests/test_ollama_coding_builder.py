@@ -71,6 +71,32 @@ def test_status_never_generates_or_reads_prompt(monkeypatch, capsys):
     assert json.loads(capsys.readouterr().out)['coding_execution_verified'] is False
 
 
+@pytest.mark.parametrize("failure, category", [
+    (TimeoutError("PRIVATE_PAYLOAD"), "provider_timeout"),
+    (builder.urllib.error.URLError(TimeoutError("PRIVATE_PAYLOAD")), "provider_timeout"),
+    (ConnectionRefusedError("PRIVATE_PAYLOAD"), "provider_unavailable"),
+    (builder.urllib.error.URLError(ConnectionRefusedError("PRIVATE_PAYLOAD")), "provider_unavailable"),
+    (builder.urllib.error.HTTPError("http://private.invalid", 503, "PRIVATE_PAYLOAD", {}, None), "provider_http_error"),
+    (ValueError("PRIVATE_PAYLOAD"), "provider_response_invalid"),
+    (OSError("PRIVATE_PAYLOAD"), "provider_transport_error"),
+])
+def test_provider_failure_classification_preserves_files(tmp_path, monkeypatch, failure, category):
+    target = tmp_path / "src" / "app.py"
+    target.parent.mkdir()
+    target.write_text("VALUE = 1\n")
+    def fail_request(*args):
+        raise failure
+    monkeypatch.setattr(builder, "_post", fail_request)
+    with pytest.raises(builder.CodingBuilderError) as error:
+        builder.request_edits("repair", tmp_path, (PurePosixPath("src"),),
+            model="qwen2.5-coder:7b", timeout=1, context_chars=1000, attempts=2)
+    assert category in str(error.value)
+    assert "PRIVATE_PAYLOAD" not in str(error.value)
+    assert "private.invalid" not in str(error.value)
+    assert error.value.__suppress_context__ is True
+    assert target.read_text() == "VALUE = 1\n"
+
+
 def test_cloud_model_rejected_before_request(monkeypatch):
     monkeypatch.setattr('sys.argv', ['builder', '--model', 'qwen:cloud'])
     monkeypatch.setattr(builder, '_post', lambda *a: pytest.fail('must not send'))

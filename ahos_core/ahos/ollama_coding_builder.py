@@ -196,6 +196,20 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
         raise CodingBuilderError("Ollama redirects are disabled")
 
 
+def _provider_failure(exc: Exception) -> str:
+    """Classify transport failures without copying provider text or bodies."""
+    cause = exc.reason if isinstance(exc, urllib.error.URLError) else exc
+    if isinstance(exc, urllib.error.HTTPError):
+        return "provider_http_error"
+    if isinstance(cause, TimeoutError):
+        return "provider_timeout"
+    if isinstance(cause, ConnectionRefusedError):
+        return "provider_unavailable"
+    if isinstance(exc, ValueError):
+        return "provider_response_invalid"
+    return "provider_transport_error"
+
+
 def request_edits(prompt: str, worktree: Path, roots: tuple[PurePosixPath, ...],
                   *, model: str, timeout: float, context_chars: int, attempts: int) -> dict:
     inventory = _file_inventory(worktree, roots)
@@ -220,8 +234,11 @@ def request_edits(prompt: str, worktree: Path, roots: tuple[PurePosixPath, ...],
                 "keep_alive": "5m",
                 "options": {"temperature": 0.1, "num_ctx": 8192, "num_predict": 4096},
             }, timeout)
-        except (OSError, ValueError, urllib.error.URLError):
-            raise CodingBuilderError("Local Ollama request failed; check service and downloaded model") from None
+        except (OSError, ValueError, urllib.error.URLError) as exc:
+            raise CodingBuilderError(
+                "Local Ollama request failed; " + _provider_failure(exc)
+                + "; no files written; check service and downloaded model"
+            ) from None
         content = _message_text(payload.get("message", {}).get("content")) if isinstance(payload.get("message"), dict) else ""
         try:
             if payload.get("done") is not True or payload.get("done_reason") == "length":
