@@ -59,6 +59,15 @@ def _coding_step(runtime_dir: Path, config: Mapping[str, object]):
     ]
     for executable in allowed:
         command.extend(("--allow-test-executable", executable))
+    sandbox_image = raw.get("sandbox_image")
+    if sandbox_image is not None:
+        if not isinstance(sandbox_image, str) or not sandbox_image.strip():
+            raise ValueError("sandbox_image must be a pinned local image digest")
+        sandbox_timeout = raw.get("sandbox_timeout_seconds", 300)
+        if type(sandbox_timeout) is not int or not 1 <= sandbox_timeout <= 900:
+            raise ValueError("sandbox_timeout_seconds must be between 1 and 900")
+        command.extend(("--sandbox-image", sandbox_image,
+                        "--sandbox-timeout", str(sandbox_timeout)))
 
     def run() -> str:
         completed = subprocess.run(

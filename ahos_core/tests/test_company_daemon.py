@@ -49,6 +49,26 @@ def test_daemon_preserves_nested_builder_options_as_json(tmp_path, monkeypatch):
     assert json.loads(encoded) == ["python", "-m", "builder", "--model", "openrouter/free"]
 
 
+def test_daemon_forwards_explicit_sandbox_without_changing_builder(tmp_path, monkeypatch):
+    from ahos.company_daemon import _coding_step
+    captured = []
+    image = "sha256:" + "a" * 64
+    config = {"coding_supervisor": {"enabled": True,
+        "builder_command": ["python", "-m", "builder"],
+        "allowed_test_executables": ["python"],
+        "sandbox_image": image, "sandbox_timeout_seconds": 120}}
+    def run(command, **kwargs):
+        captured.extend(command)
+        return subprocess.CompletedProcess(command, 0, "null", "")
+    monkeypatch.setattr("ahos.company_daemon.subprocess.run", run)
+    assert _coding_step(tmp_path, config)() == "coding:polled"
+    assert captured[captured.index("--sandbox-image") + 1] == image
+    assert captured[captured.index("--sandbox-timeout") + 1] == "120"
+    config["coding_supervisor"]["sandbox_timeout_seconds"] = 0
+    with pytest.raises(ValueError, match="sandbox_timeout"):
+        _coding_step(tmp_path, config)
+
+
 def test_departments_hot_activate_before_blocking_coding(tmp_path, monkeypatch):
     import threading
     from ahos.company_daemon import _department_step
