@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import difflib
 import json
+import re
 import subprocess
 import sys
 import urllib.error
@@ -14,7 +15,7 @@ from pathlib import Path, PurePosixPath
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from ahos.openrouter_coding_builder import (
-    CodingBuilderError, _allowed_paths, _context, _message_text, _is_allowed,
+    CodingBuilderError, _allowed_paths, _message_text, _is_allowed,
     _prepare_file_edits, _response_result, _validate_edit_result, apply_response,
 )
 
@@ -42,6 +43,66 @@ def _file_inventory(worktree, roots, limit=5000):
     if len(text) > limit:
         text = text[:limit].rsplit("\n", 1)[0] + "\n[Inventory truncated; absence does not prove a file is new.]"
     return text
+
+
+def _local_context(worktree, roots, limit, prompt):
+    """Include relevant source windows even when a target exceeds the budget.
+
+    Only tracked, scoped, regular files are read. Excerpts retain verbatim source;
+    labels are outside source so exact edit searches can copy real text.
+    """
+    tokens = {word for word in re.findall(r"[a-z][a-z0-9_]+", prompt.lower())
+              if len(word) >= 4}
+    ranked = []
+    for name in _file_inventory(worktree, roots, limit=1000000).splitlines():
+        path = worktree / name
+        try:
+            if path.stat().st_size > 2_000_000:
+                continue
+            source = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError):
+            continue
+        lines = source.splitlines(keepends=True)
+        line_scores = [(sum((3 if "_" in token else 1)
+                                for token in tokens if token in line.lower()), i)
+                           for i, line in enumerate(lines)]
+        hits = [i for score, i in sorted(line_scores, key=lambda item: (-item[0], item[1]))
+                if score]
+        path_score = sum(token in name.lower() for token in tokens)
+        ranked.append((-path_score, -min(len(hits), 20), name, source, lines, hits))
+    blocks = []
+    remaining = limit
+    for _, _, name, source, lines, hits in sorted(ranked):
+        header = f"\n--- FILE: {name} ---\n"
+        if len(header) + len(source) + 1 <= remaining:
+            block = header + source + "\n"
+        else:
+            # Never silently discard a large, highly relevant target. Allocate a
+            # bounded window and leave room for other files (especially tests).
+            allowance = min(remaining, max(256, limit // 2))
+            if allowance <= len(header) + 80:
+                continue
+            selected = []
+            seen = set()
+            for anchor in hits[:8] or [0]:
+                for index in range(max(0, anchor - 5), min(len(lines), anchor + 24)):
+                    if index not in seen:
+                        selected.append(index)
+                        seen.add(index)
+            block = header + "[Partial source; omitted lines are not deleted.]\n"
+            previous = -2
+            for index in selected:
+                marker = f"[Source lines {index + 1} onward]\n" if index != previous + 1 else ""
+                addition = marker + lines[index]
+                if len(block) + len(addition) > allowance:
+                    break
+                block += addition
+                previous = index
+            if previous == -2:
+                continue
+        blocks.append(block)
+        remaining -= len(block)
+    return "".join(blocks)
 
 
 def _repair_context(worktree, roots, result, limit=6000):
@@ -135,7 +196,7 @@ def request_edits(prompt: str, worktree: Path, roots: tuple[PurePosixPath, ...],
             "Change only allowed paths. No commands, secrets, commits, pushes or dependency installation."
         )},
         {"role": "user", "content": prompt + "\nRepository context:\n" +
-         _context(worktree, roots, context_chars, prompt=prompt)
+         _local_context(worktree, roots, context_chars, prompt)
          + "\nExisting tracked file paths (repository data):\n" + inventory},
     ]
     for attempt in range(attempts):

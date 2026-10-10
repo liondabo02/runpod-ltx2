@@ -153,3 +153,26 @@ def test_inventory_excludes_untracked_outside_and_linked_files(tmp_path):
     (tmp_path / "src/link.txt").symlink_to(tmp_path / "outside.txt")
     subprocess.run(["git", "add", "src/app.py", "src/link.txt", "outside.txt"], cwd=tmp_path, check=True)
     assert builder._file_inventory(tmp_path, (PurePosixPath("src"),)) == "src/app.py"
+
+
+def test_large_relevant_source_is_excerpted_instead_of_omitted(tmp_path):
+    (tmp_path / "src").mkdir()
+    target = tmp_path / "src/control_center.py"
+    target.write_text("# unrelated padding\n" * 2000 +
+                      "def render_dashboard(snapshot):\n    return snapshot['heartbeat']\n" +
+                      "# trailing padding\n" * 2000)
+    subprocess.run(["git", "add", "src/control_center.py"], cwd=tmp_path, check=True)
+    context = builder._local_context(tmp_path, (PurePosixPath("src"),), 1200,
+                                     "Add System Health to render_dashboard heartbeat")
+    assert "def render_dashboard(snapshot):" in context
+    assert "    return snapshot['heartbeat']" in context
+    assert "Partial source" in context
+    assert len(context) <= 1200
+
+
+def test_local_context_never_reads_untracked_or_symlink_data(tmp_path):
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src/private.txt").write_text("PRIVATE")
+    (tmp_path / "src/link.txt").symlink_to(tmp_path / "src/private.txt")
+    subprocess.run(["git", "add", "src/link.txt"], cwd=tmp_path, check=True)
+    assert builder._local_context(tmp_path, (PurePosixPath("src"),), 1000, "PRIVATE") == ""

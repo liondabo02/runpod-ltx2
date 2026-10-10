@@ -74,3 +74,14 @@ When an exact edit fails, the local repair request receives bounded excerpts fro
 ### Repository path inventory
 
 Initial local requests include a bounded inventory of existing tracked files within allowed paths, excluding symlinks, missing targets and untracked data. Missing-file repairs receive this inventory again with explicit repository-root path and new-file instructions. No nonexistent edit is silently converted to a new file; the model must return a valid complete result and all validation gates remain in force. An inventory read failure stops the builder.
+
+
+### Large target files
+
+Local context now ranks tracked files and source lines by the task text. A file
+larger than the context budget is included as bounded, verbatim source windows
+rather than silently omitted. Partial-source and line labels identify gaps;
+these labels are not source code and must not appear in exact searches. This
+improves grounding without increasing the model context window or weakening
+scope, exact-match, existing-definition, test-preservation, or owner gates.
+Untracked files and symlink targets are excluded from this context.
