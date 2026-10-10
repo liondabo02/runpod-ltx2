@@ -23,8 +23,8 @@ _REPAIRS = {
     'coding_exhausted': {
         'title': 'AHOS coding reliability: diagnose failed builder responses and repair code production',
         'instruction': 'Inspect the persisted failing task evidence and builder response diagnostics locally. Repair the actual root cause. Preserve original task requirements, existing public APIs, owner controls and all tests. Do not claim a coding task succeeded without an actual scoped patch and passing checks. Never include credentials or raw provider payloads in owner-facing reports.',
-        'paths': ('ahos_core/ahos/coding_supervisor.py', 'ahos_core/ahos/coding_worker.py', 'ahos_core/ahos/openrouter_coding_builder.py', 'ahos_core/tests/test_openrouter_coding_builder.py', 'ahos_core/tests/test_coding_supervisor.py', 'ahos_core/tests/test_coding_worker.py'),
-        'tests': ('ahos_core/tests/test_openrouter_coding_builder.py', 'ahos_core/tests/test_coding_supervisor.py', 'ahos_core/tests/test_coding_worker.py'),
+        'paths': ('ahos_core/ahos/coding_supervisor.py', 'ahos_core/ahos/coding_worker.py', 'ahos_core/ahos/openrouter_coding_builder.py', 'ahos_core/ahos/ollama_coding_builder.py', 'ahos_core/tests/test_ollama_coding_builder.py', 'ahos_core/tests/test_openrouter_coding_builder.py', 'ahos_core/tests/test_coding_supervisor.py', 'ahos_core/tests/test_coding_worker.py'),
+        'tests': ('ahos_core/tests/test_ollama_coding_builder.py', 'ahos_core/tests/test_openrouter_coding_builder.py', 'ahos_core/tests/test_coding_supervisor.py', 'ahos_core/tests/test_coding_worker.py'),
     },
     'department_exhausted': {
         'title': 'AHOS department reliability: diagnose exhausted draft production failures',

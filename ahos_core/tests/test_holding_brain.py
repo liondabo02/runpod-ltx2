@@ -97,3 +97,22 @@ def test_decision_history_stays_bounded_and_omits_uncontrolled_fields(tmp_path):
     result = HoldingBrain(root, repo).cycle()
     assert len(result['decision_history']) == 50
     assert 'never-copy' not in (root / 'holding-brain.json').read_text()
+
+
+def test_coding_repair_can_modify_and_test_local_ollama_adapter(tmp_path):
+    root, repo = tmp_path / 'runtime', tmp_path / 'repo'
+    root.mkdir()
+    for path in _REPAIRS['coding_exhausted']['paths']:
+        destination = repo / path
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text('')
+    store = fail_task(root, repo)
+    result = HoldingBrain(root, repo).cycle(dispatch=True)
+    repair = store.get(result['handoffs'][0]['task_id'])
+    assert 'ahos_core/ahos/ollama_coding_builder.py' in repair.allowed_paths
+    assert 'ahos_core/tests/test_ollama_coding_builder.py' in repair.allowed_paths
+    assert 'ahos_core/tests/test_ollama_coding_builder.py' in repair.test_commands[0]
+    assert 'ahos_core/ahos/openrouter_coding_builder.py' in repair.allowed_paths
+    assert repair.max_attempts == 2
+    assert result['owner_approval_required'] is True
+    assert store.get('OWNER-TASK').allowed_paths == ('src',)
