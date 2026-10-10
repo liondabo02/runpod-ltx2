@@ -2,19 +2,24 @@
 
 This is a reviewed candidate list, not a claim that all candidates are integrated.
 The current bottleneck is correct code production and validation, not agent count.
-No new accounts, billing, credentials, cloud inference, or model downloads were started in this review.
+No new accounts, billing, credentials or model downloads were started. An official Gemini CLI public-text probe was rejected at authentication. An Antigravity public-text probe returned SUCCESS / READY in one turn (2.76 seconds reported inference duration); neither probe sent repository contents.
+
+## Critical correction: Gemini consumer login retired
+
+The quota page still lists 1,000 daily requests for personal Google login, but it is superseded for consumer login by Google's deprecation notice (updated 9 October 2026): consumer Code Assist/Gemini CLI requests stopped on 18 June 2026. The live Windows probe returned UNSUPPORTED_CLIENT and directed migration to Antigravity. Do not enable this worker using cached Gemini personal OAuth. Antigravity's current individual plan is $0/month with basic weekly limits, not unlimited agent inference. Antigravity CLI 1.3.3 was found at the standard Windows user install path, although `where agy` could not find it on the current process PATH. Basic Antigravity response execution is verified. Account quota/entitlement details and a real AHOS coding integration test remain outstanding. API-key authentication is a separate path with separate terms/quotas.
 
 ## Verified local state
 
-- Gemini CLI 0.63.0 is already installed on the Windows host. Its help supports headless JSON output, plan mode, sandbox and worktrees. Authentication and remaining free quota are not verified.
+- Gemini CLI 0.63.0 is already installed. Its cached personal OAuth configuration exists, but actual authentication failed with UNSUPPORTED_CLIENT. No credential contents were read. Installed CLI does not mean usable service.
+- Antigravity CLI 1.3.3 returned READY successfully through its official interface. This proves a model response, not successful code generation or unlimited free quota.
 - Native Ollama has qwen2.5-coder:7b and nomic-embed-text. The loaded coder is CPU-only. Docker Ollama is a separate installation; do not assume its models are native models.
-- Read-only probe: `python ahos_core/scripts/free_ai_preflight.py`. It queries loopback metadata and prints key-presence booleans only. Installation/key presence never proves successful model execution.
+- Read-only probe: `python ahos_core/scripts/free_ai_preflight.py`. It queries loopback metadata and prints key-presence booleans only. These reflect the invoking process environment, not all services or stored configs. Installation/key presence never proves successful model execution.
 
 ## Candidates and concrete roles
 
 | Candidate | Cost/license distinction | AHOS role and next gate |
 | --- | --- | --- |
-| Google Gemini CLI | Apache-2.0 CLI. Official quota page: personal Google account 1,000 model requests/day; unpaid API key 250/day, Flash only. These are requests, not completed tasks; service availability applies. | Priority coding reviewer/alternative worker. Use official CLI headless interface in an isolated worktree; keep AHOS scope, tests and owner approval. Verify existing auth and free entitlement before inference. Never extract OAuth tokens for a custom API client. |
+| Google Gemini CLI / Antigravity migration | Apache-2.0 Gemini CLI; consumer Google login retired. Antigravity individual plan $0/month with weekly limits. Gemini API-key quota is separate. | Priority alternative worker after migration validation. Preserve isolated worktrees, scope, tests and owner approval. Never extract OAuth tokens for a custom API client. |
 | Google ADK | Apache-2.0 framework; model services priced separately. | Evaluate durable department delegation, retries and human review through a separate prototype. Keep existing queue authoritative until an actual compatibility test passes. |
 | DeepSeek-R1 | Official repository and weights MIT; distilled Qwen and Llama variants retain underlying license considerations. Hosted DeepSeek API has paid token pricing. | Candidate local independent reasoning reviewer. Benchmark an installed compatible distilled model in isolation before downloading another. Full model is not a practical CPU replacement for this host. Do not assume reasoning quality equals exact-edit coding quality. |
 | Microsoft Agent Framework | MIT framework; inference/providers separate. AutoGen is in maintenance mode and directs new projects here. | Alternative to ADK for restartable multi-department workflows. Compare one workflow, not install multiple redundant orchestrators. |
@@ -42,6 +47,8 @@ Gemini CLI Google-account login uses Code Assist terms, not automatically Gemini
 ## Official sources checked
 
 - https://geminicli.com/docs/resources/quota-and-pricing/
+- https://developers.google.com/gemini-code-assist/docs/deprecations/code-assist-individuals
+- https://antigravity.google/pricing
 - https://geminicli.com/docs/resources/tos-privacy/
 - https://geminicli.com/docs/cli/headless/
 - https://ai.google.dev/gemini-api/terms

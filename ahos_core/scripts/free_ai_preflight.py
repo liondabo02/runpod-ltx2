@@ -3,6 +3,7 @@ import json
 import os
 import shutil
 import urllib.request
+from pathlib import Path
 from datetime import datetime, timezone
 
 
@@ -22,7 +23,12 @@ def main():
             "authentication_verified": False,
             "free_quota_verified": False,
             "coding_execution_verified": False,
+            "consumer_google_login": "retired_2026_06_18_migrate_to_antigravity",
         },
+        "antigravity_cli_installed": bool(shutil.which("agy") or (
+            Path(os.environ.get("LOCALAPPDATA", "")) / "agy" / "bin" / "agy.exe"
+        ).is_file()),
+        "key_presence_scope": "invoking_process_environment_only",
         "cloud_key_presence": {
             name: bool(os.environ.get(name)) for name in
             ("OPENROUTER_API_KEY", "GROQ_API_KEY", "HF_TOKEN", "NVIDIA_API_KEY", "BYTEZ_API_KEY")
