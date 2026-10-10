@@ -147,7 +147,8 @@ def main() -> int:
     parser.add_argument('--repository', required=True)
     parser.add_argument('--dispatch', action='store_true', help='Enqueue scoped repair proposals; owner gates remain intact')
     args = parser.parse_args()
-    print(json.dumps(run_brain_cycle(args.runtime_dir, args.repository, dispatch=args.dispatch), ensure_ascii=False, indent=2))
+    # Console pipes on Windows may use cp1252; JSON escapes preserve all text.
+    print(json.dumps(run_brain_cycle(args.runtime_dir, args.repository, dispatch=args.dispatch), ensure_ascii=True, indent=2))
     return 0
 
 
