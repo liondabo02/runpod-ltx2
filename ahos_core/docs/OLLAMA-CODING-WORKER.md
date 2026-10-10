@@ -85,3 +85,14 @@ these labels are not source code and must not appear in exact searches. This
 improves grounding without increasing the model context window or weakening
 scope, exact-match, existing-definition, test-preservation, or owner gates.
 Untracked files and symlink targets are excluded from this context.
+
+
+### Repair context budget
+
+Each repair request starts fresh with the original full task and system edit
+contract. It replaces stale context with at most 4,000 characters of current
+source, a 2,000-character path excerpt and a 2,000-character failed proposal
+excerpt. Failed conversations no longer accumulate under the fixed 8,192-token
+context window. Requirements are not shortened and model RAM/context limits are
+not increased. Character bounds reduce history growth but do not establish an
+exact tokenizer guarantee for arbitrarily long owner requests.
