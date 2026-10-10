@@ -1,4 +1,5 @@
 import json
+import subprocess
 from pathlib import PurePosixPath
 import pytest
 from ahos import ollama_coding_builder as builder
@@ -39,7 +40,7 @@ def test_incomplete_output_does_not_write(tmp_path, monkeypatch, extra):
     with pytest.raises(builder.CodingBuilderError):
         builder.request_edits('task', tmp_path, (PurePosixPath('src'),),
             model='qwen2.5-coder:7b', timeout=1, context_chars=1000, attempts=1)
-    assert list(tmp_path.iterdir()) == []
+    assert [p for p in tmp_path.iterdir() if p.name != ".git"] == []
 
 
 def test_redirects_rejected():
@@ -76,7 +77,7 @@ def test_failed_gate_is_reported_without_model_paths(tmp_path, monkeypatch, resu
     assert gate in str(error.value)
     assert 'secret-token' not in str(error.value)
     assert 'no files written' in str(error.value)
-    assert list(tmp_path.iterdir()) == []
+    assert [p for p in tmp_path.iterdir() if p.name != ".git"] == []
 
 
 def test_exact_search_repair_reads_omitted_target_without_fuzzy_write(tmp_path, monkeypatch):
@@ -112,3 +113,43 @@ def test_repair_context_rejects_outside_and_symlink_targets(tmp_path):
         {"path": "src/link.txt", "search": "PRIVATE", "replace": "x"},
     ]}
     assert builder._repair_context(tmp_path, (PurePosixPath("src"),), result) == ""
+
+
+@pytest.fixture(autouse=True)
+def repository_for_local_builder_tests(tmp_path):
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+
+
+def test_missing_target_repair_gets_real_repository_paths(tmp_path, monkeypatch):
+    target = tmp_path / "src/app.py"
+    target.parent.mkdir()
+    target.write_text("VALUE = 1\n")
+    subprocess.run(["git", "add", "src/app.py"], cwd=tmp_path, check=True)
+    replies = iter([
+        response({"edits": [{"path": "src/invented.py", "search": "VALUE = 1", "replace": "VALUE = 2"}]}),
+        response({"edits": [{"path": "src/app.py", "search": "VALUE = 1", "replace": "VALUE = 2"}]}),
+    ])
+    calls = []
+    def post(path, payload, timeout):
+        calls.append(json.loads(json.dumps(payload)))
+        return next(replies)
+    monkeypatch.setattr(builder, "_post", post)
+    result = builder.request_edits("task", tmp_path, (PurePosixPath("src"),),
+        model="qwen2.5-coder:7b", timeout=1, context_chars=1000, attempts=2)
+    assert "src/app.py" in calls[0]["messages"][-1]["content"]
+    assert "nonexistent file" in calls[1]["messages"][-1]["content"]
+    assert "src/app.py" in calls[1]["messages"][-1]["content"]
+    assert not (tmp_path / "src/invented.py").exists()
+    assert target.read_text() == "VALUE = 1\n"
+    builder.apply_response(tmp_path, (PurePosixPath("src"),), result)
+    assert target.read_text() == "VALUE = 2\n"
+
+
+def test_inventory_excludes_untracked_outside_and_linked_files(tmp_path):
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src/app.py").write_text("VALUE = 1")
+    (tmp_path / "src/untracked.txt").write_text("private")
+    (tmp_path / "outside.txt").write_text("private")
+    (tmp_path / "src/link.txt").symlink_to(tmp_path / "outside.txt")
+    subprocess.run(["git", "add", "src/app.py", "src/link.txt", "outside.txt"], cwd=tmp_path, check=True)
+    assert builder._file_inventory(tmp_path, (PurePosixPath("src"),)) == "src/app.py"

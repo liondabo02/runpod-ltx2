@@ -70,3 +70,7 @@ blindly retry an exhausted task before reviewing its reported gate.
 ### Exact-search repair context
 
 When an exact edit fails, the local repair request receives bounded excerpts from the actual allowed target files, including targets omitted from the initial context budget. Similarity only selects a useful excerpt; writes still require an exact unique match and all existing validation gates. Out-of-scope and symlink targets are not read. The repair returns the complete corrected edit result before any write.
+
+### Repository path inventory
+
+Initial local requests include a bounded inventory of existing tracked files within allowed paths, excluding symlinks, missing targets and untracked data. Missing-file repairs receive this inventory again with explicit repository-root path and new-file instructions. No nonexistent edit is silently converted to a new file; the model must return a valid complete result and all validation gates remain in force. An inventory read failure stops the builder.
