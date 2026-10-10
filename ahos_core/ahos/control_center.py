@@ -560,8 +560,54 @@ pre{{white-space:pre-wrap;word-break:break-word;background:#090d18;padding:16px;
 </body></html>'''
 
 
+def system_health(snapshot: dict[str, object], *, now: datetime | None = None) -> dict[str, object]:
+    """Read-only operational summary; a healthy service is not production readiness."""
+    now = now or datetime.now(timezone.utc)
+    reasons: list[str] = []
+    heartbeat = snapshot.get("heartbeat", {})
+    if not isinstance(heartbeat, dict):
+        heartbeat = {}
+    state = heartbeat.get("state", "unknown")
+    if state not in {"starting", "polling", "idle", "running", "completed"}:
+        reasons.append(f"Company service state: {state}.")
+    timestamp = heartbeat.get("timestamp")
+    try:
+        stamp = datetime.fromisoformat(timestamp) if isinstance(timestamp, str) else None
+        if stamp is None or stamp.tzinfo is None:
+            raise ValueError("missing timezone-aware heartbeat")
+        age = (now - stamp).total_seconds()
+        if age > 300:
+            reasons.append("Company heartbeat is stale (more than 5 minutes old).")
+        elif age < -30:
+            reasons.append("Company heartbeat is in the future; check the clock.")
+    except (ValueError, TypeError, OverflowError):
+        reasons.append("Company heartbeat timestamp is missing or invalid.")
+    if heartbeat.get("error") or heartbeat.get("mission_status") in {"failed", "blocked", "error"}:
+        reasons.append("Company heartbeat reports an error or failed mission.")
+    for label, counts in (
+        ("Mission", snapshot.get("mission_counts", {})),
+        ("Coding", snapshot.get("coding_supervisor", {}).get("counts", {})),
+        ("Department", snapshot.get("departments", {}).get("counts", {})),
+    ):
+        if not isinstance(counts, dict):
+            reasons.append(f"{label} task counters are invalid.")
+            continue
+        for key in ("blocked", "failed", "error", "retries_exhausted"):
+            count = counts.get(key, 0)
+            if isinstance(count, bool) or not isinstance(count, int) or count < 0:
+                reasons.append(f"{label} {key} counter is invalid.")
+            elif count:
+                reasons.append(f"{label} tasks: {count} {key.replace('_', ' ')}.")
+    return {"status": "Attention Required" if reasons else "Healthy",
+            "reasons": reasons or ["Company heartbeat is fresh; no blocked or failed tasks reported."],
+            "heartbeat_timestamp": timestamp}
+
+
 def render_dashboard(snapshot: dict[str, object], message: str = "") -> str:
     hb = snapshot["heartbeat"]
+    health = system_health(snapshot)
+    health_css = "ok" if health["status"] == "Healthy" else "bad"
+    health_reasons = "".join(f"<li>{_esc(reason)}</li>" for reason in health["reasons"])
     counts = snapshot["mission_counts"]
     coding = snapshot.get("coding_supervisor", {"counts": {}, "tasks": []})
     coding_counts = coding.get("counts", {})
@@ -699,6 +745,9 @@ th{{color:var(--muted)}} .wide{{max-width:520px;color:var(--muted)}} .badge{{dis
 </style></head><body>
 <header><div><h1>AHOS Holding Control Center</h1><div class="sub">Local owner console · refresh 5s · {_esc(snapshot["generated_at"])}</div></div>{_badge(str(hb.get("state","unknown")))}</header>
 <main>{notice}<div class="grid">{cards}</div>
+<section class="section" aria-labelledby="system-health-title"><h2 id="system-health-title">System Health</h2>
+<p><strong class="badge {health_css}">{_esc(health["status"])}</strong></p><ul>{health_reasons}</ul>
+<p>Operational status only; this does not certify production readiness.</p></section>
 <div class="section"><h2>Owner Controls</h2><div class="toolbar">
 <form method="post" action="/action/start"><button class="neutral">Start / Resume Company</button></form>
 <form method="post" action="/action/backup"><button class="neutral">Create Backup</button></form>

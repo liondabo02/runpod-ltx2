@@ -303,3 +303,58 @@ def test_dashboard_shows_brain_evidence_and_escapes_recommendations(tmp_path):
     assert 'Holding Brain' in page
     assert '&lt;script&gt;unsafe&lt;/script&gt;' in page
     assert 'PC connection: not connected' in page
+
+
+def test_system_health_fresh_service_and_all_failure_counters():
+    from datetime import datetime, timezone
+    from copy import deepcopy
+    from ahos.control_center import system_health
+    now = datetime(2026, 10, 10, 6, tzinfo=timezone.utc)
+    snapshot = {"heartbeat": {"state": "idle", "timestamp": now.isoformat()},
+                "mission_counts": {}, "coding_supervisor": {"counts": {}},
+                "departments": {"counts": {}}}
+    original = deepcopy(snapshot)
+    assert system_health(snapshot, now=now)["status"] == "Healthy"
+    assert snapshot == original
+    for section in ("mission_counts", "coding_supervisor", "departments"):
+        for status in ("blocked", "failed", "error", "retries_exhausted"):
+            failed = deepcopy(snapshot)
+            counts = failed[section] if section == "mission_counts" else failed[section]["counts"]
+            counts[status] = 1
+            result = system_health(failed, now=now)
+            assert result["status"] == "Attention Required"
+            assert status.replace('_', ' ') in ' '.join(result["reasons"])
+
+
+def test_system_health_rejects_stale_missing_unknown_error_and_bad_clock():
+    from datetime import datetime, timezone, timedelta
+    from ahos.control_center import system_health
+    now = datetime(2026, 10, 10, 6, tzinfo=timezone.utc)
+    for heartbeat, reason in (
+        ({"state": "idle", "timestamp": (now - timedelta(seconds=301)).isoformat()}, "stale"),
+        ({"state": "idle"}, "missing or invalid"),
+        ({"state": "idle", "timestamp": "not-a-date"}, "missing or invalid"),
+        ({"state": "unknown", "timestamp": now.isoformat()}, "unknown"),
+        ({"state": "error", "timestamp": now.isoformat()}, "error"),
+        ({"state": "idle", "timestamp": (now + timedelta(seconds=31)).isoformat()}, "future"),
+        ({"state": "idle", "timestamp": now.isoformat(), "error": "private detail"}, "reports an error"),
+    ):
+        result = system_health({"heartbeat": heartbeat}, now=now)
+        assert result["status"] == "Attention Required"
+        assert reason in ' '.join(result["reasons"])
+        assert "private detail" not in ' '.join(result["reasons"])
+
+
+def test_system_health_panel_uses_accessible_status_and_escaped_reason(tmp_path):
+    state = ControlCenterState(tmp_path / "runtime")
+    snapshot = state.snapshot()
+    snapshot["heartbeat"] = {"state": "<script>bad</script>", "timestamp": None}
+    page = render_dashboard(snapshot)
+    assert 'aria-labelledby="system-health-title"' in page
+    assert 'id="system-health-title">System Health' in page
+    assert "Attention Required" in page
+    assert "&lt;script&gt;bad&lt;/script&gt;" in page
+    assert "<script>bad</script>" not in page
+    from datetime import datetime, timezone
+    state.heartbeat_path.write_text(json.dumps({"state": "idle", "timestamp": datetime.now(timezone.utc).isoformat()}))
+    assert '>Healthy</strong>' in render_dashboard(state.snapshot())

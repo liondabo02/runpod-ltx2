@@ -1,0 +1,5 @@
+# System Health dashboard
+
+The read-only System Health section summarizes the existing company heartbeat and mission, coding and department failure counters. Healthy requires a timezone-aware heartbeat no older than five minutes (and no more than 30 seconds ahead), a recognized active/idle service state, and no blocked, failed, error or exhausted tasks. Missing, invalid, stale or unknown heartbeat evidence produces Attention Required with a readable reason. Error payload text is not displayed in this summary.
+
+The panel uses text status and a reason list in the existing dark style, so color is not the only signal. No controls, credentials, approval gates or runtime queues are changed by this summary. Operational health does not certify film quality, sandbox isolation or production readiness. Long work that does not update the company heartbeat may show stale; inspect the worker evidence rather than assuming it stopped.
