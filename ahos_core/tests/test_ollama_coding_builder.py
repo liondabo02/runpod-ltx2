@@ -48,6 +48,20 @@ def test_redirects_rejected():
         builder._NoRedirect().redirect_request(None, None, 302, '', {}, 'https://example.com')
 
 
+@pytest.mark.parametrize("exception_type", [OSError, ValueError])
+def test_provider_errors_do_not_expose_raw_payload(tmp_path, monkeypatch, exception_type):
+    private_payload = "PRIVATE_PROVIDER_PAYLOAD_TEST_ONLY"
+    def fail_request(*args):
+        raise exception_type(private_payload)
+    monkeypatch.setattr(builder, "_post", fail_request)
+    with pytest.raises(builder.CodingBuilderError) as error:
+        builder.request_edits("task", tmp_path, (PurePosixPath("src"),),
+            model="qwen2.5-coder:7b", timeout=1, context_chars=1000, attempts=1)
+    assert private_payload not in str(error.value)
+    assert error.value.__suppress_context__ is True
+    assert "Local Ollama request failed" in str(error.value)
+
+
 def test_status_never_generates_or_reads_prompt(monkeypatch, capsys):
     monkeypatch.setattr('sys.argv', ['builder', '--status'])
     calls = []
