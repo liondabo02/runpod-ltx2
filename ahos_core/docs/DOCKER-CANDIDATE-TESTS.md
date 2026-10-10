@@ -40,3 +40,12 @@ integration probe on the configured daemon. Docker version alone is not evidence
 of containment. Tests depending on host binaries, external network, native
 executables in writable tmpfs or Windows behavior may need an explicitly reviewed
 image/test strategy rather than weakened isolation.
+
+
+The PID cap is 128 (processes and threads share this budget). The parallel
+11-department acceptance test exceeded the initial cap of 64 in an actual
+Windows Docker run, so the bounded cap was raised without reducing coverage.
+Each receipt records the effective limits; a failed new call clears any prior
+receipt. Containers are fresh per invocation, so application threads cannot
+carry over from a completed, verified-cleaned previous invocation. Host/daemon
+resource pressure can still affect a run and should be diagnosed separately.

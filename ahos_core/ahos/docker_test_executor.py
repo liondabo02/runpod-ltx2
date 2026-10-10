@@ -152,6 +152,7 @@ class DockerTestExecutor:
         self.last_receipt = None
 
     def __call__(self, worktree: Path, command: Sequence[str]) -> subprocess.CompletedProcess[str]:
+        self.last_receipt = None
         translated = _pytest_command(command)
         blob = candidate_archive(Path(worktree).resolve(), self.allowed_paths)
         name = "ahos-test-" + uuid.uuid4().hex
@@ -173,7 +174,7 @@ class DockerTestExecutor:
                 raise DockerSandboxError("sandbox image metadata is invalid") from exc
             create = control("create", "--name", name, "--pull", "never", "--network", "none",
                              "--read-only", "--user", "65534:65534", "--cap-drop", "ALL",
-                             "--security-opt", "no-new-privileges", "--pids-limit", "64", "--cpus", "1",
+                             "--security-opt", "no-new-privileges", "--pids-limit", "128", "--cpus", "1",
                              "--memory", "1024m", "--memory-swap", "1024m", "--log-driver", "none",
                              "--tmpfs", "/work:rw,noexec,nosuid,nodev,size=128m,mode=1777",
                              "--tmpfs", "/tmp:rw,noexec,nosuid,nodev,size=32m,mode=1777",
@@ -227,6 +228,9 @@ class DockerTestExecutor:
             self.last_receipt = {"mode": "local_docker", "off_host_verified": False, "image": self.image,
                 "candidate_sha256": hashlib.sha256(blob).hexdigest(), "exit_code": code,
                 "timed_out": timed_out, "cleanup_verified": True,
+                "limits": {"cpu_cores": 1, "memory_mb": 1024, "process_limit": 128,
+                           "workspace_mb": 128, "temporary_mb": 32,
+                           "timeout_seconds": self.timeout_seconds, "output_bytes_per_stream": self.output_limit},
                 "stdout_sha256": hashlib.sha256(captured[0]).hexdigest(),
                 "stderr_sha256": hashlib.sha256(captured[1]).hexdigest()}
             return result

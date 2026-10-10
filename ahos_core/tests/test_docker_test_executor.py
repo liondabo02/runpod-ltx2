@@ -114,12 +114,14 @@ def test_restricted_execution_sanitizes_env_bounds_output_and_verifies_cleanup(t
     assert result.returncode == 0 and len(result.stdout) == 1024
     create = next(args for args, kwargs in calls if args[1] == 'create')
     assert '--network' in create and create[create.index('--network') + 1] == 'none'
-    assert '--read-only' in create and '--cap-drop' in create and '--pids-limit' in create
+    assert '--read-only' in create and '--cap-drop' in create
+    assert create[create.index('--pids-limit') + 1] == '128'
     assert '--mount' not in create and '-v' not in create
     assert create[create.index('--pull') + 1] == 'never'
     assert all('OPENROUTER_API_KEY' not in kwargs['env'] for args, kwargs in calls)
     assert executor.last_receipt['cleanup_verified'] is True
     assert executor.last_receipt['off_host_verified'] is False
+    assert executor.last_receipt['limits']['process_limit'] == 128
 
 
 def test_timeout_kills_container_and_returns_failure(tmp_path, monkeypatch):
@@ -141,3 +143,13 @@ def test_unavailable_image_never_pulls_or_runs(tmp_path, monkeypatch):
     with pytest.raises(sandbox.DockerSandboxError, match='no pull'):
         sandbox.DockerTestExecutor(IMAGE)(tmp_path, ['python', '-m', 'pytest'])
     assert len(calls) == 1
+
+
+def test_failed_call_clears_previous_receipt(tmp_path, monkeypatch):
+    fake_docker(monkeypatch)
+    executor = sandbox.DockerTestExecutor(IMAGE)
+    executor(tmp_path, ['python', '-m', 'pytest'])
+    assert executor.last_receipt
+    with pytest.raises(sandbox.DockerSandboxError):
+        executor(tmp_path, ['bash'])
+    assert executor.last_receipt is None
