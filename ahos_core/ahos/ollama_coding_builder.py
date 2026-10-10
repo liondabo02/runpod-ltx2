@@ -131,12 +131,20 @@ def _repair_context(worktree, roots, result, limit=6000):
                 difflib.SequenceMatcher(None, needle, lines[i].strip()).ratio())]
         for index in matches[:2]:
             excerpt = "".join(lines[max(0, index - 8):index + 32])
-            block = f"\nActual file: {relative.as_posix()}; search matches: {count}\n{excerpt}"
+            block = f"\nActual file: {relative.as_posix()}; search matches: {count}\n"
             # JSON quoting makes whitespace and newlines explicit. This is
             # source evidence only: the model must still produce an edit that
             # passes the unchanged exact-match validator.
-            if excerpt and source.count(excerpt) == 1:
-                block += "\nUnique current-source search candidate (JSON string):\n" + json.dumps(excerpt, ensure_ascii=False) + "\n"
+            for radius in range(2, 33, 2):
+                candidate = "".join(lines[max(0, index - radius):index + radius + 1])
+                if candidate and source.count(candidate) == 1:
+                    quoted = "Unique current-source search candidate (JSON string):\n" + json.dumps(candidate, ensure_ascii=False) + "\n"
+                    if len(block) + len(quoted) <= remaining:
+                        block += quoted
+                    break
+            # Keep a complete JSON candidate before adding bounded excerpts.
+            # A clipped quoted string is not a usable exact-search example.
+            block += excerpt[:max(0, remaining - len(block))]
             block = block[:remaining]
             blocks.append(block)
             remaining -= len(block)

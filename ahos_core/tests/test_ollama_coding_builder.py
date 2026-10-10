@@ -130,6 +130,20 @@ def test_repair_candidate_preserves_whitespace_and_never_writes(tmp_path):
     assert target.read_text() == source
 
 
+def test_repair_candidate_is_complete_under_context_budget(tmp_path):
+    target = tmp_path / "src/app.py"
+    target.parent.mkdir()
+    source = "\n".join(f"VALUE_{i} = {i}  # {'padding ' * 30}" for i in range(80)) + "\n"
+    target.write_text(source)
+    result = {"edits": [{"path": "src/app.py", "search": "VALUE_40=40", "replace": "VALUE_40=41"}]}
+    context = builder._repair_context(tmp_path, (PurePosixPath("src"),), result, limit=2000)
+    marker = "Unique current-source search candidate (JSON string):\n"
+    candidate = json.loads(context.split(marker, 1)[1].splitlines()[0])
+    assert source.count(candidate) == 1
+    assert "VALUE_40 = 40" in candidate
+    assert len(context) <= 2000
+
+
 @pytest.fixture(autouse=True)
 def repository_for_local_builder_tests(tmp_path):
     subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
