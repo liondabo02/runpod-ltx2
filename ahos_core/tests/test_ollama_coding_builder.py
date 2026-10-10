@@ -48,6 +48,48 @@ def test_redirects_rejected():
         builder._NoRedirect().redirect_request(None, None, 302, '', {}, 'https://example.com')
 
 
+def test_dead_code_proposal_is_repaired_before_any_write(tmp_path, monkeypatch):
+    target = tmp_path / "src" / "app.py"
+    target.parent.mkdir()
+    original = "def run():\n    value = 1\n    return value\n"
+    target.write_text(original)
+    calls = []
+    proposals = iter([
+        response({"edits": [{"path": "src/app.py", "search": "    value = 1", "replace": "    raise RuntimeError()\n    value = 2"}]}),
+        response({"edits": [{"path": "src/app.py", "search": "    value = 1", "replace": "    value = 2"}]}),
+    ])
+    def post(*args):
+        calls.append(args[1])
+        assert target.read_text() == original
+        return next(proposals)
+    monkeypatch.setattr(builder, "_post", post)
+    result = builder.request_edits("repair", tmp_path, (PurePosixPath("src"),),
+        model="qwen2.5-coder:7b", timeout=1, context_chars=1000, attempts=2)
+    assert "unreachable_code:" in calls[1]["messages"][-1]["content"]
+    builder.apply_response(tmp_path, (PurePosixPath("src"),), result)
+    assert target.read_text() == original.replace("value = 1", "value = 2")
+
+
+@pytest.mark.parametrize("source", [
+    "def run():\n    if False:\n        raise ValueError()\n    return 2\n",
+    "def run():\n    try:\n        raise ValueError()\n    except ValueError:\n        return 2\n",
+])
+def test_conditional_termination_is_not_misclassified(tmp_path, source):
+    builder.apply_response(tmp_path, (PurePosixPath("src"),),
+        {"files": [{"path": "src/new.py", "content": source}]})
+    assert (tmp_path / "src" / "new.py").read_text() == source
+
+
+def test_existing_dead_code_does_not_block_unrelated_repair(tmp_path):
+    target = tmp_path / "src" / "app.py"
+    target.parent.mkdir()
+    original = "VALUE = 1\ndef legacy():\n    return 1\n    print('legacy')\n"
+    target.write_text(original)
+    builder.apply_response(tmp_path, (PurePosixPath("src"),),
+        {"edits": [{"path": "src/app.py", "search": "VALUE = 1", "replace": "VALUE = 2"}]})
+    assert target.read_text() == original.replace("VALUE = 1", "VALUE = 2")
+
+
 @pytest.mark.parametrize("exception_type", [OSError, ValueError])
 def test_provider_errors_do_not_expose_raw_payload(tmp_path, monkeypatch, exception_type):
     private_payload = "PRIVATE_PROVIDER_PAYLOAD_TEST_ONLY"

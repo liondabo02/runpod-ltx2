@@ -240,6 +240,25 @@ def _validate_edit_result(result: dict[str, object]) -> dict[str, object]:
     return result
 
 
+def _unreachable_statements(tree):
+    """Count direct dead statements, without guessing conditional outcomes."""
+    from collections import Counter
+    result = Counter()
+    for node in ast.walk(tree):
+        for _, value in ast.iter_fields(node):
+            if not isinstance(value, list):
+                continue
+            terminated = False
+            for statement in value:
+                if not isinstance(statement, ast.stmt):
+                    continue
+                if terminated:
+                    result[ast.dump(statement, include_attributes=False)] += 1
+                if isinstance(statement, (ast.Return, ast.Raise, ast.Break, ast.Continue)):
+                    terminated = True
+    return result
+
+
 def _prepare_file_edits(worktree, roots, result):
     """Prepare and validate all JSON edits before changing any file."""
     _validate_edit_result(result)
@@ -271,12 +290,16 @@ def _prepare_file_edits(worktree, roots, result):
         source.encode("utf-8")
         if name.endswith(".py"):
             after = ast.parse(source)
+            if not path.exists() and _unreachable_statements(after):
+                raise ValueError("new unreachable statements: restore reachable implementation")
             if path.exists():
                 baseline = subprocess.run(
                     ["git", "show", f"HEAD:{name}"], cwd=worktree,
                     text=True, encoding="utf-8", capture_output=True, check=False,
                 )
                 old = baseline.stdout if baseline.returncode == 0 else path.read_text(encoding="utf-8")
+                if _unreachable_statements(after) - _unreachable_statements(ast.parse(old)):
+                    raise ValueError("new unreachable statements: restore reachable implementation")
                 missing = AutonomousCodingWorker._public_python_symbols(old) - AutonomousCodingWorker._public_python_symbols(source, include_imports=True)
                 if missing:
                     raise ValueError(f"restore existing public definitions in {name}: {', '.join(sorted(missing))}")

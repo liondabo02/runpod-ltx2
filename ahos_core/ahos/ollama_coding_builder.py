@@ -169,6 +169,7 @@ def _validation_diagnostic(exc: Exception) -> str:
         "exact edit search must match once:": "exact_search: search text is missing or is not unique",
         "restore existing public definitions": "public_definitions: response removes existing definitions",
         "preserve existing tests": "existing_tests: response changes or removes existing tests",
+        "new unreachable statements:": "unreachable_code: unconditional termination disables subsequent code; restore reachable implementation",
         "Ollama generation incomplete": "truncated: generation is incomplete or reached its output limit",
     }
     for prefix, diagnostic in gates.items():
