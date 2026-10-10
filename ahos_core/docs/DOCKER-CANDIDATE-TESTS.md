@@ -41,6 +41,18 @@ of containment. Tests depending on host binaries, external network, native
 executables in writable tmpfs or Windows behavior may need an explicitly reviewed
 image/test strategy rather than weakened isolation.
 
+## Running service configuration
+
+Set `coding_supervisor.sandbox_image` to the verified local immutable image ID
+and `sandbox_timeout_seconds` to an integer from 1 to 900 in
+`company-service-config.json` beside the queue. Each new supervisor subprocess
+reads these settings before claiming work, even when an older daemon is already
+running. An active attempt retains its original settings. Explicit CLI sandbox
+arguments take precedence; invalid configured sandbox settings fail closed.
+Approval evidence records each completed command's sandbox receipt, including
+candidate hash, image, limits and verified cleanup. These are local Docker
+execution records, not remote sandbox attestations.
+
 
 The PID cap is 128 (processes and threads share this budget). The parallel
 11-department acceptance test exceeded the initial cap of 64 in an actual
