@@ -353,8 +353,31 @@ def test_system_health_panel_uses_accessible_status_and_escaped_reason(tmp_path)
     assert 'aria-labelledby="system-health-title"' in page
     assert 'id="system-health-title">System Health' in page
     assert "Attention Required" in page
-    assert "&lt;script&gt;bad&lt;/script&gt;" in page
+    assert "Company service state: unknown." in page
     assert "<script>bad</script>" not in page
     from datetime import datetime, timezone
     state.heartbeat_path.write_text(json.dumps({"state": "idle", "timestamp": datetime.now(timezone.utc).isoformat()}))
     assert '>Healthy</strong>' in render_dashboard(state.snapshot())
+
+
+def test_system_health_malformed_evidence_is_controlled_and_panel_renders(tmp_path):
+    from datetime import datetime, timezone
+    from ahos.control_center import system_health
+    snapshot = ControlCenterState(tmp_path / "runtime").snapshot()
+    now = datetime.now(timezone.utc)
+    for state in ([], {}, "private-secret-state"):
+        snapshot["heartbeat"] = {"state": state, "timestamp": now.isoformat(), "mission_status": []}
+        snapshot["coding_supervisor"] = []
+        snapshot["departments"] = None
+        result = system_health(snapshot, now=now)
+        assert result["status"] == "Attention Required"
+        assert "unknown" in ' '.join(result["reasons"])
+        assert "private-secret-state" not in ' '.join(result["reasons"])
+        assert "Attention Required" in render_dashboard(snapshot)
+    snapshot["heartbeat"] = {"state": "idle", "timestamp": now.isoformat()}
+    snapshot["coding_supervisor"] = {"counts": {}}
+    snapshot["departments"] = {"counts": {}}
+    snapshot["kill_switch_active"] = True
+    result = system_health(snapshot, now=now)
+    assert result["status"] == "Attention Required"
+    assert "Company kill switch is active." in result["reasons"]

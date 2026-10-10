@@ -83,6 +83,8 @@ class ControlCenterState:
         except (OSError, json.JSONDecodeError):
             return {"state": "error", "timestamp": None, "pid": None}
 
+        if not isinstance(raw, dict):
+            return {"state": "error", "timestamp": None, "pid": None}
         state = str(raw.get("state") or "unknown")
         if self.stop_path.exists():
             state = "stop_requested"
@@ -568,8 +570,12 @@ def system_health(snapshot: dict[str, object], *, now: datetime | None = None) -
     if not isinstance(heartbeat, dict):
         heartbeat = {}
     state = heartbeat.get("state", "unknown")
-    if state not in {"starting", "polling", "idle", "running", "completed"}:
-        reasons.append(f"Company service state: {state}.")
+    if not isinstance(state, str) or state not in {"starting", "polling", "idle", "running", "completed"}:
+        known_states = {"unknown", "error", "stopped", "stop_requested"}
+        reason_state = state if isinstance(state, str) and state in known_states else "unknown"
+        reasons.append(f"Company service state: {reason_state}.")
+    if snapshot.get("kill_switch_active"):
+        reasons.append("Company kill switch is active.")
     timestamp = heartbeat.get("timestamp")
     try:
         stamp = datetime.fromisoformat(timestamp) if isinstance(timestamp, str) else None
@@ -582,12 +588,19 @@ def system_health(snapshot: dict[str, object], *, now: datetime | None = None) -
             reasons.append("Company heartbeat is in the future; check the clock.")
     except (ValueError, TypeError, OverflowError):
         reasons.append("Company heartbeat timestamp is missing or invalid.")
-    if heartbeat.get("error") or heartbeat.get("mission_status") in {"failed", "blocked", "error"}:
+    mission_status = heartbeat.get("mission_status")
+    if mission_status is not None and not isinstance(mission_status, str):
+        reasons.append("Company heartbeat mission status is invalid.")
+    if heartbeat.get("error") or (isinstance(mission_status, str) and mission_status in {"failed", "blocked", "error"}):
         reasons.append("Company heartbeat reports an error or failed mission.")
+    def nested_counts(key: str) -> object:
+        block = snapshot.get(key, {})
+        return block.get("counts", {}) if isinstance(block, dict) else None
+
     for label, counts in (
         ("Mission", snapshot.get("mission_counts", {})),
-        ("Coding", snapshot.get("coding_supervisor", {}).get("counts", {})),
-        ("Department", snapshot.get("departments", {}).get("counts", {})),
+        ("Coding", nested_counts("coding_supervisor")),
+        ("Department", nested_counts("departments")),
     ):
         if not isinstance(counts, dict):
             reasons.append(f"{label} task counters are invalid.")
@@ -605,14 +618,22 @@ def system_health(snapshot: dict[str, object], *, now: datetime | None = None) -
 
 def render_dashboard(snapshot: dict[str, object], message: str = "") -> str:
     hb = snapshot["heartbeat"]
+    if not isinstance(hb, dict):
+        hb = {"state": "unknown"}
     health = system_health(snapshot)
     health_css = "ok" if health["status"] == "Healthy" else "bad"
     health_reasons = "".join(f"<li>{_esc(reason)}</li>" for reason in health["reasons"])
     counts = snapshot["mission_counts"]
     coding = snapshot.get("coding_supervisor", {"counts": {}, "tasks": []})
+    if not isinstance(coding, dict):
+        coding = {"counts": {}, "tasks": []}
     coding_counts = coding.get("counts", {})
+    if not isinstance(coding_counts, dict):
+        coding_counts = {}
     studio_executions = snapshot.get("studio_executions", [])
     departments = snapshot.get("departments", {"tasks": [], "counts": {}})
+    if not isinstance(departments, dict):
+        departments = {"tasks": [], "counts": {}}
     from .department_structure import CORE_DEPARTMENTS
     from .department_overview import department_overview
     overview = departments.get("overview", department_overview(departments.get("tasks", [])))
