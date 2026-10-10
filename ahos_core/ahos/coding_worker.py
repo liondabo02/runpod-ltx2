@@ -81,8 +81,14 @@ class AutonomousCodingWorker:
     deliberately has no push or merge operation.
     """
 
-    def __init__(self, *, runner: BuilderRunner, workspace_root: Path) -> None:
+    def __init__(self, *, runner: BuilderRunner, workspace_root: Path,
+                 test_executor: Callable[[Path, Sequence[str]], subprocess.CompletedProcess[str]] | None = None,
+                 test_executor_factory: Callable[[CodingBacklogItem], Any] | None = None) -> None:
+        if test_executor is not None and test_executor_factory is not None:
+            raise ValueError("choose a test executor or a task-scoped executor factory")
         self.runner = runner
+        self.test_executor = test_executor
+        self.test_executor_factory = test_executor_factory
         self.workspace_root = Path(workspace_root).resolve()
         self.workspace_root.mkdir(parents=True, exist_ok=True)
 
@@ -134,28 +140,34 @@ class AutonomousCodingWorker:
                 )
 
             tests_run: list[str] = []
+            executor = (self.test_executor_factory(item) if self.test_executor_factory
+                        else self.test_executor)
+            test_execution_mode = getattr(executor, "execution_mode", "custom") if executor else "host"
             for command in item.test_commands:
-                test_env = os.environ.copy()
-                test_env["PYTHONDONTWRITEBYTECODE"] = "1"
-                core_path = worktree / "ahos_core"
-                if core_path.is_dir():
-                    # The long-running daemon is normally launched from the
-                    # owner checkout and may therefore carry that checkout in
-                    # PYTHONPATH.  Appending it lets an isolated test import a
-                    # mixture of the candidate worktree and owner code.  Tests
-                    # must resolve the package exclusively from the candidate.
-                    test_env["PYTHONPATH"] = str(core_path)
-                    test_env["PYTHONNOUSERSITE"] = "1"
-                completed = subprocess.run(
-                    command,
-                    cwd=worktree,
-                    env=test_env,
-                    capture_output=True,
-                    text=True,
-                    encoding="utf-8",
-                    errors="replace",
-                    check=False,
-                )
+                if executor is not None:
+                    completed = executor(worktree, command)
+                else:
+                    test_env = os.environ.copy()
+                    test_env["PYTHONDONTWRITEBYTECODE"] = "1"
+                    core_path = worktree / "ahos_core"
+                    if core_path.is_dir():
+                        # The long-running daemon is normally launched from the
+                        # owner checkout and may therefore carry that checkout in
+                        # PYTHONPATH.  Appending it lets an isolated test import a
+                        # mixture of the candidate worktree and owner code.  Tests
+                        # must resolve the package exclusively from the candidate.
+                        test_env["PYTHONPATH"] = str(core_path)
+                        test_env["PYTHONNOUSERSITE"] = "1"
+                    completed = subprocess.run(
+                        command,
+                        cwd=worktree,
+                        env=test_env,
+                        capture_output=True,
+                        text=True,
+                        encoding="utf-8",
+                        errors="replace",
+                        check=False,
+                    )
                 tests_run.append(" ".join(command))
                 if completed.returncode:
                     detail = (completed.stderr or completed.stdout).strip()[-1000:]
@@ -209,6 +221,7 @@ class AutonomousCodingWorker:
                         "status": CodingWorkerStatus.WAITING_OWNER_APPROVAL.value,
                         "changed_files": list(changed),
                         "tests_run": tests_run,
+                        "test_execution_mode": test_execution_mode,
                         "patch": patch_file.name,
                         "patch_sha256": patch_sha256,
                         "push_enabled": False,

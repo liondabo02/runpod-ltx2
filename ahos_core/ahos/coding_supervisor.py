@@ -526,6 +526,8 @@ class CodingSupervisor:
         attempt_name = f"attempt-{claimed.attempts}-{uuid.uuid4().hex[:8]}"
         attempt_worker = AutonomousCodingWorker(
             runner=self.worker.runner,
+            test_executor=self.worker.test_executor,
+            test_executor_factory=self.worker.test_executor_factory,
             workspace_root=self.worker.workspace_root / claimed.task_id / attempt_name,
         )
         backlog_item = claimed.backlog_item()
@@ -615,6 +617,8 @@ def main() -> int:
         help="Builder argv encoded as a JSON string; preserves nested option arguments",
     )
     run.add_argument("--allow-test-executable", action="append", required=True)
+    run.add_argument("--sandbox-image", help="Pinned local Docker image for candidate tests; no host fallback")
+    run.add_argument("--sandbox-timeout", type=int, default=300)
     args = parser.parse_args()
     store = CodingSupervisorStore(args.queue)
     if args.command == "recover-provider":
@@ -671,9 +675,17 @@ def main() -> int:
 
     allowed = {str(Path(value).resolve()) for value in args.allow_test_executable}
     policy = lambda command: bool(command) and str(Path(command[0]).resolve()) in allowed
+    test_executor_factory = None
+    if args.sandbox_image:
+        from .docker_test_executor import DockerTestExecutor
+        test_executor_factory = lambda item: DockerTestExecutor(
+            args.sandbox_image, timeout_seconds=args.sandbox_timeout,
+            allowed_paths=item.allowed_paths,
+        )
     result = CodingSupervisor(
         store=store,
-        worker=AutonomousCodingWorker(runner=builder, workspace_root=Path(args.workspace)),
+        worker=AutonomousCodingWorker(runner=builder, workspace_root=Path(args.workspace),
+                                      test_executor_factory=test_executor_factory),
         worker_id=args.worker_id,
         test_command_policy=policy,
     ).run_once()

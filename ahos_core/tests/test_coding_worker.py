@@ -44,6 +44,7 @@ def test_core_test_process_receives_only_candidate_package_on_pythonpath(
 
     result = AutonomousCodingWorker(runner=builder, workspace_root=tmp_path / "workers").run(item, "worker")
     assert result.status is CodingWorkerStatus.WAITING_OWNER_APPROVAL
+    assert json.loads(result.approval_file.read_text())["test_execution_mode"] == "host"
 
 
 def _repository(tmp_path: Path) -> Path:
@@ -351,3 +352,34 @@ def test_backlog_scope_rejects_parent_traversal(tmp_path: Path) -> None:
         assert "unsafe allowed path" in str(exc)
     else:
         raise AssertionError("unsafe scope accepted")
+
+
+def test_injected_candidate_executor_supplies_gate_and_evidence(tmp_path):
+    repository = _repository(tmp_path)
+    calls = []
+    class Executor:
+        execution_mode = "docker"
+        def __call__(self, worktree, command):
+            calls.append((worktree, command))
+            return subprocess.CompletedProcess(command, 0, "passed", "")
+    def builder(_prompt, worktree):
+        (worktree / "src" / "feature.py").write_text("VALUE = 2\n")
+    worker = AutonomousCodingWorker(runner=builder, workspace_root=tmp_path / "workers", test_executor=Executor())
+    result = worker.run(_item(repository), "worker")
+    assert result.status is CodingWorkerStatus.WAITING_OWNER_APPROVAL
+    assert len(calls) == len(_item(repository).test_commands)
+    evidence = json.loads(result.approval_file.read_text())
+    assert evidence["test_execution_mode"] == "docker"
+
+
+def test_required_candidate_executor_failure_never_runs_host_test(tmp_path):
+    repository = _repository(tmp_path)
+    def builder(_prompt, worktree):
+        (worktree / "src" / "feature.py").write_text("VALUE = 2\n")
+    def unavailable(worktree, command):
+        raise ValueError("sandbox unavailable")
+    result = AutonomousCodingWorker(runner=builder, workspace_root=tmp_path / "workers", test_executor=unavailable).run(_item(repository), "worker")
+    assert result.status is CodingWorkerStatus.BLOCKED
+    assert result.tests_run == ()
+    assert result.approval_file is None
+    assert "sandbox unavailable" in result.reason

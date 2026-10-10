@@ -478,3 +478,27 @@ def test_queue_windows_sharing_retry_is_bounded(tmp_path, monkeypatch):
     assert len(calls) == 2
     assert store.path.read_bytes() == previous
     assert not list(tmp_path.glob("*.tmp"))
+
+
+def test_supervisor_preserves_task_scoped_executor_across_attempts(tmp_path):
+    repo = _repo(tmp_path)
+    store = CodingSupervisorStore(tmp_path / "queue.json")
+    store.enqueue(_item(repo), max_attempts=2)
+    items = []
+    class Executor:
+        execution_mode = "docker"
+        def __call__(self, worktree, command):
+            return subprocess.CompletedProcess(command, 1 if len(items) == 1 else 0, "", "failed")
+    def factory(item):
+        items.append(item)
+        return Executor()
+    def builder(_prompt, worktree):
+        (worktree / "src" / "app.py").write_text("VALUE = 2\n")
+    supervisor = CodingSupervisor(store=store,
+        worker=AutonomousCodingWorker(runner=builder, workspace_root=tmp_path / "workers", test_executor_factory=factory),
+        worker_id="s", test_command_policy=_allow_python)
+    assert supervisor.run_once().status is CodingTaskStatus.QUEUED
+    result = supervisor.run_once()
+    assert result.status is CodingTaskStatus.WAITING_OWNER_APPROVAL
+    assert [item.allowed_paths for item in items] == [("src",), ("src",)]
+    assert json.loads(Path(result.approval_file).read_text())["test_execution_mode"] == "docker"
