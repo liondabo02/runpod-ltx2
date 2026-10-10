@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
 import hashlib
+import ipaddress
 import json
 import os
 from pathlib import Path
@@ -10,6 +11,7 @@ import re
 import subprocess
 import tempfile
 import threading
+from urllib.parse import urlsplit
 
 PINS = {
     "api_anything": ("https://github.com/goodnight000/api-anything", "fe5cca70fe145634e49a1c9ba1f3e8250b291bea"),
@@ -103,13 +105,91 @@ def run_tool(registry: dict, operation: str, *, query: str = "", allow_external:
         raise ToolBridgeError("operation has not been reviewed")
     with tempfile.TemporaryDirectory(prefix="ahos-public-tool-") as directory:
         result = _bounded_run(command, timeout, output_limit, Path(directory))
-    return {"schema": "ahos.upstream-result.v1", "operation": operation,
+    artifact = {"schema": "ahos.upstream-result.v1", "operation": operation,
             "kind": "public_search" if operation == "hn-search" else "installation_diagnostics",
             "tool": name, "source_url": entry["source_url"], "source_commit": entry["source_commit"],
             "entrypoint_sha256": entry["entrypoint_sha256"], "license": entry["license"],
             "collected_at": datetime.now(timezone.utc).isoformat(),
             "external_writes_enabled": False, "credentials_inherited": False,
-            "content_is_untrusted": True, **result}
+            "content_is_untrusted": True, "query": query, **result}
+    artifact["success"] = result["exit_code"] == 0 and not result["timed_out"] and not result["output_truncated"]
+    artifact["sources"] = []
+    if operation == "hn-search" and artifact["success"]:
+        try:
+            payload = json.loads(result["stdout"])
+            artifact["sources"] = hn_sources(payload)
+        except (ValueError, TypeError):
+            artifact["success"] = False
+    return artifact
+
+
+def _public_url(value) -> str | None:
+    if not isinstance(value, str) or len(value) > 2048:
+        return None
+    try:
+        url = urlsplit(value)
+        if url.scheme not in {"http", "https"} or not url.hostname or url.username or url.password:
+            return None
+        if url.hostname.lower() in {"localhost", "localhost.localdomain"} or url.hostname.endswith(".local"):
+            return None
+        try:
+            if not ipaddress.ip_address(url.hostname).is_global:
+                return None
+        except ValueError:
+            pass
+        return value
+    except ValueError:
+        return None
+
+
+def hn_sources(payload: dict) -> list[dict]:
+    if not isinstance(payload, dict) or payload.get("ok") is False:
+        raise ToolBridgeError("search did not return successful JSON")
+    body = payload
+    for key in ("result", "data", "output"):
+        if isinstance(payload.get(key), dict):
+            body = payload[key]
+            break
+    hits = payload.get("data") if isinstance(payload.get("data"), list) else body.get("hits")
+    if not isinstance(hits, list):
+        raise ToolBridgeError("search response has no hit list")
+    sources = []
+    seen = set()
+    for hit in hits[:100]:
+        if not isinstance(hit, dict):
+            continue
+        url = _public_url(hit.get("url") or hit.get("story_url"))
+        object_id = str(hit.get("objectID", ""))
+        if not url and object_id.isdigit():
+            url = "https://news.ycombinator.com/item?id=" + object_id
+        if url and url not in seen:
+            seen.add(url)
+            title = str(hit.get("title") or hit.get("story_title") or "Hacker News source")[:500]
+            sources.append({"url": url, "title": title})
+    return sources
+
+
+def save_artifact(path: Path, artifact: dict) -> dict:
+    if artifact.get("kind") != "public_search" or artifact.get("success") is not True:
+        raise ToolBridgeError("only successful public searches can become research artifacts")
+    result = dict(artifact)
+    result.pop("artifact_sha256", None)
+    canonical = json.dumps(result, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    result["artifact_sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent,
+                                         prefix=".research-", delete=False) as stream:
+            temporary = Path(stream.name)
+            json.dump(result, stream, ensure_ascii=False, indent=2)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    finally:
+        if temporary and temporary.exists():
+            temporary.unlink()
+    return result
 
 
 def main(argv=None) -> int:
@@ -118,16 +198,19 @@ def main(argv=None) -> int:
     parser.add_argument("--allow-external", action="store_true")
     parser.add_argument("operation", choices=("hn-search", "reach-doctor"))
     parser.add_argument("--query", default="")
+    parser.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
     try:
         result = run_tool(load_registry(args.registry), args.operation, query=args.query,
                           allow_external=args.allow_external)
+        if args.output:
+            result = save_artifact(args.output, result)
     except (ToolBridgeError, OSError, json.JSONDecodeError) as exc:
         # Never print upstream errors that may include credentials/config content.
         print(json.dumps({"status": "blocked", "error_type": type(exc).__name__}))
         return 2
     print(json.dumps(result, ensure_ascii=True))
-    return 0 if result["exit_code"] == 0 and not result["timed_out"] else 1
+    return 0 if result["success"] else 1
 
 if __name__ == "__main__":
     raise SystemExit(main())

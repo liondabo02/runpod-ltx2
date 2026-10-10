@@ -21,7 +21,7 @@ def test_bridge_fixed_read_only_commands(monkeypatch, tmp_path):
     def runner(command, timeout, limit, home):
         calls.append(command)
         assert home.is_dir()
-        return {"exit_code": 0, "stdout": "{}", "stderr": "", "timed_out": False, "output_truncated": False}
+        return {"exit_code": 0, "stdout": '{"ok":true,"data":[]}', "stderr": "", "timed_out": False, "output_truncated": False}
     monkeypatch.setattr("ahos.upstream_tool_bridge._bounded_run", runner)
     data = registry(tmp_path)
     result = run_tool(data, "hn-search", query="sqlite --allow-writes", allow_external=True)
@@ -63,3 +63,29 @@ def test_output_bounds_and_timeout(tmp_path):
     assert result["output_truncated"] and len(result["stdout"]) == 1024
     result = _bounded_run([sys.executable, "-c", "import time;time.sleep(30)"], 1, 1024, tmp_path)
     assert result["timed_out"] and result["exit_code"] != 0
+
+
+def test_live_hn_envelope_and_artifact_hash(tmp_path):
+    from ahos.upstream_tool_bridge import hn_sources, save_artifact
+    sources = hn_sources({"ok": True, "class": "ok", "tier": 1, "data": [
+        {"title": "SQLite", "url": "https://sqlite.org/docs.html", "objectID": "12"},
+        {"title": "Discussion", "url": None, "objectID": "13"},
+        {"title": "Private", "url": "http://127.0.0.1/", "objectID": ""}]})
+    assert sources == [{"title": "SQLite", "url": "https://sqlite.org/docs.html"},
+                       {"title": "Discussion", "url": "https://news.ycombinator.com/item?id=13"}]
+    target = tmp_path / "results" / "hn.json"
+    original = {"schema": "ahos.upstream-result.v1", "kind": "public_search", "success": True,
+                "query": "SQLite", "content_is_untrusted": True, "sources": sources}
+    artifact = save_artifact(target, original)
+    assert json.loads(target.read_text()) == artifact
+    digest = artifact.pop("artifact_sha256")
+    assert digest == hashlib.sha256(json.dumps(artifact, sort_keys=True, ensure_ascii=False,
+                                               separators=(",", ":")).encode()).hexdigest()
+    assert "artifact_sha256" not in original
+    with pytest.raises(ToolBridgeError):
+        save_artifact(target, {**original, "success": False})
+    with pytest.raises(ToolBridgeError):
+        save_artifact(target, {**original, "kind": "installation_diagnostics"})
+    with pytest.raises(ToolBridgeError):
+        hn_sources({"ok": False, "data": []})
+    assert not list(target.parent.glob(".research-*"))
