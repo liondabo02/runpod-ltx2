@@ -28,7 +28,8 @@ def test_candidate_contains_changes_new_scoped_source_and_no_secrets(tmp_path):
     blob = sandbox.candidate_archive(root, ('src',))
     with tarfile.open(fileobj=io.BytesIO(blob)) as archive:
         assert archive.getnames() == ['app.py', 'src/new.py']
-        assert archive.extractfile('app.py').read() == b'VALUE=2\n'
+        # Preserve candidate bytes including platform-specific newline endings.
+        assert archive.extractfile('app.py').read() == (root / 'app.py').read_bytes()
     assert b'PRIVATE' not in blob
 
 
