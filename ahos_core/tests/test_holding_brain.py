@@ -116,3 +116,34 @@ def test_coding_repair_can_modify_and_test_local_ollama_adapter(tmp_path):
     assert repair.max_attempts == 2
     assert result['owner_approval_required'] is True
     assert store.get('OWNER-TASK').allowed_paths == ('src',)
+
+
+def test_revised_coding_contract_preserves_exhausted_v1_and_dedupes_v2(tmp_path):
+    root, repo = tmp_path / 'runtime', tmp_path / 'repo'
+    root.mkdir()
+    for path in _REPAIRS['coding_exhausted']['paths']:
+        destination = repo / path
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text('')
+    store = fail_task(root, repo)
+    old_id = 'BRAIN-CODING-EXHAUSTED-V1'
+    store.enqueue(CodingBacklogItem(old_id, 'old repair contract', repo,
+                                   allowed_paths=('ahos_core/ahos/openrouter_coding_builder.py',)),
+                  max_attempts=1)
+    store.claim('old-worker')
+    old_record = store.finish(old_id, 'old-worker', success=False, reason='old failure')
+    brain = HoldingBrain(root, repo)
+    first = brain.cycle(dispatch=True)
+    assert first['handoffs'][0]['task_id'] == 'BRAIN-CODING-EXHAUSTED-V2'
+    assert first['handoffs'][0]['status'] == 'queued'
+    assert store.get(old_id) == old_record
+    brain.cycle(dispatch=True)
+    assert len(store.all()) == 3
+    new_id = first['handoffs'][0]['task_id']
+    for _ in range(2):
+        store.claim('new-worker')
+        store.finish(new_id, 'new-worker', success=False, reason='bounded failure')
+    final = brain.cycle(dispatch=True)
+    assert final['handoffs'][0]['status'] == 'retries_exhausted'
+    assert len(store.all()) == 3
+    assert store.get(old_id) == old_record
