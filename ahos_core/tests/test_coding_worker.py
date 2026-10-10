@@ -383,3 +383,27 @@ def test_required_candidate_executor_failure_never_runs_host_test(tmp_path):
     assert result.tests_run == ()
     assert result.approval_file is None
     assert "sandbox unavailable" in result.reason
+
+
+def test_candidate_sandbox_receipts_are_snapshotted_per_command(tmp_path):
+    from dataclasses import replace
+    repository = _repository(tmp_path)
+    class Executor:
+        execution_mode = "docker"
+        last_receipt = None
+        count = 0
+        def __call__(self, worktree, command):
+            self.last_receipt = None
+            self.count += 1
+            self.last_receipt = {"candidate_sha256": str(self.count), "image": "pinned", "cleanup_verified": True, "limits": {"count": self.count}}
+            return subprocess.CompletedProcess(command, 0, "", "")
+    executor = Executor()
+    def builder(_prompt, worktree):
+        (worktree / "src" / "feature.py").write_text("VALUE = 2\n")
+    item = replace(_item(repository), test_commands=(("test", "one"), ("test", "two")))
+    result = AutonomousCodingWorker(runner=builder, workspace_root=tmp_path / "workers", test_executor=executor).run(item, "worker")
+    assert result.status is CodingWorkerStatus.WAITING_OWNER_APPROVAL
+    receipts = json.loads(result.approval_file.read_text())["sandbox_receipts"]
+    assert [value["command"] for value in receipts] == [["test", "one"], ["test", "two"]]
+    assert [value["receipt"]["candidate_sha256"] for value in receipts] == ["1", "2"]
+    assert all(value["receipt"]["cleanup_verified"] for value in receipts)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import copy
 import hashlib
 import json
 import os
@@ -140,6 +141,7 @@ class AutonomousCodingWorker:
                 )
 
             tests_run: list[str] = []
+            sandbox_receipts: list[dict[str, Any]] = []
             executor = (self.test_executor_factory(item) if self.test_executor_factory
                         else self.test_executor)
             test_execution_mode = getattr(executor, "execution_mode", "custom") if executor else "host"
@@ -168,6 +170,9 @@ class AutonomousCodingWorker:
                         errors="replace",
                         check=False,
                     )
+                receipt = getattr(executor, "last_receipt", None) if executor else None
+                if receipt is not None:
+                    sandbox_receipts.append({"command": list(command), "receipt": copy.deepcopy(receipt)})
                 tests_run.append(" ".join(command))
                 if completed.returncode:
                     detail = (completed.stderr or completed.stdout).strip()[-1000:]
@@ -222,6 +227,7 @@ class AutonomousCodingWorker:
                         "changed_files": list(changed),
                         "tests_run": tests_run,
                         "test_execution_mode": test_execution_mode,
+                        "sandbox_receipts": sandbox_receipts,
                         "patch": patch_file.name,
                         "patch_sha256": patch_sha256,
                         "push_enabled": False,

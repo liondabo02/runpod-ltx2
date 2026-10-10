@@ -594,6 +594,40 @@ class CodingSupervisor:
         )
 
 
+def _hot_sandbox_config(queue_path: Path) -> tuple[str | None, int]:
+    """Read only the explicit sandbox settings at each supervisor child start.
+
+    Existing daemon processes need not restart to enable candidate test isolation.
+    Missing configuration remains compatible; malformed present configuration
+    fails before a task claim rather than silently switching to host execution.
+    """
+    config_path = queue_path.parent / "company-service-config.json"
+    if not config_path.exists():
+        return None, 300
+    try:
+        config = json.loads(config_path.read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError):
+        raise ValueError("cannot read coding sandbox configuration") from None
+    if not isinstance(config, dict):
+        raise ValueError("coding sandbox configuration must be an object")
+    settings = config.get("coding_supervisor", {})
+    if not isinstance(settings, dict):
+        raise ValueError("coding supervisor configuration must be an object")
+    enabled = settings.get("enabled", False)
+    if not isinstance(enabled, bool):
+        raise ValueError("coding supervisor enabled must be a boolean")
+    if not enabled or "sandbox_image" not in settings:
+        return None, 300
+    image = settings["sandbox_image"]
+    timeout = settings.get("sandbox_timeout_seconds", 300)
+    import re
+    if not isinstance(image, str) or not re.fullmatch(r"(?:[^\s]+@)?sha256:[0-9a-f]{64}", image):
+        raise ValueError("coding sandbox image must be pinned by SHA256 digest")
+    if type(timeout) is not int or not 1 <= timeout <= 900:
+        raise ValueError("coding sandbox timeout must be an integer from 1 to 900")
+    return image, timeout
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="AHOS local coding supervisor")
     parser.add_argument("--queue", required=True, help="Persistent queue JSON path")
@@ -676,10 +710,14 @@ def main() -> int:
     allowed = {str(Path(value).resolve()) for value in args.allow_test_executable}
     policy = lambda command: bool(command) and str(Path(command[0]).resolve()) in allowed
     test_executor_factory = None
-    if args.sandbox_image:
+    sandbox_image, sandbox_timeout = (args.sandbox_image, args.sandbox_timeout)
+    if args.sandbox_image is None:
+        sandbox_image, sandbox_timeout = _hot_sandbox_config(Path(args.queue))
+    if sandbox_image is not None:
         from .docker_test_executor import DockerTestExecutor
+        DockerTestExecutor(sandbox_image, timeout_seconds=sandbox_timeout)
         test_executor_factory = lambda item: DockerTestExecutor(
-            args.sandbox_image, timeout_seconds=args.sandbox_timeout,
+            sandbox_image, timeout_seconds=sandbox_timeout,
             allowed_paths=item.allowed_paths,
         )
     result = CodingSupervisor(

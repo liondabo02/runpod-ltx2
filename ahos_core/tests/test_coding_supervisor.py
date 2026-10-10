@@ -502,3 +502,43 @@ def test_supervisor_preserves_task_scoped_executor_across_attempts(tmp_path):
     assert result.status is CodingTaskStatus.WAITING_OWNER_APPROVAL
     assert [item.allowed_paths for item in items] == [("src",), ("src",)]
     assert json.loads(Path(result.approval_file).read_text())["test_execution_mode"] == "docker"
+
+
+def test_hot_sandbox_config_accepts_bom_and_observes_updates(tmp_path):
+    from ahos.coding_supervisor import _hot_sandbox_config
+    queue = tmp_path / "queue.json"
+    assert _hot_sandbox_config(queue) == (None, 300)
+    path = tmp_path / "company-service-config.json"
+    image = "sha256:" + "a" * 64
+    path.write_text(json.dumps({"coding_supervisor": {"enabled": True, "sandbox_image": image, "sandbox_timeout_seconds": 600}, "unrelated": {"builder_command": ["ignored"]}}), encoding="utf-8-sig")
+    assert _hot_sandbox_config(queue) == (image, 600)
+    path.write_text(json.dumps({"coding_supervisor": {"enabled": False, "sandbox_image": image}}))
+    assert _hot_sandbox_config(queue) == (None, 300)
+
+
+@pytest.mark.parametrize("config", [[], {"coding_supervisor": []}, {"coding_supervisor": {"enabled": "true"}},
+    {"coding_supervisor": {"enabled": True, "sandbox_image": "latest"}},
+    {"coding_supervisor": {"enabled": True, "sandbox_image": "sha256:" + "a" * 64, "sandbox_timeout_seconds": True}}])
+def test_hot_sandbox_config_fails_closed_for_invalid_settings(tmp_path, config):
+    from ahos.coding_supervisor import _hot_sandbox_config
+    (tmp_path / "company-service-config.json").write_text(json.dumps(config))
+    with pytest.raises(ValueError):
+        _hot_sandbox_config(tmp_path / "queue.json")
+
+
+def test_run_once_reads_sandbox_config_without_daemon_restart(tmp_path, monkeypatch):
+    import ahos.docker_test_executor as sandbox
+    image = "sha256:" + "b" * 64
+    (tmp_path / "company-service-config.json").write_text(json.dumps({"coding_supervisor": {"enabled": True, "sandbox_image": image, "sandbox_timeout_seconds": 400}}))
+    calls = []
+    class Executor:
+        def __init__(self, image, timeout_seconds, allowed_paths=()):
+            calls.append((image, timeout_seconds, allowed_paths))
+    def no_task(supervisor):
+        supervisor.worker.test_executor_factory(_item(tmp_path))
+        return None
+    monkeypatch.setattr(sandbox, "DockerTestExecutor", Executor)
+    monkeypatch.setattr(CodingSupervisor, "run_once", no_task)
+    monkeypatch.setattr(sys, "argv", ["supervisor", "--queue", str(tmp_path / "queue.json"), "run-once", "--workspace", str(tmp_path / "workers"), "--worker-id", "w", "--builder-command-json", '["builder"]', "--allow-test-executable", sys.executable])
+    assert main() == 0
+    assert calls[-1] == (image, 400, ("src",))
