@@ -1,5 +1,6 @@
 import ast
 import inspect
+import textwrap
 
 from openhands.sdk import Tool
 
@@ -13,7 +14,7 @@ def test_finish_response_schema_is_accepted_by_openhands() -> None:
 
 
 def test_conversation_uses_only_supported_constructor_keywords() -> None:
-    tree = ast.parse(inspect.getsource(openhands_builder.OpenHandsBuilder.run))
+    tree = ast.parse(textwrap.dedent(inspect.getsource(openhands_builder.OpenHandsBuilder.run)))
     calls = [
         node
         for node in ast.walk(tree)
