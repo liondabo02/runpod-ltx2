@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Callable, Iterator
 
 from .department_structure import CORE_DEPARTMENTS
-from .department_provider import DepartmentRateLimited
+from .department_provider import DepartmentProviderError, DepartmentRateLimited
 
 DELIVERABLES = {
     "software": "implementation specification and coding handoff with acceptance tests; do not claim code was executed",
@@ -322,21 +322,29 @@ class DepartmentRuntime:
             body = json.dumps(artifact, ensure_ascii=False, indent=2).encode("utf-8")
             path.write_bytes(body)
             update = {"status": "waiting_owner_approval", "artifact": relative,
-                      "artifact_hash": hashlib.sha256(body).hexdigest(), "last_error": ""}
+                      "artifact_hash": hashlib.sha256(body).hexdigest(), "last_error": "",
+                      "last_error_category": "", "last_error_http_status": None}
         except DepartmentRateLimited as exc:
             events = task.get("rate_limit_events", 0) + 1
             delay = min(86400, max(exc.retry_after_seconds, 300 * 2 ** min(events - 1, 8)))
             retry_at = time.time() + delay
             update = {"status": "waiting_provider", "attempts": max(0, task["attempts"] - 1),
                       "last_error": "HTTP 429: provider rate limit; automatic retry scheduled",
+                      "last_error_category": "rate_limit", "last_error_http_status": 429,
                       "rate_limit_events": events, "retry_at": retry_at,
                       "next_retry_at": datetime.fromtimestamp(retry_at, timezone.utc).isoformat()}
+        except DepartmentProviderError as exc:
+            update = {"status": "queued" if task["attempts"] < task["max_attempts"] else "retries_exhausted",
+                      "last_error": exc.safe_diagnostic,
+                      "last_error_category": exc.category,
+                      "last_error_http_status": exc.http_status}
         except Exception as exc:
             # Provider errors can contain credentials; persist only the class and
             # bounded local validation diagnostics, never arbitrary exception text.
             reason = str(exc) if isinstance(exc, _DraftValidationError) else type(exc).__name__
             update = {"status": "queued" if task["attempts"] < task["max_attempts"] else "retries_exhausted",
-                      "last_error": reason[:1000]}
+                      "last_error": reason[:1000], "last_error_category": "validation" if isinstance(exc, _DraftValidationError) else "internal",
+                      "last_error_http_status": None}
         with self._lock():
             data = self._load()
             current = data["tasks"][task["task_id"]]

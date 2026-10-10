@@ -84,3 +84,28 @@ def test_other_http_errors_keep_status_without_remote_text(monkeypatch):
     with pytest.raises(DepartmentProviderError, match="HTTP 401") as error:
         build_department_generator(DepartmentProviderConfig(allow_external=True))("work")
     assert "test-secret" not in str(error.value)
+
+
+@pytest.mark.parametrize("failure, category, status", [
+    ("auth", "auth", 403), ("http", "http", 503),
+    ("network", "network", None), ("malformed", "malformed", None),
+])
+def test_provider_structured_diagnostics_do_not_expose_remote_text(monkeypatch, failure, category, status):
+    from urllib.error import HTTPError, URLError
+    monkeypatch.setenv("OPENROUTER_API_KEY", "private-secret")
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def read(self, limit): return b'{"private-secret":true}'
+    def transport(*args, **kwargs):
+        if failure in ("auth", "http"):
+            raise HTTPError("https://private-secret", status, "private-secret", {}, None)
+        if failure == "network":
+            raise URLError("private-secret")
+        return Response()
+    monkeypatch.setattr("urllib.request.urlopen", transport)
+    with pytest.raises(DepartmentProviderError) as error:
+        build_department_generator(DepartmentProviderConfig(allow_external=True))("work")
+    assert error.value.category == category
+    assert error.value.http_status == status
+    assert "private-secret" not in error.value.safe_diagnostic

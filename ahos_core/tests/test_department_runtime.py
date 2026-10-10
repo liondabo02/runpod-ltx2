@@ -219,3 +219,21 @@ def test_dashboard_shows_provider_wait_and_retry_time(tmp_path):
     assert "waiting_provider" in html
     assert "HTTP 429" in html
     assert result["tasks"][0]["next_retry_at"] in html
+
+
+@pytest.mark.parametrize("category,status", [("auth", 401), ("network", None), ("malformed", None), ("http", 503)])
+def test_runtime_preserves_safe_provider_category_and_bounded_attempts(tmp_path, category, status):
+    from ahos.department_provider import DepartmentProviderError
+    def fail(_prompt):
+        raise DepartmentProviderError("private-secret response body", category=category, http_status=status)
+    runtime = DepartmentRuntime(tmp_path, fail)
+    runtime.enqueue(DepartmentTask("a", "research", "Research requirements", max_attempts=2))
+    first = runtime.run_once()["tasks"][0]
+    assert first["status"] == "queued"
+    assert first["last_error_category"] == category
+    assert first["last_error_http_status"] == status
+    assert "private-secret" not in first["last_error"]
+    second = runtime.run_once()["tasks"][0]
+    assert second["status"] == "retries_exhausted"
+    assert second["attempts"] == 2
+    assert "private-secret" not in json.dumps(runtime.snapshot())

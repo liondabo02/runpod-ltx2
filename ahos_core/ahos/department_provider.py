@@ -19,7 +19,30 @@ from .model_gateway import DataSensitivity, ModelGateway, ModelRouteRequest
 
 
 class DepartmentProviderError(RuntimeError):
-    pass
+    """Categorized diagnostics; persistence never trusts exception text."""
+
+    _REASONS = {
+        "provider": "department provider failed",
+        "disabled": "external department generation is disabled",
+        "request": "department prompt is empty",
+        "auth": "department provider authentication failed; check credential",
+        "network": "department provider network request failed",
+        "malformed": "department provider returned malformed response",
+        "http": "department provider HTTP request failed",
+        "rate_limit": "provider rate limit; automatic retry scheduled",
+    }
+
+    def __init__(self, message: str = "department provider failed", *,
+                 category: str = "provider", http_status: int | None = None) -> None:
+        self.category = category if category in self._REASONS else "provider"
+        self.http_status = (http_status if type(http_status) is int and 100 <= http_status <= 599 else None)
+        super().__init__(message)
+
+    @property
+    def safe_diagnostic(self) -> str:
+        prefix = f"HTTP {self.http_status}: " if self.http_status else ""
+        return prefix + self._REASONS.get(self.category, self._REASONS["provider"])
+
 
 
 class DepartmentRateLimited(DepartmentProviderError):
@@ -27,7 +50,7 @@ class DepartmentRateLimited(DepartmentProviderError):
 
     def __init__(self, retry_after_seconds: float = 300) -> None:
         self.retry_after_seconds = retry_after_seconds
-        super().__init__("HTTP 429: provider rate limit; automatic retry scheduled")
+        super().__init__("HTTP 429: provider rate limit; automatic retry scheduled", category="rate_limit", http_status=429)
 
 
 def _retry_delay(value: str | None) -> float:
@@ -64,7 +87,7 @@ class DepartmentGenerator:
 
     def __init__(self, config: DepartmentProviderConfig) -> None:
         if not config.allow_external:
-            raise DepartmentProviderError("external department generation is disabled")
+            raise DepartmentProviderError("external department generation is disabled", category="disabled")
         self.config = config
         self.plan = ModelGateway().plan(ModelRouteRequest(
             capability="reasoning", model_id=config.model_id,
@@ -74,10 +97,10 @@ class DepartmentGenerator:
 
     def __call__(self, prompt: str) -> str:
         if not isinstance(prompt, str) or not prompt.strip():
-            raise DepartmentProviderError("department prompt is empty")
+            raise DepartmentProviderError("department prompt is empty", category="request")
         key = os.environ.get(self.plan.api_key_env, "").strip()
         if not key:
-            raise DepartmentProviderError("missing OPENROUTER_API_KEY credential")
+            raise DepartmentProviderError("missing OPENROUTER_API_KEY credential", category="auth")
         # Normalize malformed UTF-16 before JSON serialization, as in coding.
         prompt = prompt.encode("utf-16-le", errors="surrogatepass").decode("utf-16-le", errors="replace")
         body = json.dumps({
@@ -108,11 +131,13 @@ class DepartmentGenerator:
         except urllib.error.HTTPError as exc:
             if exc.code == 429:
                 raise DepartmentRateLimited(_retry_delay(exc.headers.get("Retry-After") if exc.headers else None)) from None
-            raise DepartmentProviderError(f"department provider HTTP {exc.code}") from None
-        except (OSError, ValueError, KeyError, IndexError, TypeError) as exc:
+            raise DepartmentProviderError(f"department provider HTTP {exc.code}", category="auth" if exc.code in (401, 403) else "http", http_status=exc.code) from None
+        except (OSError, urllib.error.URLError) as exc:
+            raise DepartmentProviderError("department provider network request failed", category="network") from None
+        except (ValueError, KeyError, IndexError, TypeError) as exc:
             # Do not persist exception text or response bodies: either can contain
             # credentials supplied by a remote server.
-            raise DepartmentProviderError("department provider request failed: " + type(exc).__name__) from None
+            raise DepartmentProviderError("department provider request failed: " + type(exc).__name__, category="malformed") from None
         return content
 
 
