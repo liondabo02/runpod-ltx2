@@ -62,3 +62,9 @@ python -m ahos.holding_knowledge
 ```
 
 The owner goals and product brief are versioned in `ahos_core/ahos/holding_knowledge.py`. Updating that module changes the next supervisor invocation; it does not silently install resources, create new active departments or authorize paid calls.
+
+## Learning from pre-existing tasks
+
+On supervisor startup, terminal queue records are imported into persistent memory with an idempotent fingerprint. These entries are explicitly marked `historical_unverified:<status>`; queue status alone is not test evidence, deployment proof or reusable owner authorization. Queued/running tasks are not imported. Existing live evidence is never replaced with a weaker history entry. Import does not retry or change any queue item.
+
+Provider exceptions and provider cooldowns are also recorded as sanitized failure categories, even if code never reaches the test stage. Raw exception/provider output is not stored in the memory database.
