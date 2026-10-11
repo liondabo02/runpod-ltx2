@@ -16,6 +16,7 @@ from typing import Callable, Iterator, Sequence
 
 from .coding_worker import AutonomousCodingWorker, CodingBacklogItem, CodingWorkerStatus
 from .coding_memory import CodingMemory
+from .holding_knowledge import knowledge_context
 
 
 def _now() -> datetime:
@@ -530,8 +531,11 @@ class CodingSupervisor:
         memory_context = self.memory.context(claimed.repository, claimed.title)
         def remembered_runner(prompt, worktree):
             # Preserve the complete task even close to the CLI transport limit.
-            recall = memory_context if len(prompt) + len(memory_context) < 24000 else ""
-            return self.worker.runner(prompt + recall, worktree)
+            available = max(0, 24000 - len(prompt))
+            knowledge = knowledge_context(claimed.title, limit=min(6500, available))
+            available -= len(knowledge)
+            recall = memory_context if len(memory_context) <= available else ""
+            return self.worker.runner(prompt + knowledge + recall, worktree)
         attempt_worker = AutonomousCodingWorker(
             runner=remembered_runner,
             test_executor=self.worker.test_executor,
