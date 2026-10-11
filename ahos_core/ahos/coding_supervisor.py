@@ -509,6 +509,7 @@ class CodingSupervisor:
         self.worker_id = worker_id
         # Runtime storage is shared across attempts, outside candidate checkouts.
         self.memory = CodingMemory(store.path.with_suffix(".memory.sqlite3"))
+        self.memory.import_history(store.all())
         # Backlog content is data from outside the execution boundary. Running
         # its argv without an explicit host policy would be arbitrary execution.
         self.test_command_policy = test_command_policy or (lambda _command: False)
@@ -584,8 +585,10 @@ class CodingSupervisor:
                 approval_file=result.approval_file,
             )
         except CodingProviderDeferred as exc:
+            self.memory.record_failure(claimed, "provider cooldown")
             return self.store.defer_provider(claimed.task_id, self.worker_id, exc.seconds)
         except Exception as exc:
+            self.memory.record_failure(claimed, str(exc))
             return self.store.finish(
                 claimed.task_id, self.worker_id, success=False,
                 reason=f"supervisor caught {type(exc).__name__}: {exc}",

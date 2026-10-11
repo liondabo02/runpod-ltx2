@@ -56,3 +56,32 @@ def test_passed_memory_is_not_deployment_proof(tmp_path):
     assert "tests_passed_waiting_owner" in recall
     assert "does not mean merged, deployed or owner approved" in recall
     assert "patch_sha256" in recall
+
+
+def test_history_import_is_idempotent_and_explicitly_unverified(tmp_path):
+    from types import SimpleNamespace
+    memory = CodingMemory(tmp_path / 'memory.sqlite3')
+    task = SimpleNamespace(repository=tmp_path, task_id='LEGACY', title='repair value',
+        status=SimpleNamespace(value='retries_exhausted'), attempts=4, base_ref='HEAD',
+        updated_at='2026-10-10T00:00:00+00:00', last_error='exact_search failed secret=PRIVATE')
+    assert memory.import_history([task]) == 1
+    assert CodingMemory(memory.path).import_history([task]) == 0
+    recall = memory.context(tmp_path, 'repair')
+    assert 'historical_unverified:retries_exhausted' in recall
+    assert 'exact_search_failed' in recall
+    assert 'PRIVATE' not in recall
+    with memory._connect() as db:
+        assert db.execute('SELECT COUNT(*) FROM attempts').fetchone()[0] == 1
+    task.status.value = 'queued'
+    assert memory.import_history([task]) == 0
+
+
+def test_failure_before_evidence_is_remembered(tmp_path):
+    memory = CodingMemory(tmp_path / 'memory.sqlite3')
+    task, _ = event(tmp_path)
+    task.base_ref = 'HEAD'
+    memory.record_failure(task, 'provider failed: token=PRIVATE')
+    recall = memory.context(tmp_path, 'repair')
+    assert 'blocked_before_evidence' in recall
+    assert 'provider_failure' in recall
+    assert 'PRIVATE' not in recall

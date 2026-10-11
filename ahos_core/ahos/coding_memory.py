@@ -53,6 +53,7 @@ class CodingMemory:
                        "outcome TEXT NOT NULL, gate TEXT NOT NULL, files TEXT NOT NULL,"
                        "patch_sha256 TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
             db.execute("CREATE INDEX IF NOT EXISTS recall_repository ON attempts(repository, id)")
+            db.execute("CREATE TABLE IF NOT EXISTS history_imports (fingerprint TEXT PRIMARY KEY)")
 
     @contextmanager
     def _connect(self):
@@ -82,6 +83,50 @@ class CodingMemory:
                 "passed" if result.approval_file else _gate(result.reason),
                 json.dumps([_safe_text(name) for name in result.changed_files]), digest,
             ))
+
+    def import_history(self, records) -> int:
+        """Import terminal legacy queue observations once, without re-running tasks."""
+        imported = 0
+        terminal = {"retries_exhausted", "waiting_owner_approval", "owner_approved",
+                    "owner_rejected", "cancelled"}
+        with self._connect() as db:
+            for task in records:
+                status = task.status.value
+                if status not in terminal:
+                    continue
+                repository = self.repository_key(task.repository)
+                fingerprint = hashlib.sha256(json.dumps(
+                    [repository, task.task_id, task.updated_at, status],
+                    ensure_ascii=True).encode()).hexdigest()
+                if db.execute("SELECT 1 FROM history_imports WHERE fingerprint=?", (fingerprint,)).fetchone():
+                    continue
+                # Live evidence already exists; do not replace it with a weaker
+                # historical observation on the next supervisor restart.
+                live = db.execute("SELECT 1 FROM attempts WHERE repository=? AND task_id=? "
+                                  "AND base_commit NOT LIKE 'historical_ref:%' LIMIT 1",
+                                  (repository, task.task_id)).fetchone()
+                if not live:
+                    db.execute("INSERT INTO attempts "
+                        "(repository,task_id,attempt,title,base_commit,outcome,gate,files,created_at) "
+                        "VALUES (?,?,?,?,?,?,?,?,?)", (
+                            repository, task.task_id, task.attempts,
+                            _safe_text(task.title.splitlines()[0]),
+                            "historical_ref:" + task.base_ref, "historical_unverified:" + status,
+                            _gate(task.last_error or "") if task.last_error else "historical_status_only",
+                            "[]", task.updated_at))
+                    imported += 1
+                db.execute("INSERT INTO history_imports VALUES (?)", (fingerprint,))
+        return imported
+
+    def record_failure(self, task, reason: str):
+        """Provider/worker exceptions also teach recall; never store raw stderr."""
+        with self._connect() as db:
+            db.execute("INSERT INTO attempts "
+                "(repository,task_id,attempt,title,base_commit,outcome,gate,files) "
+                "VALUES (?,?,?,?,?,?,?,?)", (
+                    self.repository_key(task.repository), task.task_id, task.attempts,
+                    _safe_text(task.title.splitlines()[0]), "unresolved_ref:" + task.base_ref,
+                    "blocked_before_evidence", _gate(reason), "[]"))
 
     def context(self, repository, query: str, *, limit: int = 2400) -> str:
         if limit < 256:

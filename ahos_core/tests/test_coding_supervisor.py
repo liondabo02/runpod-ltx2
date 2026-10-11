@@ -571,3 +571,19 @@ def test_run_once_reads_sandbox_config_without_daemon_restart(tmp_path, monkeypa
     monkeypatch.setattr(sys, "argv", ["supervisor", "--queue", str(tmp_path / "queue.json"), "run-once", "--workspace", str(tmp_path / "workers"), "--worker-id", "w", "--builder-command-json", '["builder"]', "--allow-test-executable", sys.executable])
     assert main() == 0
     assert calls[-1] == (image, 400, ("src",))
+
+
+def test_builder_exception_is_persisted_in_worker_memory(tmp_path):
+    from ahos.coding_memory import CodingMemory
+    repo = _repo(tmp_path)
+    store = CodingSupervisorStore(tmp_path / 'queue.json')
+    store.enqueue(_item(repo), max_attempts=1)
+    def unavailable(prompt, worktree):
+        raise RuntimeError('provider unavailable secret=PRIVATE')
+    supervisor = CodingSupervisor(store=store,
+        worker=AutonomousCodingWorker(runner=unavailable, workspace_root=tmp_path / 'workers'),
+        worker_id='agy', test_command_policy=_allow_python)
+    assert supervisor.run_once().status is CodingTaskStatus.RETRIES_EXHAUSTED
+    recall = CodingMemory(store.path.with_suffix('.memory.sqlite3')).context(repo, 'safe edit')
+    assert 'blocked_before_evidence' in recall and 'provider_failure' in recall
+    assert 'PRIVATE' not in recall
