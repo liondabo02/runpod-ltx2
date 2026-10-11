@@ -60,6 +60,10 @@ def test_restarted_supervisor_recalls_prior_failed_task(tmp_path):
         assert '"task_id": "OLD"' in prompt
         assert "acceptance_test_failed" in prompt
         assert "Animation & Cartoon Studio" in prompt
+        from ahos.department_structure import CORE_DEPARTMENTS
+        assert all(department in prompt for department in CORE_DEPARTMENTS)
+        assert "revenue-producing" in prompt
+        assert "Stitch" in prompt and "Hermes" in prompt
         edit(prompt, worktree)
     restarted = CodingSupervisor(store=CodingSupervisorStore(queue),
         worker=AutonomousCodingWorker(runner=remembered_edit, workspace_root=tmp_path / "workers"),

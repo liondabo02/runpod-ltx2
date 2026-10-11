@@ -46,3 +46,19 @@ Supply the existing `-RuntimeDir` and `-PythonExe` if they differ from defaults.
 Local tests exercise invalid proposal repair, exact-search recovery, complete-task preservation, bounds, environment filtering and adapter-to-worker acceptance with a mocked proposal provider and real Git worktrees and Python tests. They establish local integration behavior, not Google authentication, quota, live model quality or continuous operation on the owner's Windows computer. `--status` detects the CLI only and deliberately reports `coding_execution_verified: false`.
 
 Before marking the Windows employee operational, execute one scoped queue task through the installed CLI and existing sandbox executor; inspect its acceptance evidence and patch. No new paid service or model download is required by this change. Antigravity account limits still apply. Publication, deployment and other owner gates remain managed by the existing AHOS policy.
+
+## Shared holding knowledge
+
+`ahos.holding_knowledge` supplies every supervisor-launched coding employee with the full core department overview, owner goals, applications/games and Animation Studio product tracks, requested resource groups and current repository source locations. Department membership and candidate statuses are read from the existing Python registries on each invocation, so newly defined departments appear without a separate hardcoded roster.
+
+Detailed worker capabilities, studio rules, resource roles and integration-candidate records are ranked against the task within a 6,500-character knowledge budget. The original task takes priority under the transport cap. Cross-task SQLite history remains a separate bounded section. Long tasks may leave no room for knowledge; this never truncates owner instructions.
+
+The resource list includes requested evaluation targets, not a claim of working connections or free entitlement. Installed/connected/tested/deployed states must be established from current evidence. Gemini CLI consumer login remains a closed task. Xiaomi is the owner's requested phone resource; iPhones are excluded. Canonical cast configuration overrides historical character ages/spellings.
+
+Inspect the full knowledge record without any provider call:
+
+```text
+python -m ahos.holding_knowledge
+```
+
+The owner goals and product brief are versioned in `ahos_core/ahos/holding_knowledge.py`. Updating that module changes the next supervisor invocation; it does not silently install resources, create new active departments or authorize paid calls.
