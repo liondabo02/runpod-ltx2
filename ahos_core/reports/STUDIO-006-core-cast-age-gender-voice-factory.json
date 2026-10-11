@@ -1,0 +1,84 @@
+{
+  "studio_step": "STUDIO-006 recurring cast age/gender voice automation",
+  "status": "BATCH_FACTORY_READY",
+  "adult_metadata": {
+    "harun": {
+      "age": 30,
+      "gender": "man"
+    },
+    "davut": {
+      "age": 30,
+      "gender": "man"
+    },
+    "ahmet": {
+      "age": 33,
+      "gender": "man"
+    },
+    "esma": {
+      "age": 29,
+      "gender": "woman"
+    },
+    "fatos": {
+      "age": 30,
+      "gender": "woman"
+    },
+    "esra": {
+      "age": 33,
+      "gender": "woman"
+    },
+    "veysel": {
+      "age": 33,
+      "gender": "man"
+    },
+    "oznur": {
+      "age": 31,
+      "gender": "woman"
+    }
+  },
+  "existing_child_metadata": {
+    "aden": {
+      "age": 3,
+      "gender": "girl"
+    },
+    "kaan": {
+      "age": 1,
+      "gender": "boy"
+    },
+    "salih": {
+      "age": 2,
+      "gender": "boy"
+    },
+    "medine": {
+      "age": "2 months",
+      "gender": "girl",
+      "mode": "infant_vocalization"
+    },
+    "emos": {
+      "age": 4,
+      "gender": "girl"
+    },
+    "berzan": {
+      "age": 2,
+      "gender": "boy"
+    },
+    "aras": {
+      "age": 2,
+      "gender": "boy"
+    },
+    "ramin": {
+      "age": "1 month",
+      "gender": "boy",
+      "mode": "infant_vocalization"
+    }
+  },
+  "generation_policy": {
+    "voice_reference": "Qwen3 VoiceDesign in English",
+    "turkish_voice": "Chatterbox Multilingual V3 clone from each character's synthetic reference",
+    "per_voice_human_listening_required": false,
+    "automatic_retry": false,
+    "rerun_behavior": "skip existing valid WAV files",
+    "infants": "SFX/vocalizations only; no adult-like sentence TTS",
+    "canonical_binding_created": false
+  },
+  "note": "The batch asks for one owner RUN_ALL confirmation, then generates only missing files. Exact provider billing depends on actual worker runtime."
+}

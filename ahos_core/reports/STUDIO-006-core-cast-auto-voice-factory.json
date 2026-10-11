@@ -1,0 +1,49 @@
+{
+  "studio_step": "STUDIO-006 recurring cast automatic voice factory",
+  "status": "READY_FOR_OWNER_BATCH_EXECUTION",
+  "owner_policy": "Generate recurring-character voices automatically from age, gender, role and character direction; do not require per-character listening loops.",
+  "exact_adult_demographics": {
+    "harun": {
+      "age": 30,
+      "gender": "man"
+    },
+    "davut": {
+      "age": 30,
+      "gender": "man"
+    },
+    "ahmet": {
+      "age": 33,
+      "gender": "man"
+    },
+    "esma": {
+      "age": 29,
+      "gender": "woman"
+    },
+    "fatos": {
+      "age": 30,
+      "gender": "woman"
+    },
+    "esra": {
+      "age": 33,
+      "gender": "woman"
+    },
+    "veysel": {
+      "age": 33,
+      "gender": "man"
+    },
+    "oznur": {
+      "age": 31,
+      "gender": "woman"
+    }
+  },
+  "generation_strategy": "One Qwen3 English synthetic speaker reference per speaking recurring character, then reuse that identity for Turkish and future target-language clones.",
+  "infant_policy": "Medine and Ramin use infant vocalizations/SFX, not adult-like sentence TTS.",
+  "cost_control": [
+    "skip existing WAVs",
+    "generate references in one warm-worker phase",
+    "generate Turkish clones in one warm-worker phase",
+    "no automatic retries",
+    "single owner batch confirmation"
+  ],
+  "canonical_binding_created": false
+}

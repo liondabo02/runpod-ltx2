@@ -1,0 +1,381 @@
+from __future__ import annotations
+
+import base64
+import json
+import os
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Mapping
+
+from .age_voice_policy import AgeVoicePolicy, AgeVoicePolicyError
+from .infant_vocalization_library import InfantVocalizationLibrary, VALID_CUES
+from .kurmanji_tts import (
+    KurdishTTSConfig,
+    KurdishTTSExecutionApproval,
+    KurdishTTSProvider,
+)
+from .runpod_chatterbox import RunPodChatterboxConfig, RunPodChatterboxProvider
+from .runpod_openvoice import RunPodOpenVoiceConfig, RunPodOpenVoiceProvider
+from .runpod_ltx2 import PaidExecutionApproval, RunPodLTX2Config, RunPodLTX2Provider
+from .studio_approval import _atomic_write, _read_object
+from .studio_executor import StageHandler, StageResult
+from .visual_pipeline import RenderJob
+from .voice_audio_quality import (
+    VoiceAudioQualityError,
+    prepare_openvoice_reference,
+    validate_generated_voice,
+)
+
+
+class StudioProviderConfigurationError(RuntimeError):
+    pass
+
+
+@dataclass(frozen=True, slots=True)
+class ProductionProviderConfig:
+    ltx2_endpoint_id: str
+    chatterbox_endpoint_id: str
+    voice_conversion_endpoint_id: str
+    runpod_api_key_env: str = "RUNPOD_API_KEY"
+    kurmanji_api_key_env: str = "KURDISH_TTS_API_KEY"
+    render_cost_ceiling_usd: float = 0.0
+    tts_cost_ceiling_usd: float = 0.0
+
+    @classmethod
+    def from_environment(cls) -> "ProductionProviderConfig":
+        def money(name: str) -> float:
+            raw = os.getenv(name, "0").strip()
+            try:
+                value = float(raw)
+            except ValueError as exc:
+                raise StudioProviderConfigurationError(f"{name} must be numeric") from exc
+            if value < 0:
+                raise StudioProviderConfigurationError(f"{name} must not be negative")
+            return value
+
+        return cls(
+            ltx2_endpoint_id=os.getenv("RUNPOD_LTX2_ENDPOINT_ID", "").strip(),
+            chatterbox_endpoint_id=os.getenv("RUNPOD_CHATTERBOX_ENDPOINT_ID", "").strip(),
+            voice_conversion_endpoint_id=os.getenv("RUNPOD_OPENVOICE_ENDPOINT_ID", "").strip(),
+            runpod_api_key_env=os.getenv("AHOS_RUNPOD_API_KEY_ENV", "RUNPOD_API_KEY").strip(),
+            kurmanji_api_key_env=os.getenv("AHOS_KURMANJI_API_KEY_ENV", "KURDISH_TTS_API_KEY").strip(),
+            render_cost_ceiling_usd=money("AHOS_RENDER_COST_CEILING_USD"),
+            tts_cost_ceiling_usd=money("AHOS_TTS_COST_CEILING_USD"),
+        )
+
+    def validate(self) -> None:
+        missing = []
+        if not self.ltx2_endpoint_id:
+            missing.append("RUNPOD_LTX2_ENDPOINT_ID")
+        if not self.chatterbox_endpoint_id:
+            missing.append("RUNPOD_CHATTERBOX_ENDPOINT_ID")
+        if not self.voice_conversion_endpoint_id:
+            missing.append("RUNPOD_OPENVOICE_ENDPOINT_ID")
+        if not os.getenv(self.runpod_api_key_env, "").strip():
+            missing.append(self.runpod_api_key_env)
+        if not os.getenv(self.kurmanji_api_key_env, "").strip():
+            missing.append(self.kurmanji_api_key_env)
+        if self.render_cost_ceiling_usd <= 0:
+            missing.append("AHOS_RENDER_COST_CEILING_USD")
+        if self.tts_cost_ceiling_usd <= 0:
+            missing.append("AHOS_TTS_COST_CEILING_USD")
+        if missing:
+            raise StudioProviderConfigurationError(
+                "production providers are not ready: " + ", ".join(missing)
+            )
+
+    def status(self) -> dict[str, object]:
+        return {
+            "ltx2_endpoint_present": bool(self.ltx2_endpoint_id),
+            "chatterbox_endpoint_present": bool(self.chatterbox_endpoint_id),
+            "voice_conversion_endpoint_present": bool(self.voice_conversion_endpoint_id),
+            "runpod_api_key_present": bool(os.getenv(self.runpod_api_key_env, "").strip()),
+            "kurmanji_api_key_present": bool(os.getenv(self.kurmanji_api_key_env, "").strip()),
+            "render_cost_ceiling_usd": self.render_cost_ceiling_usd,
+            "tts_cost_ceiling_usd": self.tts_cost_ceiling_usd,
+        }
+
+
+def _paid_approval(ledger: Mapping[str, object]) -> PaidExecutionApproval:
+    return PaidExecutionApproval(
+        owner_approved=True,
+        execution_enabled=ledger.get("status") in {"running", "retryable"},
+        paid_provider_enabled=True,
+    )
+
+
+def _render_job(value: Mapping[str, object]) -> RenderJob:
+    def strings(name: str) -> tuple[str, ...]:
+        raw = value.get(name, [])
+        if not isinstance(raw, list):
+            raise StudioProviderConfigurationError(f"render job {name} must be a list")
+        return tuple(str(item) for item in raw)
+
+    return RenderJob(
+        job_id=str(value["job_id"]), episode_id=str(value["episode_id"]),
+        shot_id=str(value["shot_id"]), prompt_id=str(value["prompt_id"]),
+        output_asset_id=str(value["output_asset_id"]), mode=str(value["mode"]),
+        seed=int(value["seed"]), positive_prompt=str(value["positive_prompt"]),
+        negative_prompt=str(value["negative_prompt"]),
+        reference_asset_ids=strings("reference_asset_ids"),
+        continuity_constraints=strings("continuity_constraints"),
+        style_id=str(value["style_id"]), duration_seconds=int(value["duration_seconds"]),
+        output_prefix=str(value["output_prefix"]),
+    )
+
+
+def _local_file(root: Path, uri: str, *, label: str) -> Path:
+    raw = uri.removeprefix("file://")
+    candidate = Path(raw)
+    if not candidate.is_absolute():
+        candidate = root / candidate
+    candidate = candidate.resolve()
+    try:
+        candidate.relative_to(root.resolve())
+    except ValueError as exc:
+        raise StudioProviderConfigurationError(f"{label} escapes studio directory") from exc
+    if not candidate.is_file():
+        raise StudioProviderConfigurationError(f"{label} is missing: {candidate}")
+    return candidate
+
+
+def build_production_handlers(
+    config: ProductionProviderConfig,
+    *,
+    ltx2: RunPodLTX2Provider | None = None,
+    chatterbox: RunPodChatterboxProvider | None = None,
+    kurmanji: KurdishTTSProvider | None = None,
+    voice_converter: RunPodOpenVoiceProvider | None = None,
+) -> tuple[dict[str, StageHandler], dict[str, float]]:
+    """Bind real paid providers to the first two executor stages.
+
+    Mixing, assembly and delivery QA remain intentionally unbound until their
+    local FFmpeg executors are configured. This prevents a remote render/TTS
+    response from being mislabeled as a finished episode.
+    """
+    config.validate()
+    ltx2 = ltx2 or RunPodLTX2Provider(RunPodLTX2Config(
+        endpoint_id=config.ltx2_endpoint_id, api_key_env=config.runpod_api_key_env,
+        request_timeout_seconds=900.0,
+    ))
+    chatterbox = chatterbox or RunPodChatterboxProvider(RunPodChatterboxConfig(
+        endpoint_id=config.chatterbox_endpoint_id, api_key_env=config.runpod_api_key_env,
+        request_timeout_seconds=900.0,
+    ))
+    kurmanji = kurmanji or KurdishTTSProvider(KurdishTTSConfig(
+        api_key_env=config.kurmanji_api_key_env, request_timeout_seconds=300.0,
+    ))
+    voice_converter = voice_converter or RunPodOpenVoiceProvider(RunPodOpenVoiceConfig(
+        endpoint_id=config.voice_conversion_endpoint_id,
+        api_key_env=config.runpod_api_key_env,
+        request_timeout_seconds=900.0,
+    ))
+
+    def render(root: Path, ledger: Mapping[str, object]) -> StageResult:
+        manifest = _read_object(root / "artifacts" / "render-jobs.json")
+        raw_jobs = manifest.get("jobs")
+        if not isinstance(raw_jobs, list) or not raw_jobs:
+            raise StudioProviderConfigurationError("render manifest has no jobs")
+        references = _read_object(root / "artifacts" / "reference-images.json")
+        reference_map = references.get("assets")
+        if not isinstance(reference_map, Mapping):
+            raise StudioProviderConfigurationError("reference-images.json has no assets map")
+        output_dir = root / "runtime-artifacts" / "renders"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        artifacts: list[str] = []
+        evidence: list[dict[str, object]] = []
+        for raw in raw_jobs:
+            if not isinstance(raw, Mapping):
+                raise StudioProviderConfigurationError("render job must be an object")
+            job = _render_job(raw)
+            if not job.reference_asset_ids:
+                raise StudioProviderConfigurationError(
+                    f"render job {job.job_id} has no locked character reference"
+                )
+            reference_uri = reference_map.get(job.reference_asset_ids[0])
+            if not isinstance(reference_uri, str):
+                raise StudioProviderConfigurationError(
+                    f"reference asset is unresolved: {job.reference_asset_ids[0]}"
+                )
+            reference = _local_file(root, reference_uri, label="render reference")
+            encoded = base64.b64encode(reference.read_bytes()).decode("ascii")
+            response = ltx2.submit(
+                ltx2.render_payload(job, input_image_base64=encoded,
+                                    wait=True, return_output_base64=True),
+                approval=_paid_approval(ledger), synchronous=True,
+            )
+            target = output_dir / f"{job.output_asset_id}.mp4"
+            materialized = ltx2.materialize_inline_output(response, target)
+            relative = target.relative_to(root).as_posix()
+            artifacts.append(relative)
+            evidence.append({"job_id": job.job_id, "asset_id": job.output_asset_id,
+                             "path": relative, "sha256": materialized.sha256,
+                             "size_bytes": materialized.size_bytes})
+        evidence_path = output_dir / "render-evidence.json"
+        _atomic_write(evidence_path, {"schema": "ahos.render-execution-evidence.v1",
+                                      "episode_id": ledger["episode_id"], "outputs": evidence})
+        artifacts.append(evidence_path.relative_to(root).as_posix())
+        return StageResult(tuple(artifacts), config.render_cost_ceiling_usd,
+                           f"materialized {len(evidence)} verified LTX-2 renders")
+
+    def tts(root: Path, ledger: Mapping[str, object]) -> StageResult:
+        localization = _read_object(root / "artifacts" / "localization-plan.json")
+        casting = _read_object(root / "artifacts" / "voice-casting.json")
+        raw_units, raw_characters = localization.get("units"), casting.get("characters")
+        if not isinstance(raw_units, list) or not isinstance(raw_characters, list):
+            raise StudioProviderConfigurationError("localization or voice plan is invalid")
+        voices = {str(item.get("character_id")): item for item in raw_characters
+                  if isinstance(item, Mapping)}
+        output_dir = root / "runtime-artifacts" / "tts"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        outputs: list[dict[str, object]] = []
+        artifacts: list[str] = []
+        paid = _paid_approval(ledger)
+        kurdish_approval = KurdishTTSExecutionApproval(True, True, True, True)
+        infant_library = InfantVocalizationLibrary(root)
+        for raw in raw_units:
+            if not isinstance(raw, Mapping):
+                raise StudioProviderConfigurationError("localization unit must be an object")
+            character_id = str(raw.get("speaker_character_id") or "")
+            voice = voices.get(character_id)
+            if not isinstance(voice, Mapping):
+                raise StudioProviderConfigurationError(f"voice casting missing: {character_id}")
+            language = str(raw.get("target_language") or "")
+            raw_policy = voice.get("age_voice_policy")
+            if not isinstance(raw_policy, Mapping):
+                raise StudioProviderConfigurationError(
+                    f"approved age voice policy missing for {character_id}"
+                )
+            try:
+                policy = AgeVoicePolicy(
+                    character_id=str(raw_policy["character_id"]),
+                    age_stage=str(raw_policy["age_stage"]),
+                    speech_mode=str(raw_policy["speech_mode"]),
+                    sentence_tts_allowed=bool(raw_policy["sentence_tts_allowed"]),
+                    maximum_words_per_utterance=(
+                        int(raw_policy["maximum_words_per_utterance"])
+                        if raw_policy.get("maximum_words_per_utterance") is not None else None
+                    ),
+                    synthetic_reference_required=bool(raw_policy["synthetic_reference_required"]),
+                    exaggeration=float(raw_policy["exaggeration"]),
+                    cfg_weight=float(raw_policy["cfg_weight"]),
+                    temperature=float(raw_policy["temperature"]),
+                    direction=str(raw_policy["direction"]),
+                )
+                if policy.character_id != character_id:
+                    raise AgeVoicePolicyError("character/policy identity mismatch")
+            except (KeyError, TypeError, ValueError, AgeVoicePolicyError) as exc:
+                raise StudioProviderConfigurationError(
+                    f"age voice policy rejected {character_id}: {exc}"
+                ) from exc
+            safe_id = str(raw.get("unit_id") or "unit").replace(":", "_").replace("/", "_")
+            target = output_dir / f"{safe_id}.wav"
+            reference_prepared = False
+            reference_quality: dict[str, object] | None = None
+            output_quality: dict[str, object] | None = None
+            if policy.speech_mode == "infant_vocalization":
+                cue = str(raw.get("vocalization_cue") or "").strip().lower()
+                if cue not in VALID_CUES:
+                    intent = str(raw.get("intent") or "").lower()
+                    cue = (
+                        "tiny_laugh" if any(word in intent for word in ("happy", "laugh", "play", "joy"))
+                        else "gentle_cry" if any(word in intent for word in ("cry", "hurt", "sad"))
+                        else "soft_fuss" if any(word in intent for word in ("fuss", "worry", "uneasy"))
+                        else "sleepy_breath" if any(word in intent for word in ("sleep", "tired"))
+                        else "coo"
+                    )
+                selected = infant_library.materialize(character_id, cue, target)
+                audio = target.read_bytes()
+                provider_id = "canonical-infant-vocalization-library"
+                provider_chain = [provider_id]
+                identity_evidence = selected.sha256
+            else:
+                text = str(raw.get("localized_text") or "").strip()
+                if not text:
+                    raise StudioProviderConfigurationError(
+                        f"translation is missing: {raw.get('unit_id')}"
+                    )
+                try:
+                    policy.validate_text(text)
+                except AgeVoicePolicyError as exc:
+                    raise StudioProviderConfigurationError(
+                        f"age voice policy rejected {character_id}: {exc}"
+                    ) from exc
+                voice_ids = voice.get("voice_ids")
+                if not isinstance(voice_ids, Mapping) or not str(voice_ids.get(language) or "").strip():
+                    raise StudioProviderConfigurationError(
+                        f"approved {language} voice_id missing for {character_id}"
+                    )
+                voice_id = str(voice_ids[language])
+                reference_uri = str(voice.get("reference_audio_uri") or "")
+                reference = _local_file(root, reference_uri, label="voice reference")
+                reference_audio = reference.read_bytes()
+                if language == "ku-latn":
+                    try:
+                        reference_audio, quality, reference_prepared = (
+                            prepare_openvoice_reference(reference_audio)
+                        )
+                        reference_quality = quality.as_dict()
+                    except VoiceAudioQualityError as exc:
+                        raise StudioProviderConfigurationError(
+                            f"OpenVoice reference rejected for {character_id}: {exc}"
+                        ) from exc
+                    source = kurmanji.synthesize(
+                        text=text, voice_id=voice_id, approval=kurdish_approval
+                    ).body
+                    audio = voice_converter.convert(
+                        source_audio=source,
+                        target_reference_audio=reference_audio,
+                        character_id=character_id,
+                        approval=paid,
+                    )
+                    provider_id = voice_converter.provider_id
+                    provider_chain = [kurmanji.provider_id, voice_converter.provider_id]
+                    identity_evidence = str(voice.get("reference_sha256") or "")
+                else:
+                    encoded = base64.b64encode(reference_audio).decode("ascii")
+                    audio = chatterbox.synthesize(text=text, language_id=language,
+                                                   voice_id=voice_id,
+                                                   reference_audio_base64=encoded,
+                                                   approval=paid,
+                                                   exaggeration=policy.exaggeration,
+                                                   cfg_weight=policy.cfg_weight,
+                                                   temperature=policy.temperature)
+                    provider_id = chatterbox.provider_id
+                    provider_chain = [provider_id]
+                    identity_evidence = str(voice.get("reference_sha256") or "")
+                try:
+                    output_quality = validate_generated_voice(audio).as_dict()
+                except VoiceAudioQualityError as exc:
+                    raise StudioProviderConfigurationError(
+                        f"generated voice rejected for {character_id}/{language}: {exc}"
+                    ) from exc
+            target.write_bytes(audio)
+            relative = target.relative_to(root).as_posix()
+            artifacts.append(relative)
+            outputs.append({"unit_id": raw.get("unit_id"), "language": language,
+                            "provider_id": provider_id,
+                            "provider_chain": provider_chain,
+                            "identity_evidence": identity_evidence,
+                            "reference_prepared": reference_prepared,
+                            "reference_quality": reference_quality,
+                            "output_quality": output_quality,
+                            "path": relative})
+        evidence_path = output_dir / "tts-evidence.json"
+        _atomic_write(evidence_path, {"schema": "ahos.tts-execution-evidence.v1",
+                                      "episode_id": ledger["episode_id"], "outputs": outputs})
+        artifacts.append(evidence_path.relative_to(root).as_posix())
+        return StageResult(tuple(artifacts), config.tts_cost_ceiling_usd,
+                           f"materialized {len(outputs)} verified TTS files in seven languages")
+
+    return (
+        {"render": render, "tts_7_languages": tts},
+        {"render": config.render_cost_ceiling_usd,
+         "tts_7_languages": config.tts_cost_ceiling_usd},
+    )
+
+
+__all__ = [
+    "ProductionProviderConfig", "StudioProviderConfigurationError",
+    "build_production_handlers",
+]

@@ -1,0 +1,2 @@
+# Verified stable release on PyPI as of 2026-09-13
+litellm==1.100.1

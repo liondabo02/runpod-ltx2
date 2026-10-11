@@ -1,0 +1,54 @@
+{
+  "schema": "ahos.studio.voice-generation-policy.v1",
+  "status": "OWNER_APPROVED",
+  "policy": "metadata-driven recurring-character voice generation",
+  "per_character_audition_required": false,
+  "design_inputs": [
+    "canonical age",
+    "gender presentation",
+    "role",
+    "character voice direction"
+  ],
+  "recurring_adult_profiles": {
+    "harun": {
+      "age": 30,
+      "gender": "man"
+    },
+    "davut": {
+      "age": 30,
+      "gender": "man"
+    },
+    "ahmet": {
+      "age": 33,
+      "gender": "man"
+    },
+    "esma": {
+      "age": 29,
+      "gender": "woman"
+    },
+    "fatos": {
+      "age": 30,
+      "gender": "woman"
+    },
+    "esra": {
+      "age": 33,
+      "gender": "woman"
+    },
+    "veysel": {
+      "age": 33,
+      "gender": "man"
+    },
+    "oznur": {
+      "age": 31,
+      "gender": "woman"
+    }
+  },
+  "aden_existing_voice_reuse": true,
+  "infant_policy": {
+    "medine": "infant vocalization/SFX only",
+    "ramin": "infant vocalization/SFX only"
+  },
+  "paid_batch_requires_single_owner_confirmation": "RUN_ALL",
+  "automatic_retry": false,
+  "canonical_binding": "after generated-asset manifest validation"
+}
