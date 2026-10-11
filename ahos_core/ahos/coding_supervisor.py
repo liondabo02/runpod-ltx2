@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Callable, Iterator, Sequence
 
 from .coding_worker import AutonomousCodingWorker, CodingBacklogItem, CodingWorkerStatus
+from .coding_memory import CodingMemory
 
 
 def _now() -> datetime:
@@ -505,6 +506,8 @@ class CodingSupervisor:
         self.store = store
         self.worker = worker
         self.worker_id = worker_id
+        # Runtime storage is shared across attempts, outside candidate checkouts.
+        self.memory = CodingMemory(store.path.with_suffix(".memory.sqlite3"))
         # Backlog content is data from outside the execution boundary. Running
         # its argv without an explicit host policy would be arbitrary execution.
         self.test_command_policy = test_command_policy or (lambda _command: False)
@@ -524,8 +527,13 @@ class CodingSupervisor:
         # The nonce also prevents an abandoned or quarantined Windows checkout
         # from blocking a later owner-authorized retry whose attempt counter was reset.
         attempt_name = f"attempt-{claimed.attempts}-{uuid.uuid4().hex[:8]}"
+        memory_context = self.memory.context(claimed.repository, claimed.title)
+        def remembered_runner(prompt, worktree):
+            # Preserve the complete task even close to the CLI transport limit.
+            recall = memory_context if len(prompt) + len(memory_context) < 24000 else ""
+            return self.worker.runner(prompt + recall, worktree)
         attempt_worker = AutonomousCodingWorker(
-            runner=self.worker.runner,
+            runner=remembered_runner,
             test_executor=self.worker.test_executor,
             test_executor_factory=self.worker.test_executor_factory,
             workspace_root=self.worker.workspace_root / claimed.task_id / attempt_name,
@@ -561,6 +569,11 @@ class CodingSupervisor:
         try:
             result = attempt_worker.run(backlog_item, self.worker_id)
             ok = result.status is CodingWorkerStatus.WAITING_OWNER_APPROVAL
+            # Source version is recorded separately: old success is never proof
+            # that the same change works against a newer checkout.
+            base = subprocess.run(["git", "rev-parse", "HEAD" if result.worktree else claimed.base_ref],
+                cwd=result.worktree or claimed.repository, capture_output=True, text=True, check=True).stdout.strip()
+            self.memory.record(claimed, result, base_commit=base)
             return self.store.finish(
                 claimed.task_id, self.worker_id, success=ok, reason=result.reason,
                 worktree=result.worktree, patch_file=result.patch_file,
