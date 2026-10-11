@@ -24,6 +24,7 @@ ahos-studio-executor = "ahos.studio_executor:main"
 ahos-voice-candidate-lab = "ahos.voice_candidate_lab:main"
 ahos-company-service = "ahos.company_daemon:main"
 ahos-openrouter-coding-builder = "ahos.openrouter_coding_builder:main"
+ahos-antigravity-coding-builder = "ahos.antigravity_coding_builder:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

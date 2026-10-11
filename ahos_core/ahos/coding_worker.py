@@ -411,6 +411,7 @@ class AutonomousCodingWorker:
             f"Backlog item: {item.task_id} - {item.title}\n"
             f"Git worktree: {worktree}\n"
             f"Allowed paths: {', '.join(item.allowed_paths)}\n\n"
+            f"Acceptance test argv (supervisor executes these): {json.dumps(item.test_commands)}\n"
             "Implement the complete scoped item. You may add modules, classes, tests, "
             "and improve the architecture anywhere inside the allowed paths. Preserve "
             "all existing behavior and public import surfaces unless the owner task "
