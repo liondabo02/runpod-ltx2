@@ -43,6 +43,31 @@ def _allow_python(command) -> bool:
     return tuple(command[:1]) == (sys.executable,)
 
 
+def test_restarted_supervisor_recalls_prior_failed_task(tmp_path):
+    repo = _repo(tmp_path)
+    queue = tmp_path / "queue.json"
+    store = CodingSupervisorStore(queue)
+    store.enqueue(CodingBacklogItem("OLD", "repair value", repo, allowed_paths=("src",),
+        test_commands=((sys.executable, "-c", "assert False"),)), max_attempts=1)
+    def edit(prompt, worktree):
+        (worktree / "src/app.py").write_text("VALUE = 2\n", encoding="utf-8")
+    supervisor = CodingSupervisor(store=store,
+        worker=AutonomousCodingWorker(runner=edit, workspace_root=tmp_path / "workers"),
+        worker_id="agy", test_command_policy=_allow_python)
+    assert supervisor.run_once().status is CodingTaskStatus.RETRIES_EXHAUSTED
+    store.enqueue(_item(repo, "NEW"))
+    def remembered_edit(prompt, worktree):
+        assert '"task_id": "OLD"' in prompt
+        assert "acceptance_test_failed" in prompt
+        assert "Animation & Cartoon Studio" in prompt
+        edit(prompt, worktree)
+    restarted = CodingSupervisor(store=CodingSupervisorStore(queue),
+        worker=AutonomousCodingWorker(runner=remembered_edit, workspace_root=tmp_path / "workers"),
+        worker_id="agy", test_command_policy=_allow_python)
+    assert restarted.run_once().status is CodingTaskStatus.WAITING_OWNER_APPROVAL
+    assert queue.with_suffix(".memory.sqlite3").is_file()
+
+
 def test_builder_process_uses_utf8_for_turkish_task_text(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
