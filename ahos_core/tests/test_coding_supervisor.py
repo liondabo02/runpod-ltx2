@@ -587,3 +587,67 @@ def test_builder_exception_is_persisted_in_worker_memory(tmp_path):
     recall = CodingMemory(store.path.with_suffix('.memory.sqlite3')).context(repo, 'safe edit')
     assert 'blocked_before_evidence' in recall and 'provider_failure' in recall
     assert 'PRIVATE' not in recall
+
+
+def test_claim_skips_overlapping_scope_while_another_task_is_running(tmp_path: Path) -> None:
+    repo = _repo(tmp_path)
+    store = CodingSupervisorStore(tmp_path / "queue.json")
+    store.enqueue(CodingBacklogItem(
+        "CODE-A", "edit app", repo, allowed_paths=("src",),
+        test_commands=((sys.executable, "-c", "assert True"),),
+    ), priority=10)
+    store.enqueue(CodingBacklogItem(
+        "CODE-B", "edit nested app", repo, allowed_paths=("src/app.py",),
+        test_commands=((sys.executable, "-c", "assert True"),),
+    ), priority=9)
+
+    assert store.claim("worker-a").task_id == "CODE-A"
+    assert store.claim("worker-b") is None
+    status = store.status()
+    assert status["scope_conflicts"] == [{
+        "task_id": "CODE-B",
+        "blocked_by": ["CODE-A"],
+        "repository": str(repo.resolve()),
+        "allowed_paths": ["src/app.py"],
+    }]
+
+
+def test_claim_allows_non_overlapping_scopes_in_parallel(tmp_path: Path) -> None:
+    repo = _repo(tmp_path)
+    (repo / "docs").mkdir()
+    (repo / "docs" / "readme.md").write_text("x\n", encoding="utf-8")
+    subprocess.run(["git", "add", "."], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-qm", "docs"], cwd=repo, check=True)
+    store = CodingSupervisorStore(tmp_path / "queue.json")
+    store.enqueue(CodingBacklogItem(
+        "CODE-A", "edit src", repo, allowed_paths=("src",),
+        test_commands=((sys.executable, "-c", "assert True"),),
+    ), priority=10)
+    store.enqueue(CodingBacklogItem(
+        "CODE-B", "edit docs", repo, allowed_paths=("docs",),
+        test_commands=((sys.executable, "-c", "assert True"),),
+    ), priority=9)
+
+    assert store.claim("worker-a").task_id == "CODE-A"
+    assert store.claim("worker-b").task_id == "CODE-B"
+
+
+def test_pending_owner_review_keeps_scope_reserved(tmp_path: Path) -> None:
+    repo = _repo(tmp_path)
+    store = CodingSupervisorStore(tmp_path / "queue.json")
+    store.enqueue(_item(repo, "CODE-A"), priority=10)
+    store.enqueue(_item(repo, "CODE-B"), priority=9)
+    claimed = store.claim("worker-a")
+    patch = tmp_path / "candidate.patch"
+    patch.write_bytes(b"patch")
+    approval = tmp_path / "approval.json"
+    import hashlib
+    approval.write_text(json.dumps({
+        "patch_sha256": hashlib.sha256(patch.read_bytes()).hexdigest()
+    }), encoding="utf-8")
+    finished = store.finish(
+        claimed.task_id, "worker-a", success=True, reason="",
+        worktree=tmp_path, patch_file=patch, approval_file=approval,
+    )
+    assert finished.status is CodingTaskStatus.WAITING_OWNER_APPROVAL
+    assert store.claim("worker-b") is None
