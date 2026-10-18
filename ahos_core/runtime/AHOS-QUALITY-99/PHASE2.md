@@ -6,13 +6,18 @@ This phase remains isolated from active worker/dispatcher/control-center files.
 
 ## Measured starting score
 
-The evidence-backed 15-area quality matrix starts at **69.33 / 100**.
+The evidence-backed 15-area quality matrix starts at **64.00 / 100**.
 
 This is not a success claim. The score is intentionally conservative:
 - PROVEN = 1.0
 - PARTIAL = 0.6
 - UNMEASURED/BLOCKED = 0
 - any unproven high-risk area blocks the 99% target
+
+A four-worker Windows stress run reproduced a real lock-contention defect:
+`CodingSupervisorStore._locked()` can receive `PermissionError` from the
+lock-file create path. That shared file is currently owned by another active
+branch, so Q99 records it as a blocking conflict rather than editing it in parallel.
 
 High-risk open areas at phase start:
 - real worker execution acceptance
@@ -62,3 +67,11 @@ This phase does not prove:
 - full studio release acceptance
 - production deployment
 - live process restart recovery
+
+
+## Phase-2 measured progress
+
+After the isolated memory, integrity, security and monitoring proofs pass, the
+evidence score becomes **74.67 / 100**. This still does not satisfy the target.
+Concurrency, live recovery, real worker execution, real product acceptance and
+Android/browser evidence remain open.
