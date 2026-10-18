@@ -38,7 +38,7 @@ Tarih: 2026-10-18 · Ölçülen commit: `32bc435` (izole worktree) · Ölçüm y
 | 11 | Kalıcı hafıza | Dedupe günlüğü, audit zinciri, live-events, worker metrics | ✅ | — |
 | 12 | Başkanlık paneli | 8766 güncel; 8765 eski; daemon heartbeat panelde yok | ⚠️ | Panel tek kaynak değil; daemon durumu görünmüyor |
 | 13 | Gerçek ürün üretimi | Mipiluna'da deterministik iyileştirme kataloğu tükendi (0 dosya → 1 dosya arası); Foundry'de veri dosyaları değişiyor | ❌ | Katalog sonrası gerçek özellik üretimi yok |
-| 14 | Android / tarayıcı doğrulaması | `browser_check.py` var; Android derleme doğrulanmadı | ⚠️ | APK/emülatör kanıtı yok |
+| 14 | Android / tarayıcı doğrulaması | Headless tarayıcı: Mipiluna **yüklendi** (219 862 bayt DOM, 6.4 sn, 0 problem, ekran görüntüsü `quality/evidence/browser/browser.png`) | ⚠️ | Android APK/emülatör kanıtı yok; etkileşim senaryosu (kart tıklama) yok |
 | 15 | İzleme, hata kaydı, yeniden deneme | Metrikler, canlı olaylar, sınırlı retry, daemon heartbeat; **merkezî `errors.jsonl` + `ahos-errors` CLI** eklendi (traceback, görev kimliği, boyut döndürme) | ⚠️ | Panel bu günlüğü henüz göstermiyor; diğer süreçler kendi hatalarını yazmıyor |
 
 **Durum dağılımı:** 5 ✅ · 7 ⚠️ · 3 ❌ — hiçbir alan "tamamlandı" ilan edilmedi.

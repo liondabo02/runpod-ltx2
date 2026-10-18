@@ -25,7 +25,9 @@ Durum kodları: `[ ]` açık · `[x]` kanıtlı tamam · `[~]` devam ediyor · `
       Kalan: konsol/daemon entegrasyonu ve diğer ajanın benimsemesi.
 - [ ] **Q99-008 Executor bütçe tavanı**: `AHOS_EXECUTOR=model` iken ücretli sağlayıcı varsayılan
       reddedilsin; yerel/ücretsiz profil serbest.
-- [ ] **Q99-009 Android doğrulaması**: APK üretimi/emülatör kanıtı yok; izole deneme + kayıt.
+- [~] **Q99-009 Android doğrulaması**: tarayıcı tarafı doğrulandı (Q99-014: Mipiluna hatasız
+      yüklendi, 219 862 bayt DOM, ekran görüntüsü). Android APK/emülatör kanıtı hâlâ yok.
+      Etkileşimsenaryosu (kart tıklama, oyun açılışı) CDP ile eklenecek.
 
 ## P2 — Orta
 
