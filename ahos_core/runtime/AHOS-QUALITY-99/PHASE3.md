@@ -44,7 +44,7 @@ Browser is real evidence. Android is not:
 Phase 2: **74.67 / 100**
 
 Phase 3 after real process-recovery proof and partial browser evidence:
-**84.00 / 100**
+**86.67 / 100**
 
 The 99% target remains blocked by:
 - intermittent Windows queue-lock contention
@@ -74,3 +74,32 @@ Observed:
 
 This promotes the Presidential Dashboard criterion to PROVEN for the isolated
 create/read critical flow.
+
+
+## Q99-018 — Real worker-engine E2E
+
+The actual `AutonomousCodingWorker` was executed against an isolated temporary
+Git repository with a deterministic zero-cost builder.
+
+Verified:
+- exactly one approved file changed
+- explicit real test command passed
+- binary owner-review patch was produced
+- approval evidence contains a SHA-256 patch hash
+- push_enabled=false
+- merge_enabled=false
+- worker stopped at WAITING_OWNER_APPROVAL
+- owner checkout remained clean
+
+The first harness version misread `tests_run` as return-code tuples. The
+production result contract stores executed command strings and blocks before
+owner evidence on a failed command. The harness was corrected and rerun.
+
+Targeted result:
+`1 passed in 1.92s`
+
+Full Windows quality suite after correction:
+`27 passed in 18.05s`
+
+This proves the worker engine's scoped edit/test/evidence/owner-gate path. It
+does not prove DeepSeek or any external model provider.
