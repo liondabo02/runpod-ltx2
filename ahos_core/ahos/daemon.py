@@ -31,6 +31,7 @@ from pathlib import Path
 from typing import Callable, Protocol
 
 from .delivery import DeliveryTracker, TreeSnapshot
+from .errors import ErrorLog, default_error_log
 
 HEARTBEAT_FILE = "daemon-state.json"
 PID_FILE = "daemon.pid"
@@ -220,6 +221,7 @@ class AutonomyDaemon:
         executor_mode: str = "auto",
         ram_probe: Callable[[], int] = available_ram_bytes,
         model_ram_floor: int = 2 * 1024**3,
+        error_log: ErrorLog | None = None,
     ) -> None:
         if interval_seconds < 1:
             raise ValueError("interval_seconds >= 1 olmalı")
@@ -240,6 +242,7 @@ class AutonomyDaemon:
         self.executor_mode = executor_mode
         self.ram_probe = ram_probe
         self.model_ram_floor = int(model_ram_floor)
+        self.error_log = error_log or default_error_log(self.runtime_dir)
         self.state = DaemonState(interval_seconds=self.interval_seconds)
         self._stop_requested = False
         self._last_recorded_mission = ""
@@ -470,6 +473,14 @@ class AutonomyDaemon:
                     self.state.status = "error"
                     self.state.last_reason = f"{type(exc).__name__}: {exc}"[:200]
                     self.state.last_tick_at = self.wall_clock()
+                    try:
+                        self.error_log.record(
+                            "daemon.tick",
+                            exc,
+                            context={"ticks": self.state.ticks},
+                        )
+                    except Exception:  # pragma: no cover - logging must not stop the loop
+                        pass
                     self.write_heartbeat()
                 if self._should_stop():
                     break

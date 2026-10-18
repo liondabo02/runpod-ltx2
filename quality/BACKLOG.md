@@ -29,7 +29,9 @@ Durum kodları: `[ ]` açık · `[x]` kanıtlı tamam · `[~]` devam ediyor · `
 
 ## P2 — Orta
 
-- [ ] **Q99-010 Merkezî hata günlüğü**: tüm süreçler için tek `errors.jsonl` + panelde son 20 hata.
+- [x] **Q99-010 Merkezî hata günlüğü**: `errors.py` + `ahos-errors` CLI + daemon entegrasyonu;
+      traceback/görev kimliği/boyut döndürme. Kanıt: `quality/evidence/Q99-010.md`.
+      Kalan: panelde gösterim (control_center commit edilince).
 - [ ] **Q99-011 Yük testi**: 100 sentetik görev (başka ajanın soak testi commit edilince birleştirilecek).
 - [ ] **Q99-012 Mipiluna yeni katalog**: kart/kabartma/erişilebilirlik dışında kalan gerçek çocuk
       deneyimi iyileştirmeleri (LLM olmadan yapılabilenler).

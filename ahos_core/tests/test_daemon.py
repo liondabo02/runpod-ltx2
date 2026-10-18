@@ -367,3 +367,19 @@ def test_forced_model_mode_sets_environment(tmp_path):
 
     assert read_heartbeat(tmp_path)["executor_mode"] == "model"
     assert os.environ["AHOS_EXECUTOR"] == "model"
+
+
+def test_daemon_records_tick_errors_in_the_shared_journal(tmp_path):
+    from ahos.errors import ErrorLog
+
+    scheduler = FakeScheduler(["idle"])
+    scheduler.raises = [RuntimeError("disk full")]
+    daemon = _daemon(tmp_path, scheduler, max_ticks=1)
+
+    daemon.run()
+
+    rows = ErrorLog(tmp_path / "errors.jsonl").recent(5)
+    assert len(rows) == 1
+    assert rows[0]["source"] == "daemon.tick"
+    assert rows[0]["kind"] == "RuntimeError"
+    assert "disk full" in rows[0]["message"]

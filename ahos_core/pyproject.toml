@@ -18,6 +18,7 @@ ahos-ceo = "ahos.holding_office:main"
 ahos-guardian = "ahos.github_guardian:main"
 ahos-daemon = "ahos.daemon:main"
 ahos-taskboard = "ahos.taskboard:main"
+ahos-errors = "ahos.errors:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
