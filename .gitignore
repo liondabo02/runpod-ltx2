@@ -18,3 +18,7 @@ runtime/
 **/runtime/
 *.patch
 .dsh-write-probe.txt
+# generated studio run outputs (regenerate with the pipeline, not source)
+control_plane_v2/episode.json
+control_plane_v2/rehearsal-report.json
+control_plane_v2/S01E002-story.json
