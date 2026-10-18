@@ -1,0 +1,183 @@
+from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+from types import SimpleNamespace
+
+from ahos.daemon import AutonomyDaemon, mission_evidence, read_heartbeat
+
+
+class FakeScheduler:
+    def __init__(self, statuses: list[str] | None = None) -> None:
+        self.statuses = list(statuses or [])
+        self.calls = 0
+        self.raises: list[Exception] = []
+        self.state = SimpleNamespace(
+            status="idle",
+            hour_key="2026-10-18T12",
+            missions_this_hour=0,
+            missions_total=0,
+            last_reason="",
+        )
+
+    def tick(self) -> str:
+        self.calls += 1
+        if self.raises:
+            raise self.raises.pop(0)
+        status = self.statuses.pop(0) if self.statuses else "idle"
+        self.state.status = status
+        return status
+
+
+def _daemon(tmp_path: Path, scheduler: FakeScheduler, **kwargs) -> AutonomyDaemon:
+    options = {"interval_seconds": 5.0, "sleep": lambda _seconds: None}
+    options.update(kwargs)
+    return AutonomyDaemon(scheduler, tmp_path, **options)
+
+
+def test_ticks_until_max_ticks_and_writes_heartbeat(tmp_path):
+    scheduler = FakeScheduler(["running", "idle", "quota_wait"])
+    daemon = _daemon(tmp_path, scheduler, max_ticks=3)
+
+    assert daemon.run() == 0
+
+    assert scheduler.calls == 3
+    heartbeat = read_heartbeat(tmp_path)
+    assert heartbeat["ticks"] == 3
+    assert heartbeat["status"] == "stopped"
+    assert heartbeat["scheduler"]["last_reason"] == ""
+    assert not (tmp_path / "daemon.pid").exists(), "temiz çıkışta pid dosyası silinmeli"
+
+
+def test_second_instance_is_refused(tmp_path):
+    (tmp_path / "daemon.pid").write_text(
+        json.dumps({"pid": os.getppid()}), encoding="utf-8"
+    )
+    scheduler = FakeScheduler()
+    daemon = _daemon(tmp_path, scheduler, max_ticks=5)
+
+    assert daemon.run() == 2
+    assert scheduler.calls == 0
+
+
+def test_stop_file_ends_loop_after_current_tick(tmp_path):
+    scheduler = FakeScheduler(["running", "running", "running"])
+
+    def sleeper(_seconds: float) -> None:
+        (tmp_path / "daemon.stop").write_text("stop", encoding="utf-8")
+
+    daemon = _daemon(tmp_path, scheduler, sleep=sleeper)
+
+    assert daemon.run() == 0
+    assert scheduler.calls == 1, "stop dosyası bir sonraki tick'i engellemeli"
+    assert read_heartbeat(tmp_path)["status"] == "stopped"
+
+
+def test_tick_error_does_not_kill_the_loop(tmp_path):
+    scheduler = FakeScheduler(["idle", "idle"])
+    scheduler.raises = [RuntimeError("görev patladı")]
+    daemon = _daemon(tmp_path, scheduler, max_ticks=2)
+
+    assert daemon.run() == 0
+    assert scheduler.calls == 3, "patlayan tick sayılmaz; iki başarılı tick için üç çağrı"
+    heartbeat = read_heartbeat(tmp_path)
+    assert heartbeat["ticks"] == 2
+    assert heartbeat["status"] == "stopped"
+
+
+def test_heartbeat_contains_scheduler_quota_snapshot(tmp_path):
+    scheduler = FakeScheduler(["running"])
+    scheduler.state.missions_this_hour = 2
+    scheduler.state.missions_total = 5
+    scheduler.state.last_reason = "kota doldu"
+    daemon = _daemon(tmp_path, scheduler, max_ticks=1)
+
+    daemon.run()
+
+    heartbeat = read_heartbeat(tmp_path)
+    assert heartbeat["scheduler"]["missions_this_hour"] == 2
+    assert heartbeat["scheduler"]["missions_total"] == 5
+    assert heartbeat["scheduler"]["last_reason"] == "kota doldu"
+
+
+def test_sleep_is_bounded_by_stop_request(tmp_path):
+    scheduler = FakeScheduler(["idle", "idle", "idle"])
+    daemon = _daemon(tmp_path, scheduler, max_ticks=3)
+    slices: list[float] = []
+
+    def sleeper(seconds: float) -> None:
+        slices.append(seconds)
+
+    daemon.sleep = sleeper
+    daemon.interval_seconds = 12.0
+    daemon.run()
+
+    assert slices, "tick'ler arasında uyuma olmalı"
+    assert all(0 < value <= 5.0 for value in slices), "uyuma sinyal için parçalanmalı"
+
+
+def _mission(mission_id: str, changed_files: int, status: str = "routed"):
+    step = SimpleNamespace(
+        worker_summary=f"varlık denetimi: 89 referans, 0 eksik; {changed_files} dosya değişti"
+    )
+    return SimpleNamespace(
+        status=status,
+        mission=SimpleNamespace(mission_id=mission_id, steps=(step,)),
+    )
+
+
+class EvidenceScheduler(FakeScheduler):
+    def __init__(self, results: list) -> None:
+        super().__init__()
+        self.results = list(results)
+        self.runner = SimpleNamespace(last_result=None)
+
+    def tick(self) -> str:
+        self.calls += 1
+        self.runner.last_result = self.results.pop(0)
+        return "running"
+
+
+def test_mission_evidence_reads_changed_file_count():
+    evidence = mission_evidence(_mission("m-1", 4))
+
+    assert evidence["mission_id"] == "m-1"
+    assert evidence["changed_files"] == 4
+    assert evidence["evidence_ok"] is True
+
+
+def test_three_report_only_missions_pause_the_loop(tmp_path):
+    scheduler = EvidenceScheduler([_mission(f"m-{i}", 0) for i in range(1, 4)])
+    daemon = _daemon(tmp_path, scheduler, max_ticks=3, no_evidence_limit=3)
+
+    daemon.run()
+
+    assert (tmp_path / "autonomy.pause").exists(), "kanıtsız görevler döngüyü durdurmalı"
+    heartbeat = read_heartbeat(tmp_path)
+    assert heartbeat["no_evidence_streak"] == 3
+    assert heartbeat["last_evidence"]["changed_files"] == 0
+    assert len((tmp_path / "daemon-missions.jsonl").read_text(encoding="utf-8").splitlines()) == 3
+
+
+def test_real_change_resets_no_evidence_streak(tmp_path):
+    scheduler = EvidenceScheduler(
+        [_mission("m-1", 0), _mission("m-2", 3), _mission("m-3", 0)]
+    )
+    daemon = _daemon(tmp_path, scheduler, max_ticks=3, no_evidence_limit=2)
+
+    daemon.run()
+
+    assert not (tmp_path / "autonomy.pause").exists()
+    assert read_heartbeat(tmp_path)["no_evidence_streak"] == 1
+
+
+def test_same_mission_is_not_counted_twice(tmp_path):
+    same = _mission("m-1", 0)
+    scheduler = EvidenceScheduler([same, same])
+    daemon = _daemon(tmp_path, scheduler, max_ticks=2, no_evidence_limit=2)
+
+    daemon.run()
+
+    assert not (tmp_path / "autonomy.pause").exists()
+    assert read_heartbeat(tmp_path)["no_evidence_streak"] == 1
