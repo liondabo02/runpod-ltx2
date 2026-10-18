@@ -6,13 +6,14 @@
 Status: OPEN / SHARED-FILE OWNERSHIP CONFLICT
 
 Observed during 100-task / four-synthetic-worker Windows stress:
-`CodingSupervisorStore._locked()` can receive `PermissionError` while creating
-`queue.json.lock`.
+`CodingSupervisorStore._locked()` has reproduced both `PermissionError` while
+creating `queue.json.lock` and `TimeoutError` under sustained four-worker
+contention.
 
 The shared implementation file `ahos_core/ahos/coding_supervisor.py` is also
 modified by active branch `improve/ahos-99-conflict-safety`. AHOS-QUALITY-99
-will not write that file concurrently. A later stress run passed, confirming
-intermittency rather than disproving the defect.
+will not write that file concurrently. Other stress runs passed, confirming intermittency rather than disproving the
+defect. The timeout reproduction also demonstrates possible lock starvation.
 
 Acceptance:
 - shared-file owner fixes lock acquisition portability
