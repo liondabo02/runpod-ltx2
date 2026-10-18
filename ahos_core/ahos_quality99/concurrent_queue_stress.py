@@ -18,6 +18,7 @@ class ConcurrentQueueReport:
     unique_claims: int
     duplicates: int
     lost: int
+    errors: tuple[str, ...]
     passed: bool
 
 
@@ -48,17 +49,22 @@ def run_concurrent_queue_stress(*, task_count: int = 100, workers: int = 4) -> C
             )
 
         claims: list[str] = []
+        errors: list[str] = []
         claims_lock = threading.Lock()
 
         def worker(worker_index: int) -> None:
             worker_id = f"synthetic-{worker_index}"
-            while True:
-                record = store.claim(worker_id, lease_seconds=30)
-                if record is None:
-                    return
+            try:
+                while True:
+                    record = store.claim(worker_id, lease_seconds=30)
+                    if record is None:
+                        return
+                    with claims_lock:
+                        claims.append(record.task_id)
+                    store.finish(record.task_id, worker_id, success=False, reason="synthetic")
+            except Exception as exc:
                 with claims_lock:
-                    claims.append(record.task_id)
-                store.finish(record.task_id, worker_id, success=False, reason="synthetic")
+                    errors.append(type(exc).__name__)
 
         with ThreadPoolExecutor(max_workers=workers) as pool:
             list(pool.map(worker, range(workers)))
@@ -74,6 +80,7 @@ def run_concurrent_queue_stress(*, task_count: int = 100, workers: int = 4) -> C
             and duplicates == 0
             and lost == 0
             and terminal == task_count
+            and not errors
         )
         return ConcurrentQueueReport(
             requested=task_count,
@@ -82,5 +89,6 @@ def run_concurrent_queue_stress(*, task_count: int = 100, workers: int = 4) -> C
             unique_claims=unique,
             duplicates=duplicates,
             lost=lost,
+            errors=tuple(sorted(errors)),
             passed=passed,
         )
