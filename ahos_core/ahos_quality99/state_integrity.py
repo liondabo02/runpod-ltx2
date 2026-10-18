@@ -37,10 +37,14 @@ def run_state_integrity_rehearsal() -> StateIntegrityReport:
         hash_tamper = _sha256(json_path) != expected_hash
 
         db_path = root / "state.sqlite3"
-        with sqlite3.connect(db_path) as db:
-            db.execute("CREATE TABLE items(id INTEGER PRIMARY KEY, value TEXT NOT NULL)")
-            db.execute("INSERT INTO items(value) VALUES ('ok')")
-            integrity = db.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
+        healthy_db = sqlite3.connect(db_path)
+        try:
+            healthy_db.execute("CREATE TABLE items(id INTEGER PRIMARY KEY, value TEXT NOT NULL)")
+            healthy_db.execute("INSERT INTO items(value) VALUES ('ok')")
+            healthy_db.commit()
+            integrity = healthy_db.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
+        finally:
+            healthy_db.close()
 
         raw = bytearray(db_path.read_bytes())
         if len(raw) < 200:
