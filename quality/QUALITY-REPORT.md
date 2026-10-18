@@ -48,8 +48,10 @@
 ## Açık engeller
 
 0. **Merge sırası:** `daemon.py` `ahos.autoschedule`'a bağlı; bu modül başka ajanın
-   commit edilmemiş dosyası. Branch tek başına çalışmaz — önce `autoschedule`
-   (ve `recovery`) commit edilmeli, sonra bu dal birleştirilmeli.
+   commit edilmemiş dosyası. **Simülasyon yapıldı (Q99-022):** diğer ajanın 16
+   dosyası kopyalanıp birleştirme denendi → **0 çakışma, 593 test geçti**,
+   birleşik ağaçta daemon çalıştı. Yani diğer ajan commit edince dal güvenle
+   birleştirilebilir (o an yeniden doğrulanmalı).
 
 1. **Gerçek özellik üretimi** — yerel model yolu ≥2 GiB boş RAM istiyor; makine
    1.7–1.9 GiB arasında. `auto` mod hazır: RAM açılınca kendiliğinden devreye girer.

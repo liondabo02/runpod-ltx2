@@ -57,6 +57,9 @@ Durum kodları: `[ ]` açık · `[x]` kanıtlı tamam · `[~]` devam ediyor · `
 - [x] **Q99-021 Daemon bekçisi**: `AHOS-Watchdog.ps1` ölü/bayat daemon'ı yeniden başlatıyor,
       `watchdog.log` + `errors.jsonl`'a yazıyor. İzole testte pid 14348 → 25940. Kanıt: `Q99-021.md`.
 
+- [x] **Q99-022 Birleştirme simülasyonu**: diğer ajanın 16 dosyası kopyalanıp merge edildi →
+      **0 çakışma**, birleşik ağaçta **593 test geçti**, daemon smoke OK. Kanıt: `Q99-022.md`.
+
 ## Kural
 
 Bir iş ancak şu üçü varsa `[x]` olur: (1) kod, (2) yeşil test, (3) `quality/evidence/` altında komut+çıktı.
