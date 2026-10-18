@@ -27,7 +27,7 @@ Tarih: 2026-10-18 · Ölçülen commit: `32bc435` (izole worktree) · Ölçüm y
 |---|---|---|---|---|
 | 1 | Mimari güvenilirlik | 508 test, 91 modül; tek süreçli panel + ayrı daemon | ⚠️ | İki panel farklı kod çalıştırıyor; panel/daemon durum birleşmiyor |
 | 2 | Ajanların gerçek iş yapması | 6 görevin 5'i dosya değiştirdi; hepsi deterministik işçi | ⚠️ | Görev metnine göre özellik üretimi yok (LLM yolu RAM'e takılı) |
-| 3 | Kalıcı görev kuyruğu | SQLite, 66 kayıt; lease/attempt alanları mevcut | ✅ | — (bloklu kayıtların 3'ü eski kod hatası) |
+| 3 | Kalıcı görev kuyruğu | SQLite, 66 kayıt; lease/attempt alanları; **100 sentetik görev: 1.97 sn, 100/100 tamam, kayıp/tekrar yok**, tekrar oynatma idempotent | ✅ | — (bloklu kayıtların 3'ü eski kod hatası) |
 | 4 | Çökme sonrası kurtarma | `recovery.py` **commit edilmemiş** (başka ajan); committed ağaçta yok | ❌ | Kurtarma yolu baseline'da yok; canlıda yalnız panel başlangıcında |
 | 5 | Eşzamanlı görev güvenliği | `test_project_lock_xproc`, `test_lock_observability`; OS kilidi + fail-closed `unknown-owner` | ✅ | — |
 | 6 | Dosya/veri bütünlüğü | SHA-256 kanıt, kabul kapısı hash pinleme, yeni filesystem delivery defteri | ✅ | — |
