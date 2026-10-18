@@ -98,7 +98,7 @@ def phase3_current() -> QualityMatrixReport:
             row.name,
             (
                 MeasurementState.PROVEN
-                if row.area_id == "recovery"
+                if row.area_id in {"recovery", "dashboard"}
                 else MeasurementState.PARTIAL
                 if row.area_id == "android_browser"
                 else row.state
@@ -107,13 +107,15 @@ def phase3_current() -> QualityMatrixReport:
             (
                 "two-process lease-expiry/reclaim E2E"
                 if row.area_id == "recovery"
+                else "real isolated task-create + dashboard render flow"
+                if row.area_id == "dashboard"
                 else "real Chrome Control Center render; Android device unavailable"
                 if row.area_id == "android_browser"
                 else row.evidence
             ),
             (
                 ""
-                if row.area_id == "recovery"
+                if row.area_id in {"recovery", "dashboard"}
                 else "Android device E2E still unavailable"
                 if row.area_id == "android_browser"
                 else row.gap
