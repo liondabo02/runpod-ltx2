@@ -85,6 +85,11 @@ class BoundedProcessRunner:
                 process.stdin.close()
             except (BrokenPipeError, OSError):
                 pass
+            finally:
+                # Python 3.12 on POSIX may try to flush a manually closed
+                # stdin again inside communicate(). Clearing the handle keeps
+                # the lifecycle portable across Windows/Linux runners.
+                process.stdin = None
 
         timed_out = False
         cancelled = False
