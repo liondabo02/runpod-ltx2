@@ -51,3 +51,22 @@
 
  const stickerPass=passRound;passRound=function(text,countRound=true){const fresh=countRound&&!roundSolved&&activityData[game].rounds===0;stickerPass(text,countRound);updateStickers();if(fresh){const note=document.createElement('p');note.className='stickerEarned';note.setAttribute('role','status');note.textContent='🌼 '+t('newSticker');$('stage').append(note)}};
 
+--- www/studio.js
++++ www/studio.js
+@@ -130,7 +130,7 @@
+   this.stamps=document.createElement('div');this.stamps.className='toolbar studioStamps22';
+
+   for(const id of STAMP_IDS){
+
+    const button=makeButton('',()=>{stampChoice=id;artTool='stamp';this.tools()});
+
+-   button.innerHTML=illustratedIcon(ART_ICONS[id]);button.dataset.stamp=id;
+
++   button.innerHTML=illustratedIcon(ART_ICONS[id]||ART_ICONS.explore);button.dataset.stamp=id;
+
+    button.setAttribute('aria-label',t(id));this.stamps.append(button);
+
+   }
+
+   $('stage').append(this.stamps);
+
