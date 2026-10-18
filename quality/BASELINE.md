@@ -36,7 +36,7 @@ Tarih: 2026-10-18 · Ölçülen commit: `32bc435` (izole worktree) · Ölçüm y
 | 9 | Güvenlik / yetkilendirme | Onay girişi, kill-switch, panel token; `local_ollama` güvenlik kapıları artık testli (9 test: sabit localhost/model, 2 GiB, kilit, indirme yok) | ✅ | — |
 | 10 | API / token maliyeti | Geçmişte 6 ücretli çağrı ($0.0111); `paid_calls` artık defterden okunuyor | ⚠️ | Otomatik $0 politikası yalnız autonomy'de; executor seviyesinde tavan yok |
 | 11 | Kalıcı hafıza | Dedupe günlüğü, audit zinciri, live-events, worker metrics | ✅ | — |
-| 12 | Başkanlık paneli | 8766 güncel; 8765 eski; daemon heartbeat panelde yok | ⚠️ | Panel tek kaynak değil; daemon durumu görünmüyor |
+| 12 | Başkanlık paneli | 8766 güncel; 8765 eski; daemon heartbeat panelde yok. **`ahos-status` CLI** tüm kayıtları tek ekranda birleştiriyor (Q99-019) | ⚠️ | Panel tek kaynak değil; CLI henüz panele gömülmedi |
 | 13 | Gerçek ürün üretimi | Mipiluna: **49/49 etkinlik tarayıcıda açıldı, 0 istisna** (Q99-016); "undefined" etiket kusurunun kök nedeni bulundu ve **izole kopyada** düzeltildi (6 → 0, Q99-017) | ❌ | Düzeltme üretime uygulanmadı (sahip onayı); yeni özellik üretimi hâlâ LLM'e bağlı |
 | 14 | Android / tarayıcı doğrulaması | Headless yükleme (Q99-014) **+ CDP etkileşim testi**: kart tıklaması `scene home→paint`, 0 istisna, ekran görüntüsü (Q99-015) | ⚠️ | Android APK/emülatör yok; 39 etkinliğin tamamı test edilmedi |
 | 15 | İzleme, hata kaydı, yeniden deneme | Metrikler, canlı olaylar, sınırlı retry, daemon heartbeat; **merkezî `errors.jsonl` + `ahos-errors` CLI** eklendi (traceback, görev kimliği, boyut döndürme) | ⚠️ | Panel bu günlüğü henüz göstermiyor; diğer süreçler kendi hatalarını yazmıyor |

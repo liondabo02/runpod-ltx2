@@ -48,6 +48,9 @@ Durum kodları: `[ ]` açık · `[x]` kanıtlı tamam · `[~]` devam ediyor · `
 - [x] **Q99-018 İşçi idempotentliği**: tüm deterministik yetenekler iki kez uygulandığında ikinci tur
       dosya değiştirmiyor; proje dışına yazmıyor. Kanıt: `quality/evidence/Q99-018.md`.
 
+- [x] **Q99-019 Durum raporu**: `ahos-status` CLI tüm kalıcı kayıtları (daemon, otonomi, kota,
+      teslimat, hata, pano) tek ekranda birleştiriyor. Kanıt: `quality/evidence/Q99-019.md`.
+
 ## Kural
 
 Bir iş ancak şu üçü varsa `[x]` olur: (1) kod, (2) yeşil test, (3) `quality/evidence/` altında komut+çıktı.
