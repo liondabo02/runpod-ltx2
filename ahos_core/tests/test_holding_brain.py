@@ -147,3 +147,80 @@ def test_revised_coding_contract_preserves_exhausted_v1_and_dedupes_v2(tmp_path)
     assert final['handoffs'][0]['status'] == 'retries_exhausted'
     assert len(store.all()) == 3
     assert store.get(old_id) == old_record
+
+
+
+def _write_baseline(root, *, coding=True, department=True, verified_at="2099-01-01T00:00:00Z"):
+    (root / "verification-baseline.json").write_text(json.dumps({
+        "schema": "ahos.verification-baseline.v1",
+        "verified_at": verified_at,
+        "commit_sha": "verified-commit",
+        "platform": "windows",
+        "proofs": {
+            "coding_reliability": coding,
+            "department_runtime": department,
+        },
+    }), encoding="utf-8")
+
+
+def test_verified_baseline_moves_old_coding_failure_to_history(tmp_path):
+    root, repo = tmp_path / "runtime", tmp_path / "repo"
+    root.mkdir()
+    fail_task(root, repo)
+    _write_baseline(root, coding=True, department=False)
+    result = HoldingBrain(root, repo).cycle()
+    assert not any(gap["kind"] == "coding_exhausted" for gap in result["gaps"])
+    assert result["historical_failures"]["coding_exhausted"]["count"] == 1
+    assert result["verification_baseline"]["status"] == "valid"
+    assert result["verification_baseline"]["proofs"] == ["coding_reliability"]
+    assert result["handoffs"] == []
+
+
+def test_baseline_without_proof_does_not_hide_coding_failure(tmp_path):
+    root, repo = tmp_path / "runtime", tmp_path / "repo"
+    root.mkdir()
+    fail_task(root, repo)
+    _write_baseline(root, coding=False, department=False)
+    result = HoldingBrain(root, repo).cycle()
+    assert result["gaps"][0]["kind"] == "coding_exhausted"
+    assert result["historical_failures"]["coding_exhausted"]["count"] == 0
+
+
+def test_failure_newer_than_baseline_remains_active(tmp_path):
+    root, repo = tmp_path / "runtime", tmp_path / "repo"
+    root.mkdir()
+    _write_baseline(root, coding=True, verified_at="2020-01-01T00:00:00Z")
+    fail_task(root, repo)
+    result = HoldingBrain(root, repo).cycle()
+    assert result["gaps"][0]["kind"] == "coding_exhausted"
+    assert result["historical_failures"]["coding_exhausted"]["count"] == 0
+
+
+def test_verified_department_failures_become_history_not_repair_handoffs(tmp_path):
+    from ahos.department_runtime import DepartmentRuntime, DepartmentTask
+    root, repo = tmp_path / "runtime", tmp_path / "repo"
+    root.mkdir()
+    runtime = DepartmentRuntime(root / "departments")
+    runtime.enqueue(DepartmentTask("DRAFT-OLD", "research", "old provider failure"))
+    with runtime._lock():
+        data = runtime._load()
+        data["tasks"]["DRAFT-OLD"].update(
+            status="retries_exhausted",
+            updated_at="2026-10-01T00:00:00+00:00",
+        )
+        runtime._save(data)
+    _write_baseline(root, coding=False, department=True)
+    result = HoldingBrain(root, repo).cycle()
+    assert not any(gap["kind"] == "department_exhausted" for gap in result["gaps"])
+    assert result["historical_failures"]["department_exhausted"]["count"] == 1
+    assert result["handoffs"] == []
+
+
+def test_corrupted_baseline_fails_closed_and_preserves_gap(tmp_path):
+    root, repo = tmp_path / "runtime", tmp_path / "repo"
+    root.mkdir()
+    fail_task(root, repo)
+    (root / "verification-baseline.json").write_text("{broken", encoding="utf-8")
+    result = HoldingBrain(root, repo).cycle()
+    assert result["verification_baseline"]["status"] == "invalid"
+    assert result["gaps"][0]["kind"] == "coding_exhausted"
