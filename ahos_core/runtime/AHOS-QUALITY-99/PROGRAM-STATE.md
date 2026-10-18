@@ -79,3 +79,20 @@ outcomes, zero duplicate records, zero lost records.
    tests.
 6. Build Android/browser proof contracts and local smoke harnesses; real device
    evidence remains pending until an execution surface/device is available.
+
+
+## Verification log — 2026-10-18
+
+### Local isolated worktree
+- Existing worktree `C:\\actions-runner\\_work\\ahos-quality-99` belongs to another workflow on `quality-99/ahos`; untouched.
+- Main checkout `feature/agent-control-plane` had active modified/untracked files; untouched.
+- AHOS-QUALITY-99 created separate worktree `C:\\actions-runner\\_work\\AHOS-QUALITY-99-chatgpt` on `program/AHOS-QUALITY-99`.
+- Initial sparse-checkout pattern write used the wrong worktree `.git` assumption; corrected with worktree-local `git sparse-checkout set`.
+
+### Test evidence
+- Incorrect root-level command: `python -m pytest -q ahos_core/tests/quality99` -> 9 collection errors because `ahos_core` was not the Python working directory. Recorded as operator-command error, not counted as pass.
+- Correct local command from `ahos_core`: `python -m pytest -q tests/quality99` -> **15 passed in 9.24s**.
+- GitHub AHOS Core CI on head `6612da78...`: Python 3.13 PASS, Python 3.14 PASS, Python 3.12 FAIL.
+- Python 3.12 failure: 3 bounded-process tests failed because `subprocess.communicate()` attempted to flush an already closed stdin on POSIX.
+- Fix: after manually closing child stdin, clear `process.stdin` before `communicate()`. No shared AHOS worker file changed.
+- Re-verification: pending new CI.
