@@ -49,12 +49,16 @@ def run_state_integrity_rehearsal() -> StateIntegrityReport:
         raw[0:16] = b"X" * 16
         broken = root / "broken.sqlite3"
         broken.write_bytes(raw)
+        broken_db = None
         try:
-            with sqlite3.connect(broken) as db:
-                db.execute("PRAGMA integrity_check").fetchone()
+            broken_db = sqlite3.connect(broken)
+            broken_db.execute("PRAGMA integrity_check").fetchone()
             sqlite_corrupt = False
         except sqlite3.DatabaseError:
             sqlite_corrupt = True
+        finally:
+            if broken_db is not None:
+                broken_db.close()
 
         return StateIntegrityReport(
             json_corruption_detected=json_corrupt,
