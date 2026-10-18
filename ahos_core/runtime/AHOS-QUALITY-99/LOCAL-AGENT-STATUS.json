@@ -1,0 +1,28 @@
+{
+  "schema": "ahos-quality99.local-agent-status.v1",
+  "observed_at": "2026-10-18T18:17:00Z",
+  "paid_api_budget_usd": 0,
+  "tools": {
+    "codex": {"installed": true, "version": "codex-cli 0.162.1"},
+    "opencode": {"installed": true, "version": "1.18.35"},
+    "claude_code": {"installed": true, "version": "2.1.292"},
+    "ollama": {
+      "installed": true,
+      "models": [
+        "qwen2.5-coder:1.5b",
+        "qwen2.5-coder:7b",
+        "nomic-embed-text:latest"
+      ]
+    },
+    "deepseek_cli": {"installed": false}
+  },
+  "local_reviewer_smoke": {
+    "model": "qwen2.5-coder:1.5b",
+    "expected": "AHOS_Q99_LOCAL_REVIEWER_OK",
+    "result": "timeout_no_output",
+    "bounded_wait_seconds_approx": 15,
+    "process_terminated": true,
+    "accepted": false
+  },
+  "conclusion": "Local/free tooling exists, but real Codex-DeepSeek separation is not proven and the tested Qwen local reviewer did not meet the bounded responsiveness criterion."
+}
