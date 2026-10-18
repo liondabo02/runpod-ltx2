@@ -178,6 +178,49 @@ class AutonomyRunner:
             return {}
         return payload
 
+    def spend_record(self) -> dict[str, float]:
+        """Real model spend from the executor ledger (never a hard-coded zero).
+
+        The autonomous loop promises zero paid calls; that promise is only
+        credible if it is measured. Reads ``model-spend.jsonl`` written by the
+        LLM executor and reports today's calls/cost plus the lifetime total.
+        """
+
+        path = self.runtime_dir / "model-spend.jsonl"
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        calls_today = 0
+        usd_today = 0.0
+        usd_total = 0.0
+        try:
+            lines = path.read_text(encoding="utf-8", errors="ignore").splitlines()
+        except OSError:
+            return {
+                "paid_calls": 0,
+                "paid_usd_today": 0.0,
+                "paid_usd_total": 0.0,
+            }
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                record = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            try:
+                usd = float(record.get("usd") or 0)
+            except (TypeError, ValueError):
+                usd = 0.0
+            usd_total += usd
+            if str(record.get("at", "")).startswith(today) and usd > 0:
+                calls_today += 1
+                usd_today += usd
+        return {
+            "paid_calls": calls_today,
+            "paid_usd_today": round(usd_today, 6),
+            "paid_usd_total": round(usd_total, 6),
+        }
+
     def status(self) -> dict[str, object]:
         state = self.state.to_dict()
         persisted = self.persisted_state()
@@ -200,7 +243,7 @@ class AutonomyRunner:
                 "max_usd": self.limits.max_usd,
                 "max_concurrent": self.limits.max_concurrent,
             },
-            "paid_calls": 0,
+            **self.spend_record(),
         }
 
     def executed_departments_today(self) -> set[str]:

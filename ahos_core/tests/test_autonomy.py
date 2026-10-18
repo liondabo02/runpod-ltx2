@@ -152,3 +152,40 @@ def test_state_persists_across_restart(tmp_path) -> None:
         reloaded._key("holding", "x")
     ) is False
     assert runner.dedupe_path.exists() or runner.state.executed == 0
+
+
+def test_spend_record_reports_real_ledger_numbers(tmp_path) -> None:
+    import json
+    from datetime import datetime, timezone
+
+    console = build_default_console(tmp_path)
+    runner = AutonomyRunner(console, tmp_path, limits=AutonomyLimits())
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    ledger = tmp_path / "model-spend.jsonl"
+    ledger.write_text(
+        "\n".join(
+            [
+                json.dumps({"at": f"{today}T10:00:00+00:00", "usd": 0.002}),
+                json.dumps({"at": f"{today}T11:00:00+00:00", "usd": 0.003}),
+                json.dumps({"at": "2020-01-01T10:00:00+00:00", "usd": 0.5}),
+                json.dumps({"at": f"{today}T12:00:00+00:00", "usd": 0}),
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    record = runner.spend_record()
+    status = runner.status()
+
+    assert record["paid_calls"] == 2
+    assert record["paid_usd_today"] == pytest.approx(0.005)
+    assert record["paid_usd_total"] == pytest.approx(0.505)
+    assert status["paid_calls"] == 2
+
+
+def test_spend_record_is_zero_without_a_ledger(tmp_path) -> None:
+    console = build_default_console(tmp_path)
+    runner = AutonomyRunner(console, tmp_path, limits=AutonomyLimits())
+
+    assert runner.status()["paid_calls"] == 0
+    assert runner.status()["paid_usd_total"] == 0.0
