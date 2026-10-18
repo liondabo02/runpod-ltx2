@@ -224,3 +224,35 @@ def test_corrupted_baseline_fails_closed_and_preserves_gap(tmp_path):
     result = HoldingBrain(root, repo).cycle()
     assert result["verification_baseline"]["status"] == "invalid"
     assert result["gaps"][0]["kind"] == "coding_exhausted"
+
+
+
+def test_platform_readiness_is_separate_from_department_acceptance(tmp_path):
+    root, repo = tmp_path / "runtime", tmp_path / "repo"
+    root.mkdir()
+    (root / "verification-baseline.json").write_text(json.dumps({
+        "schema": "ahos.verification-baseline.v1",
+        "verified_at": "2099-01-01T00:00:00Z",
+        "commit_sha": "platform-proof",
+        "platform": "windows",
+        "proofs": {
+            "holding_platform": True,
+            "coding_reliability": True,
+            "runtime_health": True,
+            "recovery": True,
+            "owner_gates": True,
+            "evidence": True,
+        },
+    }), encoding="utf-8")
+    result = HoldingBrain(root, repo).cycle()
+    assert result["gaps"] == []
+    assert result["platform_ready"] is True
+    assert result["department_acceptance_ready"] is False
+    assert result["production_ready"] is False
+    status = {item["id"]: item["verification"] for item in result["requirements"]}
+    assert status["HOLDING"] == "proven"
+    assert status["CODING"] == "proven"
+    assert status["RELIABILITY"] == "proven"
+    assert status["OWNER_GATES"] == "proven"
+    assert status["EVIDENCE"] == "proven"
+    assert status["STUDIO"] == "not_proven"
