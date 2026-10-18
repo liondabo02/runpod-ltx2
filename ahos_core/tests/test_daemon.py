@@ -323,3 +323,47 @@ def test_auto_executor_falls_back_when_model_is_not_configured(tmp_path, monkeyp
     heartbeat = read_heartbeat(tmp_path)
     assert heartbeat["executor_mode"] == "deterministic"
     assert heartbeat["executor_reason"] == "model yapılandırılmadı"
+
+
+def test_request_stop_ends_the_loop_gracefully(tmp_path):
+    scheduler = FakeScheduler(["idle", "idle", "idle"])
+    daemon = _daemon(tmp_path, scheduler)
+
+    def sleeper(_seconds: float) -> None:
+        daemon.request_stop()
+
+    daemon.sleep = sleeper
+    assert daemon.run() == 0
+    assert scheduler.calls == 1
+    assert read_heartbeat(tmp_path)["status"] == "stopped"
+
+
+def test_cli_status_reads_the_heartbeat(tmp_path, capsys):
+    from ahos.daemon import main
+
+    (tmp_path / "daemon-state.json").write_text(
+        json.dumps({"status": "running", "ticks": 7}), encoding="utf-8"
+    )
+
+    code = main(["--status", "--runtime-dir", str(tmp_path)])
+
+    assert code == 0
+    printed = capsys.readouterr().out
+    assert '"ticks": 7' in printed
+
+
+def test_cli_status_without_heartbeat(tmp_path, capsys):
+    from ahos.daemon import main
+
+    assert main(["--status", "--runtime-dir", str(tmp_path)]) == 0
+    assert "not-running" in capsys.readouterr().out
+
+
+def test_forced_model_mode_sets_environment(tmp_path):
+    scheduler = FakeScheduler()
+    daemon = _daemon(tmp_path, scheduler, max_ticks=1, executor_mode="model")
+
+    daemon.run()
+
+    assert read_heartbeat(tmp_path)["executor_mode"] == "model"
+    assert os.environ["AHOS_EXECUTOR"] == "model"

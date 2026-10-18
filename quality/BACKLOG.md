@@ -18,8 +18,8 @@ Durum kodları: `[ ]` açık · `[x]` kanıtlı tamam · `[~]` devam ediyor · `
 
 ## P1 — Yüksek
 
-- [ ] **Q99-006 Test kapsamı**: `pytest-cov` ile kritik modüllerin (autonomy, daemon, owner_console,
-      project_qa, delivery, autoschedule) satır kapsamı ölçülecek; <%70 olan modüller için test.
+- [~] **Q99-006 Test kapsamı**: ölçüldü — toplam %83; kritik modüller %83-88. `local_ollama` %0→%73,
+      `daemon` %74→%83. Kalan: `owner_cli` ve `source_context` 0%. Kanıt: `quality/evidence/Q99-006.md`.
 - [ ] **Q99-007 Codex–DeepSeek görev sözleşmesi**: görev kimliği, sahip, durum, test, kanıt alanlarıyla
       dosya tabanlı sözleşme; iki ajan aynı görevi almaz.
 - [ ] **Q99-008 Executor bütçe tavanı**: `AHOS_EXECUTOR=model` iken ücretli sağlayıcı varsayılan

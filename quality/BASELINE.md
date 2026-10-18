@@ -32,8 +32,8 @@ Tarih: 2026-10-18 · Ölçülen commit: `32bc435` (izole worktree) · Ölçüm y
 | 5 | Eşzamanlı görev güvenliği | `test_project_lock_xproc`, `test_lock_observability`; OS kilidi + fail-closed `unknown-owner` | ✅ | — |
 | 6 | Dosya/veri bütünlüğü | SHA-256 kanıt, kabul kapısı hash pinleme, yeni filesystem delivery defteri | ✅ | — |
 | 7 | Codex–DeepSeek görev paylaşımı | Yazılı sözleşme/yetki devri yok; yalnız dosya bazlı koordinasyon | ❌ | Ortak görev sözleşmesi (id, durum, sahip, test, kanıt) yok |
-| 8 | Otomatik test kapsamı | 508 test; kapsam (coverage) ölçümü yok | ⚠️ | `pytest-cov` yok; kritik modül kapsamı bilinmiyor |
-| 9 | Güvenlik / yetkilendirme | Onay girişi, kill-switch, sır taraması; panel token | ✅ | — |
+| 8 | Otomatik test kapsamı | `pytest-cov` ile ölçüldü: **ahos toplam %83** (10 525 satır). Kritik: autonomy %88, owner_console %88, delivery %88, project_qa %87, daemon %83, local_ollama %73. 0%: `owner_cli`, `source_context` | ⚠️ | Kapsam artık ölçülüyor; 0% modüller ve %70 altı kalanlar kapatılmalı |
+| 9 | Güvenlik / yetkilendirme | Onay girişi, kill-switch, panel token; `local_ollama` güvenlik kapıları artık testli (9 test: sabit localhost/model, 2 GiB, kilit, indirme yok) | ✅ | — |
 | 10 | API / token maliyeti | Geçmişte 6 ücretli çağrı ($0.0111); `paid_calls` artık defterden okunuyor | ⚠️ | Otomatik $0 politikası yalnız autonomy'de; executor seviyesinde tavan yok |
 | 11 | Kalıcı hafıza | Dedupe günlüğü, audit zinciri, live-events, worker metrics | ✅ | — |
 | 12 | Başkanlık paneli | 8766 güncel; 8765 eski; daemon heartbeat panelde yok | ⚠️ | Panel tek kaynak değil; daemon durumu görünmüyor |
