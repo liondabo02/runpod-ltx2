@@ -11,6 +11,12 @@ requires-python = ">=3.12,<3.15"
 [project.optional-dependencies]
 test = ["pytest>=9.1,<10"]
 
+[project.scripts]
+ahos-owner = "ahos.owner_cli:main"
+ahos-growth = "ahos.growth_loop:main"
+ahos-ceo = "ahos.holding_office:main"
+ahos-guardian = "ahos.github_guardian:main"
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["ahos*"]

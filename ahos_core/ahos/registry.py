@@ -19,10 +19,24 @@ class Department(str, Enum):
     ANALYTICS = "analytics"
 
 
+def department_key(department: object) -> str:
+    """Return the stable string id used for an AHOS department.
+
+    Built-in departments are ``Department`` enum members; departments created
+    later by the owner console are plain string ids. Both normalise to the same
+    lowercase identifier so a single book can describe them.
+    """
+
+    value = getattr(department, "value", None)
+    if isinstance(value, str):
+        return value
+    return str(department)
+
+
 @dataclass(frozen=True, slots=True)
 class Capability:
     name: str
-    department: Department
+    department: str
     description: str
     authority: AuthorityLevel
 
@@ -86,41 +100,70 @@ _DEFAULT_CAPABILITIES = (
 
 
 class DepartmentCapabilityRegistry:
-    """Immutable local descriptions of departmental capabilities."""
+    """Immutable local descriptions of departmental capabilities.
 
-    def __init__(self, capabilities: Iterable[Capability] | None = None) -> None:
+    The registry describes both the built-in ``Department`` members and any
+    additional departments created at runtime (plain string ids). It remains
+    immutable: extending it produces a new registry instead of mutating one.
+    """
+
+    def __init__(
+        self,
+        capabilities: Iterable[Capability] | None = None,
+        *,
+        extra_departments: Iterable[object] = (),
+    ) -> None:
         entries = _DEFAULT_CAPABILITIES if capabilities is None else tuple(capabilities)
+
+        order: dict[str, object] = {}
+        if capabilities is None:
+            # Preserve the historical contract: the default registry describes
+            # every built-in department, in declaration order.
+            for department in Department:
+                order[department_key(department)] = department
+
+        buckets: dict[str, list[Capability]] = {}
         by_name: dict[str, Capability] = {}
-        by_department: dict[Department, list[Capability]] = {
-            department: [] for department in Department
-        }
+
         for capability in entries:
             if capability.name in by_name:
                 raise ValueError(f"duplicate capability {capability.name!r}")
             by_name[capability.name] = capability
-            by_department[capability.department].append(capability)
+            key = department_key(capability.department)
+            buckets.setdefault(key, []).append(capability)
+            order.setdefault(key, capability.department)
+
+        for department in extra_departments:
+            key = department_key(department)
+            buckets.setdefault(key, [])
+            order.setdefault(key, department)
 
         self._capabilities = MappingProxyType(by_name)
+        self._order = MappingProxyType(order)
         self._capabilities_by_department = MappingProxyType(
             {
-                department: tuple(department_capabilities)
-                for department, department_capabilities in by_department.items()
+                order[key]: tuple(department_capabilities)
+                for key, department_capabilities in buckets.items()
             }
         )
 
     @property
-    def departments(self) -> tuple[Department, ...]:
-        return tuple(Department)
+    def departments(self) -> tuple[object, ...]:
+        return tuple(self._order.values())
 
     @property
-    def capabilities_by_department(self) -> Mapping[Department, tuple[Capability, ...]]:
+    def capabilities_by_department(self) -> Mapping[object, tuple[Capability, ...]]:
         return self._capabilities_by_department
 
     def get(self, name: str) -> Capability | None:
         return self._capabilities.get(name)
 
-    def capabilities_for(self, department: Department) -> tuple[Capability, ...]:
-        return self._capabilities_by_department[Department(department)]
+    def capabilities_for(self, department: object) -> tuple[Capability, ...]:
+        key = department_key(department)
+        known = self._order.get(key)
+        if known is None:
+            raise KeyError(f"unknown department: {key!r}")
+        return self._capabilities_by_department[known]
 
 
 @dataclass(frozen=True)

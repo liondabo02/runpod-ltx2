@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import time
+
 from dataclasses import dataclass
 from typing import Callable, Mapping, Protocol
 
@@ -100,8 +102,25 @@ class VirtualWorkerRuntime:
                 reason=f"no executor registered for worker {assignment.worker_id}",
             )
 
+        start = time.monotonic()
         worker_result = executor(item, assignment.worker_id)
+        duration_ms = (time.monotonic() - start) * 1000.0
         self.dispatcher.complete_worker_phase(item.task_id, assignment.worker_id)
+
+        try:
+            from . import worker_metrics
+
+            worker_metrics.record_here(
+                worker_id=assignment.worker_id,
+                mission_id=item.task_id,
+                step_id=item.task_id.rsplit(":", 1)[-1],
+                department=item.department,
+                success=bool(worker_result.success),
+                duration_ms=duration_ms,
+                reason=(worker_result.summary or "")[:120],
+            )
+        except Exception:  # pragma: no cover - metrics must never break work
+            pass
 
         if not worker_result.success:
             return WorkforceRunResult(
@@ -114,7 +133,7 @@ class VirtualWorkerRuntime:
                 reason="worker execution failed",
             )
 
-        qa_assignment = self.dispatcher.assign_qa(item.task_id)
+        qa_assignment = self.dispatcher.assign_qa(item.task_id, producer_id=assignment.worker_id)
         if qa_assignment.stage is WorkStage.BLOCKED or not qa_assignment.qa_worker_id:
             return WorkforceRunResult(
                 task_id=item.task_id,
@@ -144,7 +163,11 @@ class VirtualWorkerRuntime:
             worker_result=worker_result,
             qa_assignment=qa_assignment,
             qa_result=qa_result,
-            reason=final.reason,
+            reason=(
+                final.reason
+                if qa_result.passed
+                else f"QA failed: {qa_result.summary}"
+            ),
         )
 
 

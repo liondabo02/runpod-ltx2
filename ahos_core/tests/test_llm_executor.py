@@ -1,0 +1,357 @@
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+from ahos.llm_executor import (
+    ModelSettings,
+    build_prompt,
+    estimate_cost,
+    load_settings,
+    make_model_executor,
+    parse_model_response,
+)
+from ahos.workforce_execution import WorkItem
+
+
+def _settings(**overrides) -> ModelSettings:
+    base = dict(
+        base_url="https://example.invalid/v1",
+        api_key="test",
+        model="test-model",
+        max_usd_per_run=1.0,
+        max_files=3,
+        max_bytes=100_000,
+        browser_check=False,
+    )
+    base.update(overrides)
+    return ModelSettings(**base)
+
+
+def _project(tmp_path: Path) -> Path:
+    root = tmp_path / "proj"
+    (root / "www").mkdir(parents=True)
+    (root / "www" / "index.html").write_text(
+        '<html lang="tr"><head><title>x</title></head><body></body></html>',
+        encoding="utf-8",
+    )
+    (root / "www" / "game.js").write_text("const a=1;\n", encoding="utf-8")
+    return root
+
+
+def _item(step: str = "produce") -> WorkItem:
+    return WorkItem(
+        task_id=f"M-1:{step}",
+        title="Yeni bir oyun modu ekle",
+        department="oyun",
+        required_capabilities=frozenset({"javascript"}),
+    )
+
+
+def _transport(payload: dict):
+    def _call(system: str, user: str, settings: ModelSettings) -> str:
+        _call.last_prompt = user  # type: ignore[attr-defined]
+        return json.dumps(payload, ensure_ascii=False)
+
+    return _call
+
+
+def test_settings_require_base_url_key_and_model() -> None:
+    assert load_settings({}) is None
+
+    settings = load_settings(
+        {
+            "AHOS_LLM_BASE_URL": "https://api.example/v1",
+            "AHOS_LLM_API_KEY": "k",
+            "AHOS_LLM_MODEL": "m",
+            "AHOS_LLM_MAX_USD": "0.02",
+        }
+    )
+    assert settings is not None
+    assert settings.chat_url.endswith("/chat/completions")
+    assert settings.max_usd_per_run == 0.02
+
+
+def test_prompt_contains_task_and_inventory(tmp_path) -> None:
+    root = _project(tmp_path)
+
+    prompt = build_prompt(root, "Yeni mod ekle")
+
+    assert "Yeni mod ekle" in prompt
+    assert "www/game.js" in prompt
+    assert "Yanıt biçimi" in prompt
+
+
+def test_parse_response_applies_edits(tmp_path) -> None:
+    root = _project(tmp_path)
+    raw = json.dumps(
+        {
+            "summary": "mod eklendi",
+            "edits": [{"path": "www/game.js", "content": "const a=2;\n"}],
+            "risk": "low",
+        }
+    )
+
+    parsed = parse_model_response(raw, root)
+
+    assert parsed.summary == "mod eklendi"
+    assert parsed.edits[0].path == "www/game.js"
+
+
+def test_parse_rejects_path_traversal(tmp_path) -> None:
+    root = _project(tmp_path)
+    raw = json.dumps(
+        {"summary": "x", "edits": [{"path": "../evil.js", "content": "x"}]}
+    )
+
+    with pytest.raises(Exception):
+        parse_model_response(raw, root)
+
+
+def test_executor_applies_change_and_records_diff(tmp_path) -> None:
+    root = _project(tmp_path)
+    transport = _transport(
+        {
+            "summary": "oyun modu eklendi",
+            "edits": [{"path": "www/game.js", "content": "const a=2;\n"}],
+            "risk": "low",
+        }
+    )
+    executor = make_model_executor(root, tmp_path / "artifacts", settings=_settings(), transport=transport, verify_command=[sys.executable, "-c", 'from pathlib import Path; assert Path("www/game.js").read_text().strip() == \'const a=2;\''])
+
+    result = executor(_item(), "oyun-engineering-lead")
+
+    assert result.success is True
+    assert "1 dosya değişti" in result.summary
+    assert (root / "www" / "game.js").read_text(encoding="utf-8") == "const a=2;\n"
+    diff = tmp_path / "artifacts" / "M-1_produce" / "CHANGES.diff"
+    assert "const a=2" in diff.read_text(encoding="utf-8")
+
+
+def test_executor_blocks_changes_that_need_approval(tmp_path) -> None:
+    root = _project(tmp_path)
+    transport = _transport(
+        {
+            "summary": "büyük değişiklik",
+            "edits": [
+                {"path": "www/a.js", "content": "1"},
+                {"path": "www/b.js", "content": "2"},
+                {"path": "www/c.js", "content": "3"},
+            ],
+            "risk": "medium",
+        }
+    )
+    executor = make_model_executor(
+        root,
+        tmp_path / "artifacts",
+        settings=_settings(),
+        transport=transport,
+        require_approval_over_files=2,
+    )
+
+    result = executor(_item(), "oyun-engineering-lead")
+
+    assert result.success is False
+    assert "onay bekliyor" in result.summary
+    assert (tmp_path / "artifacts" / "M-1_produce" / "APPROVAL_REQUIRED.md").exists()
+    assert not (root / "www" / "a.js").exists()
+
+
+def test_executor_enforces_cost_ceiling(tmp_path) -> None:
+    root = _project(tmp_path)
+    transport = _transport(
+        {"summary": "x", "edits": [], "risk": "low"}
+    )
+    executor = make_model_executor(
+        root,
+        tmp_path / "artifacts",
+        settings=_settings(max_usd_per_run=0.000001),
+        transport=transport,
+    )
+
+    result = executor(_item(), "w")
+
+    assert result.success is False
+    assert "maliyet tavanı" in result.summary
+
+
+def test_executor_reports_failed_verification(tmp_path) -> None:
+    root = _project(tmp_path)
+    (root / "tools").mkdir()
+    (root / "tools" / "check_offline.py").write_text(
+        "import sys\nprint('eksik varlik var')\nsys.exit(1)\n",
+        encoding="utf-8",
+    )
+    transport = _transport(
+        {
+            "summary": "x",
+            "edits": [{"path": "www/game.js", "content": "const a=3;\n"}],
+            "risk": "low",
+        }
+    )
+    executor = make_model_executor(root, tmp_path / "artifacts", settings=_settings(), transport=transport)
+
+    result = executor(_item(), "w")
+
+    assert result.success is False
+    assert "geri alındı" in result.summary
+    log = (tmp_path / "artifacts" / "M-1_produce" / "VERIFY.log").read_text(encoding="utf-8")
+    assert "eksik varlik" in log
+
+
+def test_spend_is_written_to_ledger(tmp_path) -> None:
+    root = _project(tmp_path)
+    transport = _transport({"summary": "x", "edits": [], "risk": "low"})
+    ledger = tmp_path / "spend.jsonl"
+    executor = make_model_executor(
+        root,
+        tmp_path / "artifacts",
+        settings=_settings(),
+        transport=transport,
+        spend_ledger=ledger,
+    )
+
+    executor(_item(), "w")
+
+    record = json.loads(ledger.read_text(encoding="utf-8").splitlines()[0])
+    assert record["model"] == "test-model"
+    assert record["usd"] >= 0
+
+
+def test_cost_estimate_scales_with_length() -> None:
+    settings = _settings()
+    short = estimate_cost("a" * 100, "b" * 100, settings)
+    long = estimate_cost("a" * 10_000, "b" * 10_000, settings)
+
+    assert long > short
+
+def test_syntax_error_in_model_output_fails_verification(tmp_path) -> None:
+    root = _project(tmp_path)
+    transport = _transport(
+        {
+            "summary": "bozuk js",
+            "edits": [{"path": "www/game.js", "content": "const a = ;\n"}],
+            "risk": "low",
+        }
+    )
+    executor = make_model_executor(root, tmp_path / "artifacts", settings=_settings(), transport=transport)
+
+    result = executor(_item(), "w")
+
+    node_available = __import__("shutil").which("node") is not None
+    if node_available:
+        assert result.success is False
+        assert "geri alındı" in result.summary
+    else:
+        assert result.success is False  # Missing tools cannot establish acceptance
+
+def test_patch_edit_applies_minimal_change(tmp_path) -> None:
+    root = _project(tmp_path)
+    transport = _transport(
+        {
+            "summary": "tek satır yama",
+            "edits": [
+                {"path": "www/game.js", "find": "const a=1;", "replace": "const a=42;"}
+            ],
+            "risk": "low",
+        }
+    )
+    executor = make_model_executor(root, tmp_path / "artifacts", settings=_settings(), transport=transport, verify_command=[sys.executable, "-c", 'from pathlib import Path; assert Path("www/game.js").read_text().strip() == \'const a=42;\''])
+
+    result = executor(_item(), "w")
+
+    assert result.success is True
+    assert (root / "www" / "game.js").read_text(encoding="utf-8") == "const a=42;\n"
+
+
+def test_patch_with_ambiguous_target_is_rejected(tmp_path) -> None:
+    root = _project(tmp_path)
+    (root / "www" / "dup.js").write_text("x();\nx();\n", encoding="utf-8")
+    transport = _transport(
+        {
+            "summary": "belirsiz yama",
+            "edits": [{"path": "www/dup.js", "find": "x();", "replace": "y();"}],
+            "risk": "low",
+        }
+    )
+    executor = make_model_executor(root, tmp_path / "artifacts", settings=_settings(), transport=transport)
+
+    result = executor(_item(), "w")
+
+    assert result.success is False
+    assert "uygulanamadı" in result.summary
+    assert (root / "www" / "dup.js").read_text(encoding="utf-8") == "x();\nx();\n"
+
+
+def test_shrinking_rewrite_requires_approval(tmp_path) -> None:
+    root = _project(tmp_path)
+    big = "const value = 1;\n" * 100
+    (root / "www" / "big.js").write_text(big, encoding="utf-8")
+    transport = _transport(
+        {
+            "summary": "dosyayı küçült",
+            "edits": [{"path": "www/big.js", "content": "const value = 1;\n"}],
+            "risk": "low",
+        }
+    )
+    executor = make_model_executor(root, tmp_path / "artifacts", settings=_settings(), transport=transport)
+
+    result = executor(_item(), "w")
+
+    assert result.success is False
+    assert "onay bekliyor" in result.summary
+    assert "küçültüyor" in result.summary
+    assert (root / "www" / "big.js").read_text(encoding="utf-8") == big
+
+def test_patch_that_comments_out_code_requires_approval(tmp_path) -> None:
+    root = _project(tmp_path)
+    (root / "www" / "safety.js").write_text(
+        "let a=false, b=false, c=false;\n", encoding="utf-8"
+    )
+    transport = _transport(
+        {
+            "summary": "sessizce devre dışı bırak",
+            "edits": [
+                {
+                    "path": "www/safety.js",
+                    "find": "let a=false, b=false, c=false;",
+                    "replace": "let a=false; // b=false, c=false;",
+                }
+            ],
+            "risk": "low",
+        }
+    )
+    executor = make_model_executor(root, tmp_path / "artifacts", settings=_settings(), transport=transport)
+
+    result = executor(_item(), "w")
+
+    assert result.success is False
+    assert "yorum satırına" in result.summary
+    assert (root / "www" / "safety.js").read_text(encoding="utf-8") == "let a=false, b=false, c=false;\n"
+
+def test_failed_verification_rolls_back_files(tmp_path) -> None:
+    root = _project(tmp_path)
+    original = (root / "www" / "game.js").read_text(encoding="utf-8")
+    (root / "tools").mkdir()
+    (root / "tools" / "check_offline.py").write_text(
+        "import sys\nsys.exit(1)\n", encoding="utf-8"
+    )
+    transport = _transport(
+        {
+            "summary": "bozuk",
+            "edits": [{"path": "www/game.js", "content": "const broken = ;\n"}],
+            "risk": "low",
+        }
+    )
+    executor = make_model_executor(
+        root, tmp_path / "artifacts", settings=_settings(), transport=transport
+    )
+
+    result = executor(_item(), "w")
+
+    assert result.success is False
+    assert "geri alındı" in result.summary
+    assert (root / "www" / "game.js").read_text(encoding="utf-8") == original

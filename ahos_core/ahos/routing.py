@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from .governance import AuthorityLevel
-from .registry import Department, DepartmentCapabilityRegistry
+from .registry import Department, DepartmentCapabilityRegistry, department_key
 
 
 _AUTHORITY_RANK = {
@@ -129,7 +129,7 @@ class DepartmentRoutingEngine:
             )
             matched_names = tuple(item[0] for item in matches)
             explanation = (
-                f"{department.value}: score={score}; "
+                f"{department_key(department)}: score={score}; "
                 f"matched={', '.join(matched_names)}; "
                 f"authority<={request.max_authority.value}"
             )
@@ -143,7 +143,9 @@ class DepartmentRoutingEngine:
                 )
             )
 
-        candidates.sort(key=lambda item: (-item.score, str(item.department.value)))
+        candidates.sort(
+            key=lambda item: (-item.score, department_key(item.department))
+        )
 
         return RoutingDecision(
             mission_id=request.mission_id,

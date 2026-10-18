@@ -132,10 +132,10 @@ class VirtualWorkforceDispatcher:
             reason="worker phase complete; QA required",
         )
 
-    def assign_qa(self, task_id: str) -> QaDecision:
-        matches = self.registry.matching_workers({"qa"}, department="quality")
+    def assign_qa(self, task_id: str, *, producer_id: str | None = None) -> QaDecision:
+        matches = [w for w in self.registry.matching_workers({"qa"}, department="quality") if w.profile.worker_id != producer_id]
         if not matches:
-            matches = self.registry.matching_workers({"verification"}, department="quality")
+            matches = [w for w in self.registry.matching_workers({"verification"}, department="quality") if w.profile.worker_id != producer_id]
 
         if not matches:
             return QaDecision(
