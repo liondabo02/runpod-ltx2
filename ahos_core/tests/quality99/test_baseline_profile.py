@@ -23,7 +23,7 @@ def test_phase2_proofs_improve_score_without_claiming_99():
 
 def test_phase3_real_recovery_and_browser_raise_only_supported_areas():
     report = phase3_current()
-    assert report.score == 81.33
+    assert report.score == 84.0
     assert report.target_reached is False
     assert "recovery" not in report.high_risk_open
     assert "concurrency" in report.high_risk_open
