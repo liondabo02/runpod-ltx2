@@ -1,0 +1,11 @@
+{
+  "schema": "ahos-quality99.resource-status.v1",
+  "captured_at": "2026-10-18T18:36:00Z",
+  "total_visible_memory_kb": 16070388,
+  "free_physical_memory_kb": 515208,
+  "free_ratio": 0.032059,
+  "state": "critical",
+  "heavy_local_model_work_allowed": false,
+  "reason": "free_memory_below_critical_threshold",
+  "notes": "Other Codex/Claude/Python/Node workflows are active. AHOS-QUALITY-99 does not terminate or preempt them."
+}
