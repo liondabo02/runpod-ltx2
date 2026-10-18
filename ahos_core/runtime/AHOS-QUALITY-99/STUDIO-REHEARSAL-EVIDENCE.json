@@ -1,0 +1,37 @@
+{
+  "schema": "ahos-quality99.studio-rehearsal-evidence.v1",
+  "episode_id": "S01E001",
+  "status": "awaiting_owner_story_approval",
+  "release_ready": false,
+  "story_hash": "24e5ef1aa7da472cabc5f8b24d2d803d63e0d2bf314dd8ac358fc650e550c487",
+  "production_graph_hash": "4ca3a679a0653a63ef18b2a3505227a69901eda6b663b669f6f4f11995d2260c",
+  "counts": {
+    "canonical_characters": 16,
+    "scenes": 5,
+    "shots": 10,
+    "render_jobs": 10,
+    "dialogue_lines": 43,
+    "localization_units": 301,
+    "languages": 7
+  },
+  "checks": {
+    "canonical_cast": true,
+    "episode_duration_480_seconds": true,
+    "traceable_render_plan": true,
+    "seven_language_plan": true,
+    "story_owner_approval": false,
+    "external_execution_disabled": true
+  },
+  "blockers": [
+    "owner_story_approval",
+    "approved_character_reference_images",
+    "approved_canonical_voice_enrollments",
+    "human_reviewed_localizations",
+    "owner_approved_paid_render_and_tts_execution",
+    "rendered_media_and_final_quality_evidence"
+  ],
+  "evidence_hash": "f92cd3ab400e7d429fbe595df17fc6b8f4da31f9072cc65ffe13b9f8cad674ab",
+  "external_calls_made": false,
+  "local_rehearsal_path": "C:\\actions-runner\\_work\\AHOS-QUALITY-99-chatgpt\\runtime-q99-studio-rehearsal",
+  "captured_at": "2026-10-18T18:57:00Z"
+}
