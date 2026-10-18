@@ -98,14 +98,16 @@ def phase3_current() -> QualityMatrixReport:
             row.name,
             (
                 MeasurementState.PROVEN
-                if row.area_id in {"recovery", "dashboard"}
+                if row.area_id in {"recovery", "dashboard", "worker_execution"}
                 else MeasurementState.PARTIAL
                 if row.area_id == "android_browser"
                 else row.state
             ),
             row.weight,
             (
-                "two-process lease-expiry/reclaim E2E"
+                "real AutonomousCodingWorker edit/test/patch/owner-gate E2E"
+                if row.area_id == "worker_execution"
+                else "two-process lease-expiry/reclaim E2E"
                 if row.area_id == "recovery"
                 else "real isolated task-create + dashboard render flow"
                 if row.area_id == "dashboard"
@@ -115,7 +117,7 @@ def phase3_current() -> QualityMatrixReport:
             ),
             (
                 ""
-                if row.area_id in {"recovery", "dashboard"}
+                if row.area_id in {"recovery", "dashboard", "worker_execution"}
                 else "Android device E2E still unavailable"
                 if row.area_id == "android_browser"
                 else row.gap
