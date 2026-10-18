@@ -1,0 +1,50 @@
+{
+  "schema": "ahos-quality99.blockers.v1",
+  "target_score": 99.0,
+  "measured_score": 86.67,
+  "blockers": [
+    {
+      "id": "Q99-BLOCKER-001",
+      "severity": "high",
+      "name": "windows_coding_queue_lock_race",
+      "status": "blocked_by_shared_file_ownership",
+      "owner_path": "ahos_core/ahos/coding_supervisor.py",
+      "acceptance": "repeated Windows stress with zero PermissionError/TimeoutError, zero duplicate claims and zero lost records"
+    },
+    {
+      "id": "Q99-BLOCKER-002",
+      "severity": "high",
+      "name": "real_product_acceptance",
+      "status": "external_real_world_evidence_required",
+      "acceptance": "real studio release candidate passes render, audio, identity, language, QA and final owner-release gates"
+    },
+    {
+      "id": "Q99-BLOCKER-003",
+      "severity": "high",
+      "name": "android_device_e2e",
+      "status": "waiting_for_device",
+      "acceptance": "ADB-visible Android device passes install, launch and critical smoke with hash-bound evidence"
+    },
+    {
+      "id": "Q99-BLOCKER-004",
+      "severity": "high",
+      "name": "real_codex_deepseek_separation",
+      "status": "deepseek_zero_cost_route_unavailable",
+      "acceptance": "real builder/reviewer execution with distinct Codex and DeepSeek routes and verified zero paid cost"
+    },
+    {
+      "id": "Q99-BLOCKER-005",
+      "severity": "medium",
+      "name": "performance_metrics_not_integrated_into_assignment",
+      "status": "parallel_worktree_owns_metrics_work",
+      "acceptance": "real recorded performance changes a deterministic worker assignment without bypassing capability, budget or owner gates"
+    },
+    {
+      "id": "Q99-BLOCKER-006",
+      "severity": "medium",
+      "name": "production_authorization_not_requested",
+      "status": "owner_gate",
+      "acceptance": "remains intentionally blocked unless owner explicitly authorizes production deployment"
+    }
+  ]
+}
