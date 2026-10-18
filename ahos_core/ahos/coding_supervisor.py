@@ -27,6 +27,31 @@ def _iso(value: datetime | None = None) -> str:
     return (value or _now()).isoformat()
 
 
+def _normalized_scope(value: str) -> tuple[str, ...]:
+    """Normalize an allowed path into comparable POSIX path parts."""
+    normalized = value.replace("\\\\", "/").strip("/")
+    return tuple(part for part in normalized.split("/") if part and part != ".")
+
+
+def _scopes_overlap(left: Sequence[str], right: Sequence[str]) -> bool:
+    """Return True when two approved path scopes can touch the same files."""
+    for lhs in left:
+        lparts = _normalized_scope(lhs)
+        for rhs in right:
+            rparts = _normalized_scope(rhs)
+            if not lparts or not rparts:
+                return True
+            common = min(len(lparts), len(rparts))
+            if lparts[:common] == rparts[:common]:
+                return True
+    return False
+
+
+def _tasks_conflict(left: "CodingTaskRecord", right: "CodingTaskRecord") -> bool:
+    if Path(left.repository).resolve() != Path(right.repository).resolve():
+        return False
+    return _scopes_overlap(left.allowed_paths, right.allowed_paths)
+
 def _run_builder_command(
     command: Sequence[str], prompt: str, worktree: Path
 ) -> subprocess.CompletedProcess[str]:
@@ -319,7 +344,22 @@ class CodingSupervisorStore:
             if not candidates:
                 self._save(records)
                 return None
-            selected = sorted(candidates, key=lambda r: (-r.priority, r.created_at, r.task_id))[0]
+            active = [
+                r for r in records.values()
+                if r.status in {
+                    CodingTaskStatus.RUNNING,
+                    CodingTaskStatus.WAITING_OWNER_APPROVAL,
+                }
+            ]
+            ordered = sorted(candidates, key=lambda r: (-r.priority, r.created_at, r.task_id))
+            selected = next(
+                (candidate for candidate in ordered
+                 if not any(_tasks_conflict(candidate, other) for other in active)),
+                None,
+            )
+            if selected is None:
+                self._save(records)
+                return None
             claimed = replace(selected, status=CodingTaskStatus.RUNNING,
                               attempts=selected.attempts + 1, claimed_by=worker_id,
                               lease_expires_at=_iso(now + timedelta(seconds=lease_seconds)),
@@ -477,10 +517,28 @@ class CodingSupervisorStore:
             for r in records
             if r.status is CodingTaskStatus.WAITING_OWNER_APPROVAL
         ]
+        active = [
+            r for r in records
+            if r.status in {
+                CodingTaskStatus.RUNNING,
+                CodingTaskStatus.WAITING_OWNER_APPROVAL,
+            }
+        ]
+        scope_conflicts = []
+        for queued in (r for r in records if r.status is CodingTaskStatus.QUEUED):
+            conflicts = [other.task_id for other in active if _tasks_conflict(queued, other)]
+            if conflicts:
+                scope_conflicts.append({
+                    "task_id": queued.task_id,
+                    "blocked_by": sorted(conflicts),
+                    "repository": queued.repository,
+                    "allowed_paths": list(queued.allowed_paths),
+                })
         return {
             "counts": counts,
             "blockers": blockers,
             "waiting_approvals": waiting,
+            "scope_conflicts": scope_conflicts,
             "tasks": [
                 {"task_id": r.task_id, "title": r.title, "status": r.status.value,
                  "attempts": r.attempts, "max_attempts": r.max_attempts,
