@@ -37,8 +37,9 @@
       "id": "Q99-BLOCKER-004",
       "severity": "high",
       "name": "real_codex_deepseek_separation",
-      "status": "deepseek_zero_cost_route_unavailable",
-      "acceptance": "real builder/reviewer execution with distinct Codex and DeepSeek routes and verified zero paid cost"
+      "status": "waiting_for_verified_zero_cost_deepseek_route",
+      "acceptance": "real builder/reviewer execution with distinct Codex and DeepSeek routes and verified zero paid cost",
+      "detail": "Live OpenRouter /api/v1/models listed only positively priced DeepSeek routes; web-documented :free ID was absent."
     },
     {
       "id": "Q99-BLOCKER-005",
