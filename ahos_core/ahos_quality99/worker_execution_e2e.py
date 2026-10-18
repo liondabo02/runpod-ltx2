@@ -74,7 +74,12 @@ def run_worker_execution_e2e() -> WorkerExecutionE2EReport:
         ).run(item, "q99-worker")
 
         changed = result.changed_files == ("src/feature.py",)
-        tested = bool(result.tests_run) and all(code == 0 for _, code in result.tests_run)
+        # CodingWorkerResult.tests_run records commands only; a failed
+        # command returns BLOCKED before owner evidence is produced.
+        tested = (
+            result.status is CodingWorkerStatus.WAITING_OWNER_APPROVAL
+            and len(result.tests_run) == len(item.test_commands)
+        )
         patch_ok = bool(
             result.patch_file
             and result.patch_file.is_file()
