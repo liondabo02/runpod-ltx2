@@ -71,6 +71,10 @@ switch ($Action) {
             Write-State
             break
         }
+        # NOT: surec uzun omurludur; bu betigi bir ajan aracindan cagirmak
+        # aracin cikisini bekletir. Baslatma icin Startup .cmd (logon) veya
+        # ayri bir terminal kullanin; arac oturumunda arka plan isi + iptal
+        # kalibi guvenlidir (surec iptalden sonra yasar).
         $args = @(
             '-m', 'ahos.daemon',
             '--runtime-dir', $RuntimeDir,
@@ -83,9 +87,9 @@ switch ($Action) {
             -WindowStyle Hidden -PassThru `
             -RedirectStandardOutput $OutLog -RedirectStandardError $ErrLog
         Start-Sleep -Seconds 3
-        $alive = Get-Process -Id $proc.Id -ErrorAction SilentlyContinue
-        if ($alive) {
-            "baslatildi: pid $($proc.Id)"
+        $started = Get-DaemonProcess
+        if ($started) {
+            "baslatildi: pid $($started.Id)"
         } else {
             "BASLATILAMADI; hata kaydi: $ErrLog"
         }

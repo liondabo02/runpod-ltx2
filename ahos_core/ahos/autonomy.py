@@ -162,9 +162,37 @@ class AutonomyRunner:
         self._log_action("stop", "acil durdurma")
         self._persist()
 
+    def persisted_state(self) -> dict[str, object]:
+        """Read the durable autonomy record (the daemon writes it).
+
+        A freshly constructed runner (panel, CLI) must show the real numbers
+        instead of a zeroed in-memory state, otherwise the dashboard lies
+        about whether the holding is actually working.
+        """
+
+        try:
+            payload = json.loads(self.state_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return {}
+        if not isinstance(payload, dict):
+            return {}
+        return payload
+
     def status(self) -> dict[str, object]:
+        state = self.state.to_dict()
+        persisted = self.persisted_state()
+        for key in (
+            "executed",
+            "failed",
+            "skipped_duplicate",
+            "last_mission",
+            "last_reason",
+            "updated_at",
+        ):
+            if key in persisted and persisted[key] not in (None, ""):
+                state[key] = persisted[key]
         return {
-            **self.state.to_dict(),
+            **state,
             "limits": {
                 "max_missions": self.limits.max_missions,
                 "max_seconds_per_mission": self.limits.max_seconds_per_mission,
@@ -203,7 +231,9 @@ class AutonomyRunner:
 
         # Yalnızca gerçek yürütücüsü olan (projesi bağlı) departmanlar otonom
         # çalışabilir; aksi hâlde işçi "yürütücü bağlı değil" diyerek durur.
-        excluded = set(self.executed_departments_today())
+        # Burada yalnızca *kullanılamayan* departmanlar dışlanır; bir departman
+        # bugün bir görev yaptı diye günün geri kalanında tamamen kapatılmaz.
+        excluded: set[str] = set()
         directive = None
         for _ in range(5):
             candidate = self.office.next_directive(exclude_departments=excluded)
@@ -219,9 +249,18 @@ class AutonomyRunner:
                 break
             excluded.add(candidate.department_id)
 
+        # CEO aynı işi tekrar öneriyorsa döngü kilitlenmesin: sıradaki
+        # yapılmamış proje işine geç.
+        if directive is not None and self.already_executed(
+            self._key(directive.department_id, directive.objective)
+        ):
+            directive = None
+
         if directive is None:
             # CEO yeni iş üretmediyse, projesi bağlı bir departman için
-            # döngüden sıradaki gerçek teslimat görevini seç (uydurma değil).
+            # döngüden sıradaki *henüz yapılmamış* gerçek teslimat görevini
+            # seç. Aynı gün içinde dört farklı iş sırayla ilerleyebilir;
+            # tamamlanan iş tekrar seçilmez (gün bazlı dedupe anahtarı).
             from .growth_loop import GROWTH_CYCLE
             from .holding_office import Directive
 
@@ -236,18 +275,25 @@ class AutonomyRunner:
                 )
                 if not projects:
                     continue
-                index = status.missions % len(GROWTH_CYCLE)
                 spec = self.console.book.get(department_id)
                 if spec is None:
                     continue
-                directive = Directive(
-                    kind="project_advance",
-                    department_id=department_id,
-                    objective=f"{spec.name}: {GROWTH_CYCLE[index]}",
-                    reason="proje döngüsü",
-                    priority=1,
-                )
-                break
+                for offset in range(len(GROWTH_CYCLE)):
+                    index = (status.missions + offset) % len(GROWTH_CYCLE)
+                    objective = f"{spec.name}: {GROWTH_CYCLE[index]}"
+                    if not self.already_executed(
+                        self._key(department_id, objective)
+                    ):
+                        directive = Directive(
+                            kind="project_advance",
+                            department_id=department_id,
+                            objective=objective,
+                            reason="proje döngüsü",
+                            priority=1,
+                        )
+                        break
+                if directive is not None:
+                    break
 
         if directive is None:
             # Kuyruk boş: executor veya model çağrısı yapılmaz.

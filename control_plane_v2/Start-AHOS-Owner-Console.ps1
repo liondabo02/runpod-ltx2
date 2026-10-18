@@ -46,7 +46,11 @@ Write-Host "  state  : $RuntimeDir"
 Write-Host "  URL    : http://${HostAddress}:$Port"
 Write-Host ""
 
-& $Python -m ahos.control_center `
-    --runtime-dir $RuntimeDir `
-    --host $HostAddress `
-    --port $Port
+# Panel uzun omurlu bir surectir; bu betik onu on planda calistirmaz.
+# AHOS-Service.ps1 sureci cagirandan bagimsiz (WMI) baslatir, saglik
+# kontrolu yapar ve hemen doner; boylece komutu cagiran terminal asili kalmaz.
+$Service = Join-Path $PSScriptRoot "AHOS-Service.ps1"
+if (-not (Test-Path $Service)) {
+    throw "AHOS-Service.ps1 not found under $PSScriptRoot"
+}
+& $Service -Action start -Port $Port -RuntimeDir $RuntimeDir

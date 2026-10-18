@@ -26,7 +26,7 @@ def test_empty_queue_makes_no_call(runner: AutonomyRunner) -> None:
     assert runner.status()["paid_calls"] == 0
 
 
-def test_dedupe_and_limits_prevent_reruns(tmp_path) -> None:
+def test_dedupe_prevents_reruns_but_allows_next_task(tmp_path) -> None:
     from ahos.projects import ProjectLink
 
     console = build_default_console(tmp_path)
@@ -42,13 +42,52 @@ def test_dedupe_and_limits_prevent_reruns(tmp_path) -> None:
     first = runner.run_once()
     assert first is not None and first.status == "routed"
     assert runner.state.executed == 1
+    first_id = first.mission.mission_id
 
+    # Aynı görev tekrar çalışmaz; sıradaki yapılmamış gerçek iş seçilir.
     second = runner.run_once()
+    assert second is not None and second.status == "routed"
+    assert second.mission.mission_id != first_id
+    assert runner.state.executed == 2
 
-    # Uygun farklı proje kalmadıysa sistem bekler; aynı görev tekrar çalışmaz.
-    assert second is None
-    assert runner.state.executed == 1
-    assert runner.state.status in {"idle", "stopped"}
+    keys = [
+        line
+        for line in runner.dedupe_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    assert len(keys) == 2
+    assert runner.state.skipped_duplicate >= 0
+
+
+def test_cycle_exhaustion_makes_runner_idle(tmp_path) -> None:
+    from ahos.growth_loop import GROWTH_CYCLE
+    from ahos.projects import ProjectLink
+
+    console = build_default_console(tmp_path)
+    console.handle("oyun geliştirme departmanı kur")
+    project = tmp_path / "proj"
+    (project / "www").mkdir(parents=True)
+    (project / "www" / "index.html").write_text("<html></html>", encoding="utf-8")
+    console.projects.link(
+        ProjectLink(project_id="p", name="P", path=project, department_id="oyun")
+    )
+    runner = AutonomyRunner(console, tmp_path, limits=AutonomyLimits(max_missions=10))
+
+    seen: set[str] = set()
+    for _ in range(12):
+        result = runner.run_once()
+        if result is None:
+            break
+        assert result.status == "routed"
+        assert result.mission.mission_id not in seen, "aynı görev iki kez çalıştı"
+        seen.add(result.mission.mission_id)
+    else:  # pragma: no cover - döngü tükenmezse test patlar
+        pytest.fail("döngü tükenmedi")
+
+    # Bütün uygun işler yapıldı: aynı gün yeni iş uydurulmaz.
+    assert len(seen) >= len(GROWTH_CYCLE)
+    assert runner.run_once() is None
+    assert runner.state.status in {"idle", "blocked", "stopped"}
 
 
 def test_pause_and_resume(runner: AutonomyRunner) -> None:

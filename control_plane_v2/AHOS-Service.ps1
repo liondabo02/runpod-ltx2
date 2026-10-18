@@ -52,6 +52,9 @@ switch ($Action) {
         }
         $env:PYTHONPATH = $AhosRoot
         $env:PYTHONIOENCODING = "utf-8"
+        # NOT: panel uzun omurludur. Bu komutu bir ajan aracindan cagirmak,
+        # arac surecin cikisini bekledigi icin asili kalabilir; kalici kurulum
+        # icin Startup .cmd (AHOS-Panel-8766.cmd) kullanilir.
         $proc = Start-Process -FilePath $Python `
             -ArgumentList @("-m", "ahos.control_center", "--runtime-dir", $RuntimeDir,
                             "--host", "127.0.0.1", "--port", $Port) `
@@ -71,7 +74,7 @@ switch ($Action) {
     }
     "stop" {
         $listenerPid = Get-ListenerPid
-        if (-not $pid) { "dinleyen surec yok: port=$Port" | Write-Output; exit 0 }
+        if (-not $listenerPid) { "dinleyen surec yok: port=$Port" | Write-Output; exit 0 }
         if ($Port -eq 8765) { "8765 korunuyor: kapatma reddedildi" | Write-Output; exit 3 }
         Stop-Process -Id $listenerPid -Force
         Remove-Item $PidFile -ErrorAction SilentlyContinue
