@@ -85,6 +85,9 @@ function Invoke-Check {
     return $true
 }
 
+# Dot-source ise yalniz fonksiyonlari tanimla (birim testi icin).
+if ($MyInvocation.InvocationName -eq '.') { return }
+
 if ($Once) {
     Invoke-Check | Out-Null
     exit 0
