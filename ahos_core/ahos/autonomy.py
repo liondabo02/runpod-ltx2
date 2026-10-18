@@ -204,10 +204,15 @@ class AutonomyRunner:
         }
 
     def executed_departments_today(self) -> set[str]:
+        return set(self.mission_counts_today())
+
+    def mission_counts_today(self) -> dict[str, int]:
+        """Today's delivered missions per department (for fair rotation)."""
+
         day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        result: set[str] = set()
+        counts: dict[str, int] = {}
         if not self.dedupe_path.exists():
-            return result
+            return counts
         for line in self.dedupe_path.read_text(encoding="utf-8", errors="ignore").splitlines():
             if not line.strip():
                 continue
@@ -218,8 +223,9 @@ class AutonomyRunner:
             if str(entry.get("at", "")).startswith(day):
                 department = entry.get("department")
                 if department:
-                    result.add(str(department))
-        return result
+                    key = str(department)
+                    counts[key] = counts.get(key, 0) + 1
+        return counts
 
     def run_once(self) -> ConsoleResult | None:
         blocked = self._blocked_reason()
@@ -249,10 +255,12 @@ class AutonomyRunner:
                 break
             excluded.add(candidate.department_id)
 
-        # CEO aynı işi tekrar öneriyorsa döngü kilitlenmesin: sıradaki
-        # yapılmamış proje işine geç.
-        if directive is not None and self.already_executed(
-            self._key(directive.department_id, directive.objective)
+        # CEO aynı işi tekrar öneriyorsa ya da o departman bugün zaten çalıştıysa
+        # döngü kilitlenmesin: sıradaki en az çalışan proje departmanına geç.
+        counts = self.mission_counts_today()
+        if directive is not None and (
+            self.already_executed(self._key(directive.department_id, directive.objective))
+            or counts.get(directive.department_id, 0) >= 1
         ):
             directive = None
 
@@ -261,10 +269,16 @@ class AutonomyRunner:
             # döngüden sıradaki *henüz yapılmamış* gerçek teslimat görevini
             # seç. Aynı gün içinde dört farklı iş sırayla ilerleyebilir;
             # tamamlanan iş tekrar seçilmez (gün bazlı dedupe anahtarı).
+            # Sıralama bugünkü görev sayısına göre: en az çalışan önce gelir,
+            # böylece tek proje (ör. ai-platform) bütün döngüyü tekeline almaz.
             from .growth_loop import GROWTH_CYCLE
             from .holding_office import Directive
 
-            for status in self.office.assessment():
+            candidates = sorted(
+                self.office.assessment(),
+                key=lambda status: (counts.get(status.department_id, 0), status.department_id),
+            )
+            for status in candidates:
                 department_id = status.department_id
                 if department_id in excluded or status.department_id == "holding":
                     continue

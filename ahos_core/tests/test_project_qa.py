@@ -98,3 +98,24 @@ def test_producer_cannot_verify_own_work(tmp_path) -> None:
 
     assert decision.passed is False
     assert "kendi" in decision.summary
+
+
+def test_acceptance_gate_with_turkish_output_is_not_encoding_blocked(
+    tmp_path, monkeypatch
+) -> None:
+    """Windows cp1252 konsolunda Türkçe basan kapı betiği çökmemeli."""
+
+    root = _web_project(tmp_path)
+    (root / "tools").mkdir()
+    (root / "tools" / "check_offline.py").write_text(
+        "print('başarılı ş ç ğ')\n", encoding="utf-8"
+    )
+    evidence = _evidence(tmp_path)
+    monkeypatch.delenv("PYTHONIOENCODING", raising=False)
+    monkeypatch.delenv("PYTHONUTF8", raising=False)
+
+    decision = make_project_qa(root, evidence)(
+        _item("produce"), _result("produce", evidence), "qa-01"
+    )
+
+    assert decision.passed is True, decision.summary

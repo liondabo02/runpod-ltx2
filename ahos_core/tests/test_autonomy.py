@@ -99,6 +99,33 @@ def test_pause_and_resume(runner: AutonomyRunner) -> None:
     assert runner.status()["status"] == "idle"
 
 
+def test_rotation_favours_least_worked_project_department(tmp_path) -> None:
+    from ahos.projects import ProjectLink
+
+    console = build_default_console(tmp_path)
+    console.handle("oyun geliştirme departmanı kur")
+    console.handle("yapay zeka platformu kur")
+    for department, name in (("oyun", "game"), ("ai-platform", "ai")):
+        root = tmp_path / name
+        (root / "www").mkdir(parents=True)
+        (root / "www" / "index.html").write_text("<html></html>", encoding="utf-8")
+        console.projects.link(
+            ProjectLink(project_id=name, name=name, path=root, department_id=department)
+        )
+    runner = AutonomyRunner(console, tmp_path, limits=AutonomyLimits(max_missions=10))
+
+    departments: list[str] = []
+    for _ in range(2):
+        result = runner.run_once()
+        assert result is not None
+        departments.append(result.department_id)
+
+    # İlk görevden sonra aynı departman tekrar seçilmez; sıra diğerine geçer.
+    assert departments[0] != departments[1]
+    counts = runner.mission_counts_today()
+    assert all(count == 1 for count in counts.values())
+
+
 def test_kill_switch_stops_execution(runner: AutonomyRunner) -> None:
     runner.stop()
     assert runner.run_once() is None

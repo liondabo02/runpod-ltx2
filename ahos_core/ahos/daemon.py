@@ -111,6 +111,47 @@ class SchedulerLike(Protocol):
     def tick(self) -> str: ...
 
 
+def available_ram_bytes() -> int:
+    """Best-effort free physical memory (0 when unknown)."""
+
+    try:
+        import ctypes
+
+        class Memory(ctypes.Structure):
+            _fields_ = [
+                ("length", ctypes.c_ulong),
+                ("load", ctypes.c_ulong),
+            ] + [
+                (name, ctypes.c_ulonglong)
+                for name in (
+                    "total",
+                    "available",
+                    "total_page",
+                    "available_page",
+                    "total_virtual",
+                    "available_virtual",
+                    "extended",
+                )
+            ]
+
+        state = Memory()
+        state.length = ctypes.sizeof(state)
+        if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(state)):
+            return 0
+        return int(state.available)
+    except Exception:  # pragma: no cover - non-Windows / restricted
+        return 0
+
+
+def _model_is_configured() -> bool:
+    try:
+        from .llm_executor import load_settings
+
+        return load_settings() is not None
+    except Exception:  # pragma: no cover - defensive
+        return False
+
+
 @dataclass
 class DaemonState:
     """Persisted heartbeat; every field is derived from real observations."""
@@ -125,6 +166,8 @@ class DaemonState:
     scheduler: dict[str, object] = field(default_factory=dict)
     last_evidence: dict[str, object] = field(default_factory=dict)
     no_evidence_streak: int = 0
+    executor_mode: str = ""
+    executor_reason: str = ""
     schema: int = SCHEMA_VERSION
 
     def to_dict(self) -> dict[str, object]:
@@ -140,6 +183,8 @@ class DaemonState:
             "scheduler": dict(self.scheduler),
             "last_evidence": dict(self.last_evidence),
             "no_evidence_streak": self.no_evidence_streak,
+            "executor_mode": self.executor_mode,
+            "executor_reason": self.executor_reason,
         }
 
 
@@ -172,6 +217,9 @@ class AutonomyDaemon:
         max_ticks: int | None = None,
         no_evidence_limit: int = 3,
         tracker: DeliveryTracker | None = None,
+        executor_mode: str = "auto",
+        ram_probe: Callable[[], int] = available_ram_bytes,
+        model_ram_floor: int = 2 * 1024**3,
     ) -> None:
         if interval_seconds < 1:
             raise ValueError("interval_seconds >= 1 olmalı")
@@ -179,6 +227,8 @@ class AutonomyDaemon:
             raise ValueError("max_ticks >= 1 olmalı")
         if no_evidence_limit < 0:
             raise ValueError("no_evidence_limit >= 0 olmalı")
+        if executor_mode not in {"auto", "deterministic", "model"}:
+            raise ValueError("executor_mode auto|deterministic|model olmalı")
         self.scheduler = scheduler
         self.runtime_dir = Path(runtime_dir)
         self.interval_seconds = float(interval_seconds)
@@ -187,6 +237,9 @@ class AutonomyDaemon:
         self.max_ticks = max_ticks
         self.no_evidence_limit = no_evidence_limit
         self.tracker = tracker
+        self.executor_mode = executor_mode
+        self.ram_probe = ram_probe
+        self.model_ram_floor = int(model_ram_floor)
         self.state = DaemonState(interval_seconds=self.interval_seconds)
         self._stop_requested = False
         self._last_recorded_mission = ""
@@ -326,9 +379,47 @@ class AutonomyDaemon:
                 "döngü durduruldu (autonomy.pause)"
             )
 
+    def _apply_executor_mode(self) -> None:
+        """Pick the worker implementation for the next mission, honestly.
+
+        The local model path refuses to run below 2 GiB of free RAM, so a
+        holding that always asked for the model would fail every mission on a
+        busy machine. In ``auto`` mode the daemon uses the model only when it
+        is configured *and* there is memory for it; otherwise it keeps the
+        deterministic project worker, which still edits files and passes QA.
+        """
+
+        if self.executor_mode == "deterministic":
+            os.environ["AHOS_EXECUTOR"] = "deterministic"
+            self.state.executor_mode = "deterministic"
+            self.state.executor_reason = "sabit (deterministik) mod"
+            return
+        if self.executor_mode == "model":
+            os.environ["AHOS_EXECUTOR"] = "model"
+            self.state.executor_mode = "model"
+            self.state.executor_reason = "elle model modu"
+            return
+        free = int(self.ram_probe() or 0)
+        floor = self.model_ram_floor
+        if _model_is_configured() and free >= floor:
+            os.environ["AHOS_EXECUTOR"] = "model"
+            self.state.executor_mode = "model"
+            self.state.executor_reason = (
+                f"RAM {free // (1024 ** 2)} MiB >= {floor // (1024 ** 2)} MiB"
+            )
+        else:
+            os.environ["AHOS_EXECUTOR"] = "deterministic"
+            self.state.executor_mode = "deterministic"
+            self.state.executor_reason = (
+                "model yapılandırılmadı"
+                if not _model_is_configured()
+                else f"RAM {free // (1024 ** 2)} MiB < {floor // (1024 ** 2)} MiB"
+            )
+
     def tick_once(self) -> str:
         """Run exactly one scheduler tick and persist the result."""
 
+        self._apply_executor_mode()
         before: dict[str, TreeSnapshot] | None = None
         if self.tracker is not None and self.tracker.roots():
             before = self.tracker.snapshot()
@@ -449,6 +540,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--missions-per-hour", type=int, default=2)
     parser.add_argument("--missions-total", type=int, default=6)
     parser.add_argument(
+        "--executor-mode",
+        choices=("auto", "deterministic", "model"),
+        default="auto",
+        help="auto: RAM ve yapılandırma uygunsa yerel model, değilse deterministik işçi",
+    )
+    parser.add_argument(
         "--no-evidence-limit",
         type=int,
         default=3,
@@ -481,6 +578,7 @@ def main(argv: list[str] | None = None) -> int:
         missions_total=args.missions_total,
         no_evidence_limit=args.no_evidence_limit,
     )
+    daemon.executor_mode = args.executor_mode
     daemon.max_ticks = args.max_ticks
 
     def _handle(signum, _frame):

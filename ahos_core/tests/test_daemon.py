@@ -261,3 +261,65 @@ def test_no_filesystem_change_counts_as_no_evidence(tmp_path):
     assert record["changed_files"] == 0
     assert record["evidence_ok"] is False
     assert (tmp_path / "rt" / "autonomy.pause").exists()
+
+
+def test_auto_executor_prefers_model_when_ram_allows(tmp_path, monkeypatch):
+    import ahos.daemon as daemon_module
+
+    monkeypatch.setattr(daemon_module, "_model_is_configured", lambda: True)
+    scheduler = FakeScheduler()
+    daemon = _daemon(
+        tmp_path,
+        scheduler,
+        max_ticks=1,
+        executor_mode="auto",
+        ram_probe=lambda: 3 * 1024**3,
+    )
+
+    daemon.run()
+
+    heartbeat = read_heartbeat(tmp_path)
+    assert heartbeat["executor_mode"] == "model"
+    assert "RAM" in heartbeat["executor_reason"]
+    assert os.environ["AHOS_EXECUTOR"] == "model"
+
+
+def test_auto_executor_falls_back_when_ram_is_low(tmp_path, monkeypatch):
+    import ahos.daemon as daemon_module
+
+    monkeypatch.setattr(daemon_module, "_model_is_configured", lambda: True)
+    scheduler = FakeScheduler()
+    daemon = _daemon(
+        tmp_path,
+        scheduler,
+        max_ticks=1,
+        executor_mode="auto",
+        ram_probe=lambda: 700 * 1024**2,
+    )
+
+    daemon.run()
+
+    heartbeat = read_heartbeat(tmp_path)
+    assert heartbeat["executor_mode"] == "deterministic"
+    assert "<" in heartbeat["executor_reason"]
+    assert os.environ["AHOS_EXECUTOR"] == "deterministic"
+
+
+def test_auto_executor_falls_back_when_model_is_not_configured(tmp_path, monkeypatch):
+    import ahos.daemon as daemon_module
+
+    monkeypatch.setattr(daemon_module, "_model_is_configured", lambda: False)
+    scheduler = FakeScheduler()
+    daemon = _daemon(
+        tmp_path,
+        scheduler,
+        max_ticks=1,
+        executor_mode="auto",
+        ram_probe=lambda: 8 * 1024**3,
+    )
+
+    daemon.run()
+
+    heartbeat = read_heartbeat(tmp_path)
+    assert heartbeat["executor_mode"] == "deterministic"
+    assert heartbeat["executor_reason"] == "model yapılandırılmadı"
