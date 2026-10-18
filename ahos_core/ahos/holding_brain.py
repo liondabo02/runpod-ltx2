@@ -18,6 +18,7 @@ from .coding_supervisor import CodingSupervisorStore, CodingTaskStatus
 from .coding_worker import CodingBacklogItem
 from .department_context import PROJECT_CONTEXT
 from .department_runtime import DepartmentRuntime
+from .verification_baseline import load_verification_baseline
 
 _REPAIRS = {
     'coding_exhausted': {
@@ -51,16 +52,29 @@ class HoldingBrain:
 
     def observe(self) -> dict:
         gaps = []
+        baseline, baseline_status = load_verification_baseline(
+            self.root / 'verification-baseline.json'
+        )
         coding = CodingSupervisorStore(self.root / 'coding-supervisor-queue.json').all()
         # Do not allow the brain's own failed repair tasks to spawn further repairs.
-        exhausted = [t for t in coding if t.status is CodingTaskStatus.RETRIES_EXHAUSTED
-                     and not t.task_id.startswith('BRAIN-')]
+        exhausted_all = [t for t in coding if t.status is CodingTaskStatus.RETRIES_EXHAUSTED
+                         and not t.task_id.startswith('BRAIN-')]
+        exhausted = [
+            t for t in exhausted_all
+            if baseline is None or not baseline.covers('coding_reliability', t.updated_at)
+        ]
+        historical_coding = [t for t in exhausted_all if t not in exhausted]
         if exhausted:
             gaps.append({'kind': 'coding_exhausted', 'count': len(exhausted),
                          'source_ids': [_safe_id(t.task_id) for t in exhausted],
                          'recommendation': 'Kodlama işçisinin gerçek başarısızlık nedenini inceleyip testli düzeltme hazırlayın.'})
         department = DepartmentRuntime(self.root / 'departments').snapshot()
-        failed = [t for t in department['tasks'] if t['status'] == 'retries_exhausted']
+        failed_all = [t for t in department['tasks'] if t['status'] == 'retries_exhausted']
+        failed = [
+            t for t in failed_all
+            if baseline is None or not baseline.covers('department_runtime', str(t.get('updated_at') or ''))
+        ]
+        historical_department = [t for t in failed_all if t not in failed]
         if failed:
             gaps.append({'kind': 'department_exhausted', 'count': len(failed),
                          'source_ids': [_safe_id(t['task_id']) for t in failed],
@@ -72,9 +86,28 @@ class HoldingBrain:
                          'recommendation': 'Sağlayıcının bekleme süresini koruyun; ücretli modele kendiliğinden geçmeyin.'})
         requirements = [{'id': key, 'requirement': text, 'verification': 'not_audited'}
                         for key, text in PROJECT_CONTEXT['requirements'].items()]
+        baseline_summary = {
+            'status': baseline_status,
+            'commit_sha': baseline.commit_sha if baseline is not None else '',
+            'platform': baseline.platform if baseline is not None else '',
+            'verified_at': baseline.verified_at.isoformat() if baseline is not None else None,
+            'proofs': sorted(baseline.proofs) if baseline is not None else [],
+        }
+        historical_failures = {
+            'coding_exhausted': {
+                'count': len(historical_coding),
+                'source_ids': [_safe_id(t.task_id) for t in historical_coding],
+            },
+            'department_exhausted': {
+                'count': len(historical_department),
+                'source_ids': [_safe_id(t['task_id']) for t in historical_department],
+            },
+        }
         return {'schema': 'ahos.holding-brain.v1',
                 'observed_at': datetime.now(timezone.utc).isoformat(),
                 'gaps': gaps, 'requirements': requirements,
+                'verification_baseline': baseline_summary,
+                'historical_failures': historical_failures,
                 'capability': 'local_evidence_coordination',
                 'production_ready': False,
                 'readiness_note': 'Queue observation is not a complete holding or film acceptance audit.',
