@@ -45,6 +45,9 @@ Durum kodları: `[ ]` açık · `[x]` kanıtlı tamam · `[~]` devam ediyor · `
       (undefined 6 → 0). Üretime uygulanmadı; sahip onayı bekliyor.
       Kanıt: `quality/evidence/Q99-017.md`, `quality/patches/mipiluna-undefined-icons.patch`.
 
+- [x] **Q99-018 İşçi idempotentliği**: tüm deterministik yetenekler iki kez uygulandığında ikinci tur
+      dosya değiştirmiyor; proje dışına yazmıyor. Kanıt: `quality/evidence/Q99-018.md`.
+
 ## Kural
 
 Bir iş ancak şu üçü varsa `[x]` olur: (1) kod, (2) yeşil test, (3) `quality/evidence/` altında komut+çıktı.
