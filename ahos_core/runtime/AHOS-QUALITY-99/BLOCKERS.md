@@ -48,3 +48,18 @@ execution has not been proven with zero paid cost.
 - production deployment remains owner-gated and unproven
 - unattended long-duration runtime evidence remains incomplete
 - browser Control Center render is proven, but Android remains open
+
+
+### Q99-BLOCKER-005 — Local zero-cost reviewer responsiveness
+Status: OPEN
+
+Installed evidence:
+- Codex CLI 0.162.1
+- OpenCode 1.18.35
+- Claude Code 2.1.292
+- Ollama qwen2.5-coder:1.5b and 7b
+- no local DeepSeek CLI/model discovered
+
+A bounded qwen2.5-coder:1.5b smoke produced no output within approximately
+15 seconds and the quality-program process was terminated. The tool is not
+promoted to a healthy reviewer route from this result.
