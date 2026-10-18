@@ -1,8 +1,16 @@
 {
   "schema": "ahos-quality99.blockers.v1",
-  "target_score": 99.0,
+  "target_score": 99,
   "measured_score": 86.67,
   "blockers": [
+    {
+      "id": "Q99-BLOCKER-000",
+      "severity": "high",
+      "name": "unbounded_builder_subprocess",
+      "status": "blocked_by_shared_file_ownership",
+      "owner_path": "ahos_core/ahos/coding_supervisor.py",
+      "acceptance": "real coding supervisor uses bounded timeout/cancellation/process-tree termination; stuck builder test passes without orphan process"
+    },
     {
       "id": "Q99-BLOCKER-001",
       "severity": "high",
