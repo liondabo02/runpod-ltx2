@@ -1,0 +1,22 @@
+{
+  "schema": "ahos-quality99.dashboard-flow-evidence.v1",
+  "task_id": "CODE-20261018-181507-0a4665",
+  "task_title": "Q99 isolated dashboard critical-flow smoke",
+  "task_status": "queued",
+  "task_attempts": 0,
+  "post_status": 200,
+  "html_has_task_id": true,
+  "html_has_task_title": true,
+  "browser": "Google Chrome",
+  "browser_version": "155.0.8059.39",
+  "url": "http://127.0.0.1:18766/",
+  "screenshot_sha256": "D38389884EBA250A890D279E39F39BDB8F8619B0F68A1041ABFB8CDAF19A85A6",
+  "screenshot_size_bytes": 64429,
+  "isolated_runtime": true,
+  "runtime_path": "C:\\actions-runner\\_work\\AHOS-QUALITY-99-chatgpt\\runtime-q99-dashboard-flow",
+  "port": 18766,
+  "unique_port": true,
+  "worker_started": false,
+  "server_terminated": true,
+  "captured_at": "2026-10-18T18:15:22Z"
+}

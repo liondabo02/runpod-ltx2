@@ -87,3 +87,43 @@ def phase2_current() -> QualityMatrixReport:
         for row in start.areas
     )
     return evaluate_quality(rows)
+
+
+def phase3_current() -> QualityMatrixReport:
+    """Phase-3 evidence: process recovery proven; browser proven but Android open."""
+    prior = phase2_current()
+    rows = tuple(
+        QualityArea(
+            row.area_id,
+            row.name,
+            (
+                MeasurementState.PROVEN
+                if row.area_id in {"recovery", "dashboard", "worker_execution"}
+                else MeasurementState.PARTIAL
+                if row.area_id == "android_browser"
+                else row.state
+            ),
+            row.weight,
+            (
+                "real AutonomousCodingWorker edit/test/patch/owner-gate E2E"
+                if row.area_id == "worker_execution"
+                else "two-process lease-expiry/reclaim E2E"
+                if row.area_id == "recovery"
+                else "real isolated task-create + dashboard render flow"
+                if row.area_id == "dashboard"
+                else "real Chrome Control Center render; Android device unavailable"
+                if row.area_id == "android_browser"
+                else row.evidence
+            ),
+            (
+                ""
+                if row.area_id in {"recovery", "dashboard", "worker_execution"}
+                else "Android device E2E still unavailable"
+                if row.area_id == "android_browser"
+                else row.gap
+            ),
+            row.success_criterion,
+        )
+        for row in prior.areas
+    )
+    return evaluate_quality(rows)

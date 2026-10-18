@@ -1,0 +1,18 @@
+{
+  "schema": "ahos-quality99.browser-evidence.v1",
+  "browser": "Google Chrome",
+  "browser_version": "155.0.8059.39",
+  "url": "http://127.0.0.1:18765/",
+  "http_status": 200,
+  "html_length": 13811,
+  "page_title": "AHOS Holding Control Center",
+  "screenshot_sha256": "D6171133AE28E3A51162C45C8ED71A7829E93D6F549B4EC6FC1D0F2F23947F5E",
+  "screenshot_size_bytes": 64522,
+  "browser_exit_code": 0,
+  "isolated_runtime": true,
+  "runtime_path": "C:\\actions-runner\\_work\\AHOS-QUALITY-99-chatgpt\\runtime-q99-browser",
+  "port": 18765,
+  "server_terminated": true,
+  "captured_at": "2026-10-18T18:10:00Z",
+  "notes": "Real Chrome headless rendered the isolated localhost AHOS Control Center. Screenshot remains local; this record binds it by SHA-256."
+}
