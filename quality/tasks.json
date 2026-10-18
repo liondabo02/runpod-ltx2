@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-10-18T12:50:53.139575+00:00",
+  "updated_at": "2026-10-18T13:15:51.705149+00:00",
   "tasks": [
     {
       "task_id": "20261018-125052-3b0cb2",
@@ -65,6 +65,20 @@
       "owner": "",
       "created_at": "2026-10-18T12:50:52.814495+00:00",
       "updated_at": "2026-10-18T12:50:52.814495+00:00",
+      "lease_until": 0.0,
+      "attempts": 0,
+      "files": [],
+      "test_command": "",
+      "evidence": [],
+      "reason": ""
+    },
+    {
+      "task_id": "20261018-131551-7332a2",
+      "title": "Mipiluna: 6 kartta 'undefined' etiket metni (kartlar aciliyor, metin bozuk)",
+      "state": "queued",
+      "owner": "",
+      "created_at": "2026-10-18T13:15:51.705149+00:00",
+      "updated_at": "2026-10-18T13:15:51.705149+00:00",
       "lease_until": 0.0,
       "attempts": 0,
       "files": [],

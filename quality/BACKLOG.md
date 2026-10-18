@@ -23,11 +23,10 @@ Durum kodları: `[ ]` açık · `[x]` kanıtlı tamam · `[~]` devam ediyor · `
 - [x] **Q99-007 Codex–DeepSeek görev sözleşmesi**: `taskboard.py` + CLI; tek sahip, lease/heartbeat,
       kanıtsız kapanmayan görev; 11 test. Kanıt: `quality/evidence/Q99-007.md`.
       Kalan: konsol/daemon entegrasyonu ve diğer ajanın benimsemesi.
-- [ ] **Q99-008 Executor bütçe tavanı**: `AHOS_EXECUTOR=model` iken ücretli sağlayıcı varsayılan
-      reddedilsin; yerel/ücretsiz profil serbest.
-- [~] **Q99-009 Android doğrulaması**: tarayıcı yüklemesi (Q99-014) ve **CDP etkileşim testi**
-      (Q99-015: kart tıklaması → `scene home→paint`, 0 istisna) tamam. Android APK/emülatör kanıtı yok;
-      39 etkinliğin tamamı test edilmedi.
+- [x] **Q99-008 Executor bütçe tavanı**: ücretli sağlayıcı `AHOS_ALLOW_PAID_LLM=1` olmadan yok sayılıyor;
+      yerel ücretsiz profil serbest. Kanıt: `quality/evidence/Q99-008.md`.
+- [~] **Q99-009 Android doğrulaması**: tarayıcı yüklemesi (Q99-014), CDP etkileşim (Q99-015) ve
+      **49/49 etkinlik taraması** (Q99-016) tamam. Android APK/emülatör kanıtı yok.
 
 ## P2 — Orta
 
@@ -39,6 +38,10 @@ Durum kodları: `[ ]` açık · `[x]` kanıtlı tamam · `[~]` devam ediyor · `
       Not: başka ajanın soak testi commit edilirse iki test birleştirilecek.
 - [x] **Q99-013 Tarayıcı QA kapısı**: web görevleri statik denetimden sonra headless tarayıcıda
       yükleniyor; başarısızsa teslim engelleniyor, tarayıcı yoksa atlanıyor. Kanıt: `quality/evidence/Q99-013.md`.
+- [x] **Q99-016 49 etkinlik taraması**: tüm kartlar CDP ile açıldı → **49/49 açık, 0 istisna**.
+      Kanıt: `quality/evidence/Q99-016.md`.
+- [ ] **Q99-017 Mipiluna etiket kusuru**: 38-43 numaralı kartlarda "undefined" öneki.
+      Ürün kodu düzeltmesi; üretime otomatik uygulanmaz, önce izole doğrulama.
 
 ## Kural
 

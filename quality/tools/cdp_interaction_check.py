@@ -12,6 +12,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import time
 import urllib.parse
@@ -203,11 +204,168 @@ def run(page: Path, artifacts: Path) -> dict:
         shutil.rmtree(profile, ignore_errors=True)
 
 
+def _open(page: Path):
+    profile = Path(tempfile.mkdtemp(prefix="cdp-scan-"))
+    binary = _browser()
+    process = subprocess.Popen(
+        [
+            binary,
+            "--headless=new",
+            "--disable-gpu",
+            "--no-first-run",
+            "--no-default-browser-check",
+            f"--remote-debugging-port={PORT}",
+            "--remote-allow-origins=*",
+            f"--user-data-dir={profile}",
+            "about:blank",
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    for _ in range(80):
+        try:
+            _get(f"http://127.0.0.1:{PORT}/json/version")
+            break
+        except Exception:
+            time.sleep(0.25)
+    url = "file:///" + page.resolve().as_posix().lstrip("/")
+    target = _put(f"http://127.0.0.1:{PORT}/json/new?{urllib.parse.quote(url, safe='')}")
+    client = Cdp(target["webSocketDebuggerUrl"])
+    client.call("Runtime.enable")
+    return process, profile, client
+
+
+def _close(process, profile) -> None:
+    process.terminate()
+    try:
+        process.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        process.kill()
+    shutil.rmtree(profile, ignore_errors=True)
+
+
+CARD_STATE = (
+    "(() => {"
+    " const card = document.querySelectorAll('.card')[%d];"
+    " if (!card) return null;"
+    " const label = (card.textContent || '').trim().slice(0, 40);"
+    " card.click();"
+    " return label; })()"
+)
+
+READ_STATE = (
+    "({scene: document.body.dataset.scene || '',"
+    " stage: (document.querySelector('.stage')?.textContent || '').trim().slice(0, 60),"
+    " hash: location.hash})"
+)
+
+GO_HOME = (
+    "(() => {"
+    " const home = [...document.querySelectorAll('button')].find(b => b.textContent.trim() === '⌂');"
+    " if (home) { home.click(); return 'home-button'; }"
+    " if (document.body.dataset.scene !== 'home') { history.back(); return 'history'; }"
+    " return 'already-home'; })()"
+)
+
+
+ENSURE_LIST = (
+    "(() => {"
+    " if (document.querySelectorAll('.card').length > 10) return 'list';"
+    " const all = [...document.querySelectorAll('.card')]"
+    "   .find(x => x.textContent.includes('Bütün oyunlar'));"
+    " if (all) { all.click(); return 'opened'; }"
+    " return 'missing'; })()"
+)
+
+
+def scan_all(page: Path, artifacts: Path, limit: int = 60) -> dict:
+    """Open every activity card and record what happened."""
+
+    artifacts.mkdir(parents=True, exist_ok=True)
+    process, profile, client = _open(page)
+    results: list[dict] = []
+    try:
+        # Ana sayfa kartları kademeli çizilir; 40+ karta ulaşana kadar bekle.
+        for _ in range(80):
+            if (client.eval("document.querySelectorAll('.card').length") or 0) >= 40:
+                break
+            time.sleep(0.4)
+        client.eval(
+            "(() => { const d = document.querySelector('dialog[open]');"
+            " if (d) { d.close(); return 'closed'; } return null; })()"
+        )
+        time.sleep(1.0)
+
+        labels = client.eval(
+            "[...document.querySelectorAll('.card')].map(c => (c.textContent || '').trim().slice(0, 40))"
+        ) or []
+        total = min(len(labels), limit)
+        baseline = client.eval(READ_STATE)
+        errors_before = len(client.events)
+
+        for index in range(total):
+            label = client.eval(CARD_STATE % index)
+            time.sleep(1.1)
+            state = client.eval(READ_STATE)
+            fresh = client.events[errors_before:]
+            errors_before = len(client.events)
+            new_errors = [
+                (event["params"]["exceptionDetails"].get("exception") or {}).get(
+                    "description", ""
+                )[:160]
+                or event["params"]["exceptionDetails"].get("text", "")[:160]
+                for event in fresh
+                if event.get("method") == "Runtime.exceptionThrown"
+            ]
+            opened = bool(state) and (
+                state.get("scene") != (baseline or {}).get("scene")
+                or (state.get("stage") or "") != ((baseline or {}).get("stage") or "")
+            )
+            results.append(
+                {
+                    "index": index,
+                    "label": label or labels[index],
+                    "opened": opened,
+                    "scene": (state or {}).get("scene", ""),
+                    "stage": (state or {}).get("stage", "")[:50],
+                    "exceptions": new_errors,
+                }
+            )
+            client.eval(GO_HOME)
+            time.sleep(0.9)
+
+        shot = client.call("Page.captureScreenshot", format="png")
+        import base64
+
+        (artifacts / "scan.png").write_bytes(base64.b64decode(shot["data"]))
+        failed = [row for row in results if not row["opened"]]
+        broken_labels = [row for row in results if str(row["label"]).startswith("undefined")]
+        return {
+            "mode": "home-grid",
+            "cards": total,
+            "opened": sum(1 for row in results if row["opened"]),
+            "failed": failed,
+            "undefined_labels": broken_labels,
+            "exceptions": sum(len(row["exceptions"]) for row in results),
+            "results": results,
+            "screenshot": str(artifacts / "scan.png"),
+        }
+    finally:
+        client.close()
+        _close(process, profile)
+
+
 def main() -> int:
     page = Path(
         r"C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\ahos_core\runtime\projects\mipiluna\www\index.html"
     )
     artifacts = Path(__file__).resolve().parent / "interaction-artifacts"
+    if "--scan" in sys.argv:
+        result = scan_all(page, artifacts)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        ok = result["opened"] == result["cards"] and result["exceptions"] == 0
+        print("SCAN_OK" if ok else "SCAN_PROBLEM")
+        return 0 if ok else 1
     result = run(page, artifacts)
     print(json.dumps(result, ensure_ascii=False, indent=2))
     ok = (
