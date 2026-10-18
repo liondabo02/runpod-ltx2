@@ -1,8 +1,16 @@
 {
   "schema": "ahos-quality99.blockers.v1",
-  "target_score": 99.0,
+  "target_score": 99,
   "measured_score": 86.67,
   "blockers": [
+    {
+      "id": "Q99-BLOCKER-000",
+      "severity": "high",
+      "name": "unbounded_builder_subprocess",
+      "status": "blocked_by_shared_file_ownership",
+      "owner_path": "ahos_core/ahos/coding_supervisor.py",
+      "acceptance": "real coding supervisor uses bounded timeout/cancellation/process-tree termination; stuck builder test passes without orphan process"
+    },
     {
       "id": "Q99-BLOCKER-001",
       "severity": "high",
@@ -29,8 +37,9 @@
       "id": "Q99-BLOCKER-004",
       "severity": "high",
       "name": "real_codex_deepseek_separation",
-      "status": "deepseek_zero_cost_route_unavailable",
-      "acceptance": "real builder/reviewer execution with distinct Codex and DeepSeek routes and verified zero paid cost"
+      "status": "waiting_for_verified_zero_cost_deepseek_route",
+      "acceptance": "real builder/reviewer execution with distinct Codex and DeepSeek routes and verified zero paid cost",
+      "detail": "Live OpenRouter /api/v1/models listed only positively priced DeepSeek routes; web-documented :free ID was absent."
     },
     {
       "id": "Q99-BLOCKER-005",
