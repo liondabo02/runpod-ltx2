@@ -37,8 +37,8 @@ Durum kodları: `[ ]` açık · `[x]` kanıtlı tamam · `[~]` devam ediyor · `
 - [x] **Q99-011 Yük testi**: 100 sentetik görev → 1.97 sn, 100/100 tamam, kayıp/tekrar yok,
       tekrar oynatma idempotent. Kanıt: `quality/evidence/Q99-011.md`.
       Not: başka ajanın soak testi commit edilirse iki test birleştirilecek.
-- [ ] **Q99-012 Mipiluna yeni katalog**: kart/kabartma/erişilebilirlik dışında kalan gerçek çocuk
-      deneyimi iyileştirmeleri (LLM olmadan yapılabilenler).
+- [x] **Q99-013 Tarayıcı QA kapısı**: web görevleri statik denetimden sonra headless tarayıcıda
+      yükleniyor; başarısızsa teslim engelleniyor, tarayıcı yoksa atlanıyor. Kanıt: `quality/evidence/Q99-013.md`.
 
 ## Kural
 
