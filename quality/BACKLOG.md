@@ -54,6 +54,9 @@ Durum kodları: `[ ]` açık · `[x]` kanıtlı tamam · `[~]` devam ediyor · `
 - [x] **Q99-020 `source_context` sınırları**: 8 test; kapsam %0 → %98 (UTF-8, boyut, test/sır
       atlama, çıktı sınırı, eşleşme yok). Kanıt: `quality/evidence/Q99-020.md`.
 
+- [x] **Q99-021 Daemon bekçisi**: `AHOS-Watchdog.ps1` ölü/bayat daemon'ı yeniden başlatıyor,
+      `watchdog.log` + `errors.jsonl`'a yazıyor. İzole testte pid 14348 → 25940. Kanıt: `Q99-021.md`.
+
 ## Kural
 
 Bir iş ancak şu üçü varsa `[x]` olur: (1) kod, (2) yeşil test, (3) `quality/evidence/` altında komut+çıktı.
