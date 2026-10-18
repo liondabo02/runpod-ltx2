@@ -24,9 +24,10 @@ def current_baseline() -> QualityMatrixReport:
                     "synthetic expired-lease recovery passes",
                     "live process restart rehearsal not proven",
                     "live interrupted task safely resumes/requeues"),
-        QualityArea("concurrency", "Concurrent task safety", MeasurementState.PROVEN, 1,
-                    "100-task/4 synthetic claimer stress",
-                    "", "no duplicate/lost claims under bounded stress"),
+        QualityArea("concurrency", "Concurrent task safety", MeasurementState.PARTIAL, 1,
+                    "Linux synthetic stress passes; Windows lock race reproduced",
+                    "CodingSupervisorStore lock can raise PermissionError on Windows under contention",
+                    "zero duplicate/lost claims on Linux and Windows bounded stress"),
         QualityArea("data_integrity", "File and data integrity", MeasurementState.PARTIAL, 1,
                     "atomic writes/hashes/provenance exist",
                     "corruption/restore matrix incomplete",
@@ -67,3 +68,22 @@ def current_baseline() -> QualityMatrixReport:
                     "fault injected, detected, retried/recovered and reported"),
     )
     return evaluate_quality(areas)
+
+
+def phase2_current() -> QualityMatrixReport:
+    """Score after phase-2 isolated proofs, while keeping unresolved live blockers."""
+    start = current_baseline()
+    promoted = {"data_integrity", "security", "memory", "monitoring_retry"}
+    rows = tuple(
+        QualityArea(
+            row.area_id,
+            row.name,
+            MeasurementState.PROVEN if row.area_id in promoted else row.state,
+            row.weight,
+            row.evidence,
+            "" if row.area_id in promoted else row.gap,
+            row.success_criterion,
+        )
+        for row in start.areas
+    )
+    return evaluate_quality(rows)
