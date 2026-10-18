@@ -51,3 +51,19 @@ configured OpenRouter key without exposing it. It did not return within the
 bounded execution window and was terminated. No paid fallback was attempted.
 
 Model-routing remains PARTIAL.
+
+
+## Live DeepSeek catalog verification
+
+A no-cost metadata request to `https://openrouter.ai/api/v1/models` returned
+HTTP 200. The exact web-documented
+`deepseek/deepseek-v4-flash-0731:free` ID was not present in that live API
+catalog.
+
+Every DeepSeek route returned by the live catalog had a positive prompt and/or
+completion price. Under AHOS-QUALITY-99's hard 0 USD API rule, those routes are
+not eligible and no paid fallback will be attempted.
+
+Therefore Q99-BLOCKER-004 is now classified as
+`waiting_for_verified_zero_cost_deepseek_route`, not as an implementation
+success.
