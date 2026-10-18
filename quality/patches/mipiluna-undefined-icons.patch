@@ -1,0 +1,53 @@
+--- www/play-games.js
++++ www/play-games.js
+@@ -1,7 +1,7 @@
+ 'use strict';
+
+ for(const [id,base]of Object.entries({animalPark:'animals',soundDetective:'animals',toyTower:'blocks',shapeBox:'blocks',sockPairs:'dress',peekaboo:'animals',ringStack:'size',toyRoad:'weather',teddyCare:'feelings',pathTrace:'paint',gardenSearch:'explore'}))ART_ICONS[id]=ART_ICONS[base]||ART_ICONS.explore;
+
+ 
+
+-for(const card of simpleCards.filter(c=>PLAY_IDS.includes(c.dataset.game))){card.querySelector('span').innerHTML=illustratedIcon(ART_ICONS[card.dataset.game]);card.querySelector('span').classList.add('illustratedCardIcon')}
+
++for(const card of simpleCards.filter(c=>PLAY_IDS.includes(c.dataset.game))){card.querySelector('span').innerHTML=illustratedIcon(ART_ICONS[card.dataset.game]||ART_ICONS.explore);card.querySelector('span').classList.add('illustratedCardIcon')}
+
+ 
+
+ const REAL_ANIMALS=['cow','cat','dog','sheep','bird','duck','pig'];
+
+ let animalAudio=null,animalGeneration=0,animalPlayingKey='';
+
+--- www/simulations.js
++++ www/simulations.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+
+ ART_ICONS.simGarden=ART_ICONS.explore;ART_ICONS.simRoom=ART_ICONS.blocks;ART_ICONS.simPicnic=ART_ICONS.food;
+
+-for(const id of SIM_IDS){const card=simpleCards.find(c=>c.dataset.game===id);card.querySelector('span').innerHTML=illustratedIcon(ART_ICONS[id]);card.querySelector('span').classList.add('illustratedCardIcon')}
+
++for(const id of SIM_IDS){const card=simpleCards.find(c=>c.dataset.game===id);card.querySelector('span').innerHTML=illustratedIcon(ART_ICONS[id]||ART_ICONS.explore);card.querySelector('span').classList.add('illustratedCardIcon')}
+
+ const SIM_STEPS={simGarden:['seedStep','waterStep','sunStep'],simRoom:['carStep','blockStep','ballStep'],simPicnic:['blanketStep','fruitStep','drinkStep']};
+
+ const SIM_DONE={simGarden:'gardenDone',simRoom:'roomDone',simPicnic:'picnicDone'};
+
+ const SIM_SYMBOLS={simGarden:['🌱','💧','☀️'],simRoom:['🚗','🧊','⚽'],simPicnic:['🧺','🍎','💧']};
+
+@@ -21,7 +21,7 @@
+  update()
+
+ }
+
+ const simulationRender=render;render=function(){if(!SIM_IDS.includes(game))return simulationRender();cleanupRound();roundSolved=false;routinePaused=false;journeyReady=false;msg('');$('stage').replaceChildren();simulationGame();updateJourneyBar();refreshSimpleUI()};
+
+-const stickerButton=makeButton('',()=>{stop();stopMusic();const dialog=$('stickerDialog');dialog.querySelector('h2').textContent=t('stickers');dialog.querySelector('.stickerHelp').textContent=t('stickerHelp');const grid=dialog.querySelector('.stickerGrid');grid.replaceChildren();const done=allGames.filter(id=>activityData[id].rounds>0);if(!done.length){const p=document.createElement('p');p.textContent=t('noStickers');grid.append(p)}for(const id of done){const c=document.createElement('div');c.innerHTML=illustratedIcon(ART_ICONS[id]);const label=document.createElement('span');label.textContent=t(id);c.append(label);grid.append(c)}dialog.querySelector('button').textContent=t('simpleFinish');dialog.showModal()},'discoveryBadge');stickerButton.id='discoveryStickers';$('simpleHome').querySelector('.simpleFriend').append(stickerButton);
+
++const stickerButton=makeButton('',()=>{stop();stopMusic();const dialog=$('stickerDialog');dialog.querySelector('h2').textContent=t('stickers');dialog.querySelector('.stickerHelp').textContent=t('stickerHelp');const grid=dialog.querySelector('.stickerGrid');grid.replaceChildren();const done=allGames.filter(id=>activityData[id].rounds>0);if(!done.length){const p=document.createElement('p');p.textContent=t('noStickers');grid.append(p)}for(const id of done){const c=document.createElement('div');c.innerHTML=illustratedIcon(ART_ICONS[id]||ART_ICONS.explore);const label=document.createElement('span');label.textContent=t(id);c.append(label);grid.append(c)}dialog.querySelector('button').textContent=t('simpleFinish');dialog.showModal()},'discoveryBadge');stickerButton.id='discoveryStickers';$('simpleHome').querySelector('.simpleFriend').append(stickerButton);
+
+ const stickerDialog=document.createElement('dialog');stickerDialog.id='stickerDialog';stickerDialog.innerHTML='<h2></h2><p class="stickerHelp sub"></p><div class="stickerGrid"></div><button></button>';stickerDialog.querySelector('button').onclick=()=>{stickerDialog.close();playMusic(game)};stickerDialog.addEventListener('cancel',()=>later(()=>playMusic(game),0));document.body.append(stickerDialog);
+
+ function updateStickers(){stickerButton.textContent='🌼 '+t('stickers');stickerButton.setAttribute('aria-label',t('stickers'));stickerButton.hidden=level===0||!allGames.some(id=>activityData[id].rounds>0)}
+
+ const stickerPass=passRound;passRound=function(text,countRound=true){const fresh=countRound&&!roundSolved&&activityData[game].rounds===0;stickerPass(text,countRound);updateStickers();if(fresh){const note=document.createElement('p');note.className='stickerEarned';note.setAttribute('role','status');note.textContent='🌼 '+t('newSticker');$('stage').append(note)}};
+

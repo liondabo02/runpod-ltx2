@@ -357,7 +357,10 @@ def scan_all(page: Path, artifacts: Path, limit: int = 60) -> dict:
 
 def main() -> int:
     page = Path(
-        r"C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\ahos_core\runtime\projects\mipiluna\www\index.html"
+        os.environ.get(
+            "MIPILUNA_INDEX",
+            r"C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\ahos_core\runtime\projects\mipiluna\www\index.html",
+        )
     )
     artifacts = Path(__file__).resolve().parent / "interaction-artifacts"
     if "--scan" in sys.argv:

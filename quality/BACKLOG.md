@@ -40,8 +40,10 @@ Durum kodları: `[ ]` açık · `[x]` kanıtlı tamam · `[~]` devam ediyor · `
       yükleniyor; başarısızsa teslim engelleniyor, tarayıcı yoksa atlanıyor. Kanıt: `quality/evidence/Q99-013.md`.
 - [x] **Q99-016 49 etkinlik taraması**: tüm kartlar CDP ile açıldı → **49/49 açık, 0 istisna**.
       Kanıt: `quality/evidence/Q99-016.md`.
-- [ ] **Q99-017 Mipiluna etiket kusuru**: 38-43 numaralı kartlarda "undefined" öneki.
-      Ürün kodu düzeltmesi; üretime otomatik uygulanmaz, önce izole doğrulama.
+- [~] **Q99-017 Mipiluna etiket kusuru**: kök neden bulundu (`play-games.js` ve `simulations.js`
+      fallback'sız `ART_ICONS` kullanıyor). Patch hazır ve **izole kopyada doğrulandı**
+      (undefined 6 → 0). Üretime uygulanmadı; sahip onayı bekliyor.
+      Kanıt: `quality/evidence/Q99-017.md`, `quality/patches/mipiluna-undefined-icons.patch`.
 
 ## Kural
 
