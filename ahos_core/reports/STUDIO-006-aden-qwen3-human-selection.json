@@ -1,0 +1,15 @@
+{
+  "studio_step": "STUDIO-006 Aden Qwen3 preschool voice selection",
+  "status": "HUMAN_REFERENCE_FIT_PASS",
+  "character_id": "aden",
+  "target_age_years": 3,
+  "gender_presentation": "girl",
+  "source_model": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+  "design_language": "English",
+  "human_feedback": "good voice",
+  "human_age_character_fit": "PASS",
+  "synthetic_voice": true,
+  "canonical_binding_created": false,
+  "turkish_clone_status": "pending_human_listening",
+  "next_step": "Clone the approved synthetic reference into Turkish with Chatterbox Multilingual V3, then require human listening before canonical enrollment."
+}

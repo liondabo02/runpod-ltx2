@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "title": "AHOS model gateway readiness",
+  "status": "prepared_no_live_calls",
+  "providers": {
+    "openrouter": {
+      "role": "multi-model text, reasoning and coding router",
+      "default_execution": "openrouter/free or explicit :free model only",
+      "production_ready": false
+    },
+    "nvidia-nim": {
+      "role": "multimodal, speech, retrieval and future self-hosted inference",
+      "default_execution": "blocked until a free model ID is verified",
+      "production_ready": false
+    },
+    "bytez": {
+      "role": "experimental broad model catalog for text, image, audio and video",
+      "default_execution": "blocked until a free model ID is verified",
+      "production_ready": false
+    }
+  },
+  "safety": {
+    "external_default": "blocked",
+    "paid_default": "blocked",
+    "unverified_free_models": "blocked",
+    "confidential_or_restricted_data": "blocked for public gateways",
+    "credentials": "environment variable names only; no secrets stored",
+    "live_api_calls": 0,
+    "paid_api_spend_usd": 0
+  },
+  "acceptance": {
+    "provider_catalog_extended": true,
+    "deterministic_route_planning_added": true,
+    "free_allowlist_enforced": true,
+    "owner_paid_gate_enforced": true,
+    "sensitivity_gate_enforced": true,
+    "syntax_validation": "passed",
+    "live_integration": "requires separate credentials and owner approval"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "schema": "ahos-quality99.current-status.v1",
+  "measured_score": 86.67,
+  "target_score": 99.0,
+  "target_reached": false,
+  "full_ci": {
+    "python_3_12": {"passed": 835, "skipped": 3, "seconds": 34.94, "status": "success"},
+    "python_3_13": {"status": "success"},
+    "python_3_14": {"status": "success"}
+  },
+  "proven_areas": [
+    "worker_execution",
+    "persistent_queue",
+    "recovery",
+    "data_integrity",
+    "automatic_tests",
+    "security",
+    "cost",
+    "memory",
+    "dashboard",
+    "monitoring_retry"
+  ],
+  "partial_areas": [
+    "architecture",
+    "concurrency",
+    "model_routing",
+    "real_product",
+    "android_browser"
+  ],
+  "blocking_conditions": [
+    "shared_coding_supervisor_owned_by_parallel_workflow",
+    "worker_assignment_files_owned_by_parallel_worktree",
+    "no_verified_zero_cost_deepseek_route",
+    "android_device_not_connected",
+    "owner_studio_approval_and_real_assets_required"
+  ],
+  "production_mutation": false,
+  "paid_api_spend_usd": 0.0,
+  "main_branch_modified_by_quality_program": false,
+  "last_verified_feature_commit": "3193d373420ba44e98e101eb648c93d60afb0b25"
+}

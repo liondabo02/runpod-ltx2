@@ -1,0 +1,10 @@
+{
+  "schema": "ahos-quality99.android-status.v1",
+  "adb_available": true,
+  "adb_command": "adb devices -l",
+  "connected_devices": 0,
+  "accepted": false,
+  "blocker": "android_device_not_connected",
+  "observed_at": "2026-10-18T18:11:00Z",
+  "notes": "No Android device was visible to ADB. Android E2E is not counted as proven."
+}

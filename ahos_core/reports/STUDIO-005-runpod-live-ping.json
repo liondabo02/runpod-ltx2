@@ -1,0 +1,15 @@
+{
+  "studio_step": "STUDIO-005 live RunPod ping",
+  "status": "PASS",
+  "endpoint_name": "miniverse-ltx2-video",
+  "endpoint_id": "dnwqoolyprqr69",
+  "job_id": "39c41640-1707-459b-abb7-831306199349-e2",
+  "runpod_job_status": "COMPLETED",
+  "health_ok": true,
+  "worker_mode": "health",
+  "comfyui_http_status": 200,
+  "comfyui_url": "http://127.0.0.1:8188",
+  "render_generated": false,
+  "paid_live_execution": true,
+  "secret_exposed": false
+}

@@ -1,0 +1,19 @@
+{
+  "studio_step": "STUDIO-007",
+  "status": "PASS",
+  "assembly_planner": "READY",
+  "qa_categories": [
+    "continuity",
+    "child_safety",
+    "picture",
+    "audio",
+    "subtitles",
+    "technical"
+  ],
+  "deterministic_package_hash": true,
+  "fail_closed_release_gate": true,
+  "render_calls": 0,
+  "external_network_calls": 0,
+  "paid_api_spend_usd": 0,
+  "publish_actions": 0
+}

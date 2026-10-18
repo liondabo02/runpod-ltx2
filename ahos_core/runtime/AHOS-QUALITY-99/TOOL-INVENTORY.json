@@ -1,0 +1,23 @@
+{
+  "schema": "ahos-quality99.tool-inventory.v1",
+  "captured_at": "2026-10-18T18:35:00Z",
+  "tools": {
+    "codex": {"installed": true, "version": "0.162.1"},
+    "claude": {"installed": true, "version": "2.1.292"},
+    "opencode": {"installed": true, "version": "1.18.35"},
+    "ollama": {"installed": true, "version": "0.40.4"},
+    "adb": {"installed": true, "version": "available"},
+    "deepseek_cli": {"installed": false}
+  },
+  "ollama_models": [
+    "qwen2.5-coder:1.5b",
+    "qwen2.5-coder:7b",
+    "nomic-embed-text:latest"
+  ],
+  "deepseek_harness": {
+    "historical_sandbox_candidate": true,
+    "production_approved": false,
+    "paid_calls_in_benchmark": 0
+  },
+  "notes": "Inventory-only evidence. Installed does not imply healthy, free-provider entitlement, or production approval."
+}

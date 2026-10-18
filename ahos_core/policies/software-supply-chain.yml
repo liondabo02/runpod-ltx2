@@ -1,0 +1,30 @@
+schema: ahos.software-supply-chain-policy.v1
+mode: fail-closed
+discovery:
+  read_only: true
+  pin_immutable_commit: true
+  treat_remote_content_as_untrusted: true
+licenses:
+  allow_with_review: [MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC]
+  conditional: [MPL-2.0, LGPL-2.1-only, LGPL-2.1-or-later, LGPL-3.0-only, LGPL-3.0-or-later]
+  owner_or_legal_approval: [GPL-2.0-only, GPL-2.0-or-later, GPL-3.0-only, GPL-3.0-or-later, AGPL-3.0-only, AGPL-3.0-or-later, SSPL-1.0, proprietary]
+  block: [NOASSERTION, NONE, unknown]
+security:
+  require_sbom: true
+  require_vulnerability_scan: true
+  require_secret_scan: true
+  require_source_commit_sha: true
+  reject_unexplained_binaries: true
+execution:
+  upstream_code_on_windows_self_hosted_runner: forbidden
+  sandbox: ephemeral_no_secrets
+  outbound_network: deny_by_default
+  github_token_permissions: read_only
+promotion:
+  direct_main_write: forbidden
+  self_approval: forbidden
+  stages: [proposal, sandbox, qa, owner_gate, canary, production]
+  feature_flag_default: off
+rollback:
+  required: true
+  preserve_previous_version: true
