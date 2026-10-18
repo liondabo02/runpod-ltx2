@@ -60,6 +60,9 @@ Durum kodları: `[ ]` açık · `[x]` kanıtlı tamam · `[~]` devam ediyor · `
 - [x] **Q99-022 Birleştirme simülasyonu**: diğer ajanın 16 dosyası kopyalanıp merge edildi →
       **0 çakışma**, birleşik ağaçta **593 test geçti**, daemon smoke OK. Kanıt: `Q99-022.md`.
 
+- [x] **Q99-023 Panel hizalaması**: 8766 güncel kodla yeniden başlatıldı; kalıcı otonomi sayıları
+      (executed=3) ve CLI ile aynı değerler; `/` ve `/office` 200. Kanıt: `Q99-023.md`.
+
 ## Kural
 
 Bir iş ancak şu üçü varsa `[x]` olur: (1) kod, (2) yeşil test, (3) `quality/evidence/` altında komut+çıktı.
