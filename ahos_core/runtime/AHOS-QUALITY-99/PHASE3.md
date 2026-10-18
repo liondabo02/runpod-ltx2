@@ -103,3 +103,21 @@ Full Windows quality suite after correction:
 
 This proves the worker engine's scoped edit/test/evidence/owner-gate path. It
 does not prove DeepSeek or any external model provider.
+
+
+## Q99-019 — Quality namespace coverage
+
+First bounded measurement:
+- tests: 26 passed, 1 xfailed
+- AHOS-QUALITY-99 namespace line coverage: 91%
+
+After adding fail-closed negative-path tests:
+- coverage reached **95%**
+- the concurrent Windows queue stress reproduced a second lock failure form:
+  `TimeoutError` (previously also `PermissionError`)
+- task records were not lost and duplicate claims were zero in that run, but
+  concurrency cannot be promoted while lock acquisition can fail/starve.
+
+The full AHOS coverage attempt in the sparse worktree was intentionally stopped:
+the checkout omits non-quality paths required by unrelated tests. That run is
+not counted as a valid full-repository coverage measurement.
