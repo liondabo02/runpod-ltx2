@@ -20,8 +20,9 @@ Durum kodları: `[ ]` açık · `[x]` kanıtlı tamam · `[~]` devam ediyor · `
 
 - [~] **Q99-006 Test kapsamı**: ölçüldü — toplam %83; kritik modüller %83-88. `local_ollama` %0→%73,
       `daemon` %74→%83. Kalan: `owner_cli` ve `source_context` 0%. Kanıt: `quality/evidence/Q99-006.md`.
-- [ ] **Q99-007 Codex–DeepSeek görev sözleşmesi**: görev kimliği, sahip, durum, test, kanıt alanlarıyla
-      dosya tabanlı sözleşme; iki ajan aynı görevi almaz.
+- [x] **Q99-007 Codex–DeepSeek görev sözleşmesi**: `taskboard.py` + CLI; tek sahip, lease/heartbeat,
+      kanıtsız kapanmayan görev; 11 test. Kanıt: `quality/evidence/Q99-007.md`.
+      Kalan: konsol/daemon entegrasyonu ve diğer ajanın benimsemesi.
 - [ ] **Q99-008 Executor bütçe tavanı**: `AHOS_EXECUTOR=model` iken ücretli sağlayıcı varsayılan
       reddedilsin; yerel/ücretsiz profil serbest.
 - [ ] **Q99-009 Android doğrulaması**: APK üretimi/emülatör kanıtı yok; izole deneme + kayıt.

@@ -31,7 +31,7 @@ Tarih: 2026-10-18 · Ölçülen commit: `32bc435` (izole worktree) · Ölçüm y
 | 4 | Çökme sonrası kurtarma | `recovery.py` **commit edilmemiş** (başka ajan); committed ağaçta yok | ❌ | Kurtarma yolu baseline'da yok; canlıda yalnız panel başlangıcında |
 | 5 | Eşzamanlı görev güvenliği | `test_project_lock_xproc`, `test_lock_observability`; OS kilidi + fail-closed `unknown-owner` | ✅ | — |
 | 6 | Dosya/veri bütünlüğü | SHA-256 kanıt, kabul kapısı hash pinleme, yeni filesystem delivery defteri | ✅ | — |
-| 7 | Codex–DeepSeek görev paylaşımı | Yazılı sözleşme/yetki devri yok; yalnız dosya bazlı koordinasyon | ❌ | Ortak görev sözleşmesi (id, durum, sahip, test, kanıt) yok |
+| 7 | Codex–DeepSeek görev paylaşımı | `taskboard.py`: kalıcı görev kimliği, tek sahip, lease + heartbeat, **kanıtsız kapanmayan** görev, CLI; 11 test (4 eşzamanlı claim → 1 kazanan) | ⚠️ | Pano hazır; diğer ajanın kullanması ve konsol entegrasyonu henüz yok |
 | 8 | Otomatik test kapsamı | `pytest-cov` ile ölçüldü: **ahos toplam %83** (10 525 satır). Kritik: autonomy %88, owner_console %88, delivery %88, project_qa %87, daemon %83, local_ollama %73. 0%: `owner_cli`, `source_context` | ⚠️ | Kapsam artık ölçülüyor; 0% modüller ve %70 altı kalanlar kapatılmalı |
 | 9 | Güvenlik / yetkilendirme | Onay girişi, kill-switch, panel token; `local_ollama` güvenlik kapıları artık testli (9 test: sabit localhost/model, 2 GiB, kilit, indirme yok) | ✅ | — |
 | 10 | API / token maliyeti | Geçmişte 6 ücretli çağrı ($0.0111); `paid_calls` artık defterden okunuyor | ⚠️ | Otomatik $0 politikası yalnız autonomy'de; executor seviyesinde tavan yok |
