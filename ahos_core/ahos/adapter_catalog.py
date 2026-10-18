@@ -78,4 +78,18 @@ def default_catalog() -> AdapterCatalog:
         AdapterSpec("openvoice", "voice", AdapterTrust.REVIEWED_OPEN_SOURCE, True, True, False, False, False),
     ):
         catalog.register(spec)
+    for spec in (
+        AdapterSpec("freellmapi", "model_gateway", AdapterTrust.EXPERIMENTAL, True, True, True, False, True, "user-installed candidate; local verification required"),
+        AdapterSpec("9router", "model_gateway", AdapterTrust.EXPERIMENTAL, True, True, True, False, True, "user-installed candidate; local verification required"),
+        AdapterSpec("hermes-opencode", "coding", AdapterTrust.EXPERIMENTAL, True, True, True, True, True, "user-installed candidate; local verification required"),
+        AdapterSpec("grok", "model_gateway", AdapterTrust.EXPERIMENTAL, False, True, True, False, True, "account/API terms must be verified"),
+        AdapterSpec("workfarmer", "coding", AdapterTrust.EXPERIMENTAL, True, True, True, True, True, "local verification required"),
+        AdapterSpec("openmontage", "media", AdapterTrust.EXPERIMENTAL, True, True, True, False, True, "local verification required"),
+        AdapterSpec("graphify", "knowledge_graph", AdapterTrust.EXPERIMENTAL, True, True, True, False, True, "local verification required"),
+        AdapterSpec("stitch", "ui_generation", AdapterTrust.EXPERIMENTAL, True, True, True, False, True, "provider capability and terms require verification"),
+        AdapterSpec("pomelli", "creative", AdapterTrust.EXPERIMENTAL, True, True, True, False, True, "provider capability and terms require verification"),
+        AdapterSpec("founderos", "operations", AdapterTrust.EXPERIMENTAL, True, True, True, False, True, "local verification required"),
+        AdapterSpec("foundry", "operations", AdapterTrust.EXPERIMENTAL, True, True, True, False, True, "ambiguous tool name; exact installed product must be identified"),
+    ):
+        catalog.register(spec)
     return catalog
