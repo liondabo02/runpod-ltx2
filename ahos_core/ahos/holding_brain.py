@@ -19,6 +19,7 @@ from .coding_worker import CodingBacklogItem
 from .department_context import PROJECT_CONTEXT
 from .department_runtime import DepartmentRuntime
 from .verification_baseline import load_verification_baseline
+from .requirement_audit import audit_requirements
 
 _REPAIRS = {
     'coding_exhausted': {
@@ -84,8 +85,8 @@ class HoldingBrain:
         if waiting:
             gaps.append({'kind': 'provider_cooldown', 'count': waiting,
                          'recommendation': 'Sağlayıcının bekleme süresini koruyun; ücretli modele kendiliğinden geçmeyin.'})
-        requirements = [{'id': key, 'requirement': text, 'verification': 'not_audited'}
-                        for key, text in PROJECT_CONTEXT['requirements'].items()]
+        requirement_audit = audit_requirements(PROJECT_CONTEXT['requirements'], baseline)
+        requirements = list(requirement_audit.rows)
         baseline_summary = {
             'status': baseline_status,
             'commit_sha': baseline.commit_sha if baseline is not None else '',
@@ -109,8 +110,18 @@ class HoldingBrain:
                 'verification_baseline': baseline_summary,
                 'historical_failures': historical_failures,
                 'capability': 'local_evidence_coordination',
-                'production_ready': False,
-                'readiness_note': 'Queue observation is not a complete holding or film acceptance audit.',
+                'platform_ready': requirement_audit.platform_ready and not gaps,
+                'department_acceptance_ready': requirement_audit.department_acceptance_ready,
+                'production_ready': (
+                    requirement_audit.platform_ready
+                    and requirement_audit.department_acceptance_ready
+                    and not gaps
+                ),
+                'readiness_note': (
+                    'AHOS platform is verified; department product acceptance is still pending.'
+                    if requirement_audit.platform_ready and not requirement_audit.department_acceptance_ready
+                    else 'Platform and department acceptance require explicit evidence.'
+                ),
                 'external_research_enabled': False, 'pc_control_enabled': False,
                 'owner_approval_required': True}
 
