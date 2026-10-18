@@ -51,6 +51,9 @@ Durum kodları: `[ ]` açık · `[x]` kanıtlı tamam · `[~]` devam ediyor · `
 - [x] **Q99-019 Durum raporu**: `ahos-status` CLI tüm kalıcı kayıtları (daemon, otonomi, kota,
       teslimat, hata, pano) tek ekranda birleştiriyor. Kanıt: `quality/evidence/Q99-019.md`.
 
+- [x] **Q99-020 `source_context` sınırları**: 8 test; kapsam %0 → %98 (UTF-8, boyut, test/sır
+      atlama, çıktı sınırı, eşleşme yok). Kanıt: `quality/evidence/Q99-020.md`.
+
 ## Kural
 
 Bir iş ancak şu üçü varsa `[x]` olur: (1) kod, (2) yeşil test, (3) `quality/evidence/` altında komut+çıktı.
