@@ -30,6 +30,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Protocol
 
+from .delivery import DeliveryTracker, TreeSnapshot
+
 HEARTBEAT_FILE = "daemon-state.json"
 PID_FILE = "daemon.pid"
 STOP_FILE = "daemon.stop"
@@ -169,6 +171,7 @@ class AutonomyDaemon:
         sleep: Callable[[float], None] = time.sleep,
         max_ticks: int | None = None,
         no_evidence_limit: int = 3,
+        tracker: DeliveryTracker | None = None,
     ) -> None:
         if interval_seconds < 1:
             raise ValueError("interval_seconds >= 1 olmalı")
@@ -183,6 +186,7 @@ class AutonomyDaemon:
         self.sleep = sleep
         self.max_ticks = max_ticks
         self.no_evidence_limit = no_evidence_limit
+        self.tracker = tracker
         self.state = DaemonState(interval_seconds=self.interval_seconds)
         self._stop_requested = False
         self._last_recorded_mission = ""
@@ -278,12 +282,14 @@ class AutonomyDaemon:
         with path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(record, ensure_ascii=False) + "\n")
 
-    def _record_evidence(self) -> None:
+    def _record_evidence(self, filesystem: dict[str, object] | None = None) -> None:
         """Refuse to count report-only missions as progress.
 
-        Autonomy stops itself after ``no_evidence_limit`` consecutive missions
-        that were routed but changed no files, so a document factory can never
-        masquerade as a self-improving holding.
+        The filesystem delta is authoritative when project roots are known; the
+        worker summary is only a fallback. Autonomy stops itself after
+        ``no_evidence_limit`` consecutive missions that were routed but changed
+        no files, so a document factory can never masquerade as a self-improving
+        holding.
         """
 
         runner = getattr(self.scheduler, "runner", None)
@@ -295,6 +301,13 @@ class AutonomyDaemon:
         if not mission_id or mission_id == self._last_recorded_mission:
             return
         self._last_recorded_mission = mission_id
+        if filesystem is not None and self.tracker is not None and self.tracker.roots():
+            evidence["changed_files"] = int(filesystem.get("changed_files") or 0)
+            evidence["projects"] = filesystem.get("projects") or []
+            evidence["source"] = "filesystem"
+            evidence["evidence_ok"] = bool(evidence["changed_files"])
+        else:
+            evidence["source"] = "worker-summary"
         self.state.last_evidence = evidence
         self._append_mission(evidence)
         if evidence.get("status") == "routed" and not evidence.get("evidence_ok"):
@@ -316,14 +329,20 @@ class AutonomyDaemon:
     def tick_once(self) -> str:
         """Run exactly one scheduler tick and persist the result."""
 
+        before: dict[str, TreeSnapshot] | None = None
+        if self.tracker is not None and self.tracker.roots():
+            before = self.tracker.snapshot()
         status = str(self.scheduler.tick())
+        filesystem = None
+        if before is not None and self.tracker is not None:
+            filesystem = self.tracker.diff(before, self.tracker.snapshot())
         self.state.ticks += 1
         self.state.last_tick_at = self.wall_clock()
         self.state.status = status
         self.state.last_reason = str(
             getattr(getattr(self.scheduler, "state", None), "last_reason", "") or ""
         )[:200]
-        self._record_evidence()
+        self._record_evidence(filesystem)
         self.write_heartbeat()
         return status
 
@@ -404,11 +423,13 @@ def build_default_daemon(
             idle_sleep_seconds=interval_seconds,
         ),
     )
+    tracker = DeliveryTracker([link.path for link in console.projects.all()])
     return AutonomyDaemon(
         scheduler,
         runtime,
         interval_seconds=interval_seconds,
         no_evidence_limit=no_evidence_limit,
+        tracker=tracker,
     )
 
 

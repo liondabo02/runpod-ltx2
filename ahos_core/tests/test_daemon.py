@@ -6,6 +6,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from ahos.daemon import AutonomyDaemon, mission_evidence, read_heartbeat
+from ahos.delivery import DeliveryTracker, diff_trees, snapshot_tree
 
 
 class FakeScheduler:
@@ -181,3 +182,82 @@ def test_same_mission_is_not_counted_twice(tmp_path):
 
     assert not (tmp_path / "autonomy.pause").exists()
     assert read_heartbeat(tmp_path)["no_evidence_streak"] == 1
+
+
+def test_tree_diff_reports_added_modified_removed(tmp_path):
+    root = tmp_path / "proj"
+    root.mkdir()
+    (root / "a.txt").write_text("a", encoding="utf-8")
+    (root / "gone.txt").write_text("g", encoding="utf-8")
+    before = snapshot_tree(root)
+
+    (root / "a.txt").write_text("changed", encoding="utf-8")
+    (root / "b.txt").write_text("b", encoding="utf-8")
+    (root / "gone.txt").unlink()
+    after = snapshot_tree(root)
+
+    delta = diff_trees(before, after)
+    assert delta.added == ("b.txt",)
+    assert delta.removed == ("gone.txt",)
+    assert delta.modified == ("a.txt",)
+    assert delta.changed == 3
+
+
+class WritingScheduler(EvidenceScheduler):
+    def __init__(self, results, project) -> None:
+        super().__init__(results)
+        self.project = project
+        self.writes = True
+
+    def tick(self) -> str:
+        if self.writes:
+            (self.project / f"file-{self.calls}.txt").write_text("x", encoding="utf-8")
+        return super().tick()
+
+
+def test_filesystem_delta_is_authoritative_over_worker_summary(tmp_path):
+    project = tmp_path / "proj"
+    project.mkdir()
+    (project / "index.html").write_text("<html></html>", encoding="utf-8")
+    scheduler = WritingScheduler([_mission("m-1", 0)], project)
+    daemon = _daemon(
+        tmp_path / "rt",
+        scheduler,
+        max_ticks=1,
+        no_evidence_limit=3,
+        tracker=DeliveryTracker([project]),
+    )
+
+    daemon.run()
+
+    record = json.loads(
+        (tmp_path / "rt" / "daemon-missions.jsonl").read_text(encoding="utf-8").splitlines()[0]
+    )
+    assert record["source"] == "filesystem"
+    assert record["changed_files"] == 1
+    assert record["evidence_ok"] is True
+    assert "index.html" not in " ".join(record["projects"][0]["modified"])
+
+
+def test_no_filesystem_change_counts_as_no_evidence(tmp_path):
+    project = tmp_path / "proj"
+    project.mkdir()
+    (project / "index.html").write_text("<html></html>", encoding="utf-8")
+    scheduler = WritingScheduler([_mission("m-1", 0)], project)
+    scheduler.writes = False
+    daemon = _daemon(
+        tmp_path / "rt",
+        scheduler,
+        max_ticks=1,
+        no_evidence_limit=1,
+        tracker=DeliveryTracker([project]),
+    )
+
+    daemon.run()
+
+    record = json.loads(
+        (tmp_path / "rt" / "daemon-missions.jsonl").read_text(encoding="utf-8").splitlines()[0]
+    )
+    assert record["changed_files"] == 0
+    assert record["evidence_ok"] is False
+    assert (tmp_path / "rt" / "autonomy.pause").exists()
