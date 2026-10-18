@@ -100,9 +100,21 @@ The installer fails closed if the coding-worker configuration or user-level key
 is missing. The scheduled task starts the service at logon and restarts it after
 transient failures.
 
+From the repository root, use the supported entry point:
+
 ```powershell
-python -m pytest ahos_core/tests -q
+python ahos_core/run_tests.py
 ```
+
+The ordinary installed-package command remains available from `ahos_core`:
+
+```powershell
+python -m pytest -q
+```
+
+Mission/approval stores can also be checked read-only through
+`ahos.consistency.MissionQueueConsistencyChecker`; it reports orphan approvals,
+invalid leases, and waiting-approval state mismatches without mutating data.
 
 ## Validate the local backlog
 
