@@ -44,7 +44,7 @@ Browser is real evidence. Android is not:
 Phase 2: **74.67 / 100**
 
 Phase 3 after real process-recovery proof and partial browser evidence:
-**81.33 / 100**
+**84.00 / 100**
 
 The 99% target remains blocked by:
 - intermittent Windows queue-lock contention
@@ -53,3 +53,24 @@ The 99% target remains blocked by:
 - Android E2E
 - real zero-cost Codex/DeepSeek separation
 - production/unattended acceptance evidence
+
+
+## Q99-017 — Real isolated dashboard critical flow
+
+A second isolated Control Center instance used unique localhost port 18766.
+
+Observed:
+- POST /action/code-create -> HTTP 200
+- task id: CODE-20261018-181507-0a4665
+- dashboard HTML contained the exact task ID: yes
+- dashboard HTML contained the exact task title: yes
+- queue status after server stop: queued
+- task attempts: 0
+- no worker was started
+- Chrome screenshot bytes: 64429
+- screenshot SHA-256:
+  D38389884EBA250A890D279E39F39BDB8F8619B0F68A1041ABFB8CDAF19A85A6
+- server terminated after the check
+
+This promotes the Presidential Dashboard criterion to PROVEN for the isolated
+create/read critical flow.
