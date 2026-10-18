@@ -2,12 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import cast
 
 from pydantic import BaseModel, Field
 from openhands.sdk import Agent, Conversation, LLM, Tool
 from openhands.sdk.tool import register_tool
-from openhands.sdk.tool.builtins.finish import FinishTool
+from openhands.sdk.tool.builtins.finish import FinishAction, FinishTool
 from openhands.tools.file_editor import FileEditorTool
 from openhands.tools.task_tracker import TaskTrackerTool
 from openhands.tools.terminal import TerminalTool
@@ -31,6 +30,14 @@ class BuilderResult:
     rollback: str
     remaining_risks: tuple[str, ...]
     estimated_cost_usd: float
+
+
+def parse_builder_finish(events) -> BuilderFinish:
+    for event in reversed(list(events)):
+        action = getattr(event, "action", None)
+        if isinstance(action, FinishAction):
+            return BuilderFinish.model_validate_json(action.message)
+    raise RuntimeError("OpenHands builder finished without a structured FinishTool result")
 
 
 register_tool("FinishTool", FinishTool)
@@ -58,23 +65,24 @@ class OpenHandsBuilder:
                 Tool(name=TerminalTool.name),
                 Tool(name=FileEditorTool.name),
                 Tool(name=TaskTrackerTool.name),
-                Tool(name="FinishTool", params={"response_schema": BuilderFinish}),
+                Tool(name="FinishTool"),
             ],
             include_default_tools=["ThinkTool"],
         )
-        conversation = Conversation(agent=agent, workspace=str(workspace_path))
+        conversation = Conversation(
+            agent=agent, workspace=str(workspace_path),
+            max_iteration_per_run=self.settings.openhands_max_iterations,
+        )
         conversation.send_message(
             "Work only inside this isolated workspace. Do not modify production, credentials, billing, volumes, "
             "or external systems. Make the smallest coherent reversible change. Inspect the repository first, run "
             "the most relevant tests, and use FinishTool only after you can report exact changed files, test results, "
-            "rollback instructions, and remaining risks.\n\nTASK:\n" + task
+            "rollback instructions, and remaining risks. Set FinishTool.message to a JSON object with fields "
+            "change_summary, tests_run (list), changed_files (list), rollback, remaining_risks (list).\n\nTASK:\n" + task
         )
         conversation.run()
 
-        finish_tool = agent.tools_map["finish"]
-        finish = cast(BuilderFinish | None, finish_tool.parse_last_response(conversation.state.events))
-        if finish is None:
-            raise RuntimeError("OpenHands builder finished without a structured FinishTool result")
+        finish = parse_builder_finish(conversation.state.events)
 
         metrics = conversation.conversation_stats.get_combined_metrics()
         cost = float(metrics.accumulated_cost or 0.0)

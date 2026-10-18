@@ -1,5 +1,6 @@
 param(
     [decimal]$DailyBudgetUsd = 0.10,
+    [decimal]$PaidTaskReserveUsd = 0.08,
     [int]$IdleSleepSeconds = 300,
     [int]$PlannerIntervalHours = 6
 )
@@ -31,6 +32,7 @@ $args = @(
     '-ExecutionPolicy', 'Bypass',
     '-File', $LoopScript,
     '-DailyBudgetUsd', [string]$DailyBudgetUsd,
+    '-PaidTaskReserveUsd', [string]$PaidTaskReserveUsd,
     '-IdleSleepSeconds', [string]$IdleSleepSeconds,
     '-PlannerIntervalHours', [string]$PlannerIntervalHours
 )
@@ -53,5 +55,6 @@ if ($p.HasExited) {
 
 Write-Host "AHOS Holding Autopilot started. PID: $($p.Id)"
 Write-Host "Daily API budget: USD $DailyBudgetUsd"
+Write-Host "Paid-task reserve: USD $PaidTaskReserveUsd"
 Write-Host "It develops only feature/ahos-autopilot and never auto-merges main."
 Write-Host "Logs: $OutLog"

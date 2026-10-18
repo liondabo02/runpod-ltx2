@@ -102,10 +102,18 @@ class SQLiteTaskQueue:
             raise ValueError("owner is required")
         if lease_seconds <= 0:
             raise ValueError("lease_seconds must be > 0")
-        now = time.time()
-        lease_expires = now + lease_seconds
         with self._connect() as conn:
             conn.execute("BEGIN IMMEDIATE")
+            now = time.time()
+            lease_expires = now + lease_seconds
+            # A crash on the final attempt must not leave an unclaimable running job.
+            conn.execute(
+                """UPDATE tasks SET status='failed', lease_owner=NULL,
+                lease_expires_at=NULL, last_error='Lease expired after final attempt',
+                updated_at=? WHERE status='running' AND attempts >= max_attempts
+                AND lease_expires_at IS NOT NULL AND lease_expires_at <= ?""",
+                (now, now),
+            )
             row = conn.execute(
                 """
                 SELECT * FROM tasks
@@ -138,33 +146,41 @@ class SQLiteTaskQueue:
             conn.execute("COMMIT")
         return self._row_to_record(claimed)
 
-    def heartbeat(self, task_id: str, owner: str, *, lease_seconds: float = 120.0) -> bool:
+    def heartbeat(self, task_id: str, owner: str, *, lease_seconds: float = 120.0,
+                  attempt: int | None = None) -> bool:
         if lease_seconds <= 0:
             raise ValueError("lease_seconds must be > 0")
-        now = time.time()
         with self._connect() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            now = time.time()
             result = conn.execute(
                 """
                 UPDATE tasks
                 SET lease_expires_at=?, updated_at=?
                 WHERE id=? AND status='running' AND lease_owner=?
+                  AND lease_expires_at > ? AND (? IS NULL OR attempts=?)
                 """,
-                (now + lease_seconds, now, task_id, owner),
+                (now + lease_seconds, now, task_id, owner, now, attempt, attempt),
             )
+            conn.execute("COMMIT")
         return result.rowcount == 1
 
-    def complete(self, task_id: str, owner: str, result: dict[str, Any]) -> bool:
-        now = time.time()
+    def complete(self, task_id: str, owner: str, result: dict[str, Any], *,
+                 attempt: int | None = None) -> bool:
         with self._connect() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            now = time.time()
             updated = conn.execute(
                 """
                 UPDATE tasks
                 SET status='completed', result_json=?, lease_owner=NULL, lease_expires_at=NULL,
                     last_error=NULL, updated_at=?
                 WHERE id=? AND status='running' AND lease_owner=?
+                  AND lease_expires_at > ? AND (? IS NULL OR attempts=?)
                 """,
-                (json.dumps(result, sort_keys=True), now, task_id, owner),
+                (json.dumps(result, sort_keys=True), now, task_id, owner, now, attempt, attempt),
             )
+            conn.execute("COMMIT")
         return updated.rowcount == 1
 
     def fail(
@@ -174,15 +190,18 @@ class SQLiteTaskQueue:
         error: str,
         *,
         retry_delay_seconds: float = 0.0,
+        attempt: int | None = None,
     ) -> bool:
         if retry_delay_seconds < 0:
             raise ValueError("retry_delay_seconds must be >= 0")
-        now = time.time()
         with self._connect() as conn:
             conn.execute("BEGIN IMMEDIATE")
+            now = time.time()
             row = conn.execute(
-                "SELECT attempts, max_attempts FROM tasks WHERE id=? AND status='running' AND lease_owner=?",
-                (task_id, owner),
+                """SELECT attempts, max_attempts FROM tasks
+                WHERE id=? AND status='running' AND lease_owner=?
+                  AND lease_expires_at > ? AND (? IS NULL OR attempts=?)""",
+                (task_id, owner, now, attempt, attempt),
             ).fetchone()
             if row is None:
                 conn.execute("ROLLBACK")

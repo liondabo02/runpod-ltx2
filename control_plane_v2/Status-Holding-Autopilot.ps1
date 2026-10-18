@@ -1,8 +1,3 @@
-﻿param(
-    [decimal]$DailyBudgetUsd = 0.10,
-    [decimal]$PaidTaskReserveUsd = 0.035
-)
-
 $ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $StateDir = Join-Path $Root 'runtime\state'
@@ -10,7 +5,6 @@ $PidFile = Join-Path $StateDir 'holding-autopilot.pid'
 $OutLog = Join-Path $StateDir 'holding-autopilot.out.log'
 $ErrLog = Join-Path $StateDir 'holding-autopilot.err.log'
 $BudgetFile = Join-Path $StateDir 'holding-autopilot-budget.json'
-$ActiveTaskFile = Join-Path $StateDir 'holding-autopilot-active-task.json'
 
 if (Test-Path $PidFile) {
     $pidValue = [int](Get-Content $PidFile -Raw)
@@ -24,42 +18,29 @@ if (Test-Path $PidFile) {
     Write-Host 'AHOS AUTOPILOT: STOPPED'
 }
 
-$today = (Get-Date).ToString('yyyy-MM-dd')
-$spent = [decimal]0
 if (Test-Path $BudgetFile) {
-    try {
-        $budget = Get-Content $BudgetFile -Raw | ConvertFrom-Json
-        if ($budget.date -eq $today) {
-            $spent = [decimal]$budget.spent_usd
-        }
-    } catch {}
-}
-
-$remaining = $DailyBudgetUsd - $spent
-Write-Host "AI spend today ($today): USD $spent / USD $DailyBudgetUsd"
-Write-Host "Paid-task reserve: USD $PaidTaskReserveUsd"
-
-if ($remaining -ge $PaidTaskReserveUsd) {
-    Write-Host "MODE: PAID-ELIGIBLE (remaining USD $remaining)"
-} else {
-    Write-Host "MODE: FREE-ONLY (paid AI paused; remaining USD $remaining)"
-}
-
-if (Test-Path $ActiveTaskFile) {
-    try {
-        $active = Get-Content $ActiveTaskFile -Raw | ConvertFrom-Json
-        Write-Host "ACTIVE BACKLOG ITEM: $($active.backlog_id)"
-        Write-Host "ACTIVE QUEUE TASK: $($active.queue_task_id)"
-    } catch {}
+    $budget = Get-Content $BudgetFile -Raw | ConvertFrom-Json
+    Write-Host "AI spend today: USD $($budget.spent_usd)"
+    if ($null -ne $budget.PSObject.Properties['reserved_usd']) {
+        Write-Host "AI budget reserved: USD $($budget.reserved_usd)"
+    }
 }
 
 Write-Host "`n--- RECENT LOG ---"
 if (Test-Path $OutLog) {
-    Get-Content $OutLog -Tail 50
+    $recent = @(Get-Content $OutLog -Tail 200)
+    $statusLines = @($recent | Where-Object { $_ -match '^STATUS: ' })
+    $meaningful = @($recent | Where-Object { $_ -notmatch '^STATUS: ' } | Select-Object -Last 39)
+    $meaningful
+    if ($statusLines.Count -gt 0) {
+        Write-Host "$($statusLines[-1]) (repeated $($statusLines.Count)x in recent log)"
+    }
 }
 
 if (Test-Path $ErrLog) {
-    $err = Get-Content $ErrLog -Tail 20
+    $err = @(Get-Content $ErrLog -Tail 200 | Where-Object {
+        $_ -match 'AUTOPILOT ERROR|ERROR:|Traceback|Exception|RuntimeError|TypeError|failed'
+    } | Select-Object -Last 20)
     if ($err) {
         Write-Host "`n--- RECENT ERRORS ---"
         $err

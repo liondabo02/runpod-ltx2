@@ -18,6 +18,7 @@ class Settings:
     qa_model: str = os.getenv("MINIVERSE_QA_MODEL", "")
     cost_model: str = os.getenv("MINIVERSE_COST_MODEL", "")
     openhands_model: str = os.getenv("MINIVERSE_OPENHANDS_MODEL", "")
+    openhands_max_iterations: int = int(os.getenv("MINIVERSE_OPENHANDS_MAX_ITERATIONS", "12"))
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
     llm_api_key: str = os.getenv("LLM_API_KEY", "")
     llm_base_url: str | None = os.getenv("MINIVERSE_LLM_BASE_URL") or None
@@ -35,6 +36,10 @@ class Settings:
     worker_health_file: str = os.getenv(
         "MINIVERSE_WORKER_HEALTH_FILE", "/var/lib/miniverse/worker-heartbeat.json"
     )
+
+    def __post_init__(self) -> None:
+        if type(self.openhands_max_iterations) is not int or not 1 <= self.openhands_max_iterations <= 500:
+            raise ValueError("MINIVERSE_OPENHANDS_MAX_ITERATIONS must be an integer between 1 and 500")
 
     def missing_runtime_settings(self) -> list[str]:
         missing: list[str] = []
