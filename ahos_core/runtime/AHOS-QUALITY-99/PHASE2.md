@@ -75,3 +75,25 @@ After the isolated memory, integrity, security and monitoring proofs pass, the
 evidence score becomes **74.67 / 100**. This still does not satisfy the target.
 Concurrency, live recovery, real worker execution, real product acceptance and
 Android/browser evidence remain open.
+
+
+## Verified execution evidence
+
+Windows isolated worktree:
+- Path: `C:\\actions-runner\\_work\\AHOS-QUALITY-99-chatgpt`
+- Branch: `program/AHOS-QUALITY-99-phase2`
+- Command: `python -m pytest -q tests/quality99`
+- Result after fixes: **22 passed in 8.63s**
+- No paid API or external service was called.
+
+GitHub:
+- Head: `38374fac987e57d031f8c5a259915b5a362f38a9`
+- AHOS Core CI: **SUCCESS**
+
+Concurrency caveat:
+- An earlier Windows four-worker stress reproduced a real
+  `PermissionError` on the shared `CodingSupervisorStore` lock file.
+- A later run completed successfully, proving the defect is intermittent rather
+  than disproven.
+- Concurrency remains PARTIAL/high-risk until repeated Windows stress and the
+  shared lock implementation are independently fixed and verified.
