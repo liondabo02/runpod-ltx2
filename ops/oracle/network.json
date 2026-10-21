@@ -1,0 +1,5 @@
+{
+  "vcn_id": "ocid1.vcn.oc1.eu-frankfurt-1.amaaaaaalyuzfhiaq7vyouv5iirwuyeasjue6ua5gtug24tgtusmtxumxbyq",
+  "subnet_id": "ocid1.subnet.oc1.eu-frankfurt-1.aaaaaaaaxd7qxshwtc6ff5xwpcmf2e7es6k2yow7o7zuz3ym67bdukvpvplq",
+  "gateway_id": "ocid1.internetgateway.oc1.eu-frankfurt-1.aaaaaaaaxpwnwmwx5tq2neya7bth3g5tdxtkb2evalxtt7niabujogdrvxeq"
+}

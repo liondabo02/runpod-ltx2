@@ -106,18 +106,14 @@ def main() -> int:
                 response = compute.launch_instance(details)
                 instance = response.data
                 print("OLUŞTURULDU:", instance.id)
-                vnics = compute.list_vnics(compartment_id, instance.id).data
                 public_ip = None
-                for vnic in vnics:
-                    attachments = compute.list_vnic_attachments(
-                        compartment_id, instance_id=instance.id
-                    ).data
-                    for attachment in attachments:
-                        vnic_data = network.get_vnic(attachment.vnic_id).data
+                attachments = compute.list_vnic_attachments(
+                    compartment_id, instance_id=instance.id
+                ).data
+                for attachment in attachments:
+                    vnic_data = network.get_vnic(attachment.vnic_id).data
+                    if vnic_data.public_ip:
                         public_ip = vnic_data.public_ip
-                        if public_ip:
-                            break
-                    if public_ip:
                         break
                 record = {
                     "instance_id": instance.id,

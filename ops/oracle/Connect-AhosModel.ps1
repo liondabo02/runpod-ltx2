@@ -25,8 +25,8 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$ControlPlane = $PSScriptRoot
-$Root = Split-Path -Parent $ControlPlane
+$RepoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$ControlPlane = Join-Path $RepoRoot 'control_plane_v2'
 $PidFile = Join-Path $RuntimeDir "tunnel-$LocalPort.pid"
 
 if (-not (Test-Path -LiteralPath $KeyPath)) {

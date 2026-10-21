@@ -1,0 +1,13 @@
+{
+  "instance_id": "ocid1.instance.oc1.eu-frankfurt-1.antheljslyuzfhic77mlehp6q64dvp765zvs3nlian7ds22jn3psc7zbpr7a",
+  "public_ip": "130.61.35.81",
+  "availability_domain": "WGoD:EU-FRANKFURT-1-AD-2",
+  "region": "eu-frankfurt-1",
+  "shape": "VM.Standard.A1.Flex",
+  "ocpus": 2,
+  "memory_gb": 12,
+  "ssh_user": "ubuntu",
+  "ssh_key": "C:\\Users\\esmak\\.ssh\\ahos-quality-99\\oracle_ed25519",
+  "ollama": "qwen2.5-coder:7b (4.7 GB)",
+  "created_at": "2026-10-21T21:49:14"
+}
