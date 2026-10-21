@@ -443,3 +443,57 @@ def test_daemon_records_tick_errors_in_the_shared_journal(tmp_path):
     assert rows[0]["source"] == "daemon.tick"
     assert rows[0]["kind"] == "RuntimeError"
     assert "disk full" in rows[0]["message"]
+
+
+def test_stale_no_evidence_pause_is_retried_after_cooldown(tmp_path):
+    import os
+    import time
+
+    pause = tmp_path / "autonomy.pause"
+    pause.write_text("2026-10-21T17:52:18+00:00", encoding="utf-8")
+    old = time.time() - 3 * 3600
+    os.utime(pause, (old, old))
+
+    scheduler = FakeScheduler(["idle"])
+    scheduler.state.status = "stopped"
+    daemon = _daemon(
+        tmp_path,
+        scheduler,
+        max_ticks=1,
+        pause_cooldown_minutes=60,
+    )
+    daemon.state.no_evidence_streak = 3
+
+    daemon.run()
+
+    assert not pause.exists(), "süresi geçen duraklama kaldırılmalı"
+    assert read_heartbeat(tmp_path)["no_evidence_streak"] == 0
+
+
+def test_fresh_no_evidence_pause_is_kept(tmp_path):
+    pause = tmp_path / "autonomy.pause"
+    pause.write_text("now", encoding="utf-8")
+
+    scheduler = FakeScheduler(["paused"])
+    daemon = _daemon(tmp_path, scheduler, max_ticks=1, pause_cooldown_minutes=60)
+
+    daemon.run()
+
+    assert pause.exists(), "yeni duraklama bekleme süresi dolmadan kaldırılmamalı"
+
+
+def test_pause_cooldown_can_be_disabled(tmp_path):
+    import os
+    import time
+
+    pause = tmp_path / "autonomy.pause"
+    pause.write_text("old", encoding="utf-8")
+    old = time.time() - 10 * 3600
+    os.utime(pause, (old, old))
+
+    scheduler = FakeScheduler(["paused"])
+    daemon = _daemon(tmp_path, scheduler, max_ticks=1, pause_cooldown_minutes=0)
+
+    daemon.run()
+
+    assert pause.exists()

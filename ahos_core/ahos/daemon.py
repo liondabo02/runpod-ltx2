@@ -226,6 +226,7 @@ class AutonomyDaemon:
         error_log: ErrorLog | None = None,
         daily_budget: bool = True,
         today: Callable[[], str] = lambda: datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        pause_cooldown_minutes: int = 360,
     ) -> None:
         if interval_seconds < 1:
             raise ValueError("interval_seconds >= 1 olmalı")
@@ -249,6 +250,7 @@ class AutonomyDaemon:
         self.error_log = error_log or default_error_log(self.runtime_dir)
         self.daily_budget = bool(daily_budget)
         self.today = today
+        self.pause_cooldown_minutes = int(pause_cooldown_minutes)
         self.state = DaemonState(interval_seconds=self.interval_seconds)
         self._stop_requested = False
         self._last_recorded_mission = ""
@@ -457,9 +459,36 @@ class AutonomyDaemon:
         except Exception:  # pragma: no cover - reset must never break the loop
             pass
 
+    def _maybe_clear_stale_pause(self) -> None:
+        """Retry a no-evidence pause after a cooldown instead of stopping forever.
+
+        Projects change (another agent edits them, new days bring new work), so
+        a no-op today may be a real delivery tomorrow. The cooldown keeps the
+        loop honest: it retries, and pauses again if the work is still empty.
+        """
+
+        if self.pause_cooldown_minutes <= 0:
+            return
+        pause = self.runtime_dir / "autonomy.pause"
+        try:
+            age_seconds = time.time() - pause.stat().st_mtime
+        except OSError:
+            return
+        if age_seconds < self.pause_cooldown_minutes * 60:
+            return
+        try:
+            pause.unlink()
+        except OSError:  # pragma: no cover - race with another process
+            return
+        self.state.no_evidence_streak = 0
+        self.state.last_reason = (
+            f"kanıt duraklaması {int(age_seconds // 60)} dk sonra yeniden denendi"
+        )
+
     def tick_once(self) -> str:
         """Run exactly one scheduler tick and persist the result."""
 
+        self._maybe_clear_stale_pause()
         self._maybe_reset_daily_budget()
         self._apply_executor_mode()
         before: dict[str, TreeSnapshot] | None = None
@@ -602,6 +631,12 @@ def main(argv: list[str] | None = None) -> int:
         help="art arda bu kadar kanıtsız (dosya değiştirmeyen) görevden sonra dur",
     )
     parser.add_argument(
+        "--pause-cooldown-minutes",
+        type=int,
+        default=360,
+        help="kanıtsız görev duraklamasını bu kadar dakika sonra yeniden dene (0 = kapalı)",
+    )
+    parser.add_argument(
         "--max-ticks",
         type=int,
         default=None,
@@ -629,6 +664,7 @@ def main(argv: list[str] | None = None) -> int:
         no_evidence_limit=args.no_evidence_limit,
     )
     daemon.executor_mode = args.executor_mode
+    daemon.pause_cooldown_minutes = args.pause_cooldown_minutes
     daemon.max_ticks = args.max_ticks
 
     def _handle(signum, _frame):

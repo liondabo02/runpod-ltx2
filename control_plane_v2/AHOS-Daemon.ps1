@@ -23,6 +23,7 @@ param(
     [int]$MissionsPerHour = 6,
     [int]$MissionsTotal = 200,
     [int]$NoEvidenceLimit = 3,
+    [int]$PauseCooldownMinutes = 120,
     [string]$LlmBaseUrl = '',
     [string]$LlmModel = 'qwen2.5-coder:7b',
     [string]$LlmApiKey = 'local-only',
@@ -85,7 +86,8 @@ switch ($Action) {
             '--interval-seconds', "$IntervalSeconds",
             '--missions-per-hour', "$MissionsPerHour",
             '--missions-total', "$MissionsTotal",
-            '--no-evidence-limit', "$NoEvidenceLimit"
+            '--no-evidence-limit', "$NoEvidenceLimit",
+            '--pause-cooldown-minutes', "$PauseCooldownMinutes"
         )
         if ($LlmBaseUrl) {
             # Uzak/self-hosted model: RAM kapisi yerel calisma icin; uzak dugumde
