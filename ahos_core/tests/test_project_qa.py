@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from ahos.project_qa import make_project_qa
@@ -119,3 +120,80 @@ def test_acceptance_gate_with_turkish_output_is_not_encoding_blocked(
     )
 
     assert decision.passed is True, decision.summary
+
+
+def _fake_browser(monkeypatch, *, ok: bool, problems=()):
+    import ahos.browser_check as browser_check
+
+    monkeypatch.setenv("AHOS_BROWSER_QA", "1")
+    monkeypatch.setattr(browser_check, "find_browser", lambda: "fake-browser")
+    check = type(
+        "Check",
+        (),
+        {
+            "ok": ok,
+            "dom_bytes": 1234,
+            "seconds": 0.5,
+            "problems": tuple(problems),
+            "screenshot": None,
+        },
+    )()
+    monkeypatch.setattr(browser_check, "check_page", lambda page, out: check)
+
+
+def test_browser_smoke_passes_and_is_recorded(tmp_path, monkeypatch) -> None:
+    root = _web_project(tmp_path)
+    evidence = _evidence(tmp_path)
+    _fake_browser(monkeypatch, ok=True)
+
+    decision = make_project_qa(root, evidence)(
+        _item("produce"), _result("produce", evidence), "qa-01"
+    )
+
+    assert decision.passed is True, decision.summary
+    record = json.loads(next(evidence.glob("qa-*.json")).read_text(encoding="utf-8"))
+    assert record["browser"]["ok"] is True
+    assert record["browser"]["dom_bytes"] == 1234
+
+
+def test_browser_smoke_failure_blocks_delivery(tmp_path, monkeypatch) -> None:
+    root = _web_project(tmp_path)
+    evidence = _evidence(tmp_path)
+    _fake_browser(monkeypatch, ok=False, problems=("konsol hatası: undefined",))
+
+    decision = make_project_qa(root, evidence)(
+        _item("produce"), _result("produce", evidence), "qa-01"
+    )
+
+    assert decision.passed is False
+    assert "Tarayıcı" in decision.summary
+
+
+def test_browser_smoke_can_be_disabled(tmp_path, monkeypatch) -> None:
+    root = _web_project(tmp_path)
+    evidence = _evidence(tmp_path)
+    _fake_browser(monkeypatch, ok=False, problems=("çağrılmamalı",))
+    monkeypatch.setenv("AHOS_BROWSER_QA", "0")
+
+    decision = make_project_qa(root, evidence)(
+        _item("produce"), _result("produce", evidence), "qa-01"
+    )
+
+    assert decision.passed is True, decision.summary
+
+
+def test_browser_smoke_is_skipped_without_a_browser(tmp_path, monkeypatch) -> None:
+    import ahos.browser_check as browser_check
+
+    root = _web_project(tmp_path)
+    evidence = _evidence(tmp_path)
+    monkeypatch.setenv("AHOS_BROWSER_QA", "1")
+    monkeypatch.setattr(browser_check, "find_browser", lambda: None)
+
+    decision = make_project_qa(root, evidence)(
+        _item("produce"), _result("produce", evidence), "qa-01"
+    )
+
+    assert decision.passed is True, decision.summary
+    record = json.loads(next(evidence.glob("qa-*.json")).read_text(encoding="utf-8"))
+    assert record["browser"]["skipped"] == "tarayıcı bulunamadı"

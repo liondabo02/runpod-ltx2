@@ -51,6 +51,66 @@ def test_ticks_until_max_ticks_and_writes_heartbeat(tmp_path):
     assert not (tmp_path / "daemon.pid").exists(), "temiz çıkışta pid dosyası silinmeli"
 
 
+def test_total_quota_stop_is_reset_on_a_new_day(tmp_path):
+    scheduler = FakeScheduler(["idle"])
+    scheduler.state.status = "stopped"
+    scheduler.state.last_reason = "oturum görev limiti doldu"
+    scheduler.state.missions_total = 24
+    daemon = _daemon(tmp_path, scheduler, max_ticks=1, today=lambda: "2026-10-22")
+
+    daemon.run()
+
+    assert scheduler.state.missions_total == 0
+    assert scheduler.state.status == "idle"
+    assert "sıfırlandı" in scheduler.state.last_reason
+    assert read_heartbeat(tmp_path)["budget_reset_at"] == "2026-10-22"
+
+
+def test_quota_reset_happens_once_per_day(tmp_path):
+    scheduler = FakeScheduler(["idle", "idle"])
+    scheduler.state.status = "stopped"
+    scheduler.state.last_reason = "oturum görev limiti doldu"
+    scheduler.state.missions_total = 24
+    daemon = _daemon(tmp_path, scheduler, max_ticks=2, today=lambda: "2026-10-22")
+
+    daemon.run()
+    first = scheduler.state.missions_total
+    scheduler.state.status = "stopped"
+    scheduler.state.last_reason = "oturum görev limiti doldu"
+    scheduler.state.missions_total = 24
+    daemon.tick_once()
+
+    assert first == 0
+    assert scheduler.state.missions_total == 24, "aynı gün ikinci kez sıfırlanmamalı"
+
+
+def test_kill_switch_stop_is_not_reset(tmp_path):
+    scheduler = FakeScheduler(["idle"])
+    scheduler.state.status = "stopped"
+    scheduler.state.last_reason = "kill-switch aktif"
+    scheduler.state.missions_total = 24
+    daemon = _daemon(tmp_path, scheduler, max_ticks=1, today=lambda: "2026-10-22")
+
+    daemon.run()
+
+    assert scheduler.state.missions_total == 24
+    assert read_heartbeat(tmp_path)["budget_reset_at"] == ""
+
+
+def test_daily_budget_can_be_disabled(tmp_path):
+    scheduler = FakeScheduler(["idle"])
+    scheduler.state.status = "stopped"
+    scheduler.state.last_reason = "oturum görev limiti doldu"
+    scheduler.state.missions_total = 24
+    daemon = _daemon(
+        tmp_path, scheduler, max_ticks=1, today=lambda: "2026-10-22", daily_budget=False
+    )
+
+    daemon.run()
+
+    assert scheduler.state.missions_total == 24
+
+
 def test_second_instance_is_refused(tmp_path):
     (tmp_path / "daemon.pid").write_text(
         json.dumps({"pid": os.getppid()}), encoding="utf-8"
@@ -323,3 +383,63 @@ def test_auto_executor_falls_back_when_model_is_not_configured(tmp_path, monkeyp
     heartbeat = read_heartbeat(tmp_path)
     assert heartbeat["executor_mode"] == "deterministic"
     assert heartbeat["executor_reason"] == "model yapılandırılmadı"
+
+
+def test_request_stop_ends_the_loop_gracefully(tmp_path):
+    scheduler = FakeScheduler(["idle", "idle", "idle"])
+    daemon = _daemon(tmp_path, scheduler)
+
+    def sleeper(_seconds: float) -> None:
+        daemon.request_stop()
+
+    daemon.sleep = sleeper
+    assert daemon.run() == 0
+    assert scheduler.calls == 1
+    assert read_heartbeat(tmp_path)["status"] == "stopped"
+
+
+def test_cli_status_reads_the_heartbeat(tmp_path, capsys):
+    from ahos.daemon import main
+
+    (tmp_path / "daemon-state.json").write_text(
+        json.dumps({"status": "running", "ticks": 7}), encoding="utf-8"
+    )
+
+    code = main(["--status", "--runtime-dir", str(tmp_path)])
+
+    assert code == 0
+    printed = capsys.readouterr().out
+    assert '"ticks": 7' in printed
+
+
+def test_cli_status_without_heartbeat(tmp_path, capsys):
+    from ahos.daemon import main
+
+    assert main(["--status", "--runtime-dir", str(tmp_path)]) == 0
+    assert "not-running" in capsys.readouterr().out
+
+
+def test_forced_model_mode_sets_environment(tmp_path):
+    scheduler = FakeScheduler()
+    daemon = _daemon(tmp_path, scheduler, max_ticks=1, executor_mode="model")
+
+    daemon.run()
+
+    assert read_heartbeat(tmp_path)["executor_mode"] == "model"
+    assert os.environ["AHOS_EXECUTOR"] == "model"
+
+
+def test_daemon_records_tick_errors_in_the_shared_journal(tmp_path):
+    from ahos.errors import ErrorLog
+
+    scheduler = FakeScheduler(["idle"])
+    scheduler.raises = [RuntimeError("disk full")]
+    daemon = _daemon(tmp_path, scheduler, max_ticks=1)
+
+    daemon.run()
+
+    rows = ErrorLog(tmp_path / "errors.jsonl").recent(5)
+    assert len(rows) == 1
+    assert rows[0]["source"] == "daemon.tick"
+    assert rows[0]["kind"] == "RuntimeError"
+    assert "disk full" in rows[0]["message"]

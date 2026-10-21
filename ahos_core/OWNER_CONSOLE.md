@@ -52,7 +52,12 @@ Bir departmana proje bağlıysa (`projects.json`), o departmanın görevleri art
 ## Model yürütücüsü (opsiyonel)
 
 `AHOS_EXECUTOR=model` + `AHOS_LLM_BASE_URL`, `AHOS_LLM_API_KEY`, `AHOS_LLM_MODEL`
-verildiğinde proje departmanları modeli kullanır. Güvenlik zinciri:
+verildiğinde proje departmanları modeli kullanır. **Ücretli sağlayıcı varsayılan
+olarak kapalıdır:** yerel/ücretsiz profil (`127.0.0.1:11434` + `qwen2.5-coder:1.5b`)
+her zaman serbesttir; token başına ücretlendiren bir sağlayıcı ancak
+`AHOS_ALLOW_PAID_LLM=1` verilirse kullanılır, aksi hâlde ayarlar yok sayılır ve
+deterministik proje işçisi devreye girer. Daemon `auto` modunda ayrıca en az
+2 GiB boş RAM arar. Güvenlik zinciri:
 
 1. **Yama modu**: `find`/`replace`; hedef tam 1 kez geçmezse uygulanmaz.
 2. **Sahiplik**: proje kökü dışına yazma reddedilir; yalnız metin dosyaları.

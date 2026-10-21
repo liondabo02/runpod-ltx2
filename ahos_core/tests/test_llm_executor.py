@@ -68,11 +68,37 @@ def test_settings_require_base_url_key_and_model() -> None:
             "AHOS_LLM_API_KEY": "k",
             "AHOS_LLM_MODEL": "m",
             "AHOS_LLM_MAX_USD": "0.02",
+            "AHOS_ALLOW_PAID_LLM": "1",
         }
     )
     assert settings is not None
     assert settings.chat_url.endswith("/chat/completions")
     assert settings.max_usd_per_run == 0.02
+
+
+def test_paid_provider_is_ignored_without_explicit_opt_in() -> None:
+    # Ücretli sağlayıcı varsayılan olarak kapalı: "0 USD" politikası.
+    assert (
+        load_settings(
+            {
+                "AHOS_LLM_BASE_URL": "https://api.example/v1",
+                "AHOS_LLM_API_KEY": "k",
+                "AHOS_LLM_MODEL": "gpt-4o-mini",
+            }
+        )
+        is None
+    )
+
+
+def test_local_model_is_always_allowed() -> None:
+    settings = load_settings(
+        {
+            "AHOS_LLM_BASE_URL": "http://127.0.0.1:11434/v1",
+            "AHOS_LLM_MODEL": "qwen2.5-coder:1.5b",
+        }
+    )
+    assert settings is not None
+    assert settings.max_usd_per_run == 0
 
 
 def test_prompt_contains_task_and_inventory(tmp_path) -> None:

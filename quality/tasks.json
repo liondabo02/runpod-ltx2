@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "updated_at": "2026-10-18T13:15:51.705149+00:00",
+  "tasks": [
+    {
+      "task_id": "20261018-125052-3b0cb2",
+      "title": "Q99-003 Mipiluna icin yeni deterministik yetenek katalogu (LLM beklemeden)",
+      "state": "claimed",
+      "owner": "quality-99",
+      "created_at": "2026-10-18T12:50:52.042282+00:00",
+      "updated_at": "2026-10-18T12:50:52.972369+00:00",
+      "lease_until": 1792328752.97237,
+      "attempts": 1,
+      "files": [],
+      "test_command": "",
+      "evidence": [],
+      "reason": ""
+    },
+    {
+      "task_id": "20261018-125052-cc3c2e",
+      "title": "Q99-004 Cokme kurtarma: yarim gorev yeniden baslatmada kaybolmaz",
+      "state": "queued",
+      "owner": "",
+      "created_at": "2026-10-18T12:50:52.223103+00:00",
+      "updated_at": "2026-10-18T12:50:52.223103+00:00",
+      "lease_until": 0.0,
+      "attempts": 0,
+      "files": [],
+      "test_command": "",
+      "evidence": [],
+      "reason": ""
+    },
+    {
+      "task_id": "20261018-125052-444e87",
+      "title": "Q99-005 Panel tekillik: 8765/8766 ayni kod ve daemon heartbeat",
+      "state": "queued",
+      "owner": "",
+      "created_at": "2026-10-18T12:50:52.400288+00:00",
+      "updated_at": "2026-10-18T12:50:52.400288+00:00",
+      "lease_until": 0.0,
+      "attempts": 0,
+      "files": [],
+      "test_command": "",
+      "evidence": [],
+      "reason": ""
+    },
+    {
+      "task_id": "20261018-125052-479fb2",
+      "title": "Q99-010 Merkezi hata gunlugu (errors.jsonl) + panelde son 20 hata",
+      "state": "queued",
+      "owner": "",
+      "created_at": "2026-10-18T12:50:52.642758+00:00",
+      "updated_at": "2026-10-18T12:50:52.642758+00:00",
+      "lease_until": 0.0,
+      "attempts": 0,
+      "files": [],
+      "test_command": "",
+      "evidence": [],
+      "reason": ""
+    },
+    {
+      "task_id": "20261018-125052-606edf",
+      "title": "Q99-011 100 sentetik gorev yuk testi (soak)",
+      "state": "queued",
+      "owner": "",
+      "created_at": "2026-10-18T12:50:52.814495+00:00",
+      "updated_at": "2026-10-18T12:50:52.814495+00:00",
+      "lease_until": 0.0,
+      "attempts": 0,
+      "files": [],
+      "test_command": "",
+      "evidence": [],
+      "reason": ""
+    },
+    {
+      "task_id": "20261018-131551-7332a2",
+      "title": "Mipiluna: 6 kartta 'undefined' etiket metni (kartlar aciliyor, metin bozuk)",
+      "state": "queued",
+      "owner": "",
+      "created_at": "2026-10-18T13:15:51.705149+00:00",
+      "updated_at": "2026-10-18T13:15:51.705149+00:00",
+      "lease_until": 0.0,
+      "attempts": 0,
+      "files": [],
+      "test_command": "",
+      "evidence": [],
+      "reason": ""
+    }
+  ]
+}

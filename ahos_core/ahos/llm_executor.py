@@ -46,6 +46,23 @@ class ModelSettings:
         return base + "/chat/completions"
 
 
+def _paid_provider_allowed(source: Mapping[str, str]) -> bool:
+    """Paid providers are opt-in, not the default.
+
+    The holding promises a zero-dollar budget. A local model (zero pricing) is
+    always allowed; anything that bills per token must be turned on explicitly
+    with ``AHOS_ALLOW_PAID_LLM=1`` or it is ignored and the deterministic
+    worker takes over.
+    """
+
+    return str(source.get("AHOS_ALLOW_PAID_LLM", "")).strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+
 def load_settings(env: Mapping[str, str] | None = None) -> ModelSettings | None:
     source = os.environ if env is None else env
     base_url = (
@@ -68,6 +85,10 @@ def load_settings(env: Mapping[str, str] | None = None) -> ModelSettings | None:
             max_usd_per_run=0, input_usd_per_1k=0, output_usd_per_1k=0,
             timeout_seconds=90, max_files=2, max_bytes=26000)
     if not (base_url and api_key and model):
+        return None
+    if not _paid_provider_allowed(source):
+        # Ücretli sağlayıcı varsayılan olarak kapalı; sessizce deterministik
+        # işçiye düşülür, böylece "0 USD" iddiası gerçek olur.
         return None
 
     def _float(name: str, default: float) -> float:

@@ -32,6 +32,33 @@ def digest_file(path, limit):
     return digest.hexdigest(), read
 
 
+def _browser_smoke(index, evidence, task_id):
+    """Load the page in a headless browser when one is available.
+
+    Fail-open when no browser exists (CI containers): the static checks still
+    run, and the QA record notes that the browser step was skipped.
+    """
+
+    if os.environ.get('AHOS_BROWSER_QA', '1').strip().lower() in {'0', 'false', 'off', 'no'}:
+        return None
+    try:
+        from .browser_check import check_page, find_browser
+
+        if find_browser() is None:
+            return {'ok': True, 'skipped': 'tarayıcı bulunamadı'}
+        safe = re.sub('[^A-Za-z0-9_-]', '_', task_id)[:80]
+        check = check_page(index, Path(evidence) / 'browser' / safe)
+    except Exception as exc:  # browser check must never crash QA
+        return {'ok': False, 'problems': f'{type(exc).__name__}: {exc}'[:200]}
+    return {
+        'ok': bool(check.ok),
+        'dom_bytes': int(check.dom_bytes),
+        'seconds': float(check.seconds),
+        'problems': '; '.join(check.problems[:2]),
+        'screenshot': check.screenshot,
+    }
+
+
 def make_project_qa(project_root, evidence_root):
     root = Path(project_root).resolve()
     evidence = Path(evidence_root).resolve()
@@ -42,6 +69,7 @@ def make_project_qa(project_root, evidence_root):
         mission_guard.guard()
         problems = []
         hashes = {}
+        browser = None
         try:
             if result.task_id != item.task_id or not result.success:
                 raise ValueError('İşçi sonucu görevle eşleşmiyor veya başarısız')
@@ -79,6 +107,12 @@ def make_project_qa(project_root, evidence_root):
                     report = scan_assets(root)
                     if not report.checked_files or report.missing:
                         raise ValueError('Bağımsız varlık denetimi başarısız')
+                    browser = _browser_smoke(index, evidence, item.task_id)
+                    if browser is not None and not browser.get('ok'):
+                        raise ValueError(
+                            'Tarayıcı duman testi başarısız: '
+                            + str(browser.get('problems') or 'sayfa yüklenemedi')
+                        )
                     gate = root / 'tools' / 'check_offline.py'
                     if gate.is_file():
                         from .acceptance import trusted_gate
@@ -119,7 +153,8 @@ def make_project_qa(project_root, evidence_root):
         passed = not problems
         record = dict(task_id=item.task_id, producer=result.worker_id, verifier=qa_worker_id,
                       passed=passed, scope='static web integrity only; functionality and human fit unverified',
-                      source_hashes=hashes, problems=problems, model_calls=0)
+                      source_hashes=hashes, problems=problems, model_calls=0,
+                      browser=browser)
         evidence.mkdir(parents=True, exist_ok=True)
         safe = re.sub('[^A-Za-z0-9_-]', '_', item.task_id)[:100]
         path = evidence / ('qa-' + safe + '-' + uuid.uuid4().hex + '.json')
