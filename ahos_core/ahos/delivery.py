@@ -34,6 +34,38 @@ IGNORED_PARTS = {
 MAX_FILES = 3000
 MAX_LISTED = 25
 
+# Runtime chatter is not a delivery. Another process (or the project itself)
+# writing logs, databases or scratch state must never be counted as work the
+# mission produced, otherwise a blocked mission looks successful.
+VOLATILE_PARTS = {
+    "logs",
+    "log",
+    "tmp",
+    "temp",
+    "cache",
+    ".cache",
+    "data",
+    ".storage",
+}
+VOLATILE_SUFFIXES = (
+    ".log",
+    ".sqlite3",
+    ".sqlite3-wal",
+    ".sqlite3-shm",
+    ".db",
+    ".db-wal",
+    ".db-shm",
+    ".pid",
+    ".tmp",
+    ".pyc",
+)
+
+
+def _is_volatile(relative) -> bool:
+    if any(part in VOLATILE_PARTS for part in relative.parts[:-1]):
+        return True
+    return relative.name.lower().endswith(VOLATILE_SUFFIXES)
+
 
 @dataclass(frozen=True)
 class TreeSnapshot:
@@ -81,6 +113,8 @@ def snapshot_tree(root: str | Path, *, max_files: int = MAX_FILES) -> TreeSnapsh
         except ValueError:  # pragma: no cover - defensive
             continue
         if any(part in IGNORED_PARTS for part in relative.parts):
+            continue
+        if _is_volatile(relative):
             continue
         if path.is_symlink() or not path.is_file():
             continue

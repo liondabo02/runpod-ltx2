@@ -419,6 +419,25 @@ def test_cli_status_without_heartbeat(tmp_path, capsys):
     assert "not-running" in capsys.readouterr().out
 
 
+def test_volatile_runtime_files_are_not_counted_as_delivery(tmp_path):
+    root = tmp_path / "proj"
+    (root / "data").mkdir(parents=True)
+    (root / "www").mkdir()
+    (root / "www" / "app.js").write_text("a", encoding="utf-8")
+    (root / "data" / "state.json").write_text("{}", encoding="utf-8")
+    before = snapshot_tree(root)
+
+    (root / "data" / "state.json").write_text('{"x":1}', encoding="utf-8")
+    (root / "service.log").write_text("noise", encoding="utf-8")
+    (root / "state.sqlite3").write_text("db", encoding="utf-8")
+    (root / "www" / "app.js").write_text("b", encoding="utf-8")
+
+    diff = diff_trees(before, snapshot_tree(root))
+
+    assert diff.modified == ("www/app.js",), "yalnız kaynak değişikliği sayılmalı"
+    assert diff.added == (), "log/veritabanı/data dosyaları teslimat sayılmamalı"
+
+
 def test_model_env_file_is_loaded_without_overriding_process_env(tmp_path, monkeypatch):
     from ahos.daemon import _load_model_env
 

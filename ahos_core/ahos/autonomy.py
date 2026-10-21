@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -74,6 +75,7 @@ class AutonomyRunner:
         self.state_path = self.runtime_dir / "autonomy-state.json"
         self.pause_path = self.runtime_dir / "autonomy.pause"
         self.stop_path = self.runtime_dir / "autonomy.stop"
+        self.plan_path = self.runtime_dir / "auto-plan.json"
         self.office = HoldingOffice(console)
         self.state = AutonomyState()
 
@@ -270,6 +272,124 @@ class AutonomyRunner:
                     counts[key] = counts.get(key, 0) + 1
         return counts
 
+    # ------------------------------------------------------------ model planning
+    def recent_objectives(self, limit: int = 20) -> list[str]:
+        """Most recent objective titles, newest first (from the dedupe ledger)."""
+
+        if not self.dedupe_path.exists():
+            return []
+        titles: list[str] = []
+        for line in self.dedupe_path.read_text(encoding="utf-8", errors="ignore").splitlines():
+            if not line.strip():
+                continue
+            try:
+                entry = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            objective = str(entry.get("objective") or "").strip()
+            if objective and objective not in titles:
+                titles.append(objective)
+        return titles[-limit:][::-1]
+
+    def _department_map(self) -> dict[str, str]:
+        names: dict[str, str] = {}
+        for status in self.office.assessment():
+            spec = self.console.book.get(status.department_id)
+            names[status.department_id] = spec.name if spec else status.department_id
+        return names
+
+    def _project_map(self) -> dict[str, list[str]]:
+        projects: dict[str, list[str]] = {}
+        if self.console.projects is None:
+            return projects
+        for department_id in self._department_map():
+            linked = self.console.projects.for_department(department_id)
+            projects[department_id] = [link.name for link in linked]
+        return projects
+
+    def _load_plan(self, day: str) -> list[dict] | None:
+        """Today's plan, or None when it has not been generated yet.
+
+        An existing but empty plan means "generated and exhausted": the loop
+        must stay idle instead of asking the model again on every tick.
+        """
+
+        try:
+            payload = json.loads(self.plan_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return None
+        if str(payload.get("day") or "") != day:
+            return None
+        items = payload.get("objectives")
+        return list(items) if isinstance(items, list) else None
+
+    def _save_plan(self, day: str, items: list[dict]) -> None:
+        self.plan_path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = self.plan_path.with_suffix(".tmp")
+        tmp.write_text(
+            json.dumps({"day": day, "objectives": items}, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        os.replace(tmp, self.plan_path)
+
+    def plan_directive(self, excluded: set[str] | None = None) -> "Directive | None":
+        """Turn the model's plan for today into the next directive.
+
+        The plan is generated once per UTC day and consumed item by item, so a
+        restart never repeats a task and the loop keeps moving after the fixed
+        growth cycle is exhausted. Any failure leaves the loop idle instead of
+        blocking it.
+        """
+
+        from .holding_office import Directive
+        from . import model_planner
+
+        excluded = excluded or set()
+        day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        items = self._load_plan(day)
+        if items is None:
+            try:
+                items = model_planner.propose_objectives(
+                    self._department_map(),
+                    self._project_map(),
+                    self.recent_objectives(),
+                    limit=3,
+                )
+            except Exception:  # noqa: BLE001 - planning is best effort
+                items = []
+            self._save_plan(day, items)
+            if not items:
+                return None
+
+        remaining: list[dict] = []
+        chosen: dict | None = None
+        projects = self._project_map()
+        for item in items:
+            department = str(item.get("department") or "")
+            title = str(item.get("title") or "")
+            if (
+                chosen is None
+                and department not in excluded
+                and department
+                and title
+                and projects.get(department)
+            ):
+                if not self.already_executed(self._key(department, title)):
+                    chosen = item
+                    continue
+            remaining.append(item)
+        if chosen is None:
+            self._save_plan(day, remaining)
+            return None
+        self._save_plan(day, remaining)
+        return Directive(
+            kind="model_plan",
+            department_id=str(chosen["department"]),
+            objective=str(chosen["title"]),
+            reason=str(chosen.get("why") or "model planı"),
+            priority=2,
+        )
+
     def run_once(self) -> ConsoleResult | None:
         blocked = self._blocked_reason()
         if blocked:
@@ -351,6 +471,11 @@ class AutonomyRunner:
                         break
                 if directive is not None:
                     break
+
+        if directive is None:
+            # Sabit döngü tükendiyse modelden günün planını iste; bu, holdingin
+            # "ne yapacağız?" sorusunu kendi kendine yanıtlamasıdır.
+            directive = self.plan_directive(excluded)
 
         if directive is None:
             # Kuyruk boş: executor veya model çağrısı yapılmaz.
