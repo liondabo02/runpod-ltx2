@@ -169,6 +169,7 @@ class DaemonState:
     no_evidence_streak: int = 0
     executor_mode: str = ""
     executor_reason: str = ""
+    budget_reset_at: str = ""
     schema: int = SCHEMA_VERSION
 
     def to_dict(self) -> dict[str, object]:
@@ -186,6 +187,7 @@ class DaemonState:
             "no_evidence_streak": self.no_evidence_streak,
             "executor_mode": self.executor_mode,
             "executor_reason": self.executor_reason,
+            "budget_reset_at": self.budget_reset_at,
         }
 
 
@@ -222,6 +224,8 @@ class AutonomyDaemon:
         ram_probe: Callable[[], int] = available_ram_bytes,
         model_ram_floor: int = 2 * 1024**3,
         error_log: ErrorLog | None = None,
+        daily_budget: bool = True,
+        today: Callable[[], str] = lambda: datetime.now(timezone.utc).strftime("%Y-%m-%d"),
     ) -> None:
         if interval_seconds < 1:
             raise ValueError("interval_seconds >= 1 olmalı")
@@ -243,6 +247,8 @@ class AutonomyDaemon:
         self.ram_probe = ram_probe
         self.model_ram_floor = int(model_ram_floor)
         self.error_log = error_log or default_error_log(self.runtime_dir)
+        self.daily_budget = bool(daily_budget)
+        self.today = today
         self.state = DaemonState(interval_seconds=self.interval_seconds)
         self._stop_requested = False
         self._last_recorded_mission = ""
@@ -419,9 +425,42 @@ class AutonomyDaemon:
                 else f"RAM {free // (1024 ** 2)} MiB < {floor // (1024 ** 2)} MiB"
             )
 
+    def _maybe_reset_daily_budget(self) -> None:
+        """Give a total-quota stop a fresh budget once a new UTC day starts.
+
+        The scheduler's ``max_missions_total`` is lifetime, so without this the
+        holding silently stops for good after N missions. Any other stop
+        (kill-switch, pause, no work) is left untouched.
+        """
+
+        if not self.daily_budget:
+            return
+        state = getattr(self.scheduler, "state", None)
+        if state is None:
+            return
+        if str(getattr(state, "status", "")) != "stopped":
+            return
+        reason = str(getattr(state, "last_reason", "")).lower()
+        if "limit" not in reason:
+            return
+        day = self.today()
+        if self.state.budget_reset_at == day:
+            return
+        try:
+            state.missions_total = 0
+            state.status = "idle"
+            state.last_reason = f"günlük görev bütçesi sıfırlandı ({day})"
+            self.state.budget_reset_at = day
+            save = getattr(self.scheduler, "_save", None)
+            if callable(save):
+                save()
+        except Exception:  # pragma: no cover - reset must never break the loop
+            pass
+
     def tick_once(self) -> str:
         """Run exactly one scheduler tick and persist the result."""
 
+        self._maybe_reset_daily_budget()
         self._apply_executor_mode()
         before: dict[str, TreeSnapshot] | None = None
         if self.tracker is not None and self.tracker.roots():

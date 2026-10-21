@@ -51,6 +51,66 @@ def test_ticks_until_max_ticks_and_writes_heartbeat(tmp_path):
     assert not (tmp_path / "daemon.pid").exists(), "temiz çıkışta pid dosyası silinmeli"
 
 
+def test_total_quota_stop_is_reset_on_a_new_day(tmp_path):
+    scheduler = FakeScheduler(["idle"])
+    scheduler.state.status = "stopped"
+    scheduler.state.last_reason = "oturum görev limiti doldu"
+    scheduler.state.missions_total = 24
+    daemon = _daemon(tmp_path, scheduler, max_ticks=1, today=lambda: "2026-10-22")
+
+    daemon.run()
+
+    assert scheduler.state.missions_total == 0
+    assert scheduler.state.status == "idle"
+    assert "sıfırlandı" in scheduler.state.last_reason
+    assert read_heartbeat(tmp_path)["budget_reset_at"] == "2026-10-22"
+
+
+def test_quota_reset_happens_once_per_day(tmp_path):
+    scheduler = FakeScheduler(["idle", "idle"])
+    scheduler.state.status = "stopped"
+    scheduler.state.last_reason = "oturum görev limiti doldu"
+    scheduler.state.missions_total = 24
+    daemon = _daemon(tmp_path, scheduler, max_ticks=2, today=lambda: "2026-10-22")
+
+    daemon.run()
+    first = scheduler.state.missions_total
+    scheduler.state.status = "stopped"
+    scheduler.state.last_reason = "oturum görev limiti doldu"
+    scheduler.state.missions_total = 24
+    daemon.tick_once()
+
+    assert first == 0
+    assert scheduler.state.missions_total == 24, "aynı gün ikinci kez sıfırlanmamalı"
+
+
+def test_kill_switch_stop_is_not_reset(tmp_path):
+    scheduler = FakeScheduler(["idle"])
+    scheduler.state.status = "stopped"
+    scheduler.state.last_reason = "kill-switch aktif"
+    scheduler.state.missions_total = 24
+    daemon = _daemon(tmp_path, scheduler, max_ticks=1, today=lambda: "2026-10-22")
+
+    daemon.run()
+
+    assert scheduler.state.missions_total == 24
+    assert read_heartbeat(tmp_path)["budget_reset_at"] == ""
+
+
+def test_daily_budget_can_be_disabled(tmp_path):
+    scheduler = FakeScheduler(["idle"])
+    scheduler.state.status = "stopped"
+    scheduler.state.last_reason = "oturum görev limiti doldu"
+    scheduler.state.missions_total = 24
+    daemon = _daemon(
+        tmp_path, scheduler, max_ticks=1, today=lambda: "2026-10-22", daily_budget=False
+    )
+
+    daemon.run()
+
+    assert scheduler.state.missions_total == 24
+
+
 def test_second_instance_is_refused(tmp_path):
     (tmp_path / "daemon.pid").write_text(
         json.dumps({"pid": os.getppid()}), encoding="utf-8"
