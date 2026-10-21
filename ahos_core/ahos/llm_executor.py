@@ -37,6 +37,7 @@ class ModelSettings:
     max_files: int = 3
     max_bytes: int = 80_000
     browser_check: bool = True
+    max_tokens: int = 2048
 
     @property
     def chat_url(self) -> str:
@@ -125,6 +126,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> ModelSettings | None:
             timeout_seconds=int(_float("AHOS_LLM_TIMEOUT", 120)),
             max_files=int(_float("AHOS_LLM_MAX_FILES", 3)),
             max_bytes=int(_float("AHOS_LLM_MAX_BYTES", 80_000)),
+            max_tokens=int(_float("AHOS_LLM_MAX_TOKENS", 4096)),
         )
 
     return ModelSettings(
@@ -134,6 +136,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> ModelSettings | None:
         max_usd_per_run=_float("AHOS_LLM_MAX_USD", 0.05),
         max_files=int(_float("AHOS_LLM_MAX_FILES", 3)),
         max_bytes=int(_float("AHOS_LLM_MAX_BYTES", 80_000)),
+        max_tokens=int(_float("AHOS_LLM_MAX_TOKENS", 2048)),
     )
 
 
@@ -148,6 +151,7 @@ def http_transport(system_prompt: str, user_prompt: str, settings: ModelSettings
     payload = {
         "model": settings.model,
         "temperature": 0.2,
+        "max_tokens": settings.max_tokens,
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},

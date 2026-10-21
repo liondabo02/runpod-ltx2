@@ -419,6 +419,27 @@ def test_cli_status_without_heartbeat(tmp_path, capsys):
     assert "not-running" in capsys.readouterr().out
 
 
+def test_model_env_file_is_loaded_without_overriding_process_env(tmp_path, monkeypatch):
+    from ahos.daemon import _load_model_env
+
+    (tmp_path / "model.env").write_text(
+        "AHOS_LLM_BASE_URL=https://openrouter.ai/api/v1\n"
+        "AHOS_LLM_MODEL=cohere/north-mini-code:free\n"
+        "AHOS_LLM_FREE=1\n",
+        encoding="utf-8",
+    )
+    monkeypatch.delenv("AHOS_LLM_BASE_URL", raising=False)
+    monkeypatch.delenv("AHOS_LLM_MODEL", raising=False)
+    monkeypatch.delenv("AHOS_LLM_FREE", raising=False)
+    monkeypatch.setenv("AHOS_LLM_MODEL", "explicit-wins")
+
+    _load_model_env(tmp_path)
+
+    assert os.environ["AHOS_LLM_BASE_URL"] == "https://openrouter.ai/api/v1"
+    assert os.environ["AHOS_LLM_MODEL"] == "explicit-wins"
+    assert os.environ["AHOS_LLM_FREE"] == "1"
+
+
 def test_forced_model_mode_sets_environment(tmp_path):
     scheduler = FakeScheduler()
     daemon = _daemon(tmp_path, scheduler, max_ticks=1, executor_mode="model")
@@ -426,6 +447,25 @@ def test_forced_model_mode_sets_environment(tmp_path):
     daemon.run()
 
     assert read_heartbeat(tmp_path)["executor_mode"] == "model"
+    assert os.environ["AHOS_EXECUTOR"] == "model"
+
+
+def test_remote_free_endpoint_is_chosen_even_with_low_ram(tmp_path, monkeypatch):
+    import ahos.daemon as daemon_module
+
+    monkeypatch.setattr(daemon_module, "_model_is_configured", lambda: True)
+    monkeypatch.setenv("AHOS_LLM_FREE", "1")
+    monkeypatch.setenv("AHOS_LLM_BASE_URL", "https://openrouter.ai/api/v1")
+    scheduler = FakeScheduler()
+    daemon = _daemon(
+        tmp_path, scheduler, max_ticks=1, executor_mode="auto", ram_probe=lambda: 200 * 1024**2
+    )
+
+    daemon.run()
+
+    heartbeat = read_heartbeat(tmp_path)
+    assert heartbeat["executor_mode"] == "model"
+    assert heartbeat["executor_reason"] == "ücretsiz uzak uç"
     assert os.environ["AHOS_EXECUTOR"] == "model"
 
 

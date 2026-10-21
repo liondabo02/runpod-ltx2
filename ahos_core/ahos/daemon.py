@@ -153,6 +153,24 @@ def _model_is_configured() -> bool:
         return False
 
 
+def _remote_free_endpoint() -> bool:
+    """A declared zero-cost endpoint on another machine needs no local RAM.
+
+    The 2 GiB floor only protects local inference. A remote hosted/owned
+    endpoint (``AHOS_LLM_FREE=1``) is allowed even on a full machine.
+    """
+
+    if str(os.environ.get("AHOS_LLM_FREE", "")).strip().lower() not in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }:
+        return False
+    url = str(os.environ.get("AHOS_LLM_BASE_URL", "")).strip()
+    return bool(url) and "127.0.0.1:11434" not in url
+
+
 @dataclass
 class DaemonState:
     """Persisted heartbeat; every field is derived from real observations."""
@@ -412,11 +430,13 @@ class AutonomyDaemon:
             return
         free = int(self.ram_probe() or 0)
         floor = self.model_ram_floor
-        if _model_is_configured() and free >= floor:
+        if _model_is_configured() and (_remote_free_endpoint() or free >= floor):
             os.environ["AHOS_EXECUTOR"] = "model"
             self.state.executor_mode = "model"
             self.state.executor_reason = (
-                f"RAM {free // (1024 ** 2)} MiB >= {floor // (1024 ** 2)} MiB"
+                "ücretsiz uzak uç"
+                if _remote_free_endpoint()
+                else f"RAM {free // (1024 ** 2)} MiB >= {floor // (1024 ** 2)} MiB"
             )
         else:
             os.environ["AHOS_EXECUTOR"] = "deterministic"
@@ -560,6 +580,26 @@ class AutonomyDaemon:
         return 0
 
 
+def _load_model_env(runtime_dir: str | Path) -> None:
+    """Load ``runtime/model.env`` so the daemon itself (not only the wrapper)
+    sees the model configuration. Explicit process env wins.
+    """
+
+    path = Path(runtime_dir) / "model.env"
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        if key:
+            os.environ.setdefault(key, value.strip())
+
+
 def build_default_daemon(
     runtime_dir: str | Path,
     *,
@@ -575,6 +615,7 @@ def build_default_daemon(
     from .owner_console import build_default_console
 
     runtime = Path(runtime_dir)
+    _load_model_env(runtime)
     console = build_default_console(runtime)
     runner = RecordingRunner(
         AutonomyRunner(
