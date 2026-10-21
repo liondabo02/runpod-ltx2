@@ -22,7 +22,11 @@ param(
     [int]$IntervalSeconds = 60,
     [int]$MissionsPerHour = 6,
     [int]$MissionsTotal = 200,
-    [int]$NoEvidenceLimit = 3
+    [int]$NoEvidenceLimit = 3,
+    [string]$LlmBaseUrl = '',
+    [string]$LlmModel = 'qwen2.5-coder:7b',
+    [string]$LlmApiKey = 'local-only',
+    [switch]$LlmFree
 )
 
 $ErrorActionPreference = 'Stop'
@@ -83,6 +87,16 @@ switch ($Action) {
             '--missions-total', "$MissionsTotal",
             '--no-evidence-limit', "$NoEvidenceLimit"
         )
+        if ($LlmBaseUrl) {
+            # Uzak/self-hosted model: RAM kapisi yerel calisma icin; uzak dugumde
+            # modeli zorla ve sifir maliyet olarak isaretle.
+            $env:AHOS_EXECUTOR = 'model'
+            $env:AHOS_LLM_BASE_URL = $LlmBaseUrl
+            $env:AHOS_LLM_API_KEY = if ($LlmApiKey) { $LlmApiKey } else { 'local-only' }
+            $env:AHOS_LLM_MODEL = $LlmModel
+            if ($LlmFree) { $env:AHOS_LLM_FREE = '1' }
+            $args += @('--executor-mode', 'model')
+        }
         $proc = Start-Process -FilePath $Python -ArgumentList $args -WorkingDirectory $CoreDir `
             -WindowStyle Hidden -PassThru `
             -RedirectStandardOutput $OutLog -RedirectStandardError $ErrLog

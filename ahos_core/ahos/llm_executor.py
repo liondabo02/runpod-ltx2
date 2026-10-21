@@ -63,6 +63,22 @@ def _paid_provider_allowed(source: Mapping[str, str]) -> bool:
     }
 
 
+def _declared_free(source: Mapping[str, str]) -> bool:
+    """An operator-declared zero-cost endpoint (e.g. self-hosted Ollama on a VM).
+
+    A remote machine you own still bills no tokens. Marking it explicitly keeps
+    the default-deny paid policy intact while allowing a bigger free model that
+    the local 2 GiB memory guard would refuse.
+    """
+
+    return str(source.get("AHOS_LLM_FREE", "")).strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+
 def load_settings(env: Mapping[str, str] | None = None) -> ModelSettings | None:
     source = os.environ if env is None else env
     base_url = (
@@ -86,7 +102,8 @@ def load_settings(env: Mapping[str, str] | None = None) -> ModelSettings | None:
             timeout_seconds=90, max_files=2, max_bytes=26000)
     if not (base_url and api_key and model):
         return None
-    if not _paid_provider_allowed(source):
+    free = _declared_free(source)
+    if not free and not _paid_provider_allowed(source):
         # Ücretli sağlayıcı varsayılan olarak kapalı; sessizce deterministik
         # işçiye düşülür, böylece "0 USD" iddiası gerçek olur.
         return None
@@ -96,6 +113,19 @@ def load_settings(env: Mapping[str, str] | None = None) -> ModelSettings | None:
             return float(source.get(name, default))
         except (TypeError, ValueError):
             return default
+
+    if free:
+        return ModelSettings(
+            base_url=base_url,
+            api_key=api_key,
+            model=model,
+            max_usd_per_run=0,
+            input_usd_per_1k=0,
+            output_usd_per_1k=0,
+            timeout_seconds=int(_float("AHOS_LLM_TIMEOUT", 120)),
+            max_files=int(_float("AHOS_LLM_MAX_FILES", 3)),
+            max_bytes=int(_float("AHOS_LLM_MAX_BYTES", 80_000)),
+        )
 
     return ModelSettings(
         base_url=base_url,

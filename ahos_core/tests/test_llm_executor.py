@@ -101,6 +101,35 @@ def test_local_model_is_always_allowed() -> None:
     assert settings.max_usd_per_run == 0
 
 
+def test_declared_free_remote_ollama_skips_the_paid_gate() -> None:
+    settings = load_settings(
+        {
+            "AHOS_LLM_BASE_URL": "http://10.0.0.5:11434/v1",
+            "AHOS_LLM_API_KEY": "local-only",
+            "AHOS_LLM_MODEL": "qwen2.5-coder:7b",
+            "AHOS_LLM_FREE": "1",
+        }
+    )
+
+    assert settings is not None
+    assert settings.input_usd_per_1k == 0
+    assert settings.output_usd_per_1k == 0
+    assert settings.max_usd_per_run == 0
+
+
+def test_remote_ollama_without_the_free_flag_is_still_denied() -> None:
+    assert (
+        load_settings(
+            {
+                "AHOS_LLM_BASE_URL": "http://10.0.0.5:11434/v1",
+                "AHOS_LLM_API_KEY": "local-only",
+                "AHOS_LLM_MODEL": "qwen2.5-coder:7b",
+            }
+        )
+        is None
+    )
+
+
 def test_prompt_contains_task_and_inventory(tmp_path) -> None:
     root = _project(tmp_path)
 
