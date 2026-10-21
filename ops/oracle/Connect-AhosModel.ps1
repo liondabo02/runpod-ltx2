@@ -16,7 +16,7 @@
 param(
     [Parameter(Mandatory = $true)]
     [string]$VmIp,
-    [string]$KeyPath = "$env:USERPROFILE\.ssh\ahos-quality-99",
+    [string]$KeyPath = "$env:USERPROFILE\.ssh\ahos-quality-99\oracle_ed25519",
     [string]$User = 'ubuntu',
     [int]$LocalPort = 11500,
     [string]$Model = 'qwen2.5-coder:7b',
