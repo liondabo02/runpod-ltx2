@@ -398,6 +398,67 @@ class AutonomyRunner:
             priority=2,
         )
 
+    def _retry_budget_path(self) -> Path:
+        return self.runtime_dir / "autonomy-retries.json"
+
+    def _reopen_blocked(self, spec, objective: str) -> bool:
+        """Give a blocked mission one fresh attempt per day.
+
+        The queue keeps a mission id in BLOCKED forever, so a fixed bug (a
+        parser change, a transient model error) could never be re-verified with
+        the same objective. One bounded retry per day keeps that possible
+        without turning a permanent failure into an endless loop.
+        """
+
+        queue = getattr(self.console, "queue", None)
+        if queue is None:
+            return False
+        try:
+            # Görev kimliği yalnız nesne metninden türetilmiyor; kuyrukta bu
+            # departman + hedef için engellenmiş satırı bul ve onu yeniden aç.
+            with queue._connect() as conn:  # noqa: SLF001 - aynı paket
+                rows = conn.execute(
+                    """
+                    SELECT mission_id, status FROM missions
+                    WHERE primary_department = ? AND lower(objective) = lower(?)
+                      AND status IN ('blocked', 'failed')
+                    ORDER BY updated_at DESC LIMIT 1
+                    """,
+                    (spec.department_id, objective),
+                ).fetchall()
+        except Exception:  # noqa: BLE001 - queue schema is theirs
+            return False
+        if not rows:
+            return False
+        mission_id = str(rows[0]["mission_id"])
+
+        day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        try:
+            retries = json.loads(self._retry_budget_path().read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            retries = {}
+        if str(retries.get("day") or "") != day:
+            retries = {"day": day, "ids": []}
+        ids = [str(item) for item in retries.get("ids", [])]
+        if mission_id in ids:
+            return False
+        ids.append(mission_id)
+        retries["ids"] = ids[-200:]
+        try:
+            self._retry_budget_path().write_text(
+                json.dumps(retries, ensure_ascii=False), encoding="utf-8"
+            )
+            queue.enqueue(
+                mission_id=mission_id,
+                objective=objective,
+                primary_department=spec.department_id,
+                max_attempts=2,
+                replace_existing=True,
+            )
+        except Exception:  # noqa: BLE001 - retry is best effort
+            return False
+        return True
+
     def run_once(self) -> ConsoleResult | None:
         blocked = self._blocked_reason()
         if blocked:
@@ -511,6 +572,8 @@ class AutonomyRunner:
         started = time.monotonic()
         attempts = 0
         result: ConsoleResult | None = None
+
+        self._reopen_blocked(spec, directive.objective)
 
         while attempts <= self.limits.max_retries:
             attempts += 1
