@@ -20,8 +20,8 @@ param(
     [string]$RuntimeDir = 'C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\ahos_core\runtime',
 
     [int]$IntervalSeconds = 60,
-    [int]$MissionsPerHour = 2,
-    [int]$MissionsTotal = 6,
+    [int]$MissionsPerHour = 6,
+    [int]$MissionsTotal = 200,
     [int]$NoEvidenceLimit = 3
 )
 
