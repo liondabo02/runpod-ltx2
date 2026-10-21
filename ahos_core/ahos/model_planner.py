@@ -13,7 +13,7 @@ import json
 import re
 from typing import Iterable, Mapping
 
-from .llm_executor import ModelError, http_transport, load_settings
+from .llm_executor import ModelError, http_transport, load_settings, parse_json_object
 
 SYSTEM_PROMPT = (
     "Sen bir yazılım holdinginin planlama kurulunun başkanısın. Sana verilen "
@@ -51,16 +51,7 @@ def build_context(
 
 
 def _extract_json(raw: str) -> dict:
-    match = re.search(r"\{.*\}", raw, re.DOTALL)
-    if not match:
-        raise ModelError("planlayıcı yanıtında JSON bulunamadı")
-    try:
-        payload = json.loads(match.group(0))
-    except json.JSONDecodeError as exc:
-        raise ModelError(f"planlayıcı JSON'u çözümlenemedi: {exc}") from exc
-    if not isinstance(payload, dict):
-        raise ModelError("planlayıcı yanıtı nesne değil")
-    return payload
+    return parse_json_object(raw)
 
 
 def validate_objectives(

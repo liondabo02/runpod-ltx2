@@ -71,6 +71,23 @@ def test_plan_directive_skips_objectives_already_executed(tmp_path, monkeypatch)
     assert runner.plan_directive() is None
 
 
+def test_planner_only_sees_departments_with_projects(tmp_path, monkeypatch) -> None:
+    from ahos import model_planner
+
+    runner = _runner(tmp_path)
+    captured: dict = {}
+
+    def fake_propose(departments, projects, recent, limit=3, **kwargs):
+        captured["departments"] = dict(departments)
+        return [{"department": "oyun", "title": "Ana sayfaya günün oyunu şeridi ekle", "why": ""}]
+
+    monkeypatch.setattr(model_planner, "propose_objectives", fake_propose)
+
+    runner.plan_directive()
+
+    assert set(captured["departments"]) == {"oyun"}, "projesiz departman plana girmemeli"
+
+
 def test_plan_directive_skips_departments_without_projects(tmp_path, monkeypatch) -> None:
     runner = _runner(tmp_path)
     _fake_plan(

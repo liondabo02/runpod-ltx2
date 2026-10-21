@@ -348,10 +348,18 @@ class AutonomyRunner:
         day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         items = self._load_plan(day)
         if items is None:
+            projects = self._project_map()
+            # Yalnız gerçek projesi olan departmanlar önerilebilir; aksi hâlde
+            # plan, işçisi olmayan bir göreve dönüşür.
+            departments = {
+                department: name
+                for department, name in self._department_map().items()
+                if projects.get(department)
+            }
             try:
                 items = model_planner.propose_objectives(
-                    self._department_map(),
-                    self._project_map(),
+                    departments,
+                    projects,
                     self.recent_objectives(),
                     limit=3,
                 )

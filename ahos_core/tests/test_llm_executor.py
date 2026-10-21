@@ -12,6 +12,7 @@ from ahos.llm_executor import (
     estimate_cost,
     load_settings,
     make_model_executor,
+    parse_json_object,
     parse_model_response,
 )
 from ahos.workforce_execution import WorkItem
@@ -410,3 +411,9 @@ def test_failed_verification_rolls_back_files(tmp_path) -> None:
     assert result.success is False
     assert "geri alındı" in result.summary
     assert (root / "www" / "game.js").read_text(encoding="utf-8") == original
+
+
+def test_json_parser_takes_the_first_object_and_ignores_trailing_text() -> None:
+    # Model bazen JSON'dan sonra açıklama ekler; eski "Extra data" hatası.
+    assert parse_json_object('{"a": 1} açıklama {"b": 2}') == {"a": 1}
+    assert parse_json_object('metin\n{"edits": []}\nson') == {"edits": []}

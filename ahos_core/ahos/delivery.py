@@ -8,6 +8,7 @@ no content hashing, hard caps on file count.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, Mapping
@@ -107,25 +108,32 @@ def snapshot_tree(root: str | Path, *, max_files: int = MAX_FILES) -> TreeSnapsh
     if not base.is_dir():
         return TreeSnapshot(root=str(base))
     truncated = False
-    for path in base.rglob("*"):
-        try:
-            relative = path.relative_to(base)
-        except ValueError:  # pragma: no cover - defensive
-            continue
-        if any(part in IGNORED_PARTS for part in relative.parts):
-            continue
-        if _is_volatile(relative):
-            continue
-        if path.is_symlink() or not path.is_file():
-            continue
-        if len(files) >= max_files:
-            truncated = True
+    skip_parts = IGNORED_PARTS | VOLATILE_PARTS
+    for dirpath, dirnames, filenames in os.walk(base):
+        # Klasörleri yürürken buda: node_modules/data gibi ağaçlar hiç gezilmez.
+        dirnames[:] = [
+            name for name in dirnames if name not in skip_parts and not name.startswith(".")
+        ]
+        for name in filenames:
+            path = Path(dirpath) / name
+            try:
+                relative = path.relative_to(base)
+            except ValueError:  # pragma: no cover - defensive
+                continue
+            if _is_volatile(relative):
+                continue
+            if path.is_symlink() or not path.is_file():
+                continue
+            if len(files) >= max_files:
+                truncated = True
+                break
+            try:
+                stat = path.stat()
+            except OSError:
+                continue
+            files[relative.as_posix()] = (stat.st_size, stat.st_mtime_ns)
+        if truncated:
             break
-        try:
-            stat = path.stat()
-        except OSError:
-            continue
-        files[relative.as_posix()] = (stat.st_size, stat.st_mtime_ns)
     return TreeSnapshot(root=str(base), files=files, truncated=truncated)
 
 

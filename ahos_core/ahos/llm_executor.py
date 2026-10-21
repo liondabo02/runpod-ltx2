@@ -331,14 +331,28 @@ class ModelResponse:
     risk: str = "low"
 
 
-def parse_model_response(raw: str, root: Path) -> ModelResponse:
-    match = re.search(r"\{.*\}", raw, re.DOTALL)
-    if not match:
+def parse_json_object(raw: str) -> dict:
+    """First complete JSON object in a model reply, tolerating trailing prose.
+
+    Models often append an explanation or a second block after the object. A
+    greedy ``{...}`` match then yields "Extra data" and the whole step fails, so
+    decode exactly one value from the first brace instead.
+    """
+
+    start = raw.find("{")
+    if start < 0:
         raise ModelError("model yanıtında JSON bulunamadı")
     try:
-        payload = json.loads(match.group(0))
+        payload, _end = json.JSONDecoder().raw_decode(raw[start:])
     except json.JSONDecodeError as exc:
         raise ModelError(f"JSON çözümlenemedi: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise ModelError("model yanıtı JSON nesnesi değil")
+    return payload
+
+
+def parse_model_response(raw: str, root: Path) -> ModelResponse:
+    payload = parse_json_object(raw)
 
     summary = str(payload.get("summary") or "").strip()
     raw_edits = payload.get("edits")
