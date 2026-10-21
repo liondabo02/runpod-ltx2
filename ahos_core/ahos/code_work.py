@@ -644,6 +644,71 @@ def apply_hint_module(root: str | Path) -> tuple[str, ...]:
     return tuple(applied)
 
 
+ERROR_BOUNDARY_JS = """'use strict';
+/* Hata siniri: beklenmedik bir hata oyunu kilitlemesin (AHOS) */
+(function () {
+  if (window.__ahosErrorBoundary) return;
+  window.__ahosErrorBoundary = true;
+  function show(detail) {
+    if (document.getElementById('ahos-hata-kutu')) return;
+    var style = document.createElement('style');
+    style.textContent = '#ahos-hata-kutu{position:fixed;inset:0;background:rgba(31,35,64,.8);display:grid;place-items:center;z-index:99999;padding:20px}#ahos-hata-kutu .ahos-hata-kart{background:#fffdf6;border-radius:22px;padding:24px;max-width:420px;text-align:center}#ahos-hata-kutu h2{margin:0 0 8px;font-size:24px}#ahos-hata-kutu p{margin:0 0 16px;font-size:17px}#ahos-hata-kutu button{font-size:18px;padding:12px 20px;border-radius:16px;border:0;background:#8f7bd8;color:#fff}';
+    document.head.appendChild(style);
+    var box = document.createElement('div');
+    box.id = 'ahos-hata-kutu';
+    box.setAttribute('role', 'alert');
+    box.innerHTML = '<div class="ahos-hata-kart"><h2>Bir aksaklik oldu</h2><p>Oyunu yeniden baslatmayi deneyelim.</p><button type="button">Tekrar dene</button></div>';
+    box.querySelector('button').addEventListener('click', function () { location.reload(); });
+    document.body.appendChild(box);
+    try { console.warn('AHOS hata siniri:', detail); } catch (e) {}
+  }
+  window.addEventListener('error', function (event) {
+    show(event && event.message ? event.message : 'error');
+  });
+  window.addEventListener('unhandledrejection', function (event) {
+    show(event && event.reason ? String(event.reason) : 'rejection');
+  });
+})();
+"""
+
+
+def apply_error_boundary(root: str | Path) -> tuple[str, ...]:
+    """Show a friendly retry card on unexpected JS errors instead of a dead screen."""
+
+    _guard(root)
+    web_root = detect_web_root(root)
+    index = web_root / "index.html"
+    if not index.exists():
+        return ()
+
+    applied: list[str] = []
+    module = web_root / "hata-siniri.js"
+    if not module.exists():
+        module.write_text(ERROR_BOUNDARY_JS, encoding="utf-8")
+        applied.append("hata-siniri.js eklendi")
+
+    html = index.read_text(encoding="utf-8", errors="replace")
+    if "hata-siniri.js" not in html:
+        if "</body>" in html:
+            html = html.replace(
+                "</body>", '<script src="hata-siniri.js"></script></body>', 1
+            )
+        else:
+            html += '<script src="hata-siniri.js"></script>'
+        index.write_text(html, encoding="utf-8")
+        applied.append("index.html'e hata-siniri.js bağlandı")
+
+    precache = web_root / "precache.js"
+    if precache.exists():
+        text = precache.read_text(encoding="utf-8", errors="replace")
+        if '"hata-siniri.js"' not in text:
+            text = text.replace("[", '["hata-siniri.js",', 1)
+            precache.write_text(text, encoding="utf-8")
+            applied.append("önbelleğe hata-siniri.js eklendi")
+
+    return tuple(applied)
+
+
 TEXT_SCALE_JS = """'use strict';
 /* Buyuk yazi modu: 2-5 yas icin okunabilirlik (AHOS) */
 (function () {
@@ -928,6 +993,7 @@ def make_project_executor(
             applied.extend(apply_press_feedback(root))
             applied.extend(apply_hint_module(root))
             applied.extend(apply_text_scale(root))
+            applied.extend(apply_error_boundary(root))
             applied.extend(fix_precache(root))
             applied.extend(install_quality_gate(root))
             after = snapshot(root)
