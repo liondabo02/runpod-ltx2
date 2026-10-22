@@ -419,6 +419,18 @@ def test_cli_status_without_heartbeat(tmp_path, capsys):
     assert "not-running" in capsys.readouterr().out
 
 
+def test_skipped_mission_does_not_grow_the_no_evidence_streak(tmp_path):
+    scheduler = FakeScheduler(["idle"])
+    scheduler.state.status = "idle"
+    scheduler.state.last_reason = "zaten tamamlanmış görev atlandı"
+    daemon = _daemon(tmp_path, scheduler, max_ticks=1)
+
+    daemon.run()
+
+    heartbeat = read_heartbeat(tmp_path)
+    assert heartbeat["no_evidence_streak"] == 0, "iş denenmediyse seri büyümemeli"
+
+
 def test_volatile_runtime_files_are_not_counted_as_delivery(tmp_path):
     root = tmp_path / "proj"
     (root / "data").mkdir(parents=True)

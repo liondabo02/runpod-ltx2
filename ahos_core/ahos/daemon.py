@@ -524,7 +524,12 @@ class AutonomyDaemon:
         self.state.last_reason = str(
             getattr(getattr(self.scheduler, "state", None), "last_reason", "") or ""
         )[:200]
-        self._record_evidence(filesystem)
+        if "atlandı" in self.state.last_reason or "boşta" in self.state.last_reason:
+            # İş denenmedi (tamamlanmış görev atlandı ya da kuyruk boş):
+            # kanıtsızlık serisi büyümemeli, yoksa döngü boşuna duraklar.
+            self.state.no_evidence_streak = 0
+        else:
+            self._record_evidence(filesystem)
         self.write_heartbeat()
         return status
 
