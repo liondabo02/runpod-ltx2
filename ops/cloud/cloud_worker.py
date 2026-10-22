@@ -80,9 +80,14 @@ def prompt_for(task: str) -> str:
 
 LOCAL_URL = os.environ.get("AHOS_LOCAL_URL", "http://127.0.0.1:11434/v1")
 LOCAL_MODEL = os.environ.get("AHOS_LOCAL_MODEL", "qwen2.5-coder:3b")
+STOP_FILE = Path(os.environ.get("AHOS_CLOUD_STOP", HOME / "ahos" / "STOP"))
+MAX_TASKS_PER_RUN = int(os.environ.get("AHOS_MAX_TASKS_PER_RUN", "2"))
+MAX_TASKS_IN_LIST = int(os.environ.get("AHOS_MAX_TASKS_IN_LIST", "40"))
+RUN_BUDGET_SECONDS = int(os.environ.get("AHOS_RUN_BUDGET_SECONDS", "1500"))
+REQUEST_TIMEOUT = int(os.environ.get("AHOS_REQUEST_TIMEOUT", "120"))
 
 
-def _chat(system: str, prompt: str, max_tokens: int = 8192) -> tuple[str, str]:
+def _chat(system: str, prompt: str, max_tokens: int = 8192, timeout: int = REQUEST_TIMEOUT) -> tuple[str, str]:
     """Try every free remote model, then the VM's own Ollama.
 
     Free endpoints are rate limited in the evening; the local 3B model is slower
@@ -113,7 +118,7 @@ def _chat(system: str, prompt: str, max_tokens: int = 8192) -> tuple[str, str]:
         ).encode("utf-8")
         request = urllib.request.Request(url, data=payload, headers=headers, method="POST")
         try:
-            with urllib.request.urlopen(request, timeout=180) as response:
+            with urllib.request.urlopen(request, timeout=max(10, timeout)) as response:
                 body = json.loads(response.read().decode("utf-8"))
             choice = body["choices"][0]
             if str(choice.get("finish_reason") or "") == "length":
@@ -130,8 +135,8 @@ def _chat(system: str, prompt: str, max_tokens: int = 8192) -> tuple[str, str]:
     raise RuntimeError(last_error)
 
 
-def call_model(task: str) -> tuple[str, str]:
-    return _chat(SYSTEM, prompt_for(task))
+def call_model(task: str, timeout: int = REQUEST_TIMEOUT) -> tuple[str, str]:
+    return _chat(SYSTEM, prompt_for(task), timeout=timeout)
 
 
 def parse(raw: str) -> dict:
@@ -179,7 +184,9 @@ PLANNER_SYSTEM = (
 )
 
 
-def propose_tasks(existing: list[str], limit: int = 3) -> list[str]:
+def propose_tasks(
+    existing: list[str], limit: int = 3, timeout: int = REQUEST_TIMEOUT
+) -> list[str]:
     """Ask the model for new objectives when the task list has been consumed."""
 
     files = project_files(60)
@@ -191,7 +198,9 @@ def propose_tasks(existing: list[str], limit: int = 3) -> list[str]:
         + "\n\nYukarıdakilerden farklı, uygulanabilir üç görev öner."
     )
     try:
-        _model, content = _chat(PLANNER_SYSTEM, prompt, max_tokens=600)
+        _model, content = _chat(
+            PLANNER_SYSTEM, prompt, max_tokens=600, timeout=timeout
+        )
         data = parse(content)
         items = data.get("objectives")
         if not isinstance(items, list):
@@ -211,27 +220,52 @@ def propose_tasks(existing: list[str], limit: int = 3) -> list[str]:
 
 
 def main() -> int:
+    if STOP_FILE.exists():
+        print(f"acil durdurma etkin: {STOP_FILE} (üretim yapılmadı)")
+        return 0
     if not KEY:
         print("OPENROUTER_KEY yok", file=sys.stderr)
         return 2
     if not TASKS.exists():
         print(f"görev listesi yok: {TASKS}", file=sys.stderr)
         return 2
+
     OUTBOX.mkdir(parents=True, exist_ok=True)
     tasks = json.loads(TASKS.read_text(encoding="utf-8"))
+    if not isinstance(tasks, list):
+        print("görev listesi bir liste değil", file=sys.stderr)
+        return 2
+
+    produced_ids = {path.stem for path in OUTBOX.glob("*.json")}
+    titles = {str(task.get("title") or "").strip().casefold() for task in tasks}
+    deadline = time.time() + RUN_BUDGET_SECONDS
     produced = 0
+    skipped_reason = ""
+
     for task in tasks:
+        if produced >= MAX_TASKS_PER_RUN:
+            skipped_reason = f"tur sınırı ({MAX_TASKS_PER_RUN} görev)"
+            break
+        if time.time() > deadline:
+            skipped_reason = "zaman bütçesi doldu"
+            break
         title = str(task.get("title") or "").strip()
         if not title:
             continue
-        digest = hashlib.sha256(f"{task.get('department','')}|{title}".encode()).hexdigest()[:16]
+        digest = hashlib.sha256(
+            f"{task.get('department', '')}|{title}".encode()
+        ).hexdigest()[:16]
         destination = OUTBOX / f"{digest}.json"
-        if destination.exists():
+        if destination.exists() or digest in produced_ids:
             continue
+        if STOP_FILE.exists():
+            skipped_reason = "acil durdurma"
+            break
+        remaining = max(10, int(deadline - time.time()))
         try:
-            model, raw = call_model(title)
+            model, raw = call_model(title, timeout=min(REQUEST_TIMEOUT, remaining))
             edits = validate(parse(raw))
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001 - bounded failure, keep going
             print(f"[skip] {title[:50]} · {exc}")
             continue
         if not edits:
@@ -246,39 +280,47 @@ def main() -> int:
             "produced_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "project": str(PROJECT),
         }
-        destination.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
+        destination.write_text(
+            json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        produced_ids.add(digest)
         produced += 1
         print(f"[ok] {title[:50]} · {len(edits)} düzenleme · {model}")
 
-    # Liste tükendiyse modelden yeni hedefler al: PC kapalıyken üretim durmasın.
-    produced_ids = {path.stem for path in OUTBOX.glob("*.json")}
-    pending: list[str] = []
-    for task in tasks:
-        title = str(task.get("title") or "").strip()
-        if not title:
-            continue
-        digest = hashlib.sha256(
-            f"{task.get('department', '')}|{title}".encode()
-        ).hexdigest()[:16]
-        if digest not in produced_ids:
-            pending.append(title)
-
-    titles = [str(task.get("title") or "") for task in tasks]
-    if not pending:
-        fresh = propose_tasks(titles)
-        if fresh:
-            tasks.extend({"department": "oyun", "title": title} for title in fresh)
-            TASKS.write_text(
-                json.dumps(tasks, ensure_ascii=False, indent=2), encoding="utf-8"
+    # Liste tükendiyse sınırlı sayıda yeni hedef üret (tekrar ve boyut korumalı).
+    if produced < MAX_TASKS_PER_RUN and time.time() < deadline:
+        pending = any(
+            hashlib.sha256(
+                f"{task.get('department', '')}|{str(task.get('title') or '').strip()}".encode()
+            ).hexdigest()[:16]
+            not in produced_ids
+            for task in tasks
+            if str(task.get("title") or "").strip()
+        )
+        if not pending and len(tasks) < MAX_TASKS_IN_LIST:
+            remaining = max(10, int(deadline - time.time()))
+            fresh = propose_tasks(
+                [str(task.get("title") or "") for task in tasks],
+                timeout=min(REQUEST_TIMEOUT, remaining),
             )
-            print("yeni hedefler: " + " | ".join(fresh))
-        fresh = propose_tasks(titles)
-        if fresh:
-            tasks.extend({"department": "oyun", "title": title} for title in fresh)
-            TASKS.write_text(json.dumps(tasks, ensure_ascii=False, indent=2), encoding="utf-8")
-            print("yeni hedefler: " + " | ".join(fresh))
+            added = 0
+            for title in fresh:
+                if title.casefold() in titles:
+                    continue
+                tasks.append({"department": "oyun", "title": title})
+                titles.add(title.casefold())
+                added += 1
+            if added:
+                TASKS.write_text(
+                    json.dumps(tasks, ensure_ascii=False, indent=2), encoding="utf-8"
+                )
+                print("yeni hedefler: " + " | ".join(fresh[:added]))
+        elif len(tasks) >= MAX_TASKS_IN_LIST:
+            skipped_reason = skipped_reason or "görev listesi üst sınırda"
 
-    print(f"üretilen: {produced}")
+    print(f"üretilen: {produced} · kalan görev: {len(tasks) - produced}")
+    if skipped_reason:
+        print(f"durma nedeni: {skipped_reason}")
     return 0
 
 

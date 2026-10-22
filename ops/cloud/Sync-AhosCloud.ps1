@@ -52,6 +52,7 @@ Write-Host "3/3 doğrulanıp uygulanıyor…"
 Push-Location (Join-Path $RepoRoot 'ahos_core')
 try {
     & python -m ahos.outbox --dir $OutboxLocal --root $ProjectPath --verify $VerifyCommand `
+        --stop-file (Join-Path $RepoRoot 'ahos_core\runtime\autonomy.stop') `
         --report (Join-Path $RepoRoot 'quality\evidence\cloud-outbox-results.jsonl')
     $code = $LASTEXITCODE
 } finally {

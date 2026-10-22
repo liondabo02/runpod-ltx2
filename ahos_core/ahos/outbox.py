@@ -17,6 +17,7 @@ import tempfile
 from pathlib import Path
 from typing import Callable, Iterable
 
+from .delivery import diff_trees, snapshot_tree
 from .llm_executor import ModelEdit, ModelError
 
 MAX_EDITS = 3
@@ -98,16 +99,38 @@ def apply_proposal(
     record: dict,
     root: str | Path,
     verify: Callable[[Path], tuple[bool, str]] | None = None,
+    *,
+    require_acceptance: bool = True,
+    stop_file: str | Path | None = None,
 ) -> dict:
-    """Apply one proposal to the project; revert when validation fails."""
+    """Apply one proposal to the project; revert when validation fails.
+
+    A proposal is only a delivery when it changes at least one file and, unless
+    explicitly waived, the project's own acceptance gate passes. A browser load
+    is never used here as acceptance.
+    """
 
     base = Path(root)
+    if stop_file is not None and Path(stop_file).exists():
+        return {
+            "status": "blocked",
+            "reason": f"acil durdurma etkin: {stop_file}",
+            "files": [],
+        }
+    if require_acceptance and verify is None:
+        return {
+            "status": "rejected",
+            "reason": "kabul testi tanımlı değil (bağımsız doğrulama yok)",
+            "files": [],
+        }
+
     edits, problems = validate_proposal(record, base)
     if problems:
         return {"status": "rejected", "reason": "; ".join(problems), "files": []}
     if not edits:
         return {"status": "rejected", "reason": "uygulanabilir düzenleme yok", "files": []}
 
+    before = snapshot_tree(base)
     reverter = _Reverter(base)
     reverter.remember(edits)
     applied: list[str] = []
@@ -118,6 +141,27 @@ def apply_proposal(
     except ModelError as exc:
         reverter.revert()
         return {"status": "rejected", "reason": str(exc), "files": []}
+
+    after = snapshot_tree(base)
+    changed = diff_trees(before, after)
+    # Boyut+mtime yetmez: aynı metni yazan bir yama gerçek değişiklik değildir.
+    content_changed = False
+    for edit in edits:
+        original = reverter.originals.get(edit.path)
+        target = base / edit.path
+        current = (
+            target.read_text(encoding="utf-8", errors="replace") if target.exists() else None
+        )
+        if current != original:
+            content_changed = True
+            break
+    if changed.changed == 0 or not content_changed:
+        reverter.revert()
+        return {
+            "status": "rejected",
+            "reason": "teslimat yok: 0 dosya değişti",
+            "files": [],
+        }
 
     if verify is not None:
         ok, detail = verify(base)
@@ -187,10 +231,21 @@ def main(argv: list[str] | None = None) -> int:
         print("--dir ve --root zorunlu")
         return 2
 
+    stop_file = ""
+    if "--stop-file" in args:
+        position = args.index("--stop-file")
+        stop_file = args[position + 1] if position + 1 < len(args) else ""
+    allow_unverified = "--allow-unverified" in args
     verify = command_verify(verify_command) if verify_command else None
     results: list[dict] = []
     for record in load_proposals(directory):
-        outcome = apply_proposal(record, root, verify)
+        outcome = apply_proposal(
+            record,
+            root,
+            verify,
+            require_acceptance=not allow_unverified,
+            stop_file=stop_file or None,
+        )
         outcome["task"] = record.get("task", "")
         outcome["id"] = record.get("id", "")
         results.append(outcome)
