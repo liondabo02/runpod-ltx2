@@ -669,6 +669,91 @@ ERROR_BOUNDARY_JS = """'use strict';
 """
 
 
+PWA_MANIFEST = """{
+  "id": "./",
+  "name": "%NAME%",
+  "short_name": "%NAME%",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fff8ed",
+  "theme_color": "#fff8ed",
+  "orientation": "any",
+  "icons": []
+}
+"""
+
+PWA_SW = """importScripts('./precache.js');
+const CACHE = 'ahos-pwa-v1';
+self.addEventListener('install', event => event.waitUntil((async () => {
+  const cache = await caches.open(CACHE);
+  await cache.addAll(CORE_ASSETS);
+  await self.skipWaiting();
+})()));
+self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
+self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+  if (event.request.method !== 'GET' || url.origin !== self.location.origin) return;
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE);
+    const cached = await cache.match(event.request, { ignoreSearch: true });
+    if (cached) return cached;
+    try { return await fetch(event.request); }
+    catch (error) {
+      if (event.request.mode === 'navigate') return cache.match('index.html');
+      throw error;
+    }
+  })());
+});
+"""
+
+
+def apply_pwa_shell(root: str | Path) -> tuple[str, ...]:
+    """Make the web app installable and offline-capable (idempotent)."""
+
+    _guard(root)
+    web_root = detect_web_root(root)
+    index = web_root / "index.html"
+    if not index.exists():
+        return ()
+
+    applied: list[str] = []
+    manifest = web_root / "manifest.webmanifest"
+    if not manifest.exists():
+        name = root_path = Path(root).name or "AHOS"
+        manifest.write_text(PWA_MANIFEST.replace("%NAME%", name), encoding="utf-8")
+        applied.append("manifest.webmanifest eklendi")
+
+    worker = web_root / "sw.js"
+    if not worker.exists() and (web_root / "precache.js").exists():
+        worker.write_text(PWA_SW, encoding="utf-8")
+        applied.append("sw.js eklendi")
+
+    html = index.read_text(encoding="utf-8", errors="replace")
+    changed = html
+    if "manifest.webmanifest" not in changed and 'rel="manifest"' not in changed:
+        link = '<link rel="manifest" href="manifest.webmanifest">'
+        if "</head>" in changed:
+            changed = changed.replace("</head>", link + "</head>", 1)
+        else:
+            changed = "<head>" + link + "</head>" + changed
+        applied.append("index.html'e manifest bağlandı")
+    if "serviceWorker" not in changed and worker.exists():
+        script = (
+            "<script>if('serviceWorker' in navigator){window.addEventListener('load',"
+            "function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>"
+        )
+        if "</body>" in changed:
+            changed = changed.replace("</body>", script + "</body>", 1)
+        else:
+            changed = changed + script
+        applied.append("index.html'e service worker kaydı eklendi")
+    if changed != html:
+        index.write_text(changed, encoding="utf-8")
+
+    return tuple(applied)
+
+
 def apply_error_boundary(root: str | Path) -> tuple[str, ...]:
     """Show a friendly retry card on unexpected JS errors instead of a dead screen."""
 
@@ -991,6 +1076,7 @@ def make_project_executor(
             applied.extend(apply_hint_module(root))
             applied.extend(apply_text_scale(root))
             applied.extend(apply_error_boundary(root))
+            applied.extend(apply_pwa_shell(root))
             applied.extend(fix_precache(root))
             applied.extend(install_quality_gate(root))
             after = snapshot(root)
