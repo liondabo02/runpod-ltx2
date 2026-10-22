@@ -79,6 +79,7 @@ class AutonomyRunner:
         self.pause_path = self.runtime_dir / "autonomy.pause"
         self.stop_path = self.runtime_dir / "autonomy.stop"
         self.plan_path = self.runtime_dir / "auto-plan.json"
+        self._active_idea: tuple[str, str] | None = None
         self.office = HoldingOffice(console)
         self.state = AutonomyState()
 
@@ -348,6 +349,27 @@ class AutonomyRunner:
         from . import model_planner
 
         excluded = excluded or set()
+
+        # Sahibin fikri her şeyden önce gelir: fikir kuyruğunda bekleyen görev
+        # varsa plan/model çağrısından önce o alınır.
+        try:
+            from .ideas import claim_next
+
+            claimed_idea = claim_next(self.runtime_dir)
+        except Exception:  # noqa: BLE001 - fikir kuyruğu isteğe bağlı
+            claimed_idea = None
+        if claimed_idea is not None:
+            idea, task = claimed_idea
+            if idea.department_id not in excluded:
+                self._active_idea = (idea.idea_id, str(task.get("task_id") or ""))
+                return Directive(
+                    kind="idea",
+                    department_id=idea.department_id,
+                    objective=str(task.get("title") or idea.text),
+                    reason=f"fikir: {idea.text[:90]}",
+                    priority=0,
+                )
+
         day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         items = self._load_plan(day)
         if items is None:
@@ -518,6 +540,31 @@ class AutonomyRunner:
         except Exception:  # noqa: BLE001 - pinning is best effort
             pass
 
+    def _idea_directive(self, excluded: set[str]) -> "Directive | None":
+        """The owner's idea outranks the CEO queue, the cycle and the planner."""
+
+        from .holding_office import Directive
+
+        try:
+            from .ideas import claim_next
+
+            claimed = claim_next(self.runtime_dir)
+        except Exception:  # noqa: BLE001 - idea queue is optional
+            claimed = None
+        if claimed is None:
+            return None
+        idea, task = claimed
+        if idea.department_id in excluded:
+            return None
+        self._active_idea = (idea.idea_id, str(task.get("task_id") or ""))
+        return Directive(
+            kind="idea",
+            department_id=idea.department_id,
+            objective=str(task.get("title") or idea.text),
+            reason=f"fikir: {idea.text[:90]}",
+            priority=0,
+        )
+
     def _recover_queue(self) -> dict:
         """Reopen orphaned missions once when a claim keeps failing."""
 
@@ -624,8 +671,8 @@ class AutonomyRunner:
         # Burada yalnızca *kullanılamayan* departmanlar dışlanır; bir departman
         # bugün bir görev yaptı diye günün geri kalanında tamamen kapatılmaz.
         excluded: set[str] = set()
-        directive = None
-        for _ in range(5):
+        directive = self._idea_directive(excluded)
+        for _ in range(5 if directive is None else 0):
             candidate = self.office.next_directive(exclude_departments=excluded)
             if candidate is None:
                 break
@@ -765,6 +812,19 @@ class AutonomyRunner:
             return result
 
         if result is not None and result.status == "routed":
+            if self._active_idea is not None:
+                try:
+                    from .ideas import complete
+
+                    complete(
+                        self._active_idea[0],
+                        self._active_idea[1],
+                        self.runtime_dir,
+                        success=True,
+                    )
+                except Exception:  # noqa: BLE001 - fikir kaydı isteğe bağlı
+                    pass
+                self._active_idea = None
             delivered, verdict = self.delivery_verdict(result, directive.department_id)
             if not delivered:
                 # Sıfır dosya ya da doğrulanmamış kabul: başarı sayılmaz.
@@ -780,6 +840,19 @@ class AutonomyRunner:
             self.state.last_reason = result.message[:200]
             self._record(key, mission_id, directive.department_id, "completed")
         else:
+            if self._active_idea is not None:
+                try:
+                    from .ideas import complete
+
+                    complete(
+                        self._active_idea[0],
+                        self._active_idea[1],
+                        self.runtime_dir,
+                        success=False,
+                    )
+                except Exception:  # noqa: BLE001
+                    pass
+                self._active_idea = None
             self.state.failed += 1
             self.state.status = "blocked"
             self.state.last_reason = (
