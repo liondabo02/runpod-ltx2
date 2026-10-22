@@ -21,6 +21,7 @@ ahos-taskboard = "ahos.taskboard:main"
 ahos-errors = "ahos.errors:main"
 ahos-status = "ahos.report:main"
 ahos-roster = "ahos.roster:main"
+ahos-offline = "ahos.offline_audit:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

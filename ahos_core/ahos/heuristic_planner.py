@@ -68,6 +68,39 @@ def scan(root: str | Path, limit: int = MAX_OBJECTIVES) -> list[str]:
             objectives.append(f"{relative} dosyasini daha kucuk modullere ayir")
             break
 
+    # Erişilebilirlik: etiketsiz ikon düğmeler ve alt'sız görseller.
+    for path in candidates:
+        text = _read(path)
+        if not text:
+            continue
+        relative = path.relative_to(base).as_posix()
+        labels_needed = 0
+        for tag in re.findall(r"<button\b[^>]*>", text, re.IGNORECASE):
+            lowered_tag = tag.lower()
+            if "aria-label" in lowered_tag or "title=" in lowered_tag:
+                continue
+            labels_needed += 1
+        if labels_needed:
+            objectives.append(
+                f"{relative} icindeki {labels_needed} ikon dugmeye erisilebilir etiket ekle"
+            )
+            break
+    for path in candidates:
+        text = _read(path)
+        if not text:
+            continue
+        missing_alt = len(
+            [
+                tag
+                for tag in re.findall(r"<img\b[^>]*>", text, re.IGNORECASE)
+                if "alt=" not in tag.lower()
+            ]
+        )
+        if missing_alt:
+            relative = path.relative_to(base).as_posix()
+            objectives.append(f"{relative} icindeki {missing_alt} gorsele alt metni ekle")
+            break
+
     todo_hits = 0
     todo_file = ""
     for path in _files(base, ".js"):

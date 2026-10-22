@@ -74,3 +74,31 @@ def test_limit_and_dedupe(tmp_path) -> None:
 
 def test_missing_directory_returns_nothing(tmp_path) -> None:
     assert scan(tmp_path / "yok") == []
+
+
+def test_unlabelled_icon_buttons_are_reported(tmp_path) -> None:
+    root = _project(tmp_path, extra_html='lang="tr"')
+    (root / "www" / "index.html").write_text(
+        '<!doctype html><html lang="tr"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width"></head>'
+        '<body><button>⚙</button><button>🌼</button></body></html>',
+        encoding="utf-8",
+    )
+
+    objectives = scan(root)
+
+    assert any("erisilebilir etiket" in item for item in objectives), objectives
+
+
+def test_images_without_alt_are_reported(tmp_path) -> None:
+    root = _project(tmp_path, extra_html='lang="tr"')
+    (root / "www" / "index.html").write_text(
+        '<!doctype html><html lang="tr"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width"></head>'
+        '<body><img src="a.png"></body></html>',
+        encoding="utf-8",
+    )
+
+    objectives = scan(root)
+
+    assert any("alt metni" in item for item in objectives), objectives
