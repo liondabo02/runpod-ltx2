@@ -379,6 +379,23 @@ def _project_name_from_text(text: str) -> str:
     return ""
 
 
+def _produce_only_executor(model_exec: WorkerExecutor, deterministic_exec: WorkerExecutor) -> WorkerExecutor:
+    """Use the model only where it creates value: the produce step.
+
+    Brief is an asset audit and review is a verification pass; both are
+    deterministic by nature. Letting the model write them only adds a JSON
+    failure mode (a non-JSON reply blocks the whole mission).
+    """
+
+    def _run(item, worker_id):
+        step = str(item.task_id).rsplit(":", 1)[-1]
+        if step in {"brief", "review"}:
+            return deterministic_exec(item, worker_id)
+        return model_exec(item, worker_id)
+
+    return _run
+
+
 def make_project_onboarding_executor(
     link: ProjectLink,
     spec: DepartmentSpec,
@@ -708,7 +725,7 @@ class OwnerConsole:
             spec = self._create_for_task(text)
             created = spec.department_id
 
-        result = self.run_department_mission(spec, text)
+        result = self.run_department_mission(spec, text, retry_blocked=True)
         if created is not None:
             result = ConsoleResult(
                 kind=CommandKind.TASK,
@@ -754,14 +771,40 @@ class OwnerConsole:
         objective: str,
         *,
         executor: WorkerExecutor | None = None,
+        retry_blocked: bool = False,
     ) -> ConsoleResult:
         mission_id = self._mission_id(spec, objective)
+
+        if retry_blocked and self.queue is not None:
+            # Açık sahip komutu: daha önce engellenmiş aynı görevi bir kez daha
+            # dene. Otonomi kendi sınırlı yeniden-denemesini ayrıca yönetir.
+            try:
+                existing = self.queue.get(mission_id)
+                status = str(getattr(getattr(existing, "status", None), "value", "") or "")
+                if status in {"blocked", "failed"}:
+                    self.queue.enqueue(
+                        mission_id=mission_id,
+                        objective=objective,
+                        primary_department=spec.department_id,
+                        max_attempts=2,
+                        replace_existing=True,
+                    )
+            except Exception:  # noqa: BLE001 - kuyruk isteğe bağlı
+                pass
 
         try:
             from . import live_activity
 
             live_activity.mission_started(mission_id, spec.department_id, objective)
+            self._audit("mission.started", mission_id, {
+                "department": spec.department_id, "objective": objective[:160],
+            })
             mission = self._dispatch(spec, objective, mission_id, executor)
+            self._audit("mission.finished", mission_id, {
+                "department": spec.department_id,
+                "status": mission.status.value,
+                "reason": (mission.reason or "")[:200],
+            })
             live_activity.mission_finished(
                 mission_id,
                 spec.department_id,
@@ -785,6 +828,16 @@ class OwnerConsole:
             )
 
         return self._console_result(spec, mission)
+
+    def _audit(self, event: str, mission_id: str, payload: dict) -> None:
+        try:
+            from .audit import AuditLog
+
+            AuditLog(self.runtime_dir / "audit.jsonl").append(
+                event, payload, correlation_id=mission_id
+            )
+        except Exception:  # pragma: no cover - audit must never break work
+            pass
 
     def _console_result(
         self,
@@ -1167,11 +1220,24 @@ class OwnerConsole:
                     else None
                 )
                 if settings is not None:
-                    chosen = make_model_executor(
+                    model_exec = make_model_executor(
                         project.work_path or project.path,
                         self.artifacts_root,
                         settings=settings,
                         spend_ledger=self.runtime_dir / "model-spend.jsonl",
+                        require_approval_over_files=3,
+                    )
+                    deterministic = make_project_executor(
+                        project.work_path or project.path,
+                        self.artifacts_root,
+                    )
+                    produce_only = os.environ.get(
+                        "AHOS_MODEL_PRODUCE_ONLY", "1"
+                    ).strip().lower() not in {"0", "false", "no"}
+                    chosen = (
+                        _produce_only_executor(model_exec, deterministic)
+                        if produce_only
+                        else model_exec
                     )
                 else:
                     chosen = make_project_executor(

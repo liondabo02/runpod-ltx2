@@ -591,7 +591,8 @@ def _load_model_env(runtime_dir: str | Path) -> None:
     except OSError:
         return
     for line in lines:
-        line = line.strip()
+        # PowerShell 5.1'in UTF-8 BOM'u ilk anahtarı görünmez biçimde bozar.
+        line = line.lstrip("\ufeff").strip()
         if not line or line.startswith("#") or "=" not in line:
             continue
         key, _, value = line.partition("=")

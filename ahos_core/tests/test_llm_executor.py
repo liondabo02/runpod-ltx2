@@ -417,3 +417,81 @@ def test_json_parser_takes_the_first_object_and_ignores_trailing_text() -> None:
     # Model bazen JSON'dan sonra açıklama ekler; eski "Extra data" hatası.
     assert parse_json_object('{"a": 1} açıklama {"b": 2}') == {"a": 1}
     assert parse_json_object('metin\n{"edits": []}\nson') == {"edits": []}
+
+
+class _FakeResponse:
+    def __init__(self, payload: dict) -> None:
+        self._body = json.dumps(payload).encode("utf-8")
+
+    def read(self) -> bytes:
+        return self._body
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc) -> None:
+        return None
+
+
+def _settings_with_fallback():
+    return ModelSettings(
+        base_url="https://openrouter.ai/api/v1",
+        api_key="k",
+        model="gone/model:free",
+        max_usd_per_run=0,
+        input_usd_per_1k=0,
+        output_usd_per_1k=0,
+        fallback_models=("alive/model:free",),
+    )
+
+
+def test_transport_falls_back_when_the_model_is_gone(monkeypatch) -> None:
+    from urllib.error import HTTPError
+
+    from ahos.llm_executor import http_transport
+
+    calls: list[str] = []
+
+    def fake_urlopen(request, timeout=None):
+        body = json.loads(request.data.decode("utf-8"))
+        calls.append(body["model"])
+        if body["model"] == "gone/model:free":
+            raise HTTPError("https://x", 404, "Not Found", None, None)
+        return _FakeResponse({"choices": [{"message": {"content": '{"ok": true}'}}]})
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+
+    raw = http_transport("sys", "user", _settings_with_fallback())
+
+    assert raw == '{"ok": true}'
+    assert calls == ["gone/model:free", "alive/model:free"]
+
+
+def test_transport_falls_back_when_the_reply_is_empty(monkeypatch) -> None:
+    from ahos.llm_executor import http_transport
+
+    def fake_urlopen(request, timeout=None):
+        body = json.loads(request.data.decode("utf-8"))
+        if body["model"] == "gone/model:free":
+            return _FakeResponse({"choices": [{"message": {"content": ""}}]})
+        return _FakeResponse({"choices": [{"message": {"content": "{}"}}]})
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+
+    assert http_transport("sys", "user", _settings_with_fallback()) == "{}"
+
+
+def test_transport_reports_all_models_failing(monkeypatch) -> None:
+    from urllib.error import HTTPError
+
+    from ahos.llm_executor import ModelError, http_transport
+
+    def fake_urlopen(request, timeout=None):
+        raise HTTPError("https://x", 429, "Too Many Requests", None, None)
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+
+    with pytest.raises(ModelError) as excinfo:
+        http_transport("sys", "user", _settings_with_fallback())
+
+    assert "tüm modeller" in str(excinfo.value)
