@@ -438,13 +438,10 @@ def install_quality_gate(root: str | Path) -> tuple[str, ...]:
     gate = tools / "check_offline.py"
 
     if gate.exists():
-        current = gate.read_text(encoding="utf-8", errors="replace")
-        if "ahos-gate-v2" in current:
-            return ()
-        # Eski sürüm: UTF-8 yeniden yapılandırması olmadığı için Türkçe
-        # çıktıda çöküyordu; bilinen güncel gövde ile değiştir.
-        gate.write_text(_QUALITY_GATE, encoding="utf-8")
-        return ("tools/check_offline.py kalite kapısı güncellendi (v2)",)
+        # Projenin kendi kabul testi kullanıcıya aittir; üzerine yazmayız.
+        # (Eski sürümlerde kodlama düzeltmesi QA alt sürecinde UTF-8 ortamıyla
+        # yapılıyor, bu yüzden kapıyı değiştirmek gerekmiyor.)
+        return ()
 
     tools.mkdir(parents=True, exist_ok=True)
     gate.write_text(_QUALITY_GATE, encoding="utf-8")

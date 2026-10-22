@@ -473,6 +473,20 @@ class AutonomyRunner:
             return False, f"{changed} dosya değişti ama {detail}"
         return True, f"{changed} dosya değişti; {detail}"
 
+    def _ensure_acceptance_baseline(self, department_id: str) -> None:
+        """Pin the project gate once so the first QA run is not blocked."""
+
+        root = self._project_root(department_id)
+        artifacts = getattr(self.console, "artifacts_root", None)
+        if root is None or artifacts is None:
+            return
+        try:
+            from .acceptance_bootstrap import ensure_baseline
+
+            ensure_baseline(root, artifacts)
+        except Exception:  # noqa: BLE001 - pinning is best effort
+            pass
+
     def _recover_queue(self) -> dict:
         """Reopen orphaned missions once when a claim keeps failing."""
 
@@ -681,6 +695,7 @@ class AutonomyRunner:
         result: ConsoleResult | None = None
 
         self._reopen_blocked(spec, directive.objective)
+        self._ensure_acceptance_baseline(directive.department_id)
 
         while attempts <= self.limits.max_retries:
             attempts += 1

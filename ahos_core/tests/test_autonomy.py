@@ -34,6 +34,15 @@ def test_dedupe_prevents_reruns_but_allows_next_task(tmp_path) -> None:
     project = tmp_path / "proj"
     (project / "www").mkdir(parents=True)
     (project / "www" / "index.html").write_text("<html></html>", encoding="utf-8")
+    # Yeni sözleşme: teslim için projenin kendi kabul kapısı gerekir; kapıyı
+    # ve sabitlenmiş kaydını burada hazırlıyoruz.
+    (project / "tools").mkdir()
+    (project / "tools" / "check_offline.py").write_text(
+        "import sys\nsys.exit(0)\n", encoding="utf-8"
+    )
+    from ahos.acceptance_bootstrap import ensure_baseline
+
+    ensure_baseline(project, tmp_path / "artifacts")
     console.projects.link(
         ProjectLink(project_id="p", name="P", path=project, department_id="oyun")
     )
@@ -45,6 +54,9 @@ def test_dedupe_prevents_reruns_but_allows_next_task(tmp_path) -> None:
     first_id = first.mission.mission_id
 
     # Aynı görev tekrar çalışmaz; sıradaki yapılmamış gerçek iş seçilir.
+    # Yeni sözleşme gerçek dosya değişikliği istediği için projeyi hafifçe geri
+    # alıyoruz ki ikinci görev de ölçülebilir bir değişiklik üretsin.
+    (project / "www" / "index.html").write_text("<html></html>", encoding="utf-8")
     second = runner.run_once()
     assert second is not None and second.status == "routed"
     assert second.mission.mission_id != first_id
@@ -68,6 +80,15 @@ def test_cycle_exhaustion_makes_runner_idle(tmp_path) -> None:
     project = tmp_path / "proj"
     (project / "www").mkdir(parents=True)
     (project / "www" / "index.html").write_text("<html></html>", encoding="utf-8")
+    # Yeni sözleşme: teslim için projenin kendi kabul kapısı gerekir; kapıyı
+    # ve sabitlenmiş kaydını burada hazırlıyoruz.
+    (project / "tools").mkdir()
+    (project / "tools" / "check_offline.py").write_text(
+        "import sys\nsys.exit(0)\n", encoding="utf-8"
+    )
+    from ahos.acceptance_bootstrap import ensure_baseline
+
+    ensure_baseline(project, tmp_path / "artifacts")
     console.projects.link(
         ProjectLink(project_id="p", name="P", path=project, department_id="oyun")
     )

@@ -419,6 +419,19 @@ def test_cli_status_without_heartbeat(tmp_path, capsys):
     assert "not-running" in capsys.readouterr().out
 
 
+def test_offline_mode_forces_the_deterministic_worker(tmp_path, monkeypatch):
+    monkeypatch.setenv("AHOS_OFFLINE", "1")
+    scheduler = FakeScheduler(["idle"])
+    daemon = _daemon(tmp_path, scheduler, max_ticks=1, executor_mode="auto")
+
+    daemon.run()
+
+    heartbeat = read_heartbeat(tmp_path)
+    assert heartbeat["executor_mode"] == "deterministic"
+    assert "çevrimdışı" in heartbeat["executor_reason"]
+    assert os.environ["AHOS_EXECUTOR"] == "deterministic"
+
+
 def test_skipped_mission_does_not_grow_the_no_evidence_streak(tmp_path):
     scheduler = FakeScheduler(["idle"])
     scheduler.state.status = "idle"

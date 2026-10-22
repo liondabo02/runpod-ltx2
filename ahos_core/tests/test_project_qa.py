@@ -112,6 +112,10 @@ def test_acceptance_gate_with_turkish_output_is_not_encoding_blocked(
         "print('başarılı ş ç ğ')\n", encoding="utf-8"
     )
     evidence = _evidence(tmp_path)
+    # Yeni güvenlik sözleşmesi: kabul kapısı ilk görüşte sabitlenir (pin).
+    from ahos.acceptance_bootstrap import ensure_baseline
+
+    ensure_baseline(root, evidence)
     monkeypatch.delenv("PYTHONIOENCODING", raising=False)
     monkeypatch.delenv("PYTHONUTF8", raising=False)
 

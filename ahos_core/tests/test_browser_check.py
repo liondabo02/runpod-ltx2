@@ -66,14 +66,24 @@ def test_empty_dom_fails(tmp_path) -> None:
     assert any("DOM boş" in problem for problem in result.problems)
 
 
-def test_missing_ui_markers_fails(tmp_path) -> None:
+def test_missing_ui_markers_is_advisory_not_fatal(tmp_path) -> None:
+    """Tarayıcı kabul testi değildir: işaret yokluğu tek başına düşürmez.
+
+    Kabul, projenin kendi `tools/check_offline.py` kapısıdır; tarayıcı yalnızca
+    "sayfa açıldı mı, JS patladı mı" sorusuna bakar.
+    """
+
     page = _page(tmp_path)
-    dom = "<html><head></head><body><p>hiçbir şey yok</p></body></html>"
+    dom = (
+        "<html><head></head><body><p>"
+        + ("içerik " * 40)
+        + "</p></body></html>"
+    )
 
     result = check_page(page, tmp_path / "artifacts", browser="edge", runner=_runner(dom))
 
-    assert result.ok is False
-    assert any("oyun arayüzü" in problem for problem in result.problems)
+    assert result.ok is True
+    assert not any("oyun arayüzü" in problem for problem in result.problems)
 
 
 def test_render_report_contains_verdict(tmp_path) -> None:

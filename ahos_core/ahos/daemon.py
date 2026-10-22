@@ -425,6 +425,12 @@ class AutonomyDaemon:
             self.state.executor_mode = "deterministic"
             self.state.executor_reason = "sabit (deterministik) mod"
             return
+        if os.environ.get("AHOS_OFFLINE", "").strip().lower() in {"1", "true", "yes", "on"}:
+            # İnternetsiz ortam: model çağrısı yok, deterministik katalog çalışır.
+            os.environ["AHOS_EXECUTOR"] = "deterministic"
+            self.state.executor_mode = "deterministic"
+            self.state.executor_reason = "çevrimdışı mod"
+            return
         if self.executor_mode == "model":
             os.environ["AHOS_EXECUTOR"] = "model"
             self.state.executor_mode = "model"

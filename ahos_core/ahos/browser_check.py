@@ -109,8 +109,9 @@ def check_page(
     for marker in ("<html", "<head", "<body"):
         if marker not in lowered:
             problems.append(f"DOM'da {marker} yok")
-    if "data-game" not in dom and "id=\"stage\"" not in dom and "id='stage'" not in dom:
-        problems.append("oyun arayüzü işaretleri bulunamadı")
+    # Oyun arayüzü işareti (data-game / #stage) sezgisel bir beklentidir; burada
+    # engelleyici sorun sayılmaz. Kabul testi projenin kendi kapısıdır, tarayıcı
+    # yalnızca "sayfa açıldı mı, JS patladı mı" sorusuna bakar.
 
     screenshot = out_dir / "browser.png"
     try:
