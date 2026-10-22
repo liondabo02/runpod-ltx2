@@ -3,3 +3,12 @@
 {"status": "rejected", "reason": "yama hedefi 0 kez bulundu (1 olmalı): www/index.html", "files": [], "task": "Mipiluna oyunlarina duraklat dugmesi ekle", "id": "6b34d525c68cee18"}
 {"status": "rejected", "reason": "doğrulama: çıkış 1: eksik varlık: index.html -> oyun-ipucu.css\n\n1 sorun bulundu.", "files": [], "task": "Mipiluna ana sayfasina gunun ipucu seridi ekle", "id": "85769ac322d0bdfd"}
 {"status": "applied", "reason": "", "files": ["www/index.html"], "task": "Mipiluna icin renk koru modu ekle", "id": "d5f303dffe4f86ab"}
+{"status": "applied", "reason": "", "files": ["www/index.html"], "task": "Mipiluna oyun kartlarina sesli geri bildirim ekle", "id": "209e634e4224c047"}
+{"status": "applied", "reason": "", "files": ["www/development-games.js"], "task": "www/development-games.js: Geliştirme oyunları için bir oyunu geliştirin.", "id": "22e6391ee907b5b0"}
+{"status": "rejected", "reason": "yama hedefi 0 kez bulundu (1 olmalı): www/index.html", "files": [], "task": "Mipiluna sayfasina yukari cik dugmesi ekle", "id": "34072df3c0cf154c"}
+{"status": "applied", "reason": "", "files": ["www/index.html"], "task": "www/index.html'de eksik meta viewport etiketini ekle", "id": "68c3ebcc1e290c4a"}
+{"status": "rejected", "reason": "yama hedefi 0 kez bulundu (1 olmalı): www/index.html", "files": [], "task": "Mipiluna oyunlarina duraklat dugmesi ekle", "id": "6b34d525c68cee18"}
+{"status": "rejected", "reason": "yama hedefi 0 kez bulundu (1 olmalı): www/animal-explorer.js", "files": [], "task": "www/animal-explorer.js: Oyunların duraklatma ve devam etme fonksiyonunu ekleyin.", "id": "8222713f876ea831"}
+{"status": "rejected", "reason": "doğrulama: çıkış 1: eksik varlık: index.html -> oyun-ipucu.css\n\n1 sorun bulundu.", "files": [], "task": "Mipiluna ana sayfasina gunun ipucu seridi ekle", "id": "85769ac322d0bdfd"}
+{"status": "applied", "reason": "", "files": ["www/credits.html"], "task": "www/credits.html'de eksik dil atributunu (lang='tr') ekle", "id": "8fbf6e6cd7968543"}
+{"status": "applied", "reason": "", "files": ["www/index.html"], "task": "Mipiluna icin renk koru modu ekle", "id": "d5f303dffe4f86ab"}

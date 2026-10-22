@@ -78,28 +78,42 @@ def prompt_for(task: str) -> str:
     )
 
 
-def call_model(task: str) -> tuple[str, str]:
+LOCAL_URL = os.environ.get("AHOS_LOCAL_URL", "http://127.0.0.1:11434/v1")
+LOCAL_MODEL = os.environ.get("AHOS_LOCAL_MODEL", "qwen2.5-coder:3b")
+
+
+def _chat(system: str, prompt: str, max_tokens: int = 8192) -> tuple[str, str]:
+    """Try every free remote model, then the VM's own Ollama.
+
+    Free endpoints are rate limited in the evening; the local 3B model is slower
+    but always available, which keeps the PC-off pipeline alive without a cloud
+    dependency.
+    """
+
+    attempts: list[tuple[str, str]] = [
+        ("https://openrouter.ai/api/v1/chat/completions", model) for model in MODELS
+    ]
+    attempts.append((f"{LOCAL_URL.rstrip('/')}/chat/completions", LOCAL_MODEL))
+
     last_error = "model yok"
-    for model in MODELS:
+    for url, model in attempts:
+        headers = {"Content-Type": "application/json"}
+        if "openrouter.ai" in url:
+            headers["Authorization"] = f"Bearer {KEY}"
         payload = json.dumps(
             {
                 "model": model,
                 "temperature": 0.2,
-                "max_tokens": 8192,
+                "max_tokens": max_tokens,
                 "messages": [
-                    {"role": "system", "content": SYSTEM},
-                    {"role": "user", "content": prompt_for(task)},
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": prompt},
                 ],
             }
         ).encode("utf-8")
-        request = urllib.request.Request(
-            "https://openrouter.ai/api/v1/chat/completions",
-            data=payload,
-            headers={"Content-Type": "application/json", "Authorization": f"Bearer {KEY}"},
-            method="POST",
-        )
+        request = urllib.request.Request(url, data=payload, headers=headers, method="POST")
         try:
-            with urllib.request.urlopen(request, timeout=120) as response:
+            with urllib.request.urlopen(request, timeout=180) as response:
                 body = json.loads(response.read().decode("utf-8"))
             choice = body["choices"][0]
             if str(choice.get("finish_reason") or "") == "length":
@@ -114,6 +128,10 @@ def call_model(task: str) -> tuple[str, str]:
         except Exception as exc:  # noqa: BLE001
             last_error = f"{model}: {type(exc).__name__}"
     raise RuntimeError(last_error)
+
+
+def call_model(task: str) -> tuple[str, str]:
+    return _chat(SYSTEM, prompt_for(task))
 
 
 def parse(raw: str) -> dict:
@@ -151,6 +169,45 @@ def validate(payload: dict) -> list[dict]:
         elif isinstance(content, str) and content:
             cleaned.append({"path": path, "content": content})
     return cleaned
+
+
+PLANNER_SYSTEM = (
+    "Sen bir yazılım holdinginin planlama kurulunun başkanısın. Verilen proje "
+    "dosyalarına bakarak en değerli üç somut iyileştirme görevini öner. Her görev "
+    "tek mühendisin 30 dakikada bitirebileceği kadar küçük olmalı. Yalnızca JSON: "
+    '{"objectives":["görev 1","görev 2","görev 3"]}'
+)
+
+
+def propose_tasks(existing: list[str], limit: int = 3) -> list[str]:
+    """Ask the model for new objectives when the task list has been consumed."""
+
+    files = project_files(60)
+    prompt = (
+        "Proje dosyaları:\n"
+        + "\n".join(files)
+        + "\n\nZaten yapılan/yapılacak işler (tekrar önerme):\n"
+        + "\n".join(f"- {item}" for item in existing[:30])
+        + "\n\nYukarıdakilerden farklı, uygulanabilir üç görev öner."
+    )
+    try:
+        _model, content = _chat(PLANNER_SYSTEM, prompt, max_tokens=600)
+        data = parse(content)
+        items = data.get("objectives")
+        if not isinstance(items, list):
+            return []
+        seen = {item.strip().casefold() for item in existing}
+        fresh: list[str] = []
+        for item in items:
+            title = " ".join(str(item).split())
+            if 12 <= len(title) <= 160 and title.casefold() not in seen:
+                seen.add(title.casefold())
+                fresh.append(title)
+            if len(fresh) >= limit:
+                break
+        return fresh
+    except Exception:  # noqa: BLE001
+        return []
 
 
 def main() -> int:
@@ -192,6 +249,35 @@ def main() -> int:
         destination.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
         produced += 1
         print(f"[ok] {title[:50]} · {len(edits)} düzenleme · {model}")
+
+    # Liste tükendiyse modelden yeni hedefler al: PC kapalıyken üretim durmasın.
+    produced_ids = {path.stem for path in OUTBOX.glob("*.json")}
+    pending: list[str] = []
+    for task in tasks:
+        title = str(task.get("title") or "").strip()
+        if not title:
+            continue
+        digest = hashlib.sha256(
+            f"{task.get('department', '')}|{title}".encode()
+        ).hexdigest()[:16]
+        if digest not in produced_ids:
+            pending.append(title)
+
+    titles = [str(task.get("title") or "") for task in tasks]
+    if not pending:
+        fresh = propose_tasks(titles)
+        if fresh:
+            tasks.extend({"department": "oyun", "title": title} for title in fresh)
+            TASKS.write_text(
+                json.dumps(tasks, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+            print("yeni hedefler: " + " | ".join(fresh))
+        fresh = propose_tasks(titles)
+        if fresh:
+            tasks.extend({"department": "oyun", "title": title} for title in fresh)
+            TASKS.write_text(json.dumps(tasks, ensure_ascii=False, indent=2), encoding="utf-8")
+            print("yeni hedefler: " + " | ".join(fresh))
+
     print(f"üretilen: {produced}")
     return 0
 

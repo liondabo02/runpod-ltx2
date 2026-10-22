@@ -153,6 +153,11 @@ def command_verify(command: str) -> Callable[[Path], tuple[bool, str]]:
 
 
 def main(argv: list[str] | None = None) -> int:
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):  # pragma: no cover - odd console
+        pass
     args = list(sys.argv[1:] if argv is None else argv)
     if not args:
         print(
