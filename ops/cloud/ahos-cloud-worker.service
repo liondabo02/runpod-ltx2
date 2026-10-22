@@ -1,0 +1,11 @@
+[Unit]
+Description=AHOS cloud worker (patch proposals while the PC is off)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+EnvironmentFile=/home/ubuntu/.ahos.env
+ExecStart=/usr/bin/python3 /home/ubuntu/ahos_cloud_worker.py
+Nice=10

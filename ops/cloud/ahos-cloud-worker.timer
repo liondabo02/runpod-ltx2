@@ -1,0 +1,10 @@
+[Unit]
+Description=Run the AHOS cloud worker every hour
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=60min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
