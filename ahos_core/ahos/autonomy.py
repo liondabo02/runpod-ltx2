@@ -10,6 +10,9 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
+import subprocess
+import sys
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -399,6 +402,77 @@ class AutonomyRunner:
             priority=2,
         )
 
+    # ------------------------------------------------------- delivery verdict
+    def _changed_from_result(self, result: object) -> int | None:
+        """File count the worker reported, or None when it said nothing."""
+
+        mission = getattr(result, "mission", None)
+        steps = getattr(mission, "steps", ()) or ()
+        for step in steps:
+            summary = str(getattr(step, "worker_summary", "") or "")
+            match = re.search(r"(\d+)\s+dosya değişti", summary)
+            if match:
+                return int(match.group(1))
+        return None
+
+    def _project_root(self, department_id: str) -> Path | None:
+        if self.console.projects is None:
+            return None
+        for link in self.console.projects.for_department(department_id):
+            root = getattr(link, "work_path", None) or getattr(link, "path", None)
+            if root:
+                return Path(root)
+        return None
+
+    def _acceptance_passed(self, department_id: str) -> tuple[bool, str]:
+        """Independent acceptance: the project's own offline gate must pass.
+
+        A browser load is evidence the page opens, not that the feature works.
+        Projects without a gate cannot claim a verified delivery.
+        """
+
+        root = self._project_root(department_id)
+        if root is None:
+            return False, "proje kökü yok"
+        gate = root / "tools" / "check_offline.py"
+        if not gate.is_file():
+            return False, "kabul kapısı yok (tools/check_offline.py)"
+        env = dict(os.environ)
+        env["PYTHONIOENCODING"] = "utf-8"
+        env["PYTHONUTF8"] = "1"
+        try:
+            completed = subprocess.run(
+                [sys.executable, str(gate)],
+                cwd=str(root),
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=120,
+                env=env,
+            )
+        except (OSError, subprocess.SubprocessError) as exc:
+            return False, f"kabul kapısı çalıştırılamadı: {type(exc).__name__}"
+        if completed.returncode != 0:
+            tail = (completed.stdout or completed.stderr or "").strip().splitlines()
+            return False, "kabul kapısı düştü: " + (tail[-1][:160] if tail else "çıktı yok")
+        return True, "kabul kapısı geçti"
+
+    def delivery_verdict(self, result: object, department_id: str) -> tuple[bool, str]:
+        """A routed mission only counts when it changed files and passed acceptance."""
+
+        changed = self._changed_from_result(result)
+        if changed is None:
+            return False, "işçi dosya değişikliği bildirmedi"
+        if changed <= 0:
+            return False, "teslimat yok: 0 dosya değişti"
+        if os.environ.get("AHOS_REQUIRE_ACCEPTANCE", "1").strip().lower() in {"0", "false", "no"}:
+            return True, f"{changed} dosya değişti (kabul kapısı devre dışı)"
+        ok, detail = self._acceptance_passed(department_id)
+        if not ok:
+            return False, f"{changed} dosya değişti ama {detail}"
+        return True, f"{changed} dosya değişti; {detail}"
+
     def _agent_capabilities(self) -> dict[str, list[str]]:
         """Departments and their managers, so the planner knows who can do what."""
 
@@ -623,6 +697,15 @@ class AutonomyRunner:
             return result
 
         if result is not None and result.status == "routed":
+            delivered, verdict = self.delivery_verdict(result, directive.department_id)
+            if not delivered:
+                # Sıfır dosya ya da doğrulanmamış kabul: başarı sayılmaz.
+                self.state.failed += 1
+                self.state.status = "blocked"
+                self.state.last_reason = verdict[:200]
+                self._record(key, mission_id, directive.department_id, "failed")
+                self._persist()
+                return result
             self.state.executed += 1
             self.state.status = "idle"
             self.state.last_mission = mission_id

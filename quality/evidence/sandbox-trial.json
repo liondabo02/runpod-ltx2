@@ -1,0 +1,48 @@
+{
+  "at": "2026-10-22T19:30:02",
+  "model": "poolside/laguna-s-2.1:free",
+  "sandbox": "C:\\Users\\esmak\\AppData\\Local\\Temp\\ahos-sandbox-ksy224f9",
+  "rows": [
+    {
+      "task": "Mipiluna ana sayfasina gunun ipucu seridi ekle",
+      "worker_success": false,
+      "summary": "model hatası: tüm modeller başarısız: poolside/laguna-s-2.1:free: HTTP 429; nvidia/nemotron-3.5-lightning:free: HTTP 429; openrouter/free: HTTP 429; google/gemma-4-26b-a4b-it:free: HTTP 429",
+      "changed_files": 0,
+      "changed": [],
+      "acceptance_ran": true,
+      "acceptance_passed": true,
+      "acceptance_detail": "Çevrimdışı kalite kapısı: temiz.",
+      "verdict": false,
+      "seconds": 3.2
+    },
+    {
+      "task": "Mipiluna oyunlarina tam ekran dugmesi ekle",
+      "worker_success": false,
+      "summary": "model hatası: tüm modeller başarısız: poolside/laguna-s-2.1:free: HTTP 429; nvidia/nemotron-3.5-lightning:free: HTTP 429; openrouter/free: HTTP 429; google/gemma-4-26b-a4b-it:free: HTTP 429",
+      "changed_files": 0,
+      "changed": [],
+      "acceptance_ran": true,
+      "acceptance_passed": true,
+      "acceptance_detail": "Çevrimdışı kalite kapısı: temiz.",
+      "verdict": false,
+      "seconds": 4.4
+    },
+    {
+      "task": "Mipiluna icin renk koru modu ekle",
+      "worker_success": false,
+      "summary": "model hatası: tüm modeller başarısız: poolside/laguna-s-2.1:free: HTTP 429; nvidia/nemotron-3.5-lightning:free: HTTP 429; openrouter/free: HTTP 429; google/gemma-4-26b-a4b-it:free: HTTP 429",
+      "changed_files": 0,
+      "changed": [],
+      "acceptance_ran": true,
+      "acceptance_passed": true,
+      "acceptance_detail": "Çevrimdışı kalite kapısı: temiz.",
+      "verdict": false,
+      "seconds": 3.3
+    }
+  ],
+  "summary": {
+    "tasks": 3,
+    "delivered": 0,
+    "zero_change_routed": 0
+  }
+}
