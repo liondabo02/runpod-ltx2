@@ -188,6 +188,7 @@ class DaemonState:
     executor_mode: str = ""
     executor_reason: str = ""
     budget_reset_at: str = ""
+    recovery: dict[str, object] = field(default_factory=dict)
     schema: int = SCHEMA_VERSION
 
     def to_dict(self) -> dict[str, object]:
@@ -206,6 +207,7 @@ class DaemonState:
             "executor_mode": self.executor_mode,
             "executor_reason": self.executor_reason,
             "budget_reset_at": self.budget_reset_at,
+            "recovery": dict(self.recovery),
         }
 
 
@@ -505,9 +507,28 @@ class AutonomyDaemon:
             f"kanıt duraklaması {int(age_seconds // 60)} dk sonra yeniden denendi"
         )
 
+    def _recover_queue(self) -> None:
+        """Return orphaned missions to the queue after a crash or a kill.
+
+        Recovery is additive and capped in ``queue_recovery``; a mission that
+        keeps failing is blocked instead of looping.
+        """
+
+        database = self.runtime_dir / "company-service.db"
+        if not database.exists():
+            return
+        try:
+            from .queue_recovery import recover_file
+
+            self.state.recovery = recover_file(database)
+        except Exception as exc:  # noqa: BLE001 - recovery must never stop the loop
+            self.state.recovery = {"error": type(exc).__name__}
+
     def tick_once(self) -> str:
         """Run exactly one scheduler tick and persist the result."""
 
+        if self.state.ticks % 10 == 0:
+            self._recover_queue()
         self._maybe_clear_stale_pause()
         self._maybe_reset_daily_budget()
         self._apply_executor_mode()
@@ -558,6 +579,7 @@ class AutonomyDaemon:
             print(f"AHOS daemon zaten çalışıyor (pid {pid}); yeni süreç başlatılmadı.")
             return 2
         self.write_heartbeat()
+        self._recover_queue()
         try:
             while not self._should_stop():
                 try:

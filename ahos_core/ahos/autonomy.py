@@ -473,6 +473,19 @@ class AutonomyRunner:
             return False, f"{changed} dosya değişti ama {detail}"
         return True, f"{changed} dosya değişti; {detail}"
 
+    def _recover_queue(self) -> dict:
+        """Reopen orphaned missions once when a claim keeps failing."""
+
+        database = self.runtime_dir / "company-service.db"
+        if not database.exists():
+            return {}
+        try:
+            from .queue_recovery import recover_file
+
+            return recover_file(database)
+        except Exception:  # noqa: BLE001 - recovery is best effort
+            return {}
+
     def _agent_capabilities(self) -> dict[str, list[str]]:
         """Departments and their managers, so the planner knows who can do what."""
 
@@ -671,6 +684,15 @@ class AutonomyRunner:
 
         while attempts <= self.limits.max_retries:
             attempts += 1
+            stop_reason = self._blocked_reason()
+            if stop_reason:
+                # Acil durdurma/duraklatma görev ortasında da geçerli: yeni
+                # deneme başlatılmaz.
+                self.state.status = "stopped"
+                self.state.last_reason = f"iptal: {stop_reason}"
+                self._record(key, "", directive.department_id, "cancelled")
+                self._persist()
+                return None
             result = self.console.run_department_mission(spec, directive.objective)
             elapsed = time.monotonic() - started
             if result.status == "routed":
@@ -717,6 +739,13 @@ class AutonomyRunner:
             self.state.last_reason = (
                 result.message[:200] if result is not None else "sonuç yok"
             )
+            if "sahiplenilemedi" in self.state.last_reason:
+                # Kuyrukta sahipsiz kalmış satır olabilir; bir kez kurtarmayı dene.
+                recovery = self._recover_queue()
+                if recovery:
+                    self.state.last_reason += (
+                        f" · kurtarma: {recovery.get('reopened_stuck', 0)} yeniden açıldı"
+                    )
             self._record(key, mission_id, directive.department_id, "failed")
 
         if self.state.executed >= self.limits.max_missions:
