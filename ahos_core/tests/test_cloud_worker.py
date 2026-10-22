@@ -104,6 +104,21 @@ def test_run_budget_stops_the_loop(monkeypatch, tmp_path) -> None:
     assert list(module.OUTBOX.glob("*.json")) == []
 
 
+def test_web_only_scope_rejects_native_paths(monkeypatch, tmp_path) -> None:
+    module, _ = _load(monkeypatch, tmp_path)
+    monkeypatch.setattr(module, "PROJECT", tmp_path / "project")
+    payload = {
+        "edits": [
+            {"path": "android/app/src/main/MainActivity.java", "find": "a", "replace": "b"},
+            {"path": "www/index.html", "find": "<html>", "replace": "<html lang='tr'>"},
+        ]
+    }
+
+    edits = module.validate(payload)
+
+    assert [edit["path"] for edit in edits] == ["www/index.html"], "android hedefi reddedilmeli"
+
+
 def test_fallback_tries_each_model_once_then_local(monkeypatch, tmp_path) -> None:
     module, _ = _load(monkeypatch, tmp_path)
     attempts: list[str] = []

@@ -52,12 +52,20 @@ SYSTEM = (
 )
 
 
+def _allowed_prefix() -> str:
+    return "www/" if (PROJECT / "www").is_dir() else ""
+
+
 def project_files(limit: int = 120) -> list[str]:
+    prefix = _allowed_prefix()
     files: list[str] = []
     for path in sorted(PROJECT.rglob("*")):
         if not path.is_file() or path.suffix.lower() not in TEXT_SUFFIXES:
             continue
-        files.append(path.relative_to(PROJECT).as_posix())
+        relative = path.relative_to(PROJECT).as_posix()
+        if prefix and not relative.startswith(prefix):
+            continue
+        files.append(relative)
         if len(files) >= limit:
             break
     return files
@@ -157,11 +165,15 @@ def validate(payload: dict) -> list[dict]:
         return []
     cleaned: list[dict] = []
     root = PROJECT.resolve()
+    prefix = _allowed_prefix()
     for item in edits[:3]:
         if not isinstance(item, dict):
             continue
         path = str(item.get("path") or "").strip().replace("\\", "/")
         if not path:
+            continue
+        if prefix and not path.startswith(prefix):
+            # Web dışı (android/ios) hedefler bu işçinin kapsamı dışında.
             continue
         candidate = (root / path).resolve()
         if root != candidate and root not in candidate.parents:
