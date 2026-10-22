@@ -190,6 +190,7 @@ class DaemonState:
     budget_reset_at: str = ""
     recovery: dict[str, object] = field(default_factory=dict)
     audit: list[dict[str, object]] = field(default_factory=list)
+    quality: dict[str, object] = field(default_factory=dict)
     schema: int = SCHEMA_VERSION
 
     def to_dict(self) -> dict[str, object]:
@@ -210,6 +211,7 @@ class DaemonState:
             "budget_reset_at": self.budget_reset_at,
             "recovery": dict(self.recovery),
             "audit": list(self.audit),
+            "quality": dict(self.quality),
         }
 
 
@@ -566,6 +568,22 @@ class AutonomyDaemon:
             )
         self.state.audit = rows
 
+    def _quality_report(self) -> None:
+        """Publish the delivery/error split and the top causes."""
+
+        try:
+            from .failure_analytics import analyse
+
+            report = analyse(self.runtime_dir)
+        except Exception:  # noqa: BLE001 - analytics must never stop the loop
+            return
+        self.state.quality = {
+            "delivery_rate": report.get("delivery_rate", 0.0),
+            "error_rate": report.get("error_rate", 0.0),
+            "missions": report.get("missions", 0),
+            "top": [item["cause"] for item in report.get("top_causes", [])[:3]],
+        }
+
     def tick_once(self) -> str:
         """Run exactly one scheduler tick and persist the result."""
 
@@ -573,6 +591,7 @@ class AutonomyDaemon:
             self._recover_queue()
         if self.state.ticks % 30 == 0:
             self._audit_projects()
+            self._quality_report()
         self._maybe_clear_stale_pause()
         self._maybe_reset_daily_budget()
         self._apply_executor_mode()

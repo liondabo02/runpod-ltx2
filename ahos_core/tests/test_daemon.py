@@ -419,6 +419,25 @@ def test_cli_status_without_heartbeat(tmp_path, capsys):
     assert "not-running" in capsys.readouterr().out
 
 
+def test_daemon_publishes_the_quality_report(tmp_path):
+    import json as _json
+
+    (tmp_path / "daemon-missions.jsonl").write_text(
+        _json.dumps({"status": "routed", "changed_files": 1}) + "\n"
+        + _json.dumps({"status": "routed", "changed_files": 0}) + "\n",
+        encoding="utf-8",
+    )
+    scheduler = FakeScheduler(["idle"])
+    daemon = _daemon(tmp_path, scheduler, max_ticks=1)
+
+    daemon.run()
+
+    quality = read_heartbeat(tmp_path)["quality"]
+    assert quality["missions"] == 2
+    assert quality["delivery_rate"] == 0.5
+    assert "no_delivery" in quality["top"]
+
+
 def test_daemon_audits_bound_projects(tmp_path):
     import json as _json
 
