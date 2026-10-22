@@ -130,9 +130,28 @@ def test_already_completed_mission_is_skipped_not_counted(tmp_path, monkeypatch)
     assert runner.state.status == "idle"
 
 
-def test_plan_directive_is_idle_without_a_model(tmp_path, monkeypatch) -> None:
+def test_plan_falls_back_to_the_heuristic_scanner_without_a_model(tmp_path, monkeypatch) -> None:
+    runner = _runner(tmp_path)
+    _fake_plan(monkeypatch, [])  # model planlayıcı boş döndü / çevrimdışı
+
+    directive = runner.plan_directive()
+
+    assert directive is not None
+    lowered = directive.objective.casefold()
+    assert any(word in lowered for word in ("lang", "viewport", "charset")), directive.objective
+    assert directive.reason == "proje taraması (model gerekmez)"
+
+
+def test_plan_directive_is_idle_when_nothing_is_missing(tmp_path, monkeypatch) -> None:
     runner = _runner(tmp_path)
     _fake_plan(monkeypatch, [])
+    # Proje temiz: sezgisel tarayıcı da iş üretmemeli.
+    clean = (
+        '<!doctype html><html lang="tr"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width"><title>x</title>'
+        "</head><body></body></html>"
+    )
+    (tmp_path / "proj" / "www" / "index.html").write_text(clean, encoding="utf-8")
 
     assert runner.plan_directive() is None
 

@@ -369,6 +369,10 @@ class AutonomyRunner:
                 )
             except Exception:  # noqa: BLE001 - planning is best effort
                 items = []
+            if not items:
+                # Model yoksa/limitliyse (internetsiz dahil) projeyi tara:
+                # somut gözlemlerden görev üret.
+                items = self._heuristic_plan(departments, projects)
             self._save_plan(day, items)
             if not items:
                 return None
@@ -472,6 +476,33 @@ class AutonomyRunner:
         if not ok:
             return False, f"{changed} dosya değişti ama {detail}"
         return True, f"{changed} dosya değişti; {detail}"
+
+    def _heuristic_plan(
+        self, departments: dict[str, str], projects: dict[str, list[str]]
+    ) -> list[dict]:
+        """Model-free objective generation from the project tree itself."""
+
+        from .heuristic_planner import scan
+
+        recent = {item.casefold() for item in self.recent_objectives()}
+        items: list[dict] = []
+        for department_id in sorted(departments):
+            root = self._project_root(department_id)
+            if root is None:
+                continue
+            for title in scan(root):
+                if title.casefold() in recent:
+                    continue
+                items.append(
+                    {
+                        "department": department_id,
+                        "title": title,
+                        "why": "proje taraması (model gerekmez)",
+                    }
+                )
+                if len(items) >= 3:
+                    return items
+        return items
 
     def _ensure_acceptance_baseline(self, department_id: str) -> None:
         """Pin the project gate once so the first QA run is not blocked."""
