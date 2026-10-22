@@ -362,6 +362,7 @@ class AutonomyRunner:
                     projects,
                     self.recent_objectives(),
                     limit=3,
+                    agents=self._agent_capabilities(),
                 )
             except Exception:  # noqa: BLE001 - planning is best effort
                 items = []
@@ -397,6 +398,25 @@ class AutonomyRunner:
             reason=str(chosen.get("why") or "model planı"),
             priority=2,
         )
+
+    def _agent_capabilities(self) -> dict[str, list[str]]:
+        """Departments and their managers, so the planner knows who can do what."""
+
+        from .roster import build_roster
+
+        agents: dict[str, list[str]] = {}
+        try:
+            roster = build_roster(self.runtime_dir)
+        except Exception:  # noqa: BLE001 - roster is advisory
+            return agents
+        for card in roster.get("agents", []):
+            kind = card.get("kind")
+            agent_id = str(card.get("id") or "")
+            if kind == "department":
+                agents[agent_id] = list(card.get("capabilities") or ())
+            elif kind == "worker" and agent_id.endswith("-manager"):
+                agents[agent_id] = list(card.get("capabilities") or ())
+        return agents
 
     def _retry_budget_path(self) -> Path:
         return self.runtime_dir / "autonomy-retries.json"

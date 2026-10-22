@@ -54,6 +54,10 @@ def collect(runtime_dir: str | Path, *, missions: int = 5, errors: int = 5) -> d
     error_rows = default_error_log(runtime).recent(errors)
     board = TaskBoard(runtime / "taskboard.json").tasks() if (runtime / "taskboard.json").exists() else ()
 
+    from .roster import build_roster
+
+    roster = build_roster(runtime)
+
     delivered = sum(1 for row in ledger if row.get("changed_files"))
     states: dict[str, int] = {}
     for task in board:
@@ -88,6 +92,10 @@ def collect(runtime_dir: str | Path, *, missions: int = 5, errors: int = 5) -> d
         },
         "errors": error_rows,
         "board": {"counts": states, "open": len(board) - states.get("done", 0)},
+        "agents": {
+            "total": roster["summary"]["total"],
+            "by_kind": roster["summary"]["by_kind"],
+        },
     }
 
 
@@ -104,6 +112,8 @@ def render(report: dict) -> str:
         f"  saat kotası : {scheduler['missions_this_hour']} / toplam {scheduler['missions_total']}"
         f" ({scheduler['status'] or '-'})",
         f"  teslimat    : {delivery['with_changes']}/{delivery['recorded']} görevde dosya değişikliği",
+        f"  ajanlar     : {report.get('agents', {}).get('total', 0)} kayıtlı "
+        f"({', '.join(f'{k}={v}' for k, v in sorted(report.get('agents', {}).get('by_kind', {}).items()))})",
         f"  pano        : {report['board']['open']} açık görev",
         f"  hata        : {len(report['errors'])} son kayıt",
     ]

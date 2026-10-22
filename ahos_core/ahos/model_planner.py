@@ -33,6 +33,7 @@ def build_context(
     departments: Mapping[str, str],
     projects: Mapping[str, Iterable[str]],
     recent: Iterable[str],
+    agents: Mapping[str, Iterable[str]] | None = None,
 ) -> str:
     """Compact, deterministic context: no file bodies, only shape and history."""
 
@@ -41,6 +42,12 @@ def build_context(
     for department_id, name in sorted(departments.items()):
         names = ", ".join(sorted(projects.get(department_id, ()))) or "proje yok"
         lines.append(f"- {department_id} ({name}) → {names}")
+    if agents:
+        lines.append("")
+        lines.append("Ekip (kim hangi yetkinliğe sahip):")
+        for agent_id, capabilities in sorted(agents.items()):
+            joined = ", ".join(list(capabilities)[:6]) or "genel"
+            lines.append(f"- {agent_id}: {joined}")
     lines.append("")
     lines.append("Son yapılan işler (tekrar önermeyin):")
     for objective in recent_list[:20]:
@@ -95,6 +102,7 @@ def propose_objectives(
     limit: int = 3,
     settings=None,
     transport=None,
+    agents: Mapping[str, Iterable[str]] | None = None,
 ) -> list[dict]:
     """Ask the model for the next objectives; empty list on any failure."""
 
@@ -102,7 +110,7 @@ def propose_objectives(
     if settings is None:
         return []
     transport = transport or http_transport
-    prompt = build_context(departments, projects, recent)
+    prompt = build_context(departments, projects, recent, agents)
     try:
         raw = transport(SYSTEM_PROMPT, prompt, settings)
     except ModelError:
