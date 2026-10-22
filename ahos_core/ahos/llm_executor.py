@@ -806,6 +806,55 @@ def make_model_executor(
         (destination / "VERIFY.log").write_text(output or "(çıktı yok)", encoding="utf-8")
 
         if not passed:
+            # Eksik varlık onarımı: model yeni bir dosyaya referans verip dosyayı
+            # üretmeyi unuttuysa, içeriğini isteyip doğrulamayı bir kez tekrarla.
+            missing_match = re.search(r"eksik varlık:\s*(\S+)\s*->\s*(\S+)", output or "")
+            if missing_match:
+                referrer, missing = missing_match.group(1), missing_match.group(2)
+                try:
+                    reference = (root / referrer).read_text(encoding="utf-8", errors="replace")[:4000]
+                    repair_prompt = (
+                        prompt
+                        + f"\n\nEKSİK DOSYA: `{missing}` referans ediliyor ama yok. "
+                        "Yalnızca bu dosyayı oluşturan JSON döndür: "
+                        f'{{"summary":"...","edits":[{{"path":"{missing}","content":"..."}}]}}\n'
+                        f"### {referrer}\n```\n{reference}\n```"
+                    )
+                    raw_fix = call(STRICT_SYSTEM_PROMPT, repair_prompt, settings)
+                    fix = parse_model_response(raw_fix, root)
+                    for edit in fix.edits:
+                        target = root / edit.path
+                        originals.setdefault(
+                            edit.path,
+                            target.read_text(encoding="utf-8", errors="replace")
+                            if target.exists()
+                            else None,
+                        )
+                        edit.apply(root)
+                    passed, output = _verify(
+                        root,
+                        response.verification,
+                        tuple(change.path for change in changes),
+                        artifacts_dir=destination,
+                        run_browser=(
+                            settings.browser_check
+                            if run_browser_check is None
+                            else run_browser_check
+                        ),
+                        forced_command=verify_command,
+                    )
+                    if passed:
+                        after = snapshot(root)
+                        changes = diff_snapshots(
+                            root, before, after, before_texts=before_texts
+                        )
+                        (destination / "VERIFY.log").write_text(
+                            output or "(çıktı yok)", encoding="utf-8"
+                        )
+                except (ModelError, OSError):
+                    pass
+
+        if not passed:
             # Roll back so a failed verification never leaves a broken project.
             for path, original in originals.items():
                 target = root / path

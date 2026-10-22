@@ -608,6 +608,20 @@ class AutonomyRunner:
         elapsed = time.monotonic() - started
         mission_id = result.mission.mission_id if result and result.mission else ""
 
+        if (
+            result is not None
+            and result.status == "routed"
+            and "zaten tamamlanmış" in (result.message or "")
+        ):
+            # Kuyruk bu görevi daha önce bitirmiş: teslimat sayma, kanıt
+            # serisini de bozma; sadece tekrar denemeyi engelle.
+            self.state.skipped_duplicate += 1
+            self.state.status = "idle"
+            self.state.last_reason = "zaten tamamlanmış görev atlandı"
+            self._record(key, mission_id, directive.department_id, "skipped")
+            self._persist()
+            return result
+
         if result is not None and result.status == "routed":
             self.state.executed += 1
             self.state.status = "idle"

@@ -104,6 +104,32 @@ def test_plan_directive_skips_departments_without_projects(tmp_path, monkeypatch
     assert directive.department_id == "oyun", "projesi olmayan departman seçilmemeli"
 
 
+def test_already_completed_mission_is_skipped_not_counted(tmp_path, monkeypatch) -> None:
+    from types import SimpleNamespace
+
+    runner = _runner(tmp_path)
+    _fake_plan(
+        monkeypatch,
+        [{"department": "oyun", "title": "Ana sayfaya günün oyunu şeridi ekle", "why": ""}],
+    )
+    monkeypatch.setattr(
+        runner.console,
+        "run_department_mission",
+        lambda *a, **k: SimpleNamespace(
+            status="routed",
+            message="görev zaten tamamlanmış; yeniden yürütülmedi",
+            mission=None,
+        ),
+    )
+
+    result = runner.run_once()
+
+    assert result is not None
+    assert runner.state.skipped_duplicate == 1
+    assert runner.state.executed == 0, "teslimat sayılmamalı"
+    assert runner.state.status == "idle"
+
+
 def test_plan_directive_is_idle_without_a_model(tmp_path, monkeypatch) -> None:
     runner = _runner(tmp_path)
     _fake_plan(monkeypatch, [])
