@@ -69,7 +69,7 @@ def prompt_for(task: str) -> str:
     for name in ("www/index.html", "index.html"):
         candidate = PROJECT / name
         if candidate.exists():
-            samples.append(f"### {name}\n```\n{candidate.read_text(encoding='utf-8', errors='replace')[:6000]}\n```")
+            samples.append(f"### {name}\n```\n{candidate.read_text(encoding='utf-8', errors='replace')[:2500]}\n```")
             break
     return (
         f"Görev: {task}\n\nDosyalar:\n" + "\n".join(files) +
@@ -95,9 +95,11 @@ def _chat(system: str, prompt: str, max_tokens: int = 8192, timeout: int = REQUE
     dependency.
     """
 
-    attempts: list[tuple[str, str]] = [
-        ("https://openrouter.ai/api/v1/chat/completions", model) for model in MODELS
-    ]
+    attempts: list[tuple[str, str]] = []
+    if KEY:
+        attempts = [
+            ("https://openrouter.ai/api/v1/chat/completions", model) for model in MODELS
+        ]
     attempts.append((f"{LOCAL_URL.rstrip('/')}/chat/completions", LOCAL_MODEL))
 
     last_error = "model yok"
@@ -223,8 +225,8 @@ def main() -> int:
     if STOP_FILE.exists():
         print(f"acil durdurma etkin: {STOP_FILE} (üretim yapılmadı)")
         return 0
-    if not KEY:
-        print("OPENROUTER_KEY yok", file=sys.stderr)
+    if not KEY and not LOCAL_URL:
+        print("OPENROUTER_KEY yok ve yerel model tanımlı değil", file=sys.stderr)
         return 2
     if not TASKS.exists():
         print(f"görev listesi yok: {TASKS}", file=sys.stderr)

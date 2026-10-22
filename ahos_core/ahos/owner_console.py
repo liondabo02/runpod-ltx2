@@ -905,8 +905,9 @@ class OwnerConsole:
                 QueueStatus.COMPLETED,
                 QueueStatus.WAITING_OWNER_APPROVAL,
                 QueueStatus.RUNNING,
-                QueueStatus.PENDING,
             }:
+                # `pending` burada DEĞİL: kuyruğa alınmış görev sahiplenilmek
+                # üzere bekliyordur; onu "sahiplenilemez" saymak kuyruğu kilitler.
                 # Terminal veya başka sahipçe yürütülen görev yeniden
                 # kuyruğa alınmaz; executor hiç çağrılmaz.
                 return self._unclaimed_result(mission_id, objective)
@@ -1219,7 +1220,25 @@ class OwnerConsole:
                     in {"model", "llm"}
                     else None
                 )
-                if settings is not None:
+                outbox_dir = self.runtime_dir / "cloud-outbox"
+                use_outbox = (
+                    os.environ.get("AHOS_PRODUCE_SOURCE", "").strip().lower() == "outbox"
+                    and outbox_dir.is_dir()
+                )
+                if use_outbox:
+                    from .outbox_executor import make_outbox_executor
+
+                    cloud_exec = make_outbox_executor(
+                        project.work_path or project.path,
+                        outbox_dir,
+                        stop_file=self.runtime_dir / "autonomy.stop",
+                    )
+                    deterministic = make_project_executor(
+                        project.work_path or project.path,
+                        self.artifacts_root,
+                    )
+                    chosen = _produce_only_executor(cloud_exec, deterministic)
+                elif settings is not None:
                     model_exec = make_model_executor(
                         project.work_path or project.path,
                         self.artifacts_root,
