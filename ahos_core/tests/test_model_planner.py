@@ -71,6 +71,27 @@ def test_propose_objectives_uses_transport_and_parses_json() -> None:
     assert "mipiluna" in calls[0] and "eski görev" in calls[0]
 
 
+def test_propose_objectives_caps_the_planner_timeout(monkeypatch) -> None:
+    from ahos.llm_executor import ModelSettings
+
+    settings = ModelSettings(
+        base_url="https://openrouter.ai/api/v1",
+        api_key="k",
+        model="m:free",
+        timeout_seconds=300,
+    )
+    monkeypatch.setenv("AHOS_PLANNER_TIMEOUT", "20")
+    seen: dict = {}
+
+    def transport(system, prompt, used):
+        seen["timeout"] = used.timeout_seconds
+        return '{"objectives":[]}'
+
+    propose_objectives(DEPARTMENTS, {}, settings=settings, transport=transport)
+
+    assert seen["timeout"] == 20, "planlama turu 20 sn ile sınırlanmalı"
+
+
 def test_propose_objectives_returns_empty_on_failure() -> None:
     def broken(system: str, prompt: str, settings) -> str:
         raise RuntimeError("model yok")

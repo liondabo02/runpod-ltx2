@@ -10,6 +10,7 @@ hands it back as ordinary directives.
 from __future__ import annotations
 
 import json
+import os
 import re
 from typing import Iterable, Mapping
 
@@ -109,6 +110,17 @@ def propose_objectives(
     settings = settings or load_settings()
     if settings is None:
         return []
+    # Planlama turu döngüyü kilitlememeli: kısa ve sabit bir zaman bütçesi.
+    try:
+        from dataclasses import replace
+
+        budget = int(os.environ.get("AHOS_PLANNER_TIMEOUT", "20"))
+        settings = replace(
+            settings,
+            timeout_seconds=min(int(settings.timeout_seconds or budget), budget),
+        )
+    except Exception:  # noqa: BLE001 - planning must not fail on odd settings
+        pass
     transport = transport or http_transport
     prompt = build_context(departments, projects, recent, agents)
     try:

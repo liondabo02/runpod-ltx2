@@ -15,7 +15,8 @@ from pathlib import Path
 
 TEXT_SUFFIXES = {".html", ".css", ".js", ".json", ".svg", ".md"}
 SKIP_PARTS = {".git", "node_modules", "android", "ios", "data", "dist", "build"}
-MAX_FILE_BYTES = 2 * 1024 * 1024
+MAX_FILE_BYTES = 200_000
+MAX_SCANNED_FILES = 300
 EXTERNAL = re.compile(
     r"""(?:\bsrc\s*=\s*|<link[^>]*\bhref\s*=\s*)["'](https?://[^"']+)["']""",
     re.IGNORECASE,
@@ -24,12 +25,23 @@ BARE_URL = re.compile(r"https?://[a-z0-9.-]+", re.IGNORECASE)
 
 
 def _iter_files(root: Path):
-    for path in root.rglob("*"):
-        if not path.is_file():
-            continue
-        if any(part in SKIP_PARTS for part in path.relative_to(root).parts):
-            continue
-        if path.suffix.lower() in TEXT_SUFFIXES:
+    import os
+    import time
+
+    started = time.time()
+    for dirpath, dirnames, filenames in os.walk(root):
+        # Ağır klasörlere hiç girme; denetim saniyeler içinde bitmeli.
+        dirnames[:] = [
+            name
+            for name in dirnames
+            if name not in SKIP_PARTS and not name.startswith(".")
+        ]
+        if time.time() - started > 5:
+            return
+        for name in filenames:
+            path = Path(dirpath) / name
+            if path.suffix.lower() not in TEXT_SUFFIXES:
+                continue
             yield path
 
 
@@ -40,6 +52,8 @@ def audit(root: str | Path) -> dict:
     scanned = 0
 
     for path in _iter_files(base):
+        if scanned >= MAX_SCANNED_FILES:
+            break
         try:
             if path.stat().st_size > MAX_FILE_BYTES:
                 continue
