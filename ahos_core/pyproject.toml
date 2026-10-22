@@ -22,6 +22,7 @@ ahos-errors = "ahos.errors:main"
 ahos-status = "ahos.report:main"
 ahos-roster = "ahos.roster:main"
 ahos-offline = "ahos.offline_audit:main"
+ahos-company = "ahos.company_foundry:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

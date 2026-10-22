@@ -99,10 +99,11 @@ def test_task_routes_to_an_existing_department(tmp_path) -> None:
 
     result = console.handle("çizgi film için yeni bir bölüm senaryosu yaz")
 
-    assert result.status == "blocked"
+    # Kod projesi olmayan şirket, işi belge olarak teslim eder (kabulden geçer).
+    assert result.status == "routed"
     assert result.department_id == "creative"
-    assert result.mission is not None
-    assert result.mission.status is MissionStatus.BLOCKED
+    assert "teslimat:" in result.message
+    assert list((tmp_path / "companies").glob("*/plan.md")), "iş belgesi yazılmalı"
 
 
 def test_task_without_a_matching_department_creates_one_first(tmp_path) -> None:
@@ -113,7 +114,7 @@ def test_task_without_a_matching_department_creates_one_first(tmp_path) -> None:
 
     assert result.status in {"routed", "blocked"}
     assert len(console.book.all()) >= before
-    assert (tmp_path / "artifacts").exists()
+    assert (tmp_path / "companies").exists(), "şirket/tedarik belgesi yazılmalı"
 
 
 def test_status_report_lists_departments(console) -> None:

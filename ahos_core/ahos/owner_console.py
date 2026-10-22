@@ -722,8 +722,33 @@ class OwnerConsole:
 
         created: str | None = None
         if spec is None:
-            spec = self._create_for_task(text)
-            created = spec.department_id
+            # Bilinen bir şirket yoksa holding şirket kurar, işçi alır ve işi
+            # teslim eder; kod görevi olmayan talepler bu yolla yürür.
+            from .company_foundry import found
+
+            company = found(
+                self.book, self.book.workforce(), self.runtime_dir, text
+            )
+            return ConsoleResult(
+                kind=CommandKind.TASK,
+                status="routed" if company.validated else "blocked",
+                message=f"{company.summary} · teslimat: {company.deliverable}",
+                department_id=company.company_id,
+            )
+
+        if self._project_for_department(spec.department_id) is None:
+            # Şirket var ama kod projesi yok: iş, iş belgesi olarak teslim edilir.
+            from .company_foundry import found
+
+            company = found(
+                self.book, self.book.workforce(), self.runtime_dir, text, spec=spec
+            )
+            return ConsoleResult(
+                kind=CommandKind.TASK,
+                status="routed" if company.validated else "blocked",
+                message=f"{company.summary} · teslimat: {company.deliverable}",
+                department_id=company.company_id,
+            )
 
         result = self.run_department_mission(spec, text, retry_blocked=True)
         if created is not None:
