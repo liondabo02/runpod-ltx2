@@ -189,6 +189,7 @@ class DaemonState:
     executor_reason: str = ""
     budget_reset_at: str = ""
     recovery: dict[str, object] = field(default_factory=dict)
+    audit: list[dict[str, object]] = field(default_factory=list)
     schema: int = SCHEMA_VERSION
 
     def to_dict(self) -> dict[str, object]:
@@ -208,6 +209,7 @@ class DaemonState:
             "executor_reason": self.executor_reason,
             "budget_reset_at": self.budget_reset_at,
             "recovery": dict(self.recovery),
+            "audit": list(self.audit),
         }
 
 
@@ -530,11 +532,47 @@ class AutonomyDaemon:
         except Exception as exc:  # noqa: BLE001 - recovery must never stop the loop
             self.state.recovery = {"error": type(exc).__name__}
 
+    def _audit_projects(self) -> None:
+        """Offline-independence snapshot for every bound project (read-only)."""
+
+        registry = self.runtime_dir / "projects.json"
+        try:
+            payload = json.loads(registry.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return
+        entries = payload.get("projects") if isinstance(payload, dict) else payload
+        if not isinstance(entries, list):
+            return
+        from .offline_audit import audit
+
+        rows: list[dict[str, object]] = []
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            path = entry.get("path")
+            if not path:
+                continue
+            try:
+                report = audit(path)
+            except Exception:  # noqa: BLE001 - audit must never stop the loop
+                continue
+            rows.append(
+                {
+                    "name": entry.get("name") or Path(str(path)).name,
+                    "offline_ready": bool(report.get("offline_ready")),
+                    "findings": len(report.get("findings") or ()),
+                    "external": report.get("external_references", 0),
+                }
+            )
+        self.state.audit = rows
+
     def tick_once(self) -> str:
         """Run exactly one scheduler tick and persist the result."""
 
         if self.state.ticks % 10 == 0:
             self._recover_queue()
+        if self.state.ticks % 30 == 0:
+            self._audit_projects()
         self._maybe_clear_stale_pause()
         self._maybe_reset_daily_budget()
         self._apply_executor_mode()

@@ -419,6 +419,30 @@ def test_cli_status_without_heartbeat(tmp_path, capsys):
     assert "not-running" in capsys.readouterr().out
 
 
+def test_daemon_audits_bound_projects(tmp_path):
+    import json as _json
+
+    project = tmp_path / "proj"
+    (project / "www").mkdir(parents=True)
+    (project / "www" / "index.html").write_text(
+        '<script src="https://cdn.example.com/x.js"></script>', encoding="utf-8"
+    )
+    (tmp_path / "projects.json").write_text(
+        _json.dumps(
+            [{"name": "örnek", "path": str(project), "department_id": "oyun"}]
+        ),
+        encoding="utf-8",
+    )
+    scheduler = FakeScheduler(["idle"])
+    daemon = _daemon(tmp_path, scheduler, max_ticks=1)
+
+    daemon.run()
+
+    audit = read_heartbeat(tmp_path)["audit"]
+    assert audit and audit[0]["name"] == "örnek"
+    assert audit[0]["offline_ready"] is False, "harici script çevrimdışı engelidir"
+
+
 def test_offline_mode_forces_the_deterministic_worker(tmp_path, monkeypatch):
     monkeypatch.setenv("AHOS_OFFLINE", "1")
     scheduler = FakeScheduler(["idle"])
@@ -455,7 +479,7 @@ def test_volatile_runtime_files_are_not_counted_as_delivery(tmp_path):
     (root / "data" / "state.json").write_text('{"x":1}', encoding="utf-8")
     (root / "service.log").write_text("noise", encoding="utf-8")
     (root / "state.sqlite3").write_text("db", encoding="utf-8")
-    (root / "www" / "app.js").write_text("b", encoding="utf-8")
+    (root / "www" / "app.js").write_text("changed-content", encoding="utf-8")
 
     diff = diff_trees(before, snapshot_tree(root))
 
