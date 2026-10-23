@@ -80,6 +80,7 @@ class AutonomyRunner:
         self.stop_path = self.runtime_dir / "autonomy.stop"
         self.plan_path = self.runtime_dir / "auto-plan.json"
         self._active_idea: tuple[str, str] | None = None
+        self._active_improvement: str | None = None
         self.office = HoldingOffice(console)
         self.state = AutonomyState()
 
@@ -540,6 +541,44 @@ class AutonomyRunner:
         except Exception:  # noqa: BLE001 - pinning is best effort
             pass
 
+    def _self_improvement_directive(self, excluded: set[str]) -> "Directive | None":
+        """Kalite kuyruğundaki ilk görevi yönlendirmeye çevir."""
+
+        from .holding_office import Directive
+
+        path = self.runtime_dir / "self-improvement.jsonl"
+        done_path = self.runtime_dir / "self-improvement-done.jsonl"
+        done: set[str] = set()
+        if done_path.is_file():
+            for line in done_path.read_text(encoding="utf-8", errors="ignore").splitlines():
+                try:
+                    done.add(str(json.loads(line).get("title") or ""))
+                except json.JSONDecodeError:
+                    continue
+        if not path.is_file():
+            return None
+        for line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                task = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            title = str(task.get("title") or "")
+            department = str(task.get("department") or "software")
+            if not title or title in done or department in excluded:
+                continue
+            self._active_improvement = title
+            return Directive(
+                kind="self_improvement",
+                department_id=department,
+                objective=title,
+                reason=str(task.get("why") or "kalite bütçesi"),
+                priority=0,
+            )
+        return None
+
     def _idea_directive(self, excluded: set[str]) -> "Directive | None":
         """The owner's idea outranks the CEO queue, the cycle and the planner."""
 
@@ -672,6 +711,8 @@ class AutonomyRunner:
         # bugün bir görev yaptı diye günün geri kalanında tamamen kapatılmaz.
         excluded: set[str] = set()
         directive = self._idea_directive(excluded)
+        if directive is None:
+            directive = self._self_improvement_directive(excluded)
         for _ in range(5 if directive is None else 0):
             candidate = self.office.next_directive(exclude_departments=excluded)
             if candidate is None:
@@ -839,6 +880,20 @@ class AutonomyRunner:
             self.state.last_mission = mission_id
             self.state.last_reason = result.message[:200]
             self._record(key, mission_id, directive.department_id, "completed")
+            if self._active_improvement is not None:
+                record = {
+                    "at": _now(),
+                    "title": self._active_improvement,
+                    "mission_id": mission_id,
+                }
+                try:
+                    with (self.runtime_dir / "self-improvement-done.jsonl").open(
+                        "a", encoding="utf-8"
+                    ) as handle:
+                        handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+                except OSError:  # pragma: no cover - best effort
+                    pass
+                self._active_improvement = None
         else:
             if self._active_idea is not None:
                 try:

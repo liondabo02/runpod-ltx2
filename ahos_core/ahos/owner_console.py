@@ -1249,6 +1249,9 @@ class OwnerConsole:
                 use_outbox = (
                     os.environ.get("AHOS_PRODUCE_SOURCE", "").strip().lower() == "outbox"
                     and outbox_dir.is_dir()
+                    # Bulut önerileri web (www/) yamalarıdır; web olmayan
+                    # projelerde model/deterministik üretim kullanılır.
+                    and ((Path(project.work_path or project.path) / "www").is_dir())
                 )
                 if use_outbox:
                     from .outbox_executor import make_outbox_executor
