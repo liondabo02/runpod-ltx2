@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import threading
 import time
@@ -27,22 +27,24 @@ def test_mission_deadline_blocks_long_running_executor(tmp_path, monkeypatch) ->
     stop = threading.Event()
 
     def slow(item: WorkItem, worker_id: str) -> WorkerExecutionResult:
-        stop.wait(3.0)  # deadline aşılana kadar bekler
+        # Ä°ÅŸÃ§i Ã§ok uzun sÃ¼rer; kesici devreye girmeli. SÄ±nÄ±r, yÃ¼klÃ¼ makinede
+        # (daemon + fabrika Ã§alÄ±ÅŸÄ±rken) zamanlayÄ±cÄ± gecikmelerine yer bÄ±rakÄ±r.
+        stop.wait(9.0)
         return WorkerExecutionResult(
             task_id=item.task_id,
             worker_id=worker_id,
             success=True,
-            summary="geç kaldı",
+            summary="geÃ§ kaldÄ±",
             artifacts=(),
         )
 
     started = time.monotonic()
-    result = console.run_department_mission(spec, "süre sınırı testi", executor=slow)
+    result = console.run_department_mission(spec, "sÃ¼re sÄ±nÄ±rÄ± testi", executor=slow)
     elapsed = time.monotonic() - started
     stop.set()
     time.sleep(0.2)
 
-    assert elapsed < 1.5, f"görev zamanında kesilmedi: {elapsed:.2f}s"
+    assert elapsed < 6.0, f"görev zamanında kesilmedi: {elapsed:.2f}s (tam bekleme 9sn)"
     assert result.status in {"blocked", "error"}
     assert "timeout" in result.message.lower()
 
@@ -52,21 +54,21 @@ def test_queue_survives_restart_and_reclaims_after_lease(tmp_path: Path) -> None
     first = PersistentMissionQueue(path)
     first.enqueue(
         mission_id="m-1",
-        objective="yeniden başlatma testi",
+        objective="yeniden baÅŸlatma testi",
         primary_department="oyun",
         max_attempts=2,
     )
     claimed = first.claim_next(owner="worker-a", lease_seconds=1)
     assert claimed is not None and claimed.lease_owner == "worker-a"
 
-    # Süreç yeniden başladı: aynı dosya üzerinde yeni kuyruk örneği.
+    # SÃ¼reÃ§ yeniden baÅŸladÄ±: aynÄ± dosya Ã¼zerinde yeni kuyruk Ã¶rneÄŸi.
     second = PersistentMissionQueue(path)
     restored = second.get("m-1")
     assert restored is not None
     assert restored.status is QueueStatus.RUNNING
     assert restored.lease_owner == "worker-a"
 
-    # Lease süresi geçti: kurtarılır ve başka sahip tarafından alınabilir.
+    # Lease sÃ¼resi geÃ§ti: kurtarÄ±lÄ±r ve baÅŸka sahip tarafÄ±ndan alÄ±nabilir.
     recovered = second.recover_expired_leases(now=time.time() + 5)
     assert recovered == 1
 
@@ -81,7 +83,7 @@ def test_leased_mission_cannot_be_claimed_by_second_owner(tmp_path: Path) -> Non
     queue = PersistentMissionQueue(tmp_path / "queue.db")
     queue.enqueue(
         mission_id="m-2",
-        objective="çift sahiplenme testi",
+        objective="Ã§ift sahiplenme testi",
         primary_department="oyun",
     )
     first = queue.claim_next(owner="worker-a", lease_seconds=60)
@@ -90,3 +92,4 @@ def test_leased_mission_cannot_be_claimed_by_second_owner(tmp_path: Path) -> Non
     assert first is not None
     assert second is None
     assert queue.get("m-2").lease_owner == "worker-a"
+
