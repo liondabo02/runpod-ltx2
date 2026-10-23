@@ -52,6 +52,12 @@ input{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--in
 border-radius:10px;padding:11px 12px;font-size:14px}
 button{background:var(--accent);color:#0b1020;border:0;border-radius:10px;padding:11px 18px;font-weight:700}
 #msg{font-size:12px;color:var(--muted);padding:6px 14px;min-height:24px}
+#ceoBox{position:fixed;right:16px;bottom:84px;width:380px;max-height:52vh;overflow:auto;
+background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;display:none;z-index:5}
+#ceoBox h3{margin:0 0 8px;font-size:13px}
+.msg{margin:6px 0;padding:8px 10px;border-radius:10px;font-size:13px}
+.owner{background:#22304d}.ceo{background:#16202e;border:1px solid var(--line)}
+#ceoToggle{position:fixed;right:16px;bottom:84px;z-index:6}
 </style></head><body>
 <header><h1>🏢 AHOS Ofis</h1>
 <span class="pill">daemon <b id="dstatus">-</b></span>
@@ -60,6 +66,9 @@ button{background:var(--accent);color:#0b1020;border:0;border-radius:10px;paddin
 <span class="pill">bekleyen fikir <b id="pending">-</b></span></header>
 <main id="rooms"></main>
 <div id="msg"></div>
+<button id="ceoToggle">CEO</button>
+<div id="ceoBox"><h3>CEO ile konuş</h3><div id="ceoLog"></div>
+<div style="display:flex;gap:8px;margin-top:8px"><input id="ceoInput" placeholder="Bir şey yaz…"><button id="ceoSend">Gönder</button></div></div>
 <footer><input id="idea" placeholder="Bir şey yaz: 'çocuklar için yeni bir oyun yapmak istiyorum'">
 <button id="send">Gönder</button></footer>
 <script>
@@ -100,8 +109,25 @@ async function sendIdea(){
     refresh();
   }catch(e){ msg.textContent='hata: '+e; }
 }
+function addMsg(role, text){
+  const log=document.getElementById('ceoLog');
+  const el=document.createElement('div'); el.className='msg '+role; el.textContent=text;
+  log.appendChild(el); log.scrollTop=log.scrollHeight;
+}
+async function sendCeo(){
+  const input=document.getElementById('ceoInput'); const text=input.value.trim(); if(!text) return;
+  input.value=''; addMsg('owner', text);
+  try{
+    const r=await fetch('/api/ceo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text})});
+    const d=await r.json(); addMsg('ceo', d.reply || ('hata: '+(d.error||'')));
+    if(d.routed) addMsg('ceo','→ '+d.routed.department+' · '+d.tasks+' görev');
+  }catch(e){ addMsg('ceo','hata: '+e); }
+}
 document.getElementById('send').onclick=sendIdea;
 document.getElementById('idea').addEventListener('keydown',e=>{if(e.key==='Enter')sendIdea();});
+document.getElementById('ceoToggle').onclick=()=>{const b=document.getElementById('ceoBox');b.style.display=b.style.display==='block'?'none':'block';};
+document.getElementById('ceoSend').onclick=sendCeo;
+document.getElementById('ceoInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendCeo();});
 refresh(); setInterval(refresh, 3000);
 </script></body></html>
 """
@@ -132,15 +158,36 @@ class OfficeHandler(BaseHTTPRequestHandler):
                 "application/json; charset=utf-8",
             )
             return
+        if self.path.split("?")[0] == "/api/ceo/thread":
+            from .ceo import thread
+
+            self._send(
+                json.dumps(thread(self.runtime_dir), ensure_ascii=False).encode("utf-8"),
+                "application/json; charset=utf-8",
+            )
+            return
         self._send(b'{"error":"not found"}', "application/json", 404)
 
     def do_POST(self):  # noqa: N802
-        if self.path.split("?")[0] != "/api/idea":
+        route = self.path.split("?")[0]
+        if route not in {"/api/idea", "/api/ceo"}:
             self._send(b'{"error":"not found"}', "application/json", 404)
             return
         try:
             length = int(self.headers.get("Content-Length") or 0)
             payload = json.loads(self.rfile.read(length).decode("utf-8") or "{}")
+            if route == "/api/ceo":
+                from .ceo import answer
+
+                message = str(payload.get("message") or "").strip()
+                if not message:
+                    raise ValueError("boş mesaj")
+                result = answer(self.runtime_dir, message)
+                self._send(
+                    json.dumps(result, ensure_ascii=False).encode("utf-8"),
+                    "application/json; charset=utf-8",
+                )
+                return
             text = str(payload.get("text") or "").strip()
             if not text:
                 raise ValueError("boş fikir")

@@ -260,6 +260,20 @@ def _json_schema_with_rules() -> str:
     return _EDIT_RULES + "Yanıt biçimi (sadece JSON):\n" + _JSON_SCHEMA
 
 
+def _knowledge_block(task: str) -> str:
+    """Optional closed-knowledge context (owner's downloaded documents)."""
+
+    runtime = os.environ.get("AHOS_RUNTIME_DIR", "").strip()
+    if not runtime:
+        return ""
+    try:
+        from .knowledge import context
+
+        return context(runtime, task, limit=2)
+    except Exception:  # noqa: BLE001 - knowledge is optional
+        return ""
+
+
 def build_prompt(root: Path, task: str, *, auto_context: bool = False) -> str:
     from .engineering_guidance import engineering_guidance
     if auto_context:
@@ -322,6 +336,7 @@ def build_prompt(root: Path, task: str, *, auto_context: bool = False) -> str:
         "- En küçük etkili değişikliği yap.\n"
         "- Türkçe açıklama yaz.\n\n"
         f"{_json_schema_with_rules()}"
+        + ("\n\n" + _knowledge_block(task) if _knowledge_block(task) else "")
     )
 
 
@@ -542,6 +557,43 @@ def _append_spend(path: Path, record: dict[str, object]) -> None:
         handle.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
+def _daily_cap() -> float | None:
+    """Optional hard daily budget (USD) for model calls; None means no cap."""
+
+    try:
+        value = float(os.environ.get("AHOS_DAILY_USD", "").strip() or "nan")
+    except ValueError:
+        return None
+    return value if value == value else None
+
+
+def _spent_today(ledger: Path) -> float:
+    """Sum today's spend from the append-only ledger."""
+
+    from datetime import datetime, timezone
+
+    day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    total = 0.0
+    try:
+        lines = ledger.read_text(encoding="utf-8", errors="ignore").splitlines()
+    except OSError:
+        return 0.0
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if str(row.get("at") or "").startswith(day):
+            try:
+                total += float(row.get("usd") or 0.0)
+            except (TypeError, ValueError):
+                continue
+    return total
+
+
 def make_model_executor(
     project_root: str | Path,
     artifacts_root: str | Path,
@@ -569,6 +621,18 @@ def make_model_executor(
 
     def _execute(item: WorkItem, worker_id: str):
         started = time.time()
+        if ledger is not None:
+            spent_today = _spent_today(ledger)
+            cap = _daily_cap()
+            if cap is not None and spent_today >= cap:
+                return WorkerExecutionResult(
+                    task_id=item.task_id,
+                    worker_id=worker_id,
+                    success=False,
+                    summary=(
+                        f"günlük model bütçesi doldu: ${spent_today:.4f} >= ${cap:.2f}"
+                    ),
+                )
         try:
             prompt = build_prompt(root, item.title, auto_context=(settings.base_url.rstrip("/") == "http://127.0.0.1:11434/v1"))
             raw = call(SYSTEM_PROMPT, prompt, settings)
@@ -661,10 +725,14 @@ def make_model_executor(
         )
         destructive = any(edit.shrinks_existing(root) for edit in response.edits)
         commenting = any(edit.comments_out_code() for edit in response.edits)
+        auto_medium = (
+            os.environ.get("AHOS_AUTO_APPROVE_RISK", "").strip().lower() == "medium"
+        )
+        risky = {"high"} if auto_medium else {"high", "medium"}
         needs_approval = (
             len(response.edits) > require_approval_over_files
             or total_bytes > settings.max_bytes
-            or response.risk in {"high", "medium"}
+            or response.risk in risky
             or destructive
             or commenting
         )
