@@ -75,6 +75,23 @@ def _activity(runtime: Path) -> dict:
     }
 
 
+def _knowledge_stats(runtime: Path) -> dict:
+    try:
+        from .knowledge import stats
+
+        return stats(runtime)
+    except Exception:  # noqa: BLE001 - knowledge is optional
+        return {"documents": 0, "chunks": 0}
+
+
+def _lesson_count(runtime: Path) -> int:
+    path = runtime / "knowledge" / "lessons.jsonl"
+    try:
+        return sum(1 for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
+    except OSError:
+        return 0
+
+
 def build(runtime_dir: str | Path) -> dict:
     runtime = Path(runtime_dir)
     activity = _activity(runtime)
@@ -157,6 +174,9 @@ def build(runtime_dir: str | Path) -> dict:
             "quality": activity["quality"],
             "pending_ideas": activity["pending_ideas"],
             "last_task": str(last_mission.get("mission_id") or ""),
+            "infra": activity["daemon"].get("infra", {}),
+            "knowledge": _knowledge_stats(runtime),
+            "lessons": _lesson_count(runtime),
         },
         "rooms": rooms,
     }

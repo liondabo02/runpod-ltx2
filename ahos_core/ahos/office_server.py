@@ -63,7 +63,7 @@ background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:
 <span class="pill">daemon <b id="dstatus">-</b></span>
 <span class="pill">mod <b id="dmode">-</b></span>
 <span class="pill">teslim <b id="rate">-</b></span>
-<span class="pill">bekleyen fikir <b id="pending">-</b></span></header>
+<span class="pill">bekleyen fikir <b id="pending">-</b></span><span class="pill">sistem <b id="infra">-</b></span><span class="pill">bilgi <b id="know">-</b></span></header>
 <main id="rooms"></main>
 <div id="msg"></div>
 <button id="ceoToggle">CEO</button>
@@ -80,6 +80,10 @@ async function refresh(){
     const q = d.holding.quality || {};
     document.getElementById('rate').textContent = Math.round((q.delivery_rate||0)*100)+'%';
     document.getElementById('pending').textContent = d.holding.pending_ideas;
+    const infra = d.holding.infra || {};
+    document.getElementById('infra').textContent = infra.ok === undefined ? '-' : (infra.ok ? 'sağlıklı' : 'sorunlu');
+    const k = d.holding.knowledge || {};
+    document.getElementById('know').textContent = (k.documents||0)+' belge · '+(d.holding.lessons||0)+' ders';
     const rooms = document.getElementById('rooms'); rooms.innerHTML='';
     for(const room of d.rooms){
       const el = document.createElement('section'); el.className='room';

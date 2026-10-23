@@ -191,6 +191,7 @@ class DaemonState:
     recovery: dict[str, object] = field(default_factory=dict)
     audit: list[dict[str, object]] = field(default_factory=list)
     quality: dict[str, object] = field(default_factory=dict)
+    infra: dict[str, object] = field(default_factory=dict)
     schema: int = SCHEMA_VERSION
 
     def to_dict(self) -> dict[str, object]:
@@ -212,6 +213,7 @@ class DaemonState:
             "recovery": dict(self.recovery),
             "audit": list(self.audit),
             "quality": dict(self.quality),
+            "infra": dict(self.infra),
         }
 
 
@@ -583,6 +585,20 @@ class AutonomyDaemon:
             "missions": report.get("missions", 0),
             "top": [item["cause"] for item in report.get("top_causes", [])[:3]],
         }
+        try:
+            from .infra import health
+
+            fix = os.environ.get("AHOS_INFRA_FIX", "1").strip() not in {"0", "false"}
+            result = health(self.runtime_dir, deep=False, fix=False)
+            self.state.infra = result.to_dict()
+            if not result.ok and fix:
+                from .infra import repair
+
+                actions = repair(self.runtime_dir, result)
+                if actions:
+                    self.state.infra["actions"] = actions
+        except Exception:  # noqa: BLE001 - infra must never stop the loop
+            pass
 
     def tick_once(self) -> str:
         """Run exactly one scheduler tick and persist the result."""
