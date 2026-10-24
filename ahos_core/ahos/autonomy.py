@@ -921,7 +921,7 @@ class AutonomyRunner:
             self.state.last_reason = "zaten tamamlanmış görev atlandı"
             self._record(key, mission_id, directive.department_id, "skipped")
             self._persist()
-            return result
+            return None
 
         if result is not None and result.status == "routed":
             if self._active_idea is not None:

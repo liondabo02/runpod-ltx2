@@ -241,3 +241,31 @@ def test_routed_without_delivery_evidence_reports_blocked(tmp_path, monkeypatch)
     assert "no changed files" in result.message
     assert runner.state.failed == 1
     assert runner.state.executed == 0
+
+
+def test_already_completed_queue_is_noop_not_routed(tmp_path, monkeypatch) -> None:
+    from ahos.projects import ProjectLink
+    from ahos.owner_console import CommandKind, ConsoleResult
+
+    console = build_default_console(tmp_path)
+    console.handle("oyun geliştirme departmanı kur")
+    project = tmp_path / "project"
+    (project / "www").mkdir(parents=True)
+    (project / "www" / "index.html").write_text("<html><body>ok</body></html>")
+    console.projects.link(
+        ProjectLink(project_id="noop", name="Noop", path=project, department_id="oyun")
+    )
+    monkeypatch.setattr(
+        console, "run_department_mission",
+        lambda *args, **kwargs: ConsoleResult(
+            kind=CommandKind.TASK,
+            status="routed",
+            message="görev zaten tamamlanmış; tekrar atlandı",
+            department_id="oyun",
+        ),
+    )
+    runner = AutonomyRunner(console, tmp_path, limits=AutonomyLimits(max_missions=2))
+    result = runner.run_once()
+    assert result is None
+    assert runner.state.executed == 0
+    assert runner.state.skipped_duplicate == 1

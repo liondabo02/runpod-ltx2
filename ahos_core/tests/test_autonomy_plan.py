@@ -124,7 +124,7 @@ def test_already_completed_mission_is_skipped_not_counted(tmp_path, monkeypatch)
 
     result = runner.run_once()
 
-    assert result is not None
+    assert result is None, "a no-op must not be reported as a delivery"
     assert runner.state.skipped_duplicate == 1
     assert runner.state.executed == 0, "teslimat sayılmamalı"
     assert runner.state.status == "idle"
