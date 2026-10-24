@@ -9,7 +9,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Callable, Mapping
 
@@ -606,6 +606,31 @@ def _spent_today(ledger: Path) -> float:
     return total
 
 
+def _fallback_settings(primary: ModelSettings) -> ModelSettings | None:
+    """Ücretli model düşerse ücretsiz yerel modele (VM) geç.
+
+    ``AHOS_FALLBACK_BASE_URL`` + ``AHOS_FALLBACK_MODEL`` tanımlıysa kullanılır;
+    aynı uç noktaya düşmemek için base_url farklı olmalıdır.
+    """
+
+    base_url = os.environ.get("AHOS_FALLBACK_BASE_URL", "").strip().rstrip("/")
+    model = os.environ.get("AHOS_FALLBACK_MODEL", "").strip()
+    if not base_url or not model or base_url == primary.base_url.rstrip("/"):
+        return None
+    try:
+        timeout = float(os.environ.get("AHOS_FALLBACK_TIMEOUT", "600"))
+    except ValueError:
+        timeout = 600.0
+    return replace(
+        primary,
+        base_url=base_url,
+        model=model,
+        api_key=os.environ.get("AHOS_FALLBACK_API_KEY", "local-only").strip() or "local-only",
+        timeout_seconds=timeout,
+        fallback_models=(),
+    )
+
+
 def make_model_executor(
     project_root: str | Path,
     artifacts_root: str | Path,
@@ -629,6 +654,17 @@ def make_model_executor(
     root = Path(project_root)
     out_root = Path(artifacts_root)
     call = transport or http_transport
+    if transport is None:
+        primary_call = http_transport
+
+        def call(system_prompt: str, user_prompt: str, settings: ModelSettings) -> str:  # noqa: F811
+            try:
+                return primary_call(system_prompt, user_prompt, settings)
+            except ModelError:
+                fallback = _fallback_settings(settings)
+                if fallback is None:
+                    raise
+                return http_transport(system_prompt, user_prompt, fallback)
     ledger = Path(spend_ledger) if spend_ledger else None
 
     def _execute(item: WorkItem, worker_id: str):
