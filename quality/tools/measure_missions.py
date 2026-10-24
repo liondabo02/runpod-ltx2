@@ -1,4 +1,4 @@
-"""Measure the worker on a list of objectives and record honest metrics.
+﻿"""Measure the worker on a list of objectives and record honest metrics.
 
 Usage:
     python quality/tools/measure_missions.py "hedef 1" "hedef 2" ...
@@ -11,6 +11,7 @@ so the numbers survive restarts and can be compared over time.
 from __future__ import annotations
 
 import json
+import re
 import sys
 import time
 from pathlib import Path
@@ -28,7 +29,7 @@ def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     objectives = [item for item in sys.argv[1:] if item.strip()]
     if not objectives:
-        print("kullanım: measure_missions.py \"hedef\" ...")
+        print("kullanÄ±m: measure_missions.py \"hedef\" ...")
         return 2
 
     runtime = ROOT / "ahos_core" / "runtime"
@@ -45,10 +46,12 @@ def main() -> int:
         steps = 0
         if result.mission is not None:
             steps = len(result.mission.steps)
-            evidence = getattr(result.mission, "evidence", None)
-            if isinstance(evidence, dict):
-                changed = int(evidence.get("changed_files") or 0)
-                evidence_ok = bool(evidence.get("evidence_ok"))
+            for step in result.mission.steps:
+                summary = str(getattr(step, "worker_summary", "") or "")
+                match = re.search(r"(\d+)\s+dosya deÄŸiÅŸti", summary)
+                if match:
+                    changed = int(match.group(1))
+                    evidence_ok = changed > 0 and "doÄŸrulama geÃ§ti" in summary
         row = {
             "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
             "objective": objective,
@@ -63,19 +66,20 @@ def main() -> int:
         METRICS.parent.mkdir(parents=True, exist_ok=True)
         with METRICS.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(row, ensure_ascii=False) + "\n")
-        print(f"[{row['status']}] {elapsed}s · {objective[:70]} · {row['message'][:90]}")
+        print(f"[{row['status']}] {elapsed}s Â· {objective[:70]} Â· {row['message'][:90]}")
 
     total = len(results)
     routed = sum(1 for row in results if row["status"] == "routed")
     delivered = sum(1 for row in results if row["evidence_ok"])
-    print("\nözet:")
-    print(f"  görev: {total}")
+    print("\nÃ¶zet:")
+    print(f"  gÃ¶rev: {total}")
     print(f"  tamamlanan: {routed} ({routed / total:.0%})")
-    print(f"  kanıtlı teslimat: {delivered} ({delivered / total:.0%})")
-    print(f"  ortalama süre: {sum(r['seconds'] for r in results) / total:.1f} sn")
-    print(f"  kayıt: {METRICS}")
+    print(f"  kanÄ±tlÄ± teslimat: {delivered} ({delivered / total:.0%})")
+    print(f"  ortalama sÃ¼re: {sum(r['seconds'] for r in results) / total:.1f} sn")
+    print(f"  kayÄ±t: {METRICS}")
     return 0 if routed == total else 1
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

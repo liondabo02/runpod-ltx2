@@ -569,7 +569,7 @@ class AutonomyRunner:
             department = str(task.get("department") or "software")
             if not title or title in done or department in excluded:
                 continue
-            self._active_improvement = title
+            self._active_improvement = (title, department)
             return Directive(
                 kind="self_improvement",
                 department_id=department,
@@ -639,7 +639,33 @@ class AutonomyRunner:
     def _retry_budget_path(self) -> Path:
         return self.runtime_dir / "autonomy-retries.json"
 
-    def _reopen_blocked(self, spec, objective: str) -> bool:
+    def _is_blocked(self, spec, objective: str) -> bool:
+        """Aynı hedef daha önce blocked kaldıysa tekrar denemeyelim."""
+
+        queue = self.console.queue
+        if queue is None:
+            return False
+        try:
+            db = getattr(queue, "path", None) or getattr(queue, "_path", None)
+            if db is None:
+                return False
+            import sqlite3
+
+            con = sqlite3.connect(str(db))
+            try:
+                row = con.execute(
+                    """SELECT status FROM missions
+                       WHERE primary_department = ? AND lower(objective) = lower(?)
+                       ORDER BY rowid DESC LIMIT 1""",
+                    (spec.department_id, objective),
+                ).fetchone()
+            finally:
+                con.close()
+        except Exception:  # noqa: BLE001 - kuyruk şeması onların
+            return False
+        return bool(row) and str(row[0]) == "blocked"
+
+    def _reopen_blocked(self, spec, objective: str, *, force: bool = False) -> bool:
         """Give a blocked mission one fresh attempt per day.
 
         The queue keeps a mission id in BLOCKED forever, so a fixed bug (a
@@ -678,7 +704,7 @@ class AutonomyRunner:
         if str(retries.get("day") or "") != day:
             retries = {"day": day, "ids": []}
         ids = [str(item) for item in retries.get("ids", [])]
-        if mission_id in ids:
+        if mission_id in ids and not force:
             return False
         ids.append(mission_id)
         retries["ids"] = ids[-200:]
@@ -729,8 +755,11 @@ class AutonomyRunner:
 
         # CEO aynı işi tekrar öneriyorsa ya da o departman bugün zaten çalıştıysa
         # döngü kilitlenmesin: sıradaki en az çalışan proje departmanına geç.
+        # Sahibin fikri ve kalite görevi bu kurala tabi DEĞİLDİR; onlar kendi
+        # dedupe anahtarlarıyla korunur.
         counts = self.mission_counts_today()
-        if directive is not None and (
+        kind = str(getattr(directive, "kind", "") or "")
+        if directive is not None and kind not in {"idea", "self_improvement"} and (
             self.already_executed(self._key(directive.department_id, directive.objective))
             or counts.get(directive.department_id, 0) >= 1
         ):
@@ -767,6 +796,8 @@ class AutonomyRunner:
                 for offset in range(len(GROWTH_CYCLE)):
                     index = (status.missions + offset) % len(GROWTH_CYCLE)
                     objective = f"{spec.name}: {GROWTH_CYCLE[index]}"
+                    if self._is_blocked(spec, objective):
+                        continue
                     if not self.already_executed(
                         self._key(department_id, objective)
                     ):
@@ -794,7 +825,9 @@ class AutonomyRunner:
             return None
 
         key = self._key(directive.department_id, directive.objective)
-        if self.already_executed(key):
+        # Fikir ve kalite görevi kendi "bitti" kayıtlarıyla korunur; günlük
+        # dedupe anahtarı onları kalıcı olarak engellememeli.
+        if self.already_executed(key) and kind not in {"idea", "self_improvement"}:
             self.state.skipped_duplicate += 1
             self.state.last_reason = f"tekrar engellendi: {key}"
             self._persist()
@@ -807,13 +840,51 @@ class AutonomyRunner:
             self._persist()
             return None
 
+        if self._project_root(directive.department_id) is None:
+            # Kod projesi olmayan şirket: iş, iş belgesi olarak teslim edilir.
+            from .company_foundry import found
+            from .owner_console import CommandKind
+
+            company = found(
+                self.console.book,
+                self.console.book.workforce(),
+                self.runtime_dir,
+                directive.objective,
+                spec=spec,
+            )
+            delivered = company.validated
+            if delivered:
+                self.state.executed += 1
+                self.state.status = "idle"
+            else:
+                self.state.failed += 1
+                self.state.status = "blocked"
+            self.state.last_reason = company.summary[:200]
+            self._record(
+                key,
+                f"DOC-{company.company_id}",
+                directive.department_id,
+                "completed" if delivered else "failed",
+            )
+            self._persist()
+            return ConsoleResult(
+                kind=CommandKind.TASK,
+                status="routed" if delivered else "blocked",
+                message=f"{company.summary} · teslimat: {company.deliverable}",
+                department_id=company.company_id,
+            )
+
         self.state.status = "running"
         self._persist()
         started = time.monotonic()
         attempts = 0
         result: ConsoleResult | None = None
 
-        self._reopen_blocked(spec, directive.objective)
+        self._reopen_blocked(
+            spec,
+            directive.objective,
+            force=kind in {"idea", "self_improvement"},
+        )
         self._ensure_acceptance_baseline(directive.department_id)
 
         while attempts <= self.limits.max_retries:
@@ -881,18 +952,24 @@ class AutonomyRunner:
             self.state.last_reason = result.message[:200]
             self._record(key, mission_id, directive.department_id, "completed")
             if self._active_improvement is not None:
-                record = {
-                    "at": _now(),
-                    "title": self._active_improvement,
-                    "mission_id": mission_id,
-                }
-                try:
-                    with (self.runtime_dir / "self-improvement-done.jsonl").open(
-                        "a", encoding="utf-8"
-                    ) as handle:
-                        handle.write(json.dumps(record, ensure_ascii=False) + "\n")
-                except OSError:  # pragma: no cover - best effort
-                    pass
+                improvement_title, improvement_department = self._active_improvement
+                # Yalnız gerçekten o departmanın görevi tamamlandıysa "bitti" yaz.
+                if (
+                    directive.department_id == improvement_department
+                    and directive.objective == improvement_title
+                ):
+                    record = {
+                        "at": _now(),
+                        "title": improvement_title,
+                        "mission_id": mission_id,
+                    }
+                    try:
+                        with (self.runtime_dir / "self-improvement-done.jsonl").open(
+                            "a", encoding="utf-8"
+                        ) as handle:
+                            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+                    except OSError:  # pragma: no cover - best effort
+                        pass
                 self._active_improvement = None
         else:
             if self._active_idea is not None:
