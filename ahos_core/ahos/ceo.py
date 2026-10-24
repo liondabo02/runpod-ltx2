@@ -80,6 +80,12 @@ def _snapshot(runtime_dir: Path) -> dict:
     }
 
 
+def _looks_like_goal(message: str) -> bool:
+    lowered = message.casefold()
+    verbs = ("geliştir", "iyileştir", "büyüt", "yenile", "dönüştür", "baştan yap")
+    return any(verb in lowered for verb in verbs) and len(message.strip()) > 10
+
+
 def _looks_like_work(message: str) -> bool:
     lowered = message.casefold()
     verbs = ("yap", "ekle", "hazırla", "oluştur", "kur", "geliştir", "düzelt", "yaz", "planla")
@@ -168,6 +174,15 @@ def answer(runtime_dir: str | Path, message: str) -> dict:
             idea = submit(console, runtime, text)
             routed = {"department": idea.department_name, "id": idea.department_id}
             tasks = len(idea.tasks)
+            if _looks_like_goal(text):
+                try:
+                    from .goals import create as create_goal
+
+                    goal = create_goal(runtime, text, idea.department_id)
+                    routed["goal"] = goal.goal_id
+                    routed["steps"] = len(goal.steps)
+                except Exception:  # noqa: BLE001 - hedef isteğe bağlı
+                    pass
         except Exception:  # noqa: BLE001 - routing must not block the reply
             routed = None
 

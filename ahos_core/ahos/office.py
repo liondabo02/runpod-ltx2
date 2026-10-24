@@ -92,6 +92,56 @@ def _lesson_count(runtime: Path) -> int:
         return 0
 
 
+def _recent_missions(runtime: Path, limit: int = 6) -> list[dict]:
+    """Son görevler: sahibin verdiği işin durumunu ofiste gösterir."""
+
+    import json as _json
+    import re as _re
+    import sqlite3
+
+    db = runtime / "company-service.db"
+    if not db.is_file():
+        return []
+    try:
+        con = sqlite3.connect(str(db))
+        con.row_factory = sqlite3.Row
+        rows = con.execute(
+            "select objective,status,updated_at,result_json from missions order by rowid desc limit ?",
+            (limit,),
+        ).fetchall()
+        con.close()
+    except sqlite3.Error:
+        return []
+    result: list[dict] = []
+    for row in rows:
+        try:
+            payload = _json.loads(row["result_json"] or "{}")
+        except _json.JSONDecodeError:
+            payload = {}
+        summary = " ".join(
+            str(step.get("worker_summary") or "") for step in payload.get("steps") or []
+        )
+        match = _re.search(r"(\d+) dosya değişti", summary)
+        result.append(
+            {
+                "objective": str(row["objective"])[:120],
+                "status": str(row["status"]),
+                "changed": int(match.group(1)) if match else 0,
+                "at": str(row["updated_at"] or "")[11:19],
+            }
+        )
+    return result
+
+
+def _goal_progress(runtime: Path) -> list[dict]:
+    try:
+        from .goals import progress
+
+        return progress(runtime)[:3]
+    except Exception:  # noqa: BLE001 - hedefler isteğe bağlı
+        return []
+
+
 def build(runtime_dir: str | Path) -> dict:
     runtime = Path(runtime_dir)
     activity = _activity(runtime)
@@ -177,6 +227,8 @@ def build(runtime_dir: str | Path) -> dict:
             "infra": activity["daemon"].get("infra", {}),
             "knowledge": _knowledge_stats(runtime),
             "lessons": _lesson_count(runtime),
+            "recent": _recent_missions(runtime),
+            "goals": _goal_progress(runtime),
         },
         "rooms": rooms,
     }

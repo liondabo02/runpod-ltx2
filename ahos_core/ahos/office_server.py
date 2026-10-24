@@ -52,6 +52,10 @@ input{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--in
 border-radius:10px;padding:11px 12px;font-size:14px}
 button{background:var(--accent);color:#0b1020;border:0;border-radius:10px;padding:11px 18px;font-weight:700}
 #msg{font-size:12px;color:var(--muted);padding:6px 14px;min-height:24px}
+#goalStrip{padding:6px 18px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted)}
+#recentWrap{padding:8px 18px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted)}
+#recentWrap b{color:var(--ink)}.recentItem{margin-right:14px;white-space:nowrap}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
 #ceoBox{position:fixed;right:16px;bottom:84px;width:380px;max-height:52vh;overflow:auto;
 background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;display:none;z-index:5}
 #ceoBox h3{margin:0 0 8px;font-size:13px}
@@ -64,6 +68,8 @@ background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:
 <span class="pill">mod <b id="dmode">-</b></span>
 <span class="pill">teslim <b id="rate">-</b></span>
 <span class="pill">bekleyen fikir <b id="pending">-</b></span><span class="pill">sistem <b id="infra">-</b></span><span class="pill">bilgi <b id="know">-</b></span></header>
+<div id="goalStrip">hedefler: <span id="goals">-</span></div>
+<div id="recentWrap">son görevler: <span id="recent">-</span></div>
 <main id="rooms"></main>
 <div id="msg"></div>
 <button id="ceoToggle">CEO</button>
@@ -85,6 +91,16 @@ async function refresh(){
     document.getElementById('infra').textContent = infra.ok === undefined ? '-' : (infra.ok ? 'sağlıklı' : 'sorunlu');
     const k = d.holding.knowledge || {};
     document.getElementById('know').textContent = (k.documents||0)+' belge · '+(d.holding.lessons||0)+' ders';
+    const goalsData = d.holding.goals || [];
+    document.getElementById('goals').innerHTML = goalsData.length
+      ? goalsData.map(function(g){ return '<span class="recentItem">'+g.title.slice(0,40)+
+        ' <b>%'+Math.round(g.progress*100)+'</b> ('+g.status+')</span>'; }).join('')
+      : '<span class="bad">hedef yok</span>';
+    const recent = d.holding.recent || [];
+    document.getElementById('recent').innerHTML = recent.slice(0,5).map(function(m){
+      const cls = m.changed > 0 ? 'ok' : 'bad';
+      return '<span class="recentItem"><b>'+m.at+'</b> <span class="'+cls+'">'+m.status+'</span> '+m.changed+' dosya · '+m.objective.slice(0,42)+'</span>';
+    }).join('') || '<span class="bad">henüz görev yok</span>';
     const rooms = document.getElementById('rooms'); rooms.innerHTML='';
     for(const room of d.rooms){
       const el = document.createElement('section'); el.className='room';

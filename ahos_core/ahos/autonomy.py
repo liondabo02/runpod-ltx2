@@ -81,6 +81,7 @@ class AutonomyRunner:
         self.plan_path = self.runtime_dir / "auto-plan.json"
         self._active_idea: tuple[str, str] | None = None
         self._active_improvement: str | None = None
+        self._active_goal: tuple[str, str] | None = None
         self.office = HoldingOffice(console)
         self.state = AutonomyState()
 
@@ -563,6 +564,25 @@ class AutonomyRunner:
         except OSError:
             pass
 
+    def _goal_directive(self, excluded: set[str]) -> "Directive | None":
+        """Geniş hedefin sıradaki adımını görev yap."""
+
+        from .goals import next_step
+        from .holding_office import Directive
+
+        found = next_step(self.runtime_dir, excluded)
+        if found is None:
+            return None
+        goal, step = found
+        self._active_goal = (goal.goal_id, step.step_id)
+        return Directive(
+            kind="goal_step",
+            department_id=goal.department_id,
+            objective=step.title,
+            reason=f"hedef adımı: {goal.title[:60]}",
+            priority=0,
+        )
+
     def _self_improvement_directive(self, excluded: set[str]) -> "Directive | None":
         """Kalite kuyruğundaki ilk görevi yönlendirmeye çevir."""
 
@@ -763,6 +783,8 @@ class AutonomyRunner:
         excluded: set[str] = set()
         directive = self._idea_directive(excluded)
         if directive is None:
+            directive = self._goal_directive(excluded)
+        if directive is None:
             directive = self._self_improvement_directive(excluded)
         for _ in range(5 if directive is None else 0):
             candidate = self.office.next_directive(exclude_departments=excluded)
@@ -784,7 +806,7 @@ class AutonomyRunner:
         # dedupe anahtarlarıyla korunur.
         counts = self.mission_counts_today()
         kind = str(getattr(directive, "kind", "") or "")
-        if directive is not None and kind not in {"idea", "self_improvement"} and (
+        if directive is not None and kind not in {"idea", "self_improvement", "goal_step"} and (
             self.already_executed(self._key(directive.department_id, directive.objective))
             or counts.get(directive.department_id, 0) >= 1
         ):
@@ -852,7 +874,7 @@ class AutonomyRunner:
         key = self._key(directive.department_id, directive.objective)
         # Fikir ve kalite görevi kendi "bitti" kayıtlarıyla korunur; günlük
         # dedupe anahtarı onları kalıcı olarak engellememeli.
-        if self.already_executed(key) and kind not in {"idea", "self_improvement"}:
+        if self.already_executed(key) and kind not in {"idea", "self_improvement", "goal_step"}:
             self.state.skipped_duplicate += 1
             self.state.last_reason = f"tekrar engellendi: {key}"
             self._persist()
@@ -908,7 +930,7 @@ class AutonomyRunner:
         self._reopen_blocked(
             spec,
             directive.objective,
-            force=kind in {"idea", "self_improvement"},
+            force=kind in {"idea", "self_improvement", "goal_step"},
         )
         self._ensure_acceptance_baseline(directive.department_id)
 
@@ -991,6 +1013,14 @@ class AutonomyRunner:
             self.state.last_mission = mission_id
             self.state.last_reason = result.message[:200]
             self._record(key, mission_id, directive.department_id, "completed")
+            if self._active_goal is not None:
+                try:
+                    from .goals import advance
+
+                    advance(self.runtime_dir, self._active_goal[0], self._active_goal[1], success=True, note=result.message[:200])
+                except Exception:  # noqa: BLE001
+                    pass
+                self._active_goal = None
             if self._active_improvement is not None:
                 improvement_title, improvement_department = self._active_improvement
                 # Yalnız gerçekten o departmanın görevi tamamlandıysa "bitti" yaz.
@@ -1012,6 +1042,14 @@ class AutonomyRunner:
                         pass
                 self._active_improvement = None
         else:
+            if self._active_goal is not None:
+                try:
+                    from .goals import advance
+
+                    advance(self.runtime_dir, self._active_goal[0], self._active_goal[1], success=False, note=result.message[:200])
+                except Exception:  # noqa: BLE001
+                    pass
+                self._active_goal = None
             if self._active_improvement is not None:
                 self._bump_improvement_attempt(self._active_improvement[0])
                 self._active_improvement = None
