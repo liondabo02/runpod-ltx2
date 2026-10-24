@@ -686,9 +686,16 @@ class DepartmentBook:
     # ------------------------------------------------------------------ derived
     def capability_registry(self) -> DepartmentCapabilityRegistry:
         entries: list[Capability] = []
+        seen: set[str] = set()
         active = self.active()
         for spec in active:
-            entries.extend(spec.to_capability_registry_entries())
+            for entry in spec.to_capability_registry_entries():
+                # Şirket kurma (foundry) aynı yeteneği hem departman hem işçi
+                # düzeyinde üretebiliyor; kayıt defteri tek ad istiyor.
+                if entry.name in seen:
+                    continue
+                seen.add(entry.name)
+                entries.append(entry)
         return DepartmentCapabilityRegistry(
             entries,
             extra_departments=[

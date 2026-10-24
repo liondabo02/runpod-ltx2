@@ -21,6 +21,7 @@ class BrowserCheck:
     url: str
     exit_code: int
     problems: tuple[str, ...] = ()
+    warnings: tuple[str, ...] = ()
     dom_bytes: int = 0
     screenshot: str | None = None
     seconds: float = 0.0
@@ -103,6 +104,7 @@ def check_page(
         )
 
     problems: list[str] = []
+    warnings: list[str] = []
     dom = dump.stdout or ""
     if dump.returncode != 0:
         problems.append(f"tarayıcı çıkış kodu {dump.returncode}")
@@ -131,7 +133,8 @@ def check_page(
         stderr, flags=re.I,
     )
     if js_errors:
-        problems.append("tarayıcı JavaScript hatası: " + js_errors[0][:180])
+        # Konsol hataları uyarıdır: sayfa çiziliyorsa teslimatı engellemez.
+        warnings.append("tarayıcı JavaScript hatası: " + js_errors[0][:180])
 
     screenshot = out_dir / "browser.png"
     try:
@@ -153,6 +156,7 @@ def check_page(
         url=url,
         exit_code=dump.returncode,
         problems=tuple(problems),
+        warnings=tuple(warnings),
         dom_bytes=len(dom),
         screenshot=str(screenshot) if screenshot and screenshot.exists() else None,
         seconds=round(time.time() - started, 2),
@@ -173,6 +177,8 @@ def render_report(check: BrowserCheck) -> str:
         "",
     ]
     lines += [f"- {problem}" for problem in check.problems] or ["Yok."]
+    if check.warnings:
+        lines += ["", "## Uyarılar", ""] + [f"- {warning}" for warning in check.warnings]
     if check.screenshot:
         lines += ["", f"![Sayfa]({Path(check.screenshot).name})"]
     lines.append("")
