@@ -541,6 +541,28 @@ class AutonomyRunner:
         except Exception:  # noqa: BLE001 - pinning is best effort
             pass
 
+    def _improvement_attempts(self) -> dict:
+        path = self.runtime_dir / "self-improvement-attempts.json"
+        try:
+            import json as _json
+
+            payload = _json.loads(path.read_text(encoding="utf-8"))
+            return payload if isinstance(payload, dict) else {}
+        except (OSError, ValueError):
+            return {}
+
+    def _bump_improvement_attempt(self, title: str) -> None:
+        import json as _json
+
+        attempts = self._improvement_attempts()
+        attempts[title] = int(attempts.get(title, 0)) + 1
+        try:
+            (self.runtime_dir / "self-improvement-attempts.json").write_text(
+                _json.dumps(attempts, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+        except OSError:
+            pass
+
     def _self_improvement_directive(self, excluded: set[str]) -> "Directive | None":
         """Kalite kuyruğundaki ilk görevi yönlendirmeye çevir."""
 
@@ -568,6 +590,9 @@ class AutonomyRunner:
             title = str(task.get("title") or "")
             department = str(task.get("department") or "software")
             if not title or title in done or department in excluded:
+                continue
+            if self._improvement_attempts().get(title, 0) >= 2:
+                # İki denemede de değişiklik üretmediyse kuyruğu tıkamasın.
                 continue
             self._active_improvement = (title, department)
             return Directive(
@@ -980,6 +1005,9 @@ class AutonomyRunner:
                         pass
                 self._active_improvement = None
         else:
+            if self._active_improvement is not None:
+                self._bump_improvement_attempt(self._active_improvement[0])
+                self._active_improvement = None
             if self._active_idea is not None:
                 try:
                     from .ideas import complete
