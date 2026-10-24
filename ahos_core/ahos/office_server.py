@@ -78,7 +78,8 @@ async function refresh(){
     document.getElementById('dstatus').textContent = d.holding.daemon;
     document.getElementById('dmode').textContent = d.holding.executor || '-';
     const q = d.holding.quality || {};
-    document.getElementById('rate').textContent = Math.round((q.delivery_rate||0)*100)+'%';
+    document.getElementById('rate').textContent = Math.round((q.delivery_rate||0)*100)+'% (bugün '+Math.round((q.today_rate||0)*100)+'%)';
+    document.getElementById('rate').title = 'genel ortalama / bugünkü kuyruk';
     document.getElementById('pending').textContent = d.holding.pending_ideas;
     const infra = d.holding.infra || {};
     document.getElementById('infra').textContent = infra.ok === undefined ? '-' : (infra.ok ? 'sağlıklı' : 'sorunlu');

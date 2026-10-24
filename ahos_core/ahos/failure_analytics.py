@@ -68,6 +68,40 @@ def classify_error(row: dict) -> str:
     return "other"
 
 
+def queue_today(runtime_dir: str | Path) -> tuple[int, int] | None:
+    """Bugünün gerçek teslim oranı: kuyruktaki tüm görevler (ledger değil)."""
+
+    import re as _re
+    import sqlite3
+    from datetime import datetime, timezone
+
+    db = Path(runtime_dir) / "company-service.db"
+    if not db.is_file():
+        return None
+    day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    try:
+        con = sqlite3.connect(str(db))
+        con.row_factory = sqlite3.Row
+        rows = con.execute(
+            "select status, result_json from missions where updated_at like ?", (f"{day}%",)
+        ).fetchall()
+        con.close()
+    except sqlite3.Error:
+        return None
+    delivered = 0
+    for row in rows:
+        try:
+            payload = json.loads(row["result_json"] or "{}")
+        except json.JSONDecodeError:
+            continue
+        summary = " ".join(str(step.get("worker_summary") or "") for step in payload.get("steps") or [])
+        match = _re.search(r"(\d+) dosya değişti", summary)
+        changed = int(match.group(1)) if match else 0
+        if row["status"] == "completed" and changed > 0:
+            delivered += 1
+    return delivered, len(rows)
+
+
 def analyse(runtime_dir: str | Path, *, window: int = 200) -> dict:
     runtime = Path(runtime_dir)
     missions = _read_jsonl(runtime / "daemon-missions.jsonl")[-window:]
@@ -101,7 +135,23 @@ def analyse(runtime_dir: str | Path, *, window: int = 200) -> dict:
         key=lambda item: item[1],
         reverse=True,
     )
+    from datetime import datetime, timezone
+
+    today_key = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today_rows = [row for row in missions if str(row.get("at") or "").startswith(today_key)]
+    today_delivered = sum(
+        1
+        for row in today_rows
+        if row.get("status") == "routed" and int(row.get("changed_files") or 0) > 0
+    )
+    queue_result = queue_today(runtime)
+    if queue_result is not None:
+        today_delivered, today_total = queue_result
+        today_rows = [None] * today_total
     return {
+        "today_missions": len(today_rows),
+        "today_delivered": today_delivered,
+        "today_rate": round(today_delivered / len(today_rows), 3) if today_rows else 0.0,
         "missions": len(missions),
         "delivered": delivered,
         "delivery_rate": round(rate, 3),
