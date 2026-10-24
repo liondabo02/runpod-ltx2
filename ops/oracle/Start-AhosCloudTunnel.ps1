@@ -28,9 +28,9 @@ $Api = "http://127.0.0.1:$Port/api/tags"
 function Get-Tags {
     try {
         $result = Invoke-RestMethod -Uri $Api -TimeoutSec 2 -ErrorAction Stop
-        return ,@($result.models | ForEach-Object { $_.name })
+        return @($result.models | ForEach-Object { $_.name })
     } catch {
-        return ,@()
+        return @()
     }
 }
 
