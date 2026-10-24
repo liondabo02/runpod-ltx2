@@ -570,6 +570,21 @@ class AutonomyDaemon:
             )
         self.state.audit = rows
 
+    def _maybe_backup(self) -> None:
+        """Günde iki kez runtime yedeği al; hiçbir şey silinmez."""
+
+        try:
+            from .backup import backup
+
+            backups = sorted((self.runtime_dir / "backups").glob("runtime-*.zip"))
+            if backups:
+                age = __import__("time").time() - backups[-1].stat().st_mtime
+                if age < 12 * 3600:
+                    return
+            backup(self.runtime_dir)
+        except Exception:  # noqa: BLE001 - yedek isteğe bağlı
+            pass
+
     def _quality_report(self) -> None:
         """Publish the delivery/error split and the top causes."""
 
@@ -608,6 +623,7 @@ class AutonomyDaemon:
         if self.state.ticks % 30 == 0:
             self._audit_projects()
             self._quality_report()
+            self._maybe_backup()
         self._maybe_clear_stale_pause()
         self._maybe_reset_daily_budget()
         self._apply_executor_mode()

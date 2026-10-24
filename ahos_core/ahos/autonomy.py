@@ -974,11 +974,18 @@ class AutonomyRunner:
                 # independent file/evidence gate rejected it. Return the
                 # authoritative outcome to the daemon and all downstream
                 # consumers instead of leaking status="routed".
-                return replace(
-                    result,
-                    status="blocked",
-                    message=f"teslimat kanıtı başarısız: {verdict[:180]}",
-                )
+                message = f"teslimat kanıtı başarısız: {verdict[:180]}"
+                try:
+                    return replace(result, status="blocked", message=message)
+                except TypeError:
+                    # Testlerde dataclass olmayan sahte sonuç kullanılabilir.
+                    return ConsoleResult(
+                        kind=getattr(result, "kind", ConsoleResult.__dataclass_fields__["kind"].default),
+                        status="blocked",
+                        message=message,
+                        department_id=directive.department_id,
+                        mission=getattr(result, "mission", None),
+                    )
             self.state.executed += 1
             self.state.status = "idle"
             self.state.last_mission = mission_id

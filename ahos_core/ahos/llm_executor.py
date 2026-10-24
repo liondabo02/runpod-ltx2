@@ -661,7 +661,11 @@ def make_model_executor(
             try:
                 return primary_call(system_prompt, user_prompt, settings)
             except ModelError:
-                fallback = _fallback_settings(settings)
+                try:
+                    fallback = _fallback_settings(settings)
+                except TypeError:
+                    # Testlerde sahte ayar nesnesi kullanılabiliyor.
+                    fallback = None
                 if fallback is None:
                     raise
                 return http_transport(system_prompt, user_prompt, fallback)
