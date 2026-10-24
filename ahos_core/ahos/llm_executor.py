@@ -273,6 +273,13 @@ def _knowledge_block(task: str) -> str:
         learned = skills_context(runtime, task, limit=3)
         if learned:
             blocks.append(learned)
+            try:
+                from .skilleval import log_usage
+                from .skills import retrieve
+
+                log_usage(runtime, task, retrieve(runtime, task, limit=3))
+            except Exception:  # noqa: BLE001 - telemetri isteğe bağlı
+                pass
     except Exception:  # noqa: BLE001 - skills are optional
         pass
     try:

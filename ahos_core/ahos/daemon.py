@@ -192,6 +192,7 @@ class DaemonState:
     audit: list[dict[str, object]] = field(default_factory=list)
     quality: dict[str, object] = field(default_factory=dict)
     infra: dict[str, object] = field(default_factory=dict)
+    learning: dict[str, object] = field(default_factory=dict)
     schema: int = SCHEMA_VERSION
 
     def to_dict(self) -> dict[str, object]:
@@ -214,6 +215,7 @@ class DaemonState:
             "audit": list(self.audit),
             "quality": dict(self.quality),
             "infra": dict(self.infra),
+            "learning": dict(self.learning),
         }
 
 
@@ -606,6 +608,12 @@ class AutonomyDaemon:
             fix = os.environ.get("AHOS_INFRA_FIX", "1").strip() not in {"0", "false"}
             result = health(self.runtime_dir, deep=False, fix=False)
             self.state.infra = result.to_dict()
+            try:
+                from .skilleval import report as skill_report
+
+                self.state.learning = skill_report(self.runtime_dir)
+            except Exception:  # noqa: BLE001 - öğrenme raporu isteğe bağlı
+                pass
             if not result.ok and fix:
                 from .infra import repair
 

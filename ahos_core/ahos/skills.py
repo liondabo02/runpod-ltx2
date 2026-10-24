@@ -238,6 +238,35 @@ def stats(runtime_dir: str | Path) -> dict:
     return {"cards": len(cards), "sources": len({card.get("source") for card in cards})}
 
 
+def reindex(runtime_dir: str | Path) -> dict:
+    """Kart anahtar kelimelerini güncel ayıklayıcıyla yeniden üret.
+
+    Eski sürüm alt çizgiyi kelime sayıyor ve Türkçe harfleri katlamıyordu; bu
+    yüzden "rag" gibi konular aranamıyordu. Kartlar silinmez, yedeklenir.
+    """
+
+    runtime = Path(runtime_dir)
+    path = _path(runtime)
+    if not path.is_file():
+        return {"cards": 0, "updated": 0}
+    import shutil
+
+    shutil.copy2(path, path.with_suffix(".jsonl.bak-reindex"))
+    rows = all_cards(runtime)
+    updated = 0
+    with path.open("w", encoding="utf-8") as handle:
+        for card in rows:
+            applies = _keywords(
+                str(card.get("rule") or "") + " " + str(card.get("title") or "") + " " + str(card.get("source") or ""),
+                12,
+            )
+            if applies != list(card.get("applies") or []):
+                updated += 1
+            card["applies"] = applies
+            handle.write(json.dumps(card, ensure_ascii=False) + "\n")
+    return {"cards": len(rows), "updated": updated}
+
+
 def main(argv: list[str] | None = None) -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -252,6 +281,10 @@ def main(argv: list[str] | None = None) -> int:
         position = args.index("--add")
         result = learn(runtime, Path(args[position + 1]), use_model="--model" in args)
         print(f"öğrenildi: {result['cards']} beceri · {result['mode']} · toplam {result['total']}")
+        return 0
+    if "--reindex" in args:
+        result = reindex(runtime)
+        print(f"yeniden indekslendi: {result['updated']}/{result['cards']} kart")
         return 0
     if "--query" in args:
         position = args.index("--query")
