@@ -624,6 +624,12 @@ class AutonomyDaemon:
             self._audit_projects()
             self._quality_report()
             self._maybe_backup()
+            try:
+                from .inbox import scan as inbox_scan
+
+                inbox_scan(self.runtime_dir)
+            except Exception:  # noqa: BLE001 - gelen kutusu isteğe bağlı
+                pass
         self._maybe_clear_stale_pause()
         self._maybe_reset_daily_budget()
         self._apply_executor_mode()

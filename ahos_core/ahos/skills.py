@@ -164,6 +164,9 @@ def learn(runtime_dir: str | Path, source: str | Path, *, use_model: bool = Fals
                     cards = []
             if not cards:
                 cards = [_offline_card(title, body, candidate.name) for title, body in _sections(text)]
+            if not cards:
+                # Kısa notlar da öğrenilsin: ilk paragraftan tek kart.
+                cards = [_offline_card(candidate.stem, re.sub(r"\s+", " ", text).strip()[:400], candidate.name)]
                 if settings is None:
                     mode = "offline"
             for card in cards:
