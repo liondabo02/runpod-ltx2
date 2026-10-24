@@ -575,11 +575,15 @@ class AutonomyRunner:
             return None
         goal, step = found
         self._active_goal = (goal.goal_id, step.step_id)
+        tried = ", ".join(step.methods[-2:]) if step.methods else "-"
         return Directive(
             kind="goal_step",
             department_id=goal.department_id,
             objective=step.title,
-            reason=f"hedef adımı: {goal.title[:60]}",
+            reason=(
+                f"hedef: {goal.title[:40]} · rol: {step.worker_role or 'işçi'}"
+                f" · kontrol: {step.checkpoint or '-'} · denenmiş: {tried}"
+            ),
             priority=0,
         )
 
@@ -709,6 +713,42 @@ class AutonomyRunner:
         except Exception:  # noqa: BLE001 - kuyruk şeması onların
             return False
         return bool(row) and str(row[0]) == "blocked"
+
+    def _record_experience(self, directive, result, mission_id: str, delivered: bool) -> None:
+        """Ortak görev kaydı + doğrulanmış deneyim; ikisi de isteğe bağlı."""
+
+        changed = self._changed_from_result(result) or 0
+        message = str(getattr(result, "message", "") or "")[:300]
+        try:
+            from . import tasks
+
+            tasks.update(
+                self.runtime_dir,
+                mission_id or f"CMD-{directive.department_id}",
+                objective=directive.objective,
+                department=directive.department_id,
+                worker=str(getattr(directive, "reason", "") or "")[:80],
+                status="completed" if delivered else "blocked",
+                output=f"{changed} dosya" if changed else "",
+                blocker="" if delivered else message,
+            )
+        except Exception:  # noqa: BLE001
+            pass
+        try:
+            from .experience import record
+
+            record(
+                self.runtime_dir,
+                objective=directive.objective,
+                department=directive.department_id,
+                mission_id=mission_id,
+                success=delivered,
+                changed_files=changed,
+                method=str(getattr(directive, "reason", "") or "")[:200],
+                blocker="" if delivered else message,
+            )
+        except Exception:  # noqa: BLE001
+            pass
 
     def _reopen_blocked(self, spec, objective: str, *, force: bool = False) -> bool:
         """Give a blocked mission one fresh attempt per day.
@@ -907,6 +947,51 @@ class AutonomyRunner:
                 self.state.failed += 1
                 self.state.status = "blocked"
             self.state.last_reason = company.summary[:200]
+            if self._active_goal is not None:
+                try:
+                    from .goals import advance
+
+                    advance(
+                        self.runtime_dir,
+                        self._active_goal[0],
+                        self._active_goal[1],
+                        success=delivered,
+                        note=company.summary[:200],
+                        method="iş belgesi",
+                        checkpoint=company.deliverable,
+                    )
+                except Exception:  # noqa: BLE001
+                    pass
+                self._active_goal = None
+            try:
+                from .experience import record as record_experience
+
+                record_experience(
+                    self.runtime_dir,
+                    objective=directive.objective,
+                    department=directive.department_id,
+                    mission_id=f"DOC-{company.company_id}",
+                    success=delivered,
+                    changed_files=1 if delivered else 0,
+                    method="iş belgesi",
+                    blocker="" if delivered else company.problems[:1],
+                )
+            except Exception:  # noqa: BLE001
+                pass
+            try:
+                from .tasks import update as update_task
+
+                update_task(
+                    self.runtime_dir,
+                    f"DOC-{company.company_id}",
+                    objective=directive.objective,
+                    department=directive.department_id,
+                    status="completed" if delivered else "blocked",
+                    output=company.deliverable if delivered else "",
+                    blocker="" if delivered else ", ".join(company.problems[:2]),
+                )
+            except Exception:  # noqa: BLE001
+                pass
             self._record(
                 key,
                 f"DOC-{company.company_id}",
@@ -1013,11 +1098,20 @@ class AutonomyRunner:
             self.state.last_mission = mission_id
             self.state.last_reason = result.message[:200]
             self._record(key, mission_id, directive.department_id, "completed")
+            self._record_experience(directive, result, mission_id, True)
             if self._active_goal is not None:
                 try:
                     from .goals import advance
 
-                    advance(self.runtime_dir, self._active_goal[0], self._active_goal[1], success=True, note=result.message[:200])
+                    advance(
+                        self.runtime_dir,
+                        self._active_goal[0],
+                        self._active_goal[1],
+                        success=True,
+                        note=result.message[:200],
+                        method="model-produce",
+                        checkpoint=str(self._changed_from_result(result) or 0) + " dosya",
+                    )
                 except Exception:  # noqa: BLE001
                     pass
                 self._active_goal = None
@@ -1042,11 +1136,19 @@ class AutonomyRunner:
                         pass
                 self._active_improvement = None
         else:
+            self._record_experience(directive, result, mission_id, False)
             if self._active_goal is not None:
                 try:
                     from .goals import advance
 
-                    advance(self.runtime_dir, self._active_goal[0], self._active_goal[1], success=False, note=result.message[:200])
+                    advance(
+                        self.runtime_dir,
+                        self._active_goal[0],
+                        self._active_goal[1],
+                        success=False,
+                        note=result.message[:200],
+                        method=str(verdict or result.message)[:160],
+                    )
                 except Exception:  # noqa: BLE001
                     pass
                 self._active_goal = None

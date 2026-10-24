@@ -27,6 +27,25 @@ STEP_TEMPLATE = (
     ("kapi", "kabul testlerini çalıştır, düşenleri düzelt"),
     ("belge", "yapılanları kısa bir belgeyle kaydet"),
 )
+VIDEO_STEPS = (
+    ("senaryo", "senaryoyu yaz ve sahnelere böl"),
+    ("sahneler", "sahne listesini mekan ve karakterlerle çıkar"),
+    ("ses", "ses planını (anlatıcı, müzik, efekt, seviye) hazırla"),
+    ("montaj", "montaj planını ve render komutunu yaz"),
+    ("kontrol", "teknik kontrol listesini doldur ve onaya sun"),
+)
+ROLE_BY_STEP = {
+    "analiz": "researcher",
+    "senaryo": "researcher",
+    "sahneler": "designer",
+    "ses": "designer",
+    "montaj": "software_engineer",
+    "kapi": "qa_engineer",
+    "kontrol": "qa_engineer",
+    "belge": "operations_specialist",
+    "uygulama-1": "software_engineer",
+    "uygulama-2": "software_engineer",
+}
 MAX_ATTEMPTS = 2
 
 
@@ -38,6 +57,9 @@ class Step:
     attempts: int = 0
     note: str = ""
     updated_at: str = ""
+    worker_role: str = ""
+    checkpoint: str = ""
+    methods: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -47,6 +69,9 @@ class Step:
             "attempts": self.attempts,
             "note": self.note,
             "updated_at": self.updated_at,
+            "worker_role": self.worker_role,
+            "checkpoint": self.checkpoint,
+            "methods": list(self.methods),
         }
 
 
@@ -59,6 +84,7 @@ class Goal:
     status: str = "active"
     created_at: str = ""
     updated_at: str = ""
+    template: str = "default"
 
     def to_dict(self) -> dict:
         return {
@@ -68,6 +94,7 @@ class Goal:
             "status": self.status,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
+            "template": self.template,
             "steps": [step.to_dict() for step in self.steps],
         }
 
@@ -96,10 +123,15 @@ def _goal_id(title: str, department_id: str) -> str:
     return f"G-{digest}"
 
 
-def _steps_for(title: str) -> list[Step]:
+def _steps_for(title: str, template: str = "default") -> list[Step]:
     subject = re.sub(r"\s+", " ", title).strip()
+    if template == "video":
+        return [
+            Step(step_id=step_id, title=f"{subject} · {wording}", worker_role=ROLE_BY_STEP.get(step_id, ""))
+            for step_id, wording in VIDEO_STEPS
+        ]
     return [
-        Step(step_id=step_id, title=f"{subject} · {wording}")
+        Step(step_id=step_id, title=f"{subject} · {wording}", worker_role=ROLE_BY_STEP.get(step_id, ""))
         for step_id, wording in STEP_TEMPLATE
     ]
 
@@ -110,6 +142,7 @@ def create(
     department_id: str,
     *,
     steps: list[str] | None = None,
+    template: str = "default",
 ) -> Goal:
     runtime = Path(runtime_dir)
     _dir(runtime).mkdir(parents=True, exist_ok=True)
@@ -123,9 +156,10 @@ def create(
         department_id=department_id,
         steps=[Step(step_id=f"s{i+1}", title=text) for i, text in enumerate(steps)]
         if steps
-        else _steps_for(title),
+        else _steps_for(title, template),
         created_at=_now(),
         updated_at=_now(),
+        template=template,
     )
     save(runtime, goal)
     _log(runtime, {"event": "created", "goal_id": goal_id, "title": goal.title})
@@ -157,6 +191,9 @@ def load(runtime_dir: str | Path, goal_id: str) -> Goal | None:
             attempts=int(item.get("attempts") or 0),
             note=str(item.get("note") or ""),
             updated_at=str(item.get("updated_at") or ""),
+            worker_role=str(item.get("worker_role") or ""),
+            checkpoint=str(item.get("checkpoint") or ""),
+            methods=list(item.get("methods") or []),
         )
         for item in payload.get("steps") or []
         if isinstance(item, dict)
@@ -167,6 +204,7 @@ def load(runtime_dir: str | Path, goal_id: str) -> Goal | None:
         department_id=str(payload.get("department_id") or ""),
         steps=steps,
         status=str(payload.get("status") or "active"),
+        template=str(payload.get("template") or "default"),
         created_at=str(payload.get("created_at") or ""),
         updated_at=str(payload.get("updated_at") or ""),
     )
@@ -204,6 +242,8 @@ def advance(
     *,
     success: bool,
     note: str = "",
+    method: str = "",
+    checkpoint: str = "",
 ) -> Goal | None:
     goal = load(runtime_dir, goal_id)
     if goal is None:
@@ -213,6 +253,10 @@ def advance(
             continue
         step.updated_at = _now()
         step.note = note[:300]
+        if method and method not in step.methods:
+            step.methods.append(method[:160])
+        if checkpoint:
+            step.checkpoint = checkpoint[:300]
         if success:
             step.status = "done"
         else:
@@ -221,6 +265,13 @@ def advance(
         break
     if all(step.status in {"done", "blocked"} for step in goal.steps):
         goal.status = "done" if all(step.status == "done" for step in goal.steps) else "blocked"
+        if goal.status == "done" and goal.template == "video":
+            try:
+                from .product import build as build_product
+
+                build_product(runtime_dir, goal.title)
+            except Exception:  # noqa: BLE001 - ürün paketi isteğe bağlı
+                pass
     save(runtime_dir, goal)
     _log(
         runtime_dir,

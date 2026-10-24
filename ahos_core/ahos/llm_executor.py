@@ -268,6 +268,14 @@ def _knowledge_block(task: str) -> str:
         return ""
     blocks: list[str] = []
     try:
+        from .experience import context as experience_context
+
+        learned_experience = experience_context(runtime, task, limit=2)
+        if learned_experience:
+            blocks.append(learned_experience)
+    except Exception:  # noqa: BLE001 - deneyim isteğe bağlı
+        pass
+    try:
         from .skills import context as skills_context
 
         learned = skills_context(runtime, task, limit=3)
