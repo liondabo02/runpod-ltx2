@@ -71,7 +71,7 @@ def test_dedupe_prevents_reruns_but_allows_next_task(tmp_path) -> None:
     assert runner.state.skipped_duplicate >= 0
 
 
-def test_cycle_exhaustion_makes_runner_idle(tmp_path) -> None:
+def test_cycle_exhaustion_makes_runner_idle(tmp_path, monkeypatch) -> None:
     from ahos.growth_loop import GROWTH_CYCLE
     from ahos.projects import ProjectLink
 
@@ -93,6 +93,9 @@ def test_cycle_exhaustion_makes_runner_idle(tmp_path) -> None:
         ProjectLink(project_id="p", name="P", path=project, department_id="oyun")
     )
     runner = AutonomyRunner(console, tmp_path, limits=AutonomyLimits(max_missions=10))
+    # This test exercises objective-cycle exhaustion, not the independent
+    # acceptance gate. Failure handling is verified in the evidence test.
+    monkeypatch.setattr(runner, "delivery_verdict", lambda result, dept: (True, "verified"))
 
     seen: set[str] = set()
     for _ in range(12):
@@ -210,3 +213,31 @@ def test_spend_record_is_zero_without_a_ledger(tmp_path) -> None:
 
     assert runner.status()["paid_calls"] == 0
     assert runner.status()["paid_usd_total"] == 0.0
+
+
+def test_routed_without_delivery_evidence_reports_blocked(tmp_path, monkeypatch) -> None:
+    """A routed command rejected by the acceptance gate must not claim delivery."""
+    from ahos.projects import ProjectLink
+    from ahos.acceptance_bootstrap import ensure_baseline
+
+    console = build_default_console(tmp_path)
+    console.handle("oyun geliştirme departmanı kur")
+    project = tmp_path / "project"
+    (project / "www").mkdir(parents=True)
+    (project / "www" / "index.html").write_text("<html></html>", encoding="utf-8")
+    (project / "tools").mkdir()
+    (project / "tools" / "check_offline.py").write_text(
+        "import sys\nsys.exit(0)\n", encoding="utf-8"
+    )
+    ensure_baseline(project, tmp_path / "artifacts")
+    console.projects.link(
+        ProjectLink(project_id="evidence", name="Evidence", path=project, department_id="oyun")
+    )
+    runner = AutonomyRunner(console, tmp_path, limits=AutonomyLimits(max_missions=2))
+    monkeypatch.setattr(runner, "delivery_verdict", lambda result, dept: (False, "no changed files"))
+    result = runner.run_once()
+    assert result is not None
+    assert result.status == "blocked"
+    assert "no changed files" in result.message
+    assert runner.state.failed == 1
+    assert runner.state.executed == 0

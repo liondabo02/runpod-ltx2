@@ -14,7 +14,7 @@ import re
 import subprocess
 import sys
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -945,7 +945,15 @@ class AutonomyRunner:
                 self.state.last_reason = verdict[:200]
                 self._record(key, mission_id, directive.department_id, "failed")
                 self._persist()
-                return result
+                # A routed command is not a successful delivery when the
+                # independent file/evidence gate rejected it. Return the
+                # authoritative outcome to the daemon and all downstream
+                # consumers instead of leaking status="routed".
+                return replace(
+                    result,
+                    status="blocked",
+                    message=f"teslimat kanıtı başarısız: {verdict[:180]}",
+                )
             self.state.executed += 1
             self.state.status = "idle"
             self.state.last_mission = mission_id
