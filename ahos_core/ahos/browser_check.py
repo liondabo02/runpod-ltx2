@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import subprocess
 import time
 from dataclasses import dataclass, field
@@ -74,7 +75,7 @@ def check_page(
 
     binary = browser or find_browser()
     if binary is None:
-        return BrowserCheck(True, _file_url(page), 0, ("tarayıcı yok; kontrol atlandı",))
+        return BrowserCheck(False, _file_url(page), -1, ("tarayıcı bulunamadı; QA doğrulanamadı",))
 
     out_dir.mkdir(parents=True, exist_ok=True)
     run = runner or _default_runner
@@ -86,6 +87,8 @@ def check_page(
         "--hide-scrollbars",
         "--no-first-run",
         "--no-default-browser-check",
+        "--enable-logging=stderr",
+        "--v=0",
     ]
 
     try:
@@ -103,15 +106,32 @@ def check_page(
     dom = dump.stdout or ""
     if dump.returncode != 0:
         problems.append(f"tarayıcı çıkış kodu {dump.returncode}")
-    if len(dom) < 200:
+    if len(dom) < 80:
         problems.append("DOM boş/çok kısa")
     lowered = dom.lower()
     for marker in ("<html", "<head", "<body"):
         if marker not in lowered:
             problems.append(f"DOM'da {marker} yok")
-    # Oyun arayüzü işareti (data-game / #stage) sezgisel bir beklentidir; burada
-    # engelleyici sorun sayılmaz. Kabul testi projenin kendi kapısıdır, tarayıcı
-    # yalnızca "sayfa açıldı mı, JS patladı mı" sorusuna bakar.
+    # Actual DOM after JavaScript execution; catch blank shell pages and common
+    # framework fatal overlays. Content-specific selectors belong to project QA.
+    match = re.search(r"<body\b[^>]*>(.*?)</body\s*>", dom, re.I | re.S)
+    if match is None:
+        problems.append("body DOM içeriği bulunamadı")
+    else:
+        body = re.sub(r"<(?:script|style)\b[^>]*>.*?</(?:script|style)>", "", match.group(1), flags=re.I | re.S)
+        visible = re.sub(r"<[^>]+>", "", body).strip()
+        surfaces = re.search(r"<(?:canvas|svg|img|video|button|input|a)\b", body, re.I)
+        if len(visible) < 2 and not surfaces:
+            problems.append("boş ekran: içerik veya etkileşimli alan yok")
+        if re.search(r"(?:application error: a client-side exception|internal server error|__next_error__)", body, re.I):
+            problems.append("uygulama hata ekranı görüntülendi")
+    stderr = dump.stderr or ""
+    js_errors = re.findall(
+        r"[^\r\n]*(?:Uncaught(?:\s+\w+Error)?|SyntaxError:|ReferenceError:|TypeError:)[^\r\n]*",
+        stderr, flags=re.I,
+    )
+    if js_errors:
+        problems.append("tarayıcı JavaScript hatası: " + js_errors[0][:180])
 
     screenshot = out_dir / "browser.png"
     try:

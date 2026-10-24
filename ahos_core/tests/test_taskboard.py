@@ -162,3 +162,117 @@ def test_cli_claim_returns_nonzero_when_empty(tmp_path, capsys) -> None:
 
     assert code == 1
     assert "uygun görev yok" in capsys.readouterr().out
+
+
+def test_expired_owner_cannot_modify_or_extend_task(tmp_path) -> None:
+    board = _board(tmp_path)
+    task = board.enqueue("expired")
+    board.claim("codex", lease_seconds=0.01)
+    time.sleep(0.04)
+
+    with pytest.raises(TaskBoardError, match="süresi dolmuş"):
+        board.heartbeat(task.task_id, "codex")
+    with pytest.raises(TaskBoardError, match="süresi dolmuş"):
+        board.complete(task.task_id, "codex", evidence=["test"])
+    with pytest.raises(TaskBoardError, match="süresi dolmuş"):
+        board.handoff(task.task_id, "codex", "deepseek")
+
+    reclaimed = board.claim("deepseek")
+    assert reclaimed is not None and reclaimed.owner == "deepseek"
+    assert reclaimed.attempts == 2
+    with pytest.raises(TaskBoardError, match="başka sahipte"):
+        board.release(task.task_id, "codex")
+
+
+def test_handoff_owner_audit_and_completion(tmp_path) -> None:
+    board = _board(tmp_path)
+    task = board.enqueue("CEO -> kodlama")
+    board.claim("ceo")
+    transferred = board.handoff(task.task_id, "ceo", "codex", lease_seconds=60)
+    assert transferred.owner == "codex"
+    assert transferred.attempts == 2
+
+    with pytest.raises(TaskBoardError, match="başka sahipte"):
+        board.complete(task.task_id, "ceo", evidence=["not my work"])
+
+    board.heartbeat(task.task_id, "codex")
+    finished = board.complete(task.task_id, "codex", evidence=["tests passed"])
+    assert [event["action"] for event in finished.history] == [
+        "created", "claimed", "handed_off", "started", "completed"
+    ]
+    assert finished.history[2]["previous_owner"] == "ceo"
+    assert finished.history[2]["actor"] == "codex"
+
+
+def test_dedupe_key_prevents_duplicate_active_jobs(tmp_path) -> None:
+    board = _board(tmp_path)
+    first = board.enqueue("task one", dedupe_key=" MIPILUNA-42 ")
+    same = board.enqueue("same work again", dedupe_key="mipiluna-42")
+    assert first.task_id == same.task_id
+    assert len(board.tasks()) == 1
+    board.claim("codex")
+    board.complete(first.task_id, "codex", evidence=["done"])
+    later = board.enqueue("new cycle", dedupe_key="mipiluna-42")
+    assert later.task_id != first.task_id
+
+
+def test_corrupt_board_fails_closed_without_data_loss(tmp_path) -> None:
+    path = tmp_path / "tasks.json"
+    path.write_text('{"tasks": [', encoding="utf-8")
+    board = TaskBoard(path)
+    with pytest.raises(TaskBoardError, match="korunuyor"):
+        board.tasks()
+    with pytest.raises(TaskBoardError, match="korunuyor"):
+        board.enqueue("unsafe overwrite")
+    assert path.read_text(encoding="utf-8") == '{"tasks": ['
+
+
+def test_read_does_not_rewrite_file(tmp_path) -> None:
+    board = _board(tmp_path)
+    task = board.enqueue("read only")
+    original = board.path.read_bytes()
+    assert board.get(task.task_id) is not None
+    assert board.tasks()
+    assert board.path.read_bytes() == original
+
+
+@pytest.mark.parametrize("invalid", [0, -1, float("inf"), float("nan")])
+def test_reject_invalid_leases(tmp_path, invalid) -> None:
+    board = _board(tmp_path)
+    task = board.enqueue("lease")
+    with pytest.raises(ValueError):
+        board.claim("codex", lease_seconds=invalid)
+    board.claim("codex")
+    with pytest.raises(ValueError):
+        board.heartbeat(task.task_id, "codex", lease_seconds=invalid)
+    with pytest.raises(ValueError):
+        board.handoff(task.task_id, "codex", "deepseek", lease_seconds=invalid)
+
+
+def test_cli_handoff_and_history(tmp_path, capsys) -> None:
+    from ahos.taskboard import main
+    board = str(tmp_path / "cli.json")
+    assert main(["--board", board, "add", "work", "--key", "work-123"]) == 0
+    task_id = TaskBoard(board).tasks()[0].task_id
+    capsys.readouterr()
+    assert main(["--board", board, "claim", "codex"]) == 0
+    assert main(["--board", board, "handoff", task_id, "codex", "deepseek"]) == 0
+    assert main(["--board", board, "heartbeat", task_id, "deepseek"]) == 0
+    assert main(["--board", board, "history", task_id]) == 0
+    output = capsys.readouterr().out
+    assert '"handed_off"' in output
+    assert '"deepseek"' in output
+    assert main(["--board", board, "release", task_id, "deepseek"]) == 0
+    assert TaskBoard(board).get(task_id).state == QUEUED
+
+
+def test_specific_claim_does_not_steal_an_unrelated_task(tmp_path) -> None:
+    board = _board(tmp_path)
+    board.enqueue("unrelated", task_id="unrelated")
+    task = board.claim_task("mission:build", "build", "runner-one")
+    assert task is not None and task.owner == "runner-one"
+    assert board.get("unrelated").state == QUEUED
+    assert board.claim_task("mission:build", "build", "runner-two") is None
+    board.heartbeat(task.task_id, "runner-one")
+    board.complete(task.task_id, "runner-one", evidence=["QA verified"])
+    assert board.claim_task("mission:build", "build", "runner-three") is None

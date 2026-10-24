@@ -35,8 +35,8 @@ def digest_file(path, limit):
 def _browser_smoke(index, evidence, task_id):
     """Load the page in a headless browser when one is available.
 
-    Fail-open when no browser exists (CI containers): the static checks still
-    run, and the QA record notes that the browser step was skipped.
+    A web deliverable must pass real browser checks. No browser means
+    unverified delivery, not an automatic QA pass.
     """
 
     if os.environ.get('AHOS_BROWSER_QA', '1').strip().lower() in {'0', 'false', 'off', 'no'}:
@@ -45,7 +45,7 @@ def _browser_smoke(index, evidence, task_id):
         from .browser_check import check_page, find_browser
 
         if find_browser() is None:
-            return {'ok': True, 'skipped': 'tarayıcı bulunamadı'}
+            return {'ok': False, 'problems': 'tarayıcı bulunamadı; web teslimatı doğrulanamadı'}
         safe = re.sub('[^A-Za-z0-9_-]', '_', task_id)[:80]
         check = check_page(index, Path(evidence) / 'browser' / safe)
     except Exception as exc:  # browser check must never crash QA
@@ -152,7 +152,7 @@ def make_project_qa(project_root, evidence_root):
             problems.append(str(exc) if isinstance(exc, ValueError) else 'Dosya okunamadı')
         passed = not problems
         record = dict(task_id=item.task_id, producer=result.worker_id, verifier=qa_worker_id,
-                      passed=passed, scope='static web integrity only; functionality and human fit unverified',
+                      passed=passed, scope='file integrity + headless DOM smoke for web when enabled; functionality and human fit unverified',
                       source_hashes=hashes, problems=problems, model_calls=0,
                       browser=browser)
         evidence.mkdir(parents=True, exist_ok=True)

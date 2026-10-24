@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 from typing import Callable, Iterable, Mapping, Protocol
 
 from .virtual_workforce import VirtualWorkforceRegistry
@@ -189,7 +190,9 @@ class MultiWorkerMissionOrchestrator:
         manager_planner: ManagerPlanner,
         executors: Mapping[str, WorkerExecutor],
         qa_executor: QaExecutor,
+        taskboard_path: str | Path | None = None,
     ) -> None:
+        self.taskboard_path = Path(taskboard_path) if taskboard_path is not None else None
         self.registry = registry
         self.manager = DepartmentManager(registry, manager_planner)
         self.runtime = VirtualWorkerRuntime(
@@ -258,7 +261,25 @@ class MultiWorkerMissionOrchestrator:
                     step=step,
                     completed=completed,
                 )
-                run = self.runtime.run(work_item)
+                if self.taskboard_path is None:
+                    run = self.runtime.run(work_item)
+                else:
+                    from .taskboard_runtime import run_with_claim
+                    from .taskboard import TaskBoardError
+
+                    try:
+                        run = run_with_claim(
+                            self.taskboard_path, work_item, lambda: self.runtime.run(work_item)
+                        )
+                    except TaskBoardError as exc:
+                        return MissionResult(
+                            mission_id=mission_id,
+                            objective=objective,
+                            manager_id=plan.manager_id,
+                            status=MissionStatus.BLOCKED,
+                            steps=tuple(ordered_results),
+                            reason=str(exc),
+                        )
 
                 result = MissionStepResult(
                     step=step,

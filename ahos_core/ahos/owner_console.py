@@ -1359,6 +1359,7 @@ class OwnerConsole:
             manager_planner=DepartmentStepPlanner(spec),
             executors=executors,
             qa_executor=qa_executor,
+            taskboard_path=self.runtime_dir / "taskboard.json",
         )
 
         try:

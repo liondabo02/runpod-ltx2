@@ -186,7 +186,7 @@ def test_browser_smoke_can_be_disabled(tmp_path, monkeypatch) -> None:
     assert decision.passed is True, decision.summary
 
 
-def test_browser_smoke_is_skipped_without_a_browser(tmp_path, monkeypatch) -> None:
+def test_browser_smoke_is_blocked_without_a_browser(tmp_path, monkeypatch) -> None:
     import ahos.browser_check as browser_check
 
     root = _web_project(tmp_path)
@@ -198,6 +198,7 @@ def test_browser_smoke_is_skipped_without_a_browser(tmp_path, monkeypatch) -> No
         _item("produce"), _result("produce", evidence), "qa-01"
     )
 
-    assert decision.passed is True, decision.summary
+    assert decision.passed is False, decision.summary
     record = json.loads(next(evidence.glob("qa-*.json")).read_text(encoding="utf-8"))
-    assert record["browser"]["skipped"] == "tarayıcı bulunamadı"
+    assert record["browser"]["ok"] is False
+    assert "tarayıcı bulunamadı" in record["browser"]["problems"]

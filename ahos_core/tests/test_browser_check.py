@@ -107,3 +107,36 @@ def test_find_browser_returns_none_on_missing_paths(monkeypatch) -> None:
     monkeypatch.setattr(module, "BROWSER_CANDIDATES", (r"C:\yok\edge.exe",))
 
     assert find_browser() is None
+
+def test_empty_app_shell_fails_after_browser_render(tmp_path) -> None:
+    page = _page(tmp_path)
+    dom = "<html><head><title>ok</title></head><body><div id='app'></div></body></html>" + (" " * 200)
+    result = check_page(page, tmp_path / "evidence", browser="edge", runner=_runner(dom))
+    assert result.ok is False
+    assert any("boş ekran" in issue for issue in result.problems)
+
+
+def test_fatal_framework_error_screen_fails(tmp_path) -> None:
+    page = _page(tmp_path)
+    dom = "<html><head></head><body><h1>Application error: a client-side exception</h1></body></html>" + (" " * 200)
+    result = check_page(page, tmp_path / "evidence", browser="edge", runner=_runner(dom))
+    assert result.ok is False
+    assert any("hata ekranı" in issue for issue in result.problems)
+
+
+def test_browser_js_error_stderr_fails(tmp_path) -> None:
+    page = _page(tmp_path)
+    dom = page.read_text(encoding="utf-8")
+    def fake(argv, timeout):
+        return subprocess.CompletedProcess(argv, 0, stdout=dom, stderr="Uncaught ReferenceError: broken is not defined")
+    result = check_page(page, tmp_path / "evidence", browser="edge", runner=fake)
+    assert not result.ok
+    assert any("JavaScript" in issue for issue in result.problems)
+
+
+def test_unavailable_browser_is_not_a_pass(tmp_path, monkeypatch) -> None:
+    import ahos.browser_check as module
+    monkeypatch.setattr(module, "find_browser", lambda: None)
+    result = check_page(_page(tmp_path), tmp_path / "evidence")
+    assert not result.ok
+    assert any("bulunamadı" in issue for issue in result.problems)
