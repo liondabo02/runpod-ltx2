@@ -35,7 +35,13 @@ def _hash(text: str) -> str:
 
 
 def _keywords(text: str, limit: int = 10) -> list[str]:
-    words = re.findall(r"[A-Za-zÇĞİÖŞÜçğıöşü0-9_]{3,}", text.casefold())
+    folded = (
+        text.casefold()
+        .replace("ı", "i").replace("ş", "s").replace("ğ", "g")
+        .replace("ü", "u").replace("ö", "o").replace("ç", "c")
+        .replace("_", " ")
+    )
+    words = re.findall(r"[a-z0-9]{3,}", folded)
     stop = {
         "için", "bir", "ile", "ve", "bu", "olan", "olarak", "the", "and", "for",
         "with", "that", "this", "from", "are", "was", "not", "bir", "daha",
@@ -208,7 +214,9 @@ def retrieve(runtime_dir: str | Path, task: str, limit: int = 3) -> list[dict]:
     scored: list[tuple[float, dict]] = []
     for card in all_cards(runtime_dir):
         applies = {str(item).casefold() for item in card.get("applies") or ()}
-        overlap = len(terms & applies) + len(terms & set(_keywords(str(card.get("rule") or ""))))
+        haystack = set(_keywords(str(card.get("rule") or "") + " " + str(card.get("title") or "")))
+        haystack |= set(_keywords(str(card.get("source") or ""), 20))
+        overlap = len(terms & applies) + len(terms & haystack)
         if overlap:
             scored.append((overlap / (len(terms) + 1), card))
     scored.sort(key=lambda item: item[0], reverse=True)

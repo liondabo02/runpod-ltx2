@@ -49,7 +49,13 @@ def _chunks(text: str) -> list[str]:
 
 
 def _keywords(text: str) -> list[str]:
-    words = re.findall(r"[A-Za-zÇĞİÖŞÜçğıöşü0-9_]{3,}", text.casefold())
+    folded = (
+        text.casefold()
+        .replace("ı", "i").replace("ş", "s").replace("ğ", "g")
+        .replace("ü", "u").replace("ö", "o").replace("ç", "c")
+        .replace("_", " ")
+    )
+    words = re.findall(r"[a-z0-9]{3,}", folded)
     stop = {
         "için", "bir", "ile", "ve", "bu", "olan", "olarak", "the", "and", "for",
         "with", "that", "this", "from", "are", "was", "not",
