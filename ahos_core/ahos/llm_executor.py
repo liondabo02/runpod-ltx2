@@ -266,12 +266,24 @@ def _knowledge_block(task: str) -> str:
     runtime = os.environ.get("AHOS_RUNTIME_DIR", "").strip()
     if not runtime:
         return ""
+    blocks: list[str] = []
+    try:
+        from .skills import context as skills_context
+
+        learned = skills_context(runtime, task, limit=3)
+        if learned:
+            blocks.append(learned)
+    except Exception:  # noqa: BLE001 - skills are optional
+        pass
     try:
         from .knowledge import context
 
-        return context(runtime, task, limit=2)
+        notes = context(runtime, task, limit=2)
+        if notes:
+            blocks.append(notes)
     except Exception:  # noqa: BLE001 - knowledge is optional
-        return ""
+        pass
+    return "\n\n".join(blocks)
 
 
 def build_prompt(root: Path, task: str, *, auto_context: bool = False) -> str:

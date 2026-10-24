@@ -19,9 +19,10 @@ from .failure_analytics import analyse
 from .ideas import submit
 
 SYSTEM = (
-    "Sen AHOS holdinginin CEO'sun. Türkçe, kısa ve net konuş. Sahibine holdingin "
-    "gerçek durumunu söyle, gerekiyorsa iş öner. Elinde olmayan veriyi uydurma. "
-    "Yanıtı yalnızca düz metin olarak ver."
+    "Sen AHOS holdinginin CEO'susun. Yalnızca sana verilen GERÇEKLERLE konuş; "
+    "veride olmayan bir şeyi uydurma. Türkçe, kısa ve net ol. Cevabında en az bir "
+    "somut sayı kullan ve 1-3 uygulanabilir sonraki adım öner. Genel geçer "
+    "danışmanlık cümleleri kurma; holdingin gerçek işlerine bağlı kal."
 )
 
 
@@ -52,6 +53,15 @@ def thread(runtime_dir: str | Path, limit: int = 20) -> list[dict]:
     return rows[-limit:]
 
 
+def _skills_count(runtime_dir: Path) -> int:
+    try:
+        from .skills import stats
+
+        return int(stats(runtime_dir).get("cards") or 0)
+    except Exception:  # noqa: BLE001
+        return 0
+
+
 def _snapshot(runtime_dir: Path) -> dict:
     daemon = {}
     try:
@@ -66,6 +76,7 @@ def _snapshot(runtime_dir: Path) -> dict:
         "missions": report.get("missions", 0),
         "top": [item["label"] for item in report.get("top_causes", [])[:2]],
         "knowledge": knowledge.stats(runtime_dir),
+        "skills": _skills_count(runtime_dir),
     }
 
 
@@ -73,6 +84,46 @@ def _looks_like_work(message: str) -> bool:
     lowered = message.casefold()
     verbs = ("yap", "ekle", "hazırla", "oluştur", "kur", "geliştir", "düzelt", "yaz", "planla")
     return any(verb in lowered for verb in verbs) and len(message.strip()) > 12
+
+
+def _facts_text(runtime: Path, state: dict) -> str:
+    """The only material the CEO may speak from."""
+
+    lines = [
+        f"daemon={state['daemon']} mod={state['executor'] or '-'}",
+        f"teslim_orani=%{round(state['delivery_rate'] * 100)} gorev={state['missions']}",
+        "en_sik_sorun=" + (", ".join(state["top"]) if state["top"] else "yok"),
+        f"bilgi_agi={state['knowledge']['documents']} belge/{state['knowledge']['chunks']} parca",
+        f"beceri_kartlari={state.get('skills', 0)}",
+    ]
+    try:
+        backlog = [
+            json.loads(line).get("title", "")
+            for line in (runtime / "self-improvement.jsonl").read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        if backlog:
+            lines.append("kalite_kuyrugu=" + " | ".join(backlog[:2]))
+    except (OSError, json.JSONDecodeError):
+        pass
+    try:
+        rows = (runtime / "daemon-missions.jsonl").read_text(encoding="utf-8").splitlines()[-3:]
+        recent = []
+        for line in rows:
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            recent.append(f"{row.get('status')}/{row.get('changed_files')} dosya")
+        if recent:
+            lines.append("son_gorevler=" + ", ".join(recent))
+    except OSError:
+        pass
+    return "\n".join(f"- {line}" for line in lines)
+
+
+def _has_number(text: str) -> bool:
+    return any(char.isdigit() for char in text)
 
 
 def _offline_reply(state: dict, message: str) -> str:
@@ -128,9 +179,7 @@ def answer(runtime_dir: str | Path, message: str) -> dict:
         if settings is not None:
             prompt = (
                 f"Sahip şöyle dedi: {text}\n\n"
-                f"Holding durumu: daemon={state['daemon']}, mod={state['executor']}, "
-                f"teslim oranı=%{round(state['delivery_rate'] * 100)}, "
-                f"görev={state['missions']}, bilgi ağı={state['knowledge']}."
+                f"GERÇEKLER:\n{_facts_text(runtime, state)}"
                 + (f"\nYönlendirilen departman: {routed['department']} ({tasks} görev)." if routed else "")
                 + "\n\nSahibe 2-4 cümleyle cevap ver."
             )
@@ -144,6 +193,8 @@ def answer(runtime_dir: str | Path, message: str) -> dict:
 
     if not reply:
         reply = _offline_reply(state, text)
+    elif not _has_number(reply):
+        reply += "\n" + _offline_reply(state, text)
 
     _record(runtime, "owner", text)
     _record(runtime, "ceo", reply, {"routed": routed, "tasks": tasks, "mode": mode})
