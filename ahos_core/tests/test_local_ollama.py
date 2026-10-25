@@ -46,6 +46,7 @@ def test_request_allows_only_known_endpoints() -> None:
 
 def test_low_memory_blocks_before_any_request(monkeypatch) -> None:
     calls: list[str] = []
+    monkeypatch.setenv("AHOS_MIN_FREE_MB", "2048")
     monkeypatch.setattr(local_ollama, "memory_available", lambda: 1024 ** 3)
     monkeypatch.setattr(local_ollama, "request", lambda *a, **k: calls.append("x"))
     with pytest.raises(ModelError, match="2 GiB"):

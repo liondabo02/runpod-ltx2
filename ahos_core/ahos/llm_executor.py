@@ -386,11 +386,19 @@ class ModelEdit:
                 raise ModelError(f"yama için dosya yok: {self.path}")
             text = target.read_text(encoding="utf-8")
             occurrences = text.count(self.find)
-            if occurrences != 1:
-                raise ModelError(
-                    f"yama hedefi {occurrences} kez bulundu (1 olmalı): {self.path}"
-                )
-            target.write_text(text.replace(self.find, self.replace, 1), encoding="utf-8")
+            if occurrences == 1:
+                target.write_text(text.replace(self.find, self.replace, 1), encoding="utf-8")
+                return
+            if occurrences == 0:
+                # Model çoğu zaman boşluk/girinti farkıyla kopyalıyor; tek eşleşme
+                # varsa uygula, birden fazlaysa güvenli tarafta kal.
+                replaced = _fuzzy_replace(text, self.find, self.replace)
+                if replaced is not None:
+                    target.write_text(replaced, encoding="utf-8")
+                    return
+            raise ModelError(
+                f"yama hedefi {occurrences} kez bulundu (1 olmalı): {self.path}"
+            )
             return
 
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -424,6 +432,28 @@ class ModelResponse:
     edits: tuple[ModelEdit, ...]
     verification: str = ""
     risk: str = "low"
+
+
+def _flexible_pattern(find: str) -> str:
+    """Whitespace-tolerant regex for a patch target."""
+
+    import re as _re
+
+    parts = [_re.escape(part) for part in find.split()]
+    return r"\s+".join(parts)
+
+
+def _fuzzy_replace(text: str, find: str, replace: str) -> str | None:
+    """Replace once when only whitespace differs; None when not unique."""
+
+    import re as _re
+
+    pattern = _flexible_pattern(find)
+    matches = list(_re.finditer(pattern, text))
+    if len(matches) != 1:
+        return None
+    match = matches[0]
+    return text[: match.start()] + replace + text[match.end():]
 
 
 def parse_json_object(raw: str) -> dict:
