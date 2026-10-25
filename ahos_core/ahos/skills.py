@@ -220,7 +220,18 @@ def retrieve(runtime_dir: str | Path, task: str, limit: int = 3) -> list[dict]:
         if overlap:
             scored.append((overlap / (len(terms) + 1), card))
     scored.sort(key=lambda item: item[0], reverse=True)
-    return [card for _score, card in scored[:limit]]
+    if scored:
+        return [card for _score, card in scored[:limit]]
+    # Eşleşme yoksa kanıtlanmış (kullanılmış) kartlardan en iyilerini ver:
+    # kütüphane boşta kalmasın, işe yaradığı görülen kural yine hatırlatılsın.
+    try:
+        from .skilleval import rank
+
+        top_ids = [item["skill_id"] for item in rank(runtime_dir, limit=2)["top"] if item["uses"]]
+        cards = {str(card.get("skill_id")): card for card in all_cards(runtime_dir)}
+        return [cards[skill_id] for skill_id in top_ids if skill_id in cards]
+    except Exception:  # noqa: BLE001 - sıralama isteğe bağlı
+        return []
 
 
 def context(runtime_dir: str | Path, task: str, limit: int = 3) -> str:

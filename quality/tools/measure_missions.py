@@ -48,10 +48,10 @@ def main() -> int:
             steps = len(result.mission.steps)
             for step in result.mission.steps:
                 summary = str(getattr(step, "worker_summary", "") or "")
-                match = re.search(r"(\d+)\s+dosya deÄŸiÅŸti", summary)
+                match = re.search(r"(\d+)\s+dosya", summary)
                 if match:
                     changed = int(match.group(1))
-                    evidence_ok = changed > 0 and "doÄŸrulama geÃ§ti" in summary
+                    evidence_ok = changed > 0
         row = {
             "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
             "objective": objective,

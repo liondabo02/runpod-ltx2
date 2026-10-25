@@ -896,6 +896,31 @@ class OwnerConsole:
         )
 
     # --------------------------------------------------------------- dispatching
+    def _reclaim_stale_lock(self, lock_path) -> bool:
+        """Ölü bir süreçten kalan proje kilidini temizle.
+
+        Kilit sahibi işçi çökmüşse dosya dakikalarca kalıyor ve her görev
+        "proje kilidi" diye engelleniyordu. On dakikadan eski kilit bayat sayılır.
+        """
+
+        from . import project_locks
+
+        metadata = project_locks.holder(lock_path) or {}
+        try:
+            lock_file = project_locks.lock_file(lock_path)
+            age = __import__("time").time() - lock_file.stat().st_mtime
+        except OSError:
+            return False
+        if age < 600:
+            return False
+        released = project_locks.release(lock_path)
+        if released:
+            try:
+                self.state = getattr(self, "state", None)
+            except Exception:  # noqa: BLE001
+                pass
+        return released
+
     def _dispatch(
         self,
         spec: DepartmentSpec,
@@ -937,7 +962,17 @@ class OwnerConsole:
                 # kuyruğa alınmaz; executor hiç çağrılmaz.
                 return self._unclaimed_result(mission_id, objective)
             if existing.attempts >= existing.max_attempts:
-                return self._unclaimed_result(mission_id, objective)
+                error_text = str(getattr(existing, "last_error", "") or "")
+                stuck = any(
+                    marker in error_text
+                    for marker in ("sahiplenilemedi", "başka işçide", "kapalı", "proje kilidi")
+                )
+                if existing.status in {QueueStatus.BLOCKED, QueueStatus.FAILED} and stuck:
+                    # Yalnız kuyruk/kilitten dolayı çalışmamış görev tazelenir.
+                    mission_id = f"{mission_id}-r{existing.attempts + 1}"
+                    existing = None
+                else:
+                    return self._unclaimed_result(mission_id, objective)
 
         self.queue.enqueue(
             mission_id=mission_id,
@@ -976,7 +1011,9 @@ class OwnerConsole:
 
                 if not project_locks.acquire(
                     lock_path, mission_id=claimed.mission_id
-                ):
+                ) and self._reclaim_stale_lock(lock_path):
+                    project_locks.acquire(lock_path, mission_id=claimed.mission_id)
+                if not project_locks.probe(lock_path) or project_locks.owned_by(lock_path) != claimed.mission_id:
                     metadata = project_locks.holder(lock_path) or {}
                     blocked = MissionResult(
                         mission_id=claimed.mission_id,

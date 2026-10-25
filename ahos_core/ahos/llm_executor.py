@@ -464,6 +464,12 @@ def parse_json_object(raw: str) -> dict:
     decode exactly one value from the first brace instead.
     """
 
+    # Model bazen JSON'u `json ... ` içine alıyor; çitleri temizle.
+    raw = raw.replace("`json", "`")
+    if "`" in raw:
+        parts = [part for part in raw.split("`") if "{" in part]
+        if parts:
+            raw = parts[0]
     start = raw.find("{")
     if start < 0:
         raise ModelError("model yanıtında JSON bulunamadı")

@@ -114,6 +114,54 @@ def report(runtime_dir: str | Path, tasks: list[str] | None = None) -> dict:
     }
 
 
+def rank(runtime_dir: str | Path, limit: int = 20) -> dict:
+    """Kart etkinliği: kullanım + o görevlerin başarısı."""
+
+    from .skills import all_cards
+
+    runtime = Path(runtime_dir)
+    cards = {str(card.get("skill_id")): card for card in all_cards(runtime)}
+    usage = usage_rows(runtime)
+    exp_rows = []
+    try:
+        from .experience import rows as experience_rows
+
+        exp_rows = experience_rows(runtime)
+    except Exception:  # noqa: BLE001
+        exp_rows = []
+    score: dict[str, float] = {}
+    uses: dict[str, int] = {}
+    for row in usage:
+        task = str(row.get("task") or "")
+        outcomes = [e for e in exp_rows if task and task[:60] in str(e.get("objective") or "")]
+        success = sum(1 for e in outcomes if e.get("success"))
+        total = len(outcomes)
+        value = (success / total) if total else 0.5
+        for skill_id in row.get("skills") or []:
+            uses[skill_id] = uses.get(skill_id, 0) + 1
+            score[skill_id] = score.get(skill_id, 0.0) + value
+    ranked = sorted(
+        (
+            {
+                "skill_id": skill_id,
+                "score": round(score.get(skill_id, 0.0), 3),
+                "uses": uses.get(skill_id, 0),
+                "rule": str(cards.get(skill_id, {}).get("rule") or "")[:120],
+                "source": str(cards.get(skill_id, {}).get("source") or ""),
+            }
+            for skill_id in cards
+        ),
+        key=lambda item: (item["score"], item["uses"]),
+        reverse=True,
+    )
+    return {
+        "cards": len(cards),
+        "used": len(score),
+        "top": ranked[:limit],
+        "dormant": sum(1 for item in ranked if item["uses"] == 0),
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -128,6 +176,12 @@ def main(argv: list[str] | None = None) -> int:
     if "--tasks" in args:
         position = args.index("--tasks")
         tasks = [line.strip() for line in args[position + 1].split("|") if line.strip()]
+    if "--rank" in args:
+        ranked = rank(runtime)
+        print(f"kart: {ranked['cards']} · kullanılan: {ranked['used']} · uyuyan: {ranked['dormant']}")
+        for item in ranked["top"][:10]:
+            print(f"  {item['score']:.2f} ({item['uses']}x) {item['rule'][:90]}")
+        return 0
     result = report(runtime, tasks or None)
     print(f"beceri: {result['cards']} kart / {result['sources']} kaynak")
     print(f"kullanılan: {result['used_cards']} · enjeksiyon: {result['injections']}")
