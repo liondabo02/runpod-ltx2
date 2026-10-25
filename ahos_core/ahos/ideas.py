@@ -59,6 +59,9 @@ def _keywords(text: str, limit: int = 6) -> str:
 
 
 def build_tasks(text: str, department_name: str) -> list[dict]:
+    from .studio_department import matches, tasks as studio_tasks
+    if matches(text, department_name):
+        return studio_tasks(text)
     subject = _keywords(text) or text.strip()[:60]
     tasks: list[dict] = []
     for suffix, wording in TASK_TEMPLATES:
@@ -83,6 +86,9 @@ def submit(console, runtime_dir: str | Path, text: str) -> Idea:
     if spec is None:
         spec = console._create_for_task(text)  # noqa: SLF001 - aynı paket
     idea_id = _digest(text)
+    existing = _load(ideas_dir / f"{idea_id}.json")
+    if existing and any(t.get('workflow') == 'studio-production-v1' for t in existing.get('tasks', [])):
+        return Idea(**{key: existing[key] for key in ('idea_id','text','department_id','department_name','tasks','status')})
     idea = Idea(
         idea_id=idea_id,
         text=text.strip(),
@@ -129,6 +135,10 @@ def pending_tasks(runtime_dir: str | Path) -> list[tuple[Idea, dict]]:
             continue
         for task in idea.tasks:
             if task.get("status") == "pending":
+                if task.get('workflow') == 'studio-production-v1':
+                    from .studio_department import ready
+                    if not ready(task, idea.tasks):
+                        continue
                 rows.append((idea, task))
     return rows
 
@@ -145,6 +155,8 @@ def claim_next(runtime_dir: str | Path) -> tuple[Idea, dict] | None:
     for item in idea.tasks:
         if item is task:
             item["status"] = "running"
+            if item.get('workflow') == 'studio-production-v1':
+                item['attempts'] = item.get('attempts', 0) + 1
     if all(item.get("status") in {"running", "done"} for item in idea.tasks):
         idea.status = "running"
     path.write_text(json.dumps(idea.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
@@ -159,9 +171,17 @@ def complete(idea_id: str, task_id: str, runtime_dir: str | Path, *, success: bo
         return
     for item in payload.get("tasks") or []:
         if item.get("task_id") == task_id:
-            item["status"] = "done" if success else "pending"
+            if item.get('workflow') == 'studio-production-v1':
+                from .studio_department import acceptance
+                issues = acceptance(runtime, idea_id, item) if success else ['Üretim yürütücüsü başarısız oldu']
+                item['blocker'] = '; '.join(issues)
+                item['status'] = 'done' if not issues else ('blocked' if success or item.get('attempts',0)>=item.get('max_attempts',2) else 'pending')
+            else:
+                item["status"] = "done" if success else "pending"
     if all(item.get("status") == "done" for item in payload.get("tasks") or []):
         payload["status"] = "done"
+    elif any(item.get('status') == 'blocked' for item in payload.get('tasks', [])):
+        payload['status'] = 'blocked'
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
@@ -192,7 +212,7 @@ def recover(runtime_dir: str | Path, *, stale_minutes: int = 15) -> int:
         changed = False
         for item in payload.get("tasks") or []:
             if item.get("status") == "running" and age_minutes >= stale_minutes:
-                item["status"] = "pending"
+                item["status"] = "blocked" if item.get('workflow')=='studio-production-v1' and item.get('attempts',0)>=item.get('max_attempts',2) else "pending"
                 changed = True
                 recovered += 1
         if changed:

@@ -446,7 +446,9 @@ class AutonomyDaemon:
             return
         free = int(self.ram_probe() or 0)
         floor = self.model_ram_floor
-        if _model_is_configured() and (_remote_free_endpoint() or free >= floor):
+        paid = os.environ.get("AHOS_ALLOW_PAID_LLM", "").strip().lower() in {"1", "true", "yes", "on"}
+        # Ücretli model RAM istemez: yerel bellek kapısı yalnız yerel model için.
+        if _model_is_configured() and (paid or _remote_free_endpoint() or free >= floor):
             os.environ["AHOS_EXECUTOR"] = "model"
             self.state.executor_mode = "model"
             self.state.executor_reason = (
