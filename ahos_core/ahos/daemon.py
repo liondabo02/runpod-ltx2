@@ -795,6 +795,27 @@ def build_default_daemon(
     )
 
 
+def _acquire_instance_lock(runtime: Path):
+    """Tek daemon kilidi: ikinci süreç hemen çıkar, kota ikiye bölünmez."""
+
+    runtime.mkdir(parents=True, exist_ok=True)
+    path = runtime / "daemon.lock"
+    handle = open(path, "a+")
+    try:
+        if os.name == "nt":
+            import msvcrt
+
+            msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        handle.close()
+        return None
+    return handle
+
+
 def main(argv: list[str] | None = None) -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -839,6 +860,12 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     runtime = Path(args.runtime_dir)
+    lock_handle = None
+    if not args.status and not args.stop:
+        lock_handle = _acquire_instance_lock(runtime)
+        if lock_handle is None:
+            print(f"AHOS daemon zaten çalışıyor ({runtime / 'daemon.lock'} kilitli); yeni süreç başlatılmadı.")
+            return 0
     if args.status:
         heartbeat = read_heartbeat(runtime)
         print(json.dumps(heartbeat or {"status": "not-running"}, indent=2, ensure_ascii=False))
