@@ -164,6 +164,49 @@ def complete(idea_id: str, task_id: str, runtime_dir: str | Path, *, success: bo
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def recover(runtime_dir: str | Path, *, stale_minutes: int = 15) -> int:
+    """Yarıda kalmış fikir görevlerini yeniden kuyruğa al.
+
+    Bir görev "running" işaretlenip süreç çökerse fikir sonsuza kadar bekte
+    kalıyordu. Şu an ``stale_minutes``'ten eski running görevler pending olur;
+    hiçbir kayıt silinmez.
+    """
+
+    import time as _time
+
+    runtime = Path(runtime_dir)
+    folder = runtime / "ideas"
+    if not folder.is_dir():
+        return 0
+    recovered = 0
+    now = _time.time()
+    for path in folder.glob("*.json"):
+        payload = _load(path)
+        if not payload:
+            continue
+        try:
+            age_minutes = (now - path.stat().st_mtime) / 60
+        except OSError:
+            continue
+        changed = False
+        for item in payload.get("tasks") or []:
+            if item.get("status") == "running" and age_minutes >= stale_minutes:
+                item["status"] = "pending"
+                changed = True
+                recovered += 1
+        if changed:
+            if all(item.get("status") == "done" for item in payload.get("tasks") or []):
+                payload["status"] = "done"
+            else:
+                payload["status"] = "open"
+            path.write_text(__import__("json").dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    return recovered
+
+
+def pending_count(runtime_dir: str | Path) -> int:
+    return len(pending_tasks(runtime_dir))
+
+
 def main(argv: list[str] | None = None) -> int:
     import sys
 
@@ -173,6 +216,12 @@ def main(argv: list[str] | None = None) -> int:
         pass
     args = list(sys.argv[1:] if argv is None else argv)
     text = " ".join(args).strip()
+    if "--recover" in args:
+        runtime = Path("runtime")
+        if "--runtime-dir" in args:
+            runtime = Path(args[args.index("--runtime-dir") + 1])
+        print(f"kurtarılan fikir görevi: {recover(runtime)}")
+        return 0
     if not text:
         print('kullanım: python -m ahos.ideas "çocuklar için yeni bir oyun yapmak istiyorum"')
         return 2

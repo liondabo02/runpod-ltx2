@@ -628,6 +628,12 @@ class AutonomyDaemon:
 
         if self.state.ticks % 10 == 0:
             self._recover_queue()
+            try:
+                from .ideas import recover as recover_ideas
+
+                recover_ideas(self.runtime_dir)
+            except Exception:  # noqa: BLE001 - fikir kurtarma isteğe bağlı
+                pass
         if self.state.ticks % 30 == 0:
             self._audit_projects()
             self._quality_report()
