@@ -53,6 +53,13 @@ border-radius:10px;padding:11px 12px;font-size:14px}
 button{background:var(--accent);color:#0b1020;border:0;border-radius:10px;padding:11px 18px;font-weight:700}
 #msg{font-size:12px;color:var(--muted);padding:6px 14px;min-height:24px}
 #goalStrip{padding:6px 18px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted)}
+#tabs{display:flex;gap:8px;padding:8px 18px;border-bottom:1px solid var(--line)}
+#tabs button{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:6px 14px;cursor:pointer}
+#tabs button.active{background:var(--accent);color:#0b1020;font-weight:700}
+.tabPanel{display:none;padding:12px 18px}.tabPanel.active{display:block}
+.tabPanel iframe{width:100%;height:70vh;border:0;border-radius:12px;background:#0b0e14}
+.tabRow{padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+.tabRow b{color:var(--ink)}
 #recentWrap{padding:8px 18px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted)}
 #recentWrap b{color:var(--ink)}.recentItem{margin-right:14px;white-space:nowrap}
 .ok{color:var(--ok)}.bad{color:var(--bad)}
@@ -63,14 +70,14 @@ background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:
 .owner{background:#22304d}.ceo{background:#16202e;border:1px solid var(--line)}
 #ceoToggle{position:fixed;right:16px;bottom:84px;z-index:6}
 </style></head><body>
-<header><h1>🏢 AHOS Ofis</h1>
+<nav id="tabs"><button data-tab="office" class="active">Ofis</button><button data-tab="codex">Codex</button><button data-tab="harun">Harun AI</button><button data-tab="products">Ürünler</button></nav><header><h1>🏢 AHOS Ofis</h1>
 <span class="pill">daemon <b id="dstatus">-</b></span>
 <span class="pill">mod <b id="dmode">-</b></span>
 <span class="pill">teslim <b id="rate">-</b></span>
 <span class="pill">bekleyen fikir <b id="pending">-</b></span><span class="pill">sistem <b id="infra">-</b></span><span class="pill">bilgi <b id="know">-</b></span></header>
 <div id="goalStrip">hedefler: <span id="goals">-</span></div>
 <div id="recentWrap">son görevler: <span id="recent">-</span></div>
-<main id="rooms"></main>
+<section id="tab-codex" class="tabPanel"><iframe src="http://127.0.0.1:8766/office" title="Codex paneli" loading="lazy"></iframe></section><section id="tab-harun" class="tabPanel"><div id="harunInfo"></div></section><section id="tab-products" class="tabPanel"><div id="productList"></div></section><main id="rooms"></main>
 <div id="msg"></div>
 <button id="ceoToggle">CEO</button>
 <div id="ceoBox"><h3>CEO ile konuş</h3><div id="ceoLog"></div>
@@ -96,11 +103,33 @@ async function refresh(){
       ? goalsData.map(function(g){ return '<span class="recentItem">'+g.title.slice(0,40)+
         ' <b>%'+Math.round(g.progress*100)+'</b> ('+g.status+')</span>'; }).join('')
       : '<span class="bad">hedef yok</span>';
+    const projects = d.holding.projects || [];
+    const harun = projects.find(function(p){return p.department==='ai-platform';});
+    document.getElementById('harunInfo').innerHTML = harun
+      ? '<div class="tabRow"><b>'+harun.name+'</b> · '+harun.path+' · kapı: '+(harun.gate?'var':'yok')+'</div>'
+      : '<div class="tabRow">Harun AI projesi kayıtlı değil</div>';
+    const products = d.holding.products || [];
+    document.getElementById('productList').innerHTML = products.length
+      ? products.map(function(p){return '<div class="tabRow"><b>'+p.name+'</b> · '+p.files+' dosya · '+(p.validated?'doğrulandı':'eksik')+'</div>';}).join('')
+      : '<div class="tabRow">henüz ürün paketi yok</div>';
+    showTab(name);
     const recent = d.holding.recent || [];
     document.getElementById('recent').innerHTML = recent.slice(0,5).map(function(m){
       const cls = m.changed > 0 ? 'ok' : 'bad';
       return '<span class="recentItem"><b>'+m.at+'</b> <span class="'+cls+'">'+m.status+'</span> '+m.changed+' dosya · '+m.objective.slice(0,42)+'</span>';
     }).join('') || '<span class="bad">henüz görev yok</span>';
+  const tabs=document.querySelectorAll('#tabs button');
+  const panels={office:document.getElementById('rooms'),codex:document.getElementById('tab-codex'),harun:document.getElementById('tab-harun'),products:document.getElementById('tab-products')};
+  function showTab(name){
+    tabs.forEach(function(b){b.classList.toggle('active',b.dataset.tab===name);});
+    Object.keys(panels).forEach(function(key){
+      const el=panels[key]; if(!el) return;
+      el.classList.toggle('active',key===name);
+      if(key==='office'&&name==='office'){el.style.display='grid';} 
+      else if(key==='office'){el.style.display='none';}
+    });
+  }
+  tabs.forEach(function(b){b.onclick=function(){showTab(b.dataset.tab);};});
     const rooms = document.getElementById('rooms'); rooms.innerHTML='';
     for(const room of d.rooms){
       const el = document.createElement('section'); el.className='room';

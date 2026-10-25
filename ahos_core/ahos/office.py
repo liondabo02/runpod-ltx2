@@ -142,6 +142,49 @@ def _goal_progress(runtime: Path) -> list[dict]:
         return []
 
 
+def _projects(runtime: Path) -> list[dict]:
+    """Projeler: tek çalışma alanında hangi iş nerede, kapısı var mı."""
+
+    import json as _json
+
+    try:
+        payload = _json.loads((runtime / "projects.json").read_text(encoding="utf-8"))
+    except (OSError, _json.JSONDecodeError):
+        return []
+    items = payload.get("projects") if isinstance(payload, dict) else payload
+    result: list[dict] = []
+    for item in items or []:
+        if not isinstance(item, dict):
+            continue
+        path = Path(str(item.get("path") or ""))
+        result.append(
+            {
+                "name": str(item.get("name") or ""),
+                "department": str(item.get("department_id") or ""),
+                "path": str(path),
+                "gate": (path / "tools" / "check_offline.py").is_file(),
+            }
+        )
+    return result
+
+
+def _products(runtime: Path) -> list[dict]:
+    folder = runtime / "products"
+    if not folder.is_dir():
+        return []
+    rows = []
+    for path in sorted(folder.iterdir(), key=lambda item: item.stat().st_mtime, reverse=True):
+        if path.is_dir():
+            rows.append(
+                {
+                    "name": path.name,
+                    "files": len(list(path.glob("*"))),
+                    "validated": (path / "manifest.json").is_file(),
+                }
+            )
+    return rows[:10]
+
+
 def build(runtime_dir: str | Path) -> dict:
     runtime = Path(runtime_dir)
     activity = _activity(runtime)
@@ -229,6 +272,8 @@ def build(runtime_dir: str | Path) -> dict:
             "lessons": _lesson_count(runtime),
             "recent": _recent_missions(runtime),
             "goals": _goal_progress(runtime),
+            "projects": _projects(runtime),
+            "products": _products(runtime),
         },
         "rooms": rooms,
     }

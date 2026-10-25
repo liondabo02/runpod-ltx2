@@ -95,7 +95,15 @@ def _looks_like_work(message: str) -> bool:
 def _facts_text(runtime: Path, state: dict) -> str:
     """The only material the CEO may speak from."""
 
-    lines = [
+    try:
+        from .ceo_brain import diagnose, explain
+
+        diagnosis = diagnose(runtime)
+        lines = [explain(diagnosis)]
+    except Exception:  # noqa: BLE001 - tanı isteğe bağlı
+        diagnosis = None
+        lines = []
+    lines += [
         f"daemon={state['daemon']} mod={state['executor'] or '-'}",
         f"teslim_orani=%{round(state['delivery_rate'] * 100)} gorev={state['missions']}",
         "en_sik_sorun=" + (", ".join(state["top"]) if state["top"] else "yok"),
@@ -206,6 +214,25 @@ def answer(runtime_dir: str | Path, message: str) -> dict:
     except Exception:  # noqa: BLE001 - fall back to the deterministic voice
         reply = ""
 
+    diagnostic = any(
+        word in text.casefold()
+        for word in ("sorun", "analiz", "neden", "kök", "teslim", "engel", "hata")
+    )
+    if diagnostic:
+        try:
+            from . import ceo_brain
+
+            explanation = ceo_brain.explain(ceo_brain.diagnose(runtime))
+            reply = (reply + "\n\n" if reply else "") + explanation
+            if any(word in text.casefold() for word in ("çöz", "coz", "düzelt", "gider")):
+                created = ceo_brain.dispatch(runtime)
+                if created:
+                    reply += "\n\nGörev açıldı: " + ", ".join(
+                        item["title"][:60] for item in created
+                    )
+                    routed = routed or {"department": created[0]["department"], "id": created[0]["department"]}
+        except Exception:  # noqa: BLE001 - tanı isteğe bağlı
+            pass
     if not reply:
         reply = _offline_reply(state, text)
     elif not _has_number(reply):
