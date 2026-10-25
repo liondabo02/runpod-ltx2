@@ -70,14 +70,14 @@ background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:
 .owner{background:#22304d}.ceo{background:#16202e;border:1px solid var(--line)}
 #ceoToggle{position:fixed;right:16px;bottom:84px;z-index:6}
 </style></head><body>
-<nav id="tabs"><button data-tab="office" class="active">Ofis</button><button data-tab="codex">Codex</button><button data-tab="harun">Harun AI</button><button data-tab="products">Ürünler</button></nav><header><h1>🏢 AHOS Ofis</h1>
+<nav id="tabs"><button data-tab="office" class="active">Ofis</button><button data-tab="codex">Codex</button><button data-tab="harun">Harun AI</button><button data-tab="track">Görevler</button><button data-tab="products">Ürünler</button></nav><header><h1>🏢 AHOS Ofis</h1>
 <span class="pill">daemon <b id="dstatus">-</b></span>
 <span class="pill">mod <b id="dmode">-</b></span>
 <span class="pill">teslim <b id="rate">-</b></span>
 <span class="pill">bekleyen fikir <b id="pending">-</b></span><span class="pill">sistem <b id="infra">-</b></span><span class="pill">bilgi <b id="know">-</b></span></header>
 <div id="goalStrip">hedefler: <span id="goals">-</span></div>
 <div id="recentWrap">son görevler: <span id="recent">-</span></div>
-<section id="tab-codex" class="tabPanel"><iframe src="http://127.0.0.1:8766/office" title="Codex paneli" loading="lazy"></iframe></section><section id="tab-harun" class="tabPanel"><div id="harunInfo"></div></section><section id="tab-products" class="tabPanel"><div id="productList"></div></section><main id="rooms"></main>
+<section id="tab-codex" class="tabPanel"><iframe src="http://127.0.0.1:8766/office" title="Codex paneli" loading="lazy"></iframe></section><section id="tab-harun" class="tabPanel"><div id="harunInfo"></div></section><section id="tab-track" class="tabPanel"><div id="trackList"></div></section><section id="tab-products" class="tabPanel"><div id="productList"></div></section><main id="rooms"></main>
 <div id="msg"></div>
 <button id="ceoToggle">CEO</button>
 <div id="ceoBox"><h3>CEO ile konuş</h3><div id="ceoLog"></div>
@@ -108,6 +108,17 @@ async function refresh(){
     document.getElementById('harunInfo').innerHTML = harun
       ? '<div class="tabRow"><b>'+harun.name+'</b> · '+harun.path+' · kapı: '+(harun.gate?'var':'yok')+'</div>'
       : '<div class="tabRow">Harun AI projesi kayıtlı değil</div>';
+    const tracks = d.holding.tracks || [];
+    document.getElementById('trackList').innerHTML = tracks.length
+      ? tracks.map(function(t){
+          const rows = t.tasks.map(function(x){
+            const mark = x.status==='done' ? '✅' : (x.status==='blocked' ? '⛔' : (x.status==='running' ? '⏳' : '•'));
+            return '<div class="tabRow">'+mark+' '+x.title.slice(0,70)+' · '+(x.output || x.blocker || x.status)+'</div>';
+          }).join('');
+          return '<div class="tabRow"><b>'+t.text.slice(0,60)+'</b> → '+t.department_name+
+            ' · %'+Math.round(t.progress*100)+' ('+t.done+'/'+t.total+')</div>'+rows;
+        }).join('')
+      : '<div class="tabRow">henüz görev yok</div>';
     const products = d.holding.products || [];
     document.getElementById('productList').innerHTML = products.length
       ? products.map(function(p){return '<div class="tabRow"><b>'+p.name+'</b> · '+p.files+' dosya · '+(p.validated?'doğrulandı':'eksik')+'</div>';}).join('')
@@ -119,7 +130,7 @@ async function refresh(){
       return '<span class="recentItem"><b>'+m.at+'</b> <span class="'+cls+'">'+m.status+'</span> '+m.changed+' dosya · '+m.objective.slice(0,42)+'</span>';
     }).join('') || '<span class="bad">henüz görev yok</span>';
   const tabs=document.querySelectorAll('#tabs button');
-  const panels={office:document.getElementById('rooms'),codex:document.getElementById('tab-codex'),harun:document.getElementById('tab-harun'),products:document.getElementById('tab-products')};
+  const panels={office:document.getElementById('rooms'),codex:document.getElementById('tab-codex'),harun:document.getElementById('tab-harun'),products:document.getElementById('tab-products'),track:document.getElementById('tab-track')};
   function showTab(name){
     tabs.forEach(function(b){b.classList.toggle('active',b.dataset.tab===name);});
     Object.keys(panels).forEach(function(key){
@@ -155,7 +166,8 @@ async function sendIdea(){
   try{
     const r=await fetch('/api/idea',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
     const d=await r.json();
-    msg.textContent = d.ok ? ('yönlendirildi: '+d.department+' · '+d.tasks+' görev') : ('hata: '+(d.error||''));
+    msg.textContent = d.ok ? ('yönlendirildi: '+d.department+' · '+d.tasks+' görev · takip: Görevler sekmesi') : ('hata: '+(d.error||''));
+    if(d.ok){ showTab('track'); }
     refresh();
   }catch(e){ msg.textContent='hata: '+e; }
 }

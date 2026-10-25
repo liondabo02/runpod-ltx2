@@ -112,7 +112,8 @@ def pending_tasks(runtime_dir: str | Path) -> list[tuple[Idea, dict]]:
     rows: list[tuple[Idea, dict]] = []
     if not ideas_dir.is_dir():
         return rows
-    for path in sorted(ideas_dir.glob("*.json"), key=lambda item: item.stat().st_mtime):
+    # Sahibin en son verdiği fikir önce çalışsın ("beklemesin").
+    for path in sorted(ideas_dir.glob("*.json"), key=lambda item: item.stat().st_mtime, reverse=True):
         payload = _load(path)
         if not payload:
             continue

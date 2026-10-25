@@ -185,6 +185,15 @@ def _products(runtime: Path) -> list[dict]:
     return rows[:10]
 
 
+def _tracks(runtime: Path) -> list[dict]:
+    try:
+        from .tracking import recent
+
+        return recent(runtime, 5)
+    except Exception:  # noqa: BLE001 - takip isteğe bağlı
+        return []
+
+
 def build(runtime_dir: str | Path) -> dict:
     runtime = Path(runtime_dir)
     activity = _activity(runtime)
@@ -274,6 +283,7 @@ def build(runtime_dir: str | Path) -> dict:
             "goals": _goal_progress(runtime),
             "projects": _projects(runtime),
             "products": _products(runtime),
+            "tracks": _tracks(runtime),
         },
         "rooms": rooms,
     }
