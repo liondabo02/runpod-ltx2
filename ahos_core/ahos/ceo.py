@@ -169,6 +169,14 @@ def answer(runtime_dir: str | Path, message: str) -> dict:
     if not text:
         return {"reply": "Bir şey yazman yeterli.", "routed": None, "tasks": 0, "mode": "empty"}
 
+    from .chitchat import is_chitchat, reply as chat_reply
+
+    if is_chitchat(text):
+        answer_text = chat_reply(text)
+        _record(runtime, "owner", text)
+        _record(runtime, "ceo", answer_text, {"routed": None, "tasks": 0, "mode": "chitchat"})
+        return {"reply": answer_text, "routed": None, "tasks": 0, "mode": "chitchat"}
+
     state = _snapshot(runtime)
     routed = None
     tasks = 0

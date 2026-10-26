@@ -85,13 +85,30 @@ background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:
 <footer><input id="idea" placeholder="Bir şey yaz: 'çocuklar için yeni bir oyun yapmak istiyorum'">
 <button id="send">Gönder</button></footer>
 <script>
+let selectedTab = 'office';
+function showTab(name) {
+  const allowed = ['office','codex','harun','track','products'];
+  if (!allowed.includes(name)) name = 'office';
+  selectedTab = name;
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  const panels = {office:'rooms',codex:'tab-codex',harun:'tab-harun',track:'tab-track',products:'tab-products'};
+  Object.keys(panels).forEach(key => {
+    const el = document.getElementById(panels[key]);
+    if (!el) return;
+    el.classList.toggle('active', key === name);
+    el.style.display = key === name ? (key === 'office' ? 'grid' : 'block') : 'none';
+  });
+}
+document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
+function esc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 async function refresh(){
   try{
     const r = await fetch('/api/office'); const d = await r.json();
     document.getElementById('dstatus').textContent = d.holding.daemon;
     document.getElementById('dmode').textContent = d.holding.executor || '-';
     const q = d.holding.quality || {};
-    document.getElementById('rate').textContent = Math.round((q.delivery_rate||0)*100)+'% (bugün '+Math.round((q.today_rate||0)*100)+'%)';
+    const qrate = (d.holding.queue_rate != null) ? d.holding.queue_rate : (q.delivery_rate||0);
+    document.getElementById('rate').textContent = Math.round(qrate*100)+'% (bugün '+Math.round((q.today_rate||0)*100)+'%)';
     document.getElementById('rate').title = 'genel ortalama / bugünkü kuyruk';
     document.getElementById('pending').textContent = d.holding.pending_ideas;
     const infra = d.holding.infra || {};
@@ -100,59 +117,53 @@ async function refresh(){
     document.getElementById('know').textContent = (k.documents||0)+' belge · '+(d.holding.lessons||0)+' ders';
     const goalsData = d.holding.goals || [];
     document.getElementById('goals').innerHTML = goalsData.length
-      ? goalsData.map(function(g){ return '<span class="recentItem">'+g.title.slice(0,40)+
-        ' <b>%'+Math.round(g.progress*100)+'</b> ('+g.status+')</span>'; }).join('')
+      ? goalsData.map(function(g){ return '<span class="recentItem">'+esc(g.title.slice(0,40))+
+        ' <b>%'+Math.round(g.progress*100)+'</b> ('+esc(g.status)+')</span>'; }).join('')
       : '<span class="bad">hedef yok</span>';
     const projects = d.holding.projects || [];
     const harun = projects.find(function(p){return p.department==='ai-platform';});
     document.getElementById('harunInfo').innerHTML = harun
-      ? '<div class="tabRow"><b>'+harun.name+'</b> · '+harun.path+' · kapı: '+(harun.gate?'var':'yok')+'</div>'
+      ? '<div class="tabRow"><b>'+esc(harun.name)+'</b> · '+esc(harun.path)+' · kapı: '+(harun.gate?'var':'yok')+'</div>'
       : '<div class="tabRow">Harun AI projesi kayıtlı değil</div>';
     const tracks = d.holding.tracks || [];
     document.getElementById('trackList').innerHTML = tracks.length
       ? tracks.map(function(t){
           const rows = t.tasks.map(function(x){
             const mark = x.status==='done' ? '✅' : (x.status==='blocked' ? '⛔' : (x.status==='running' ? '⏳' : '•'));
-            return '<div class="tabRow">'+mark+' '+x.title.slice(0,70)+' · '+(x.output || x.blocker || x.status)+'</div>';
+            return '<div class="tabRow">'+mark+' '+esc(x.title.slice(0,70))+' · '+esc((x.output || x.blocker || x.status))+'</div>';
           }).join('');
-          return '<div class="tabRow"><b>'+t.text.slice(0,60)+'</b> → '+t.department_name+
+          return '<div class="tabRow"><b>'+esc(t.text.slice(0,60))+'</b> → '+esc(t.department_name)+
             ' · %'+Math.round(t.progress*100)+' ('+t.done+'/'+t.total+')</div>'+rows;
         }).join('')
       : '<div class="tabRow">henüz görev yok</div>';
     const products = d.holding.products || [];
     document.getElementById('productList').innerHTML = products.length
-      ? products.map(function(p){return '<div class="tabRow"><b>'+p.name+'</b> · '+p.files+' dosya · '+(p.validated?'doğrulandı':'eksik')+'</div>';}).join('')
+      ? products.map(function(p){return '<div class="tabRow"><b>'+esc(p.name)+'</b> · '+p.files+' dosya · '+(p.artifact_kind==='document_package'?'belge paketi · ürün QA doğrulanmadı':'medya paketi · ürün QA doğrulanmadı')+'</div>';}).join('')
       : '<div class="tabRow">henüz ürün paketi yok</div>';
-    showTab(name);
     const recent = d.holding.recent || [];
     document.getElementById('recent').innerHTML = recent.slice(0,5).map(function(m){
       const cls = m.changed > 0 ? 'ok' : 'bad';
-      return '<span class="recentItem"><b>'+m.at+'</b> <span class="'+cls+'">'+m.status+'</span> '+m.changed+' dosya · '+m.objective.slice(0,42)+'</span>';
+      return '<span class="recentItem"><b>'+esc(m.at)+'</b> <span class="'+cls+'">'+esc(m.status)+'</span> '+m.changed+' dosya · '+esc(m.objective.slice(0,42))+'</span>';
     }).join('') || '<span class="bad">henüz görev yok</span>';
-  const tabs=document.querySelectorAll('#tabs button');
-  const panels={office:document.getElementById('rooms'),codex:document.getElementById('tab-codex'),harun:document.getElementById('tab-harun'),products:document.getElementById('tab-products'),track:document.getElementById('tab-track')};
-  function showTab(name){
-    tabs.forEach(function(b){b.classList.toggle('active',b.dataset.tab===name);});
-    Object.keys(panels).forEach(function(key){
-      const el=panels[key]; if(!el) return;
-      el.classList.toggle('active',key===name);
-      if(key==='office'&&name==='office'){el.style.display='grid';} 
-      else if(key==='office'){el.style.display='none';}
-    });
-  }
-  tabs.forEach(function(b){b.onclick=function(){showTab(b.dataset.tab);};});
+    showTab(selectedTab);
     const rooms = document.getElementById('rooms'); rooms.innerHTML='';
+    document.getElementById('msg').textContent='';
     for(const room of d.rooms){
       const el = document.createElement('section'); el.className='room';
       const h=document.createElement('h2'); h.textContent=room.name; el.appendChild(h);
       const p=document.createElement('p'); p.textContent=room.mission||''; el.appendChild(p);
+      const operations = room.operations || {};
+      const contract = document.createElement('p'); contract.className = 'sub';
+      contract.textContent = 'Yönetici: ' + (operations.manager || 'eksik') + ' · QA: ' + (operations.qa_worker || 'eksik') + ' · ' + (operations.status === 'configured' ? 'Görev dağılımı tanımlı' : 'Düzenleme gerekli');
+      el.appendChild(contract);
+      if ((operations.issues || []).length) { const issue = document.createElement('p'); issue.textContent = operations.issues.join(' · '); el.appendChild(issue); }
       const grid=document.createElement('div'); grid.className='workers';
       for(const w of room.workers){
         const box=document.createElement('div'); box.className='worker '+w.status;
-        box.innerHTML = '<div class="avatar">'+w.avatar+'</div>'+
-          '<div class="bubble"><span class="dot"></span>'+(w.thought||'çalışıyor…')+
-          (w.idea?'<div class="idea">💡 '+w.idea+'</div>':'')+'</div>'+
-          '<span class="name">'+w.name+'</span>';
+        box.innerHTML = '<div class="avatar">'+esc(w.avatar)+'</div>'+
+          '<div class="bubble"><span class="dot"></span>'+esc(w.thought || (w.status === 'working' ? 'Doğrulanmış aktif görev' : 'Aktif görev doğrulanmadı'))+
+          (w.idea?'<div class="idea">💡 '+esc(w.idea)+'</div>':'')+'</div>'+
+          '<span class="name">'+esc(w.name)+'</span>';
         grid.appendChild(box);
       }
       el.appendChild(grid); rooms.appendChild(el);
@@ -253,6 +264,17 @@ class OfficeHandler(BaseHTTPRequestHandler):
             text = str(payload.get("text") or "").strip()
             if not text:
                 raise ValueError("boş fikir")
+            from .chitchat import is_chitchat, reply as chat_reply
+
+            if is_chitchat(text):
+                self._send(
+                    json.dumps(
+                        {"ok": True, "chat": True, "reply": chat_reply(text), "tasks": 0},
+                        ensure_ascii=False,
+                    ).encode("utf-8"),
+                    "application/json; charset=utf-8",
+                )
+                return
             idea = submit(self.console, self.runtime_dir, text)
         except Exception as exc:  # noqa: BLE001 - report, never crash
             self._send(
