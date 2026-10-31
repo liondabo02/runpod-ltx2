@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -38,8 +39,8 @@ class OpenHandsManagerPlanner:
         self.workspace_root.mkdir(parents=True, exist_ok=True)
         if self.max_steps < 1:
             raise ValueError("max_steps must be >= 1")
-        if self.max_total_estimated_cost_usd < 0:
-            raise ValueError("max_total_estimated_cost_usd must be >= 0")
+        if not math.isfinite(self.max_total_estimated_cost_usd) or self.max_total_estimated_cost_usd < 0:
+            raise ValueError("max_total_estimated_cost_usd must be finite and >= 0")
 
         if self.capability_catalog is not None:
             normalized: dict[str, frozenset[str]] = {}
@@ -81,6 +82,8 @@ class OpenHandsManagerPlanner:
         except json.JSONDecodeError as exc:
             raise ValueError(f"manager produced invalid JSON: {exc}") from exc
 
+        if not isinstance(payload, dict):
+            raise ValueError("MISSION_PLAN.json must contain a JSON object")
         raw_steps = payload.get("steps")
         if not isinstance(raw_steps, list) or not raw_steps:
             raise ValueError("MISSION_PLAN.json must contain a non-empty steps list")
@@ -150,9 +153,12 @@ class OpenHandsManagerPlanner:
                 if str(value).strip()
             )
 
-            estimated_cost = float(raw.get("estimated_cost_usd", 0.0) or 0.0)
-            if estimated_cost < 0:
-                raise ValueError("estimated_cost_usd must be >= 0")
+            try:
+                estimated_cost = float(raw.get("estimated_cost_usd", 0.0) or 0.0)
+            except (TypeError, ValueError) as exc:
+                raise ValueError("estimated_cost_usd must be numeric") from exc
+            if not math.isfinite(estimated_cost) or estimated_cost < 0:
+                raise ValueError("estimated_cost_usd must be finite and >= 0")
             total_cost += estimated_cost
 
             steps.append(
@@ -253,8 +259,9 @@ Rules:
   credential access, destructive actions, or external side effects unless
   the objective explicitly requires them.
 - Never claim or set owner approval.
-- For this smoke test, all planned worker steps must have
-  estimated_cost_usd 0.0 because execution after planning is local.
+- estimated_cost_usd must be a finite, nonnegative number. Never use
+  a fabricated zero merely to bypass the budget gate; use zero only
+  for genuinely free, local execution.
 - Finish only after validating that MISSION_PLAN.json parses as JSON.
 """.strip()
 

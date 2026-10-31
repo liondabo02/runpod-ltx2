@@ -124,3 +124,40 @@ def test_missing_plan_file_is_rejected(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="did not create"):
         tuple(planner("m4", "objective", "mgr-software-01"))
+
+
+@pytest.mark.parametrize("value", ["NaN", "Infinity", "-Infinity", -1.0])
+def test_manager_rejects_nonfinite_or_negative_step_cost(tmp_path: Path, value) -> None:
+    def runner(_prompt: str, workspace: Path):
+        _write_plan(workspace, {"steps": [{
+            "step_id": "coding", "title": "Fix bug", "department": "software",
+            "required_capabilities": ["python"], "estimated_cost_usd": value,
+        }]})
+    planner = OpenHandsManagerPlanner(
+        runner=runner, workspace_root=tmp_path,
+        allowed_departments=frozenset({"software"}),
+        max_total_estimated_cost_usd=1.0,
+    )
+    with pytest.raises(ValueError, match="finite and >= 0"):
+        tuple(planner("nonfinite", "fix", "manager"))
+
+
+@pytest.mark.parametrize("limit", [float("nan"), float("inf"), -1.0])
+def test_manager_rejects_invalid_budget_limit(tmp_path: Path, limit: float) -> None:
+    with pytest.raises(ValueError, match="finite and >= 0"):
+        OpenHandsManagerPlanner(
+            runner=lambda *_: None, workspace_root=tmp_path,
+            allowed_departments=frozenset({"software"}),
+            max_total_estimated_cost_usd=limit,
+        )
+
+
+def test_manager_rejects_non_object_plan(tmp_path: Path) -> None:
+    def runner(_prompt: str, workspace: Path):
+        (workspace / "MISSION_PLAN.json").write_text("[]", encoding="utf-8")
+    planner = OpenHandsManagerPlanner(
+        runner=runner, workspace_root=tmp_path,
+        allowed_departments=frozenset({"software"}),
+    )
+    with pytest.raises(ValueError, match="JSON object"):
+        tuple(planner("array", "fix", "manager"))
