@@ -65,7 +65,9 @@ def check_readiness(
     try:
         state = json.loads((runtime / "daemon-state.json").read_text(encoding="utf-8"))
         age = (now - _timestamp(state["last_tick_at"])).total_seconds()
-        ok = state.get("status") == "running" and -60 <= age <= max_heartbeat_age_seconds
+        # An idle daemon can be healthy when no runnable mission exists.
+        # Mission completion and queue quality are checked separately below.
+        ok = state.get("status") in {"running", "idle"} and -60 <= age <= max_heartbeat_age_seconds
         checks.append(Check("daemon_heartbeat", ok, f"age_seconds={round(age, 1)} status={state.get('status')}"))
     except (OSError, ValueError, KeyError, TypeError, AttributeError) as exc:
         checks.append(Check("daemon_heartbeat", False, f"missing/invalid heartbeat: {type(exc).__name__}"))

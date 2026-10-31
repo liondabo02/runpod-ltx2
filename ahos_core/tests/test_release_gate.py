@@ -163,3 +163,19 @@ def test_deletion_cannot_count_as_verified_release_delivery(tmp_path: Path) -> N
     gate = next(x for x in check_readiness(runtime, repo)
                 if x.name == "real_delivery_evidence")
     assert not gate.ok
+
+
+def test_fresh_idle_daemon_is_healthy_but_not_proof_of_work(tmp_path: Path) -> None:
+    runtime, repo = _ready_runtime(tmp_path)
+    state_path = runtime / "daemon-state.json"
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    state["status"] = "idle"
+    state_path.write_text(json.dumps(state), encoding="utf-8")
+
+    checks = check_readiness(runtime, repo)
+    assert next(check for check in checks if check.name == "daemon_heartbeat").ok
+
+    state["status"] = "stopped"
+    state_path.write_text(json.dumps(state), encoding="utf-8")
+    checks = check_readiness(runtime, repo)
+    assert not next(check for check in checks if check.name == "daemon_heartbeat").ok
