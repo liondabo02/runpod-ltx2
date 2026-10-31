@@ -50,3 +50,10 @@ def test_missing_database_blocks_without_creating_file(tmp_path):
     missing = tmp_path / "absent.db"
     assert main(["--database", str(missing)]) == 2
     assert not missing.exists()
+
+
+def test_qa_subreason_categories_are_redacted():
+    from ahos.blocked_triage import qa_detail
+    assert qa_detail("QA failed: missing artifact /private/path") == "missing_artifact"
+    assert qa_detail("QA failed: browser unavailable at secret URL") == "browser_failure"
+    assert qa_detail("QA failed: unknown private payload") == "other_qa"

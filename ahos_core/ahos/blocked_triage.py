@@ -34,6 +34,22 @@ def classify_error(value: str | None) -> str:
     return "other"
 
 
+def qa_detail(value: str | None) -> str:
+    """Whitelisted QA failure families; never return raw error content."""
+    message = (value or "").casefold()
+    families = (
+        ("missing_artifact", ("artifact missing", "missing artifact", "kanıt yok",
+                              "çıktı eksik", "eksik varlık", "no evidence", "0 dosya")),
+        ("test_failure", ("pytest", "test failed", "assertion", "doğrulama başarısız")),
+        ("browser_failure", ("browser", "tarayıcı", "dom check")),
+        ("identity_or_approval", ("identity", "approval", "onay", "kendi çıktısını")),
+        ("media_failure", ("ffprobe", "video", "audio", "animasyon", "medya")),
+        ("resource_limit", ("timeout", "timed out", "limit", "maximum")),
+    )
+    return next((label for label, words in families
+                 if any(word in message for word in words)), "other_qa")
+
+
 def summarize(db_path: str | Path, *, limit: int = 500) -> dict[str, object]:
     if not 1 <= limit <= 5000:
         raise ValueError("limit must be between 1 and 5000")
@@ -59,11 +75,16 @@ def summarize(db_path: str | Path, *, limit: int = 500) -> dict[str, object]:
     finally:
         conn.close()
     categories = Counter(classify_error(value) for (value,) in blocked)
+    qa_details = Counter(
+        qa_detail(value) for (value,) in blocked
+        if classify_error(value) == "qa_rejected"
+    )
     return {
         "status_counts": totals,
         "recent_30_counts": dict(recent),
         "blocked_sampled": len(blocked),
         "blocked_reason_categories": dict(categories.most_common()),
+        "qa_root_cause_categories": dict(qa_details.most_common()),
         "contains_raw_error_text": False,
     }
 
