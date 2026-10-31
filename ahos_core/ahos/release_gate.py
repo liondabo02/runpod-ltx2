@@ -133,6 +133,28 @@ def check_readiness(
     except (OSError, sqlite3.Error, ValueError) as exc:
         checks.append(Check("mission_queue", False, f"unreadable mission queue: {type(exc).__name__}"))
 
+    try:
+        from .completion_integrity import summarize_completed
+
+        audit = summarize_completed(runtime / "company-service.db", limit=10000)
+        consistent = (
+            audit["audited"] >= 30
+            and audit["not_audited"] == 0
+            and audit["inconsistent"] == 0
+        )
+        checks.append(Check(
+            "completed_result_consistency",
+            consistent,
+            f"audited={audit['audited']} inconsistent={audit['inconsistent']} "
+            f"not_audited={audit['not_audited']} "
+            f"independent_proof_verified={audit['independent_qa_and_artifact_verified']}",
+        ))
+    except (OSError, ValueError, sqlite3.Error) as exc:
+        checks.append(Check(
+            "completed_result_consistency", False,
+            f"cannot audit completed results: {type(exc).__name__}",
+        ))
+
     archives = sorted((runtime / "backups").glob("runtime-*.zip"), key=lambda path: path.stat().st_mtime, reverse=True)
     if not archives:
         checks.append(Check("verified_backup", False, "no runtime snapshot"))
@@ -173,6 +195,24 @@ def check_readiness(
         checks.append(Check(
             "tracked_internal_imports", False,
             f"source provenance audit failed: {type(exc).__name__}",
+        ))
+
+    try:
+        from .completion_integrity import find_unsafe_direct_completion_updates
+
+        bypasses = find_unsafe_direct_completion_updates(
+            repo / "ahos_core" / "ahos"
+        )
+        checks.append(Check(
+            "no_direct_completion_sql",
+            not bypasses,
+            f"unsafe_completion_sites={len(bypasses)} "
+            f"sites={','.join(bypasses[:4])}",
+        ))
+    except (OSError, ValueError) as exc:
+        checks.append(Check(
+            "no_direct_completion_sql", False,
+            f"source inspection failed: {type(exc).__name__}",
         ))
 
     if require_test_receipt:

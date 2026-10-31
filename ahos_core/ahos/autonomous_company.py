@@ -305,6 +305,14 @@ class PersistentMissionQueue:
         owner: str,
         result: MissionResult,
     ) -> None:
+        # A blocked result must NEVER be persisted with a completed status.
+        # The live queue previously contained hundreds of such mismatches.
+        if result.mission_id != mission_id:
+            raise ValueError("completion result belongs to a different mission")
+        if result.status is not MissionStatus.COMPLETED:
+            raise ValueError("only completed mission results may be finalized")
+        if any(getattr(step.stage, "value", None) != "completed" for step in result.steps):
+            raise ValueError("mission has a step without completed status")
         payload = self._result_payload(result)
         self._finish(
             mission_id,

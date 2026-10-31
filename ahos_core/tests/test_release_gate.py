@@ -14,10 +14,19 @@ from ahos.release_gate import check_readiness, main
 
 def _make_queue(runtime: Path, *, blocked: int, completed: int) -> None:
     with sqlite3.connect(runtime / "company-service.db") as con:
-        con.execute("CREATE TABLE missions (status TEXT, updated_at TEXT)")
-        con.executemany("INSERT INTO missions VALUES (?,?)", [
-            ("completed", "2026-10-31T12:00:00+00:00") for _ in range(completed)
-        ] + [("blocked", "2026-10-31T12:00:00+00:00") for _ in range(blocked)])
+        con.execute("CREATE TABLE missions (status TEXT, updated_at TEXT, result_json TEXT)")
+        valid_result = json.dumps({
+            "status": "completed", "steps": [
+                {"stage": "completed", "qa_summary": "independent pass"}
+            ],
+        })
+        con.executemany("INSERT INTO missions VALUES (?,?,?)", [
+            ("completed", "2026-10-31T12:00:00+00:00", valid_result)
+            for _ in range(completed)
+        ] + [
+            ("blocked", "2026-10-31T12:00:00+00:00", None)
+            for _ in range(blocked)
+        ])
 
 
 def _ready_runtime(tmp_path: Path) -> tuple[Path, Path]:
@@ -30,7 +39,10 @@ def _ready_runtime(tmp_path: Path) -> tuple[Path, Path]:
     subprocess.run(["git", "-C", str(repo), "config", "user.email", "test@example.invalid"], check=True)
     subprocess.run(["git", "-C", str(repo), "config", "user.name", "Test"], check=True)
     (repo / "README.md").write_text("verified workspace\n", encoding="utf-8")
-    subprocess.run(["git", "-C", str(repo), "add", "README.md"], check=True)
+    package = repo / "ahos_core" / "ahos"
+    package.mkdir(parents=True)
+    (package / "__init__.py").write_text("", encoding="utf-8")
+    subprocess.run(["git", "-C", str(repo), "add", "README.md", "ahos_core/ahos/__init__.py"], check=True)
     subprocess.run(["git", "-C", str(repo), "commit", "-qm", "test baseline"], check=True)
     rev = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"], check=True,
                          capture_output=True, text=True).stdout.strip()
@@ -111,8 +123,8 @@ def test_mass_cancellation_cannot_fake_queue_recovery(tmp_path: Path) -> None:
     runtime, repo = _ready_runtime(tmp_path)
     with sqlite3.connect(runtime / "company-service.db") as con:
         con.executemany(
-            "INSERT INTO missions VALUES (?,?)",
-            [("cancelled", "2026-10-31 16:11:00")] * 65,
+            "INSERT INTO missions VALUES (?,?,?)",
+            [("cancelled", "2026-10-31 16:11:00", None)] * 65,
         )
     queue = next(x for x in check_readiness(runtime, repo) if x.name == "mission_queue")
     assert not queue.ok
@@ -179,3 +191,32 @@ def test_fresh_idle_daemon_is_healthy_but_not_proof_of_work(tmp_path: Path) -> N
     state_path.write_text(json.dumps(state), encoding="utf-8")
     checks = check_readiness(runtime, repo)
     assert not next(check for check in checks if check.name == "daemon_heartbeat").ok
+
+
+def test_completed_column_with_blocked_result_blocks_release(tmp_path: Path) -> None:
+    runtime, repo = _ready_runtime(tmp_path)
+    with sqlite3.connect(runtime / "company-service.db") as con:
+        con.execute(
+            "UPDATE missions SET result_json=? WHERE status='completed'",
+            (json.dumps({"status": "blocked", "steps": []}),),
+        )
+    report = check_readiness(runtime, repo)
+    check = next(x for x in report if x.name == "completed_result_consistency")
+    assert not check.ok
+    assert "inconsistent=99" in check.detail
+
+
+def test_direct_sql_status_update_blocks_release(tmp_path: Path) -> None:
+    runtime, repo = _ready_runtime(tmp_path)
+    source = repo / "ahos_core" / "ahos" / "daemon.py"
+    source.write_text(
+        'def bypass(conn):\n'
+        '    conn.execute("update missions set status=\'completed\' where mission_id=?", ("m",))\n',
+        encoding="utf-8",
+    )
+    gate = next(
+        check for check in check_readiness(runtime, repo)
+        if check.name == "no_direct_completion_sql"
+    )
+    assert not gate.ok
+    assert "daemon.py" in gate.detail
