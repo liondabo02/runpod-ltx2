@@ -42,3 +42,13 @@ python -B -m pytest -q tests/test_backup.py tests/test_release_gate.py tests/tes
 python -B -m ahos.blocked_triage --database C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\ahos_core\runtime\company-service.db
 
 Do not mark this project '100% complete' until every critical acceptance item is independently confirmed.
+## Final checkpoint — 2026-10-31
+- Current development head prior to this documentation update: e9ec913 (17 integrated code/documentation commits after ecd6dbd).
+- Verified targeted test matrix: 107 passed in 12.79s (12 selected test files).
+- Final release-gate read-only preflight: 1 of 8 checks passed; 7 failed.
+- Fresh idle daemon heartbeat was accepted as healthy (not evidence of mission completion).
+- Remaining failing checks: delivery quality 0.065, no verified delivery evidence, latest 100 missions all blocked, no verified runtime v2 backup, unclean test worktree, missing tracked studio_department import, no CI-bound test receipt.
+- Live active worktree still had ~192 uncommitted files; test-only consolidation snapshot had 45 untracked files. Neither may be mass-staged or reset.
+- Queue triage: 312 blocked, 297 cancelled, 200 completed; 244 QA-related, 279 last-step blocked, 33 zero-step. Historic statuses must not be rewritten to improve KPIs.
+- Full test suite did NOT complete: a separate broad run stalled after ~35%; no claim that all project tests pass.
+- All changes remain isolated; nothing was deployed, pushed, deleted, paid for or sent to DeepSeek. Review and owner-approved merge still required.
