@@ -124,7 +124,7 @@ def test_missing_repository_contract_fails_closed(tmp_path: Path):
         CodingWorkContract.from_json(source)
 
 
-@pytest.mark.parametrize("path", ["", ".", "../private"])
+@pytest.mark.parametrize("path", ["", ".", "../private", "C:\\secrets", "C:/secrets"])
 def test_unsafe_or_unscoped_software_contract_rejected(tmp_path: Path, path: str):
     source = contract_file(tmp_path, repo(tmp_path / "repo"))
     payload = json.loads(source.read_text(encoding="utf-8"))
@@ -140,4 +140,19 @@ def test_coding_task_requires_acceptance_tests(tmp_path: Path):
     payload["test_commands"] = []
     source.write_text(json.dumps(payload), encoding="utf-8")
     with pytest.raises(CodingBridgeError, match="acceptance test command"):
+        CodingWorkContract.from_json(source)
+
+
+@pytest.mark.parametrize("field,bad", [
+    ("allowed_paths", "src"),
+    ("allowed_paths", [22]),
+    ("test_commands", "pytest -q"),
+    ("test_commands", [["pytest", 3]]),
+])
+def test_malformed_coding_contract_types_rejected(tmp_path: Path, field, bad):
+    source = contract_file(tmp_path, repo(tmp_path / "repo"))
+    payload = json.loads(source.read_text(encoding="utf-8"))
+    payload[field] = bad
+    source.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(CodingBridgeError, match=field):
         CodingWorkContract.from_json(source)
