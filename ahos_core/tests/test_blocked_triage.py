@@ -57,3 +57,26 @@ def test_qa_subreason_categories_are_redacted():
     assert qa_detail("QA failed: missing artifact /private/path") == "missing_artifact"
     assert qa_detail("QA failed: browser unavailable at secret URL") == "browser_failure"
     assert qa_detail("QA failed: unknown private payload") == "other_qa"
+
+
+def test_structured_qa_step_reason_diagnosed_without_leaking(tmp_path):
+    db = tmp_path / "missions.db"
+    with sqlite3.connect(db) as con:
+        con.execute(
+            "CREATE TABLE missions(status TEXT,last_error TEXT,updated_at TEXT,result_json TEXT)"
+        )
+        result = json.dumps({
+            "steps": [{
+                "stage": "blocked",
+                "qa_summary": "QA rejected: missing artifact /PRIVATE/secret",
+                "worker_summary": "do not expose user text",
+            }]
+        })
+        con.execute(
+            "INSERT INTO missions VALUES(?,?,?,?)",
+            ("blocked", "QA failed: confidential error", "2026-10-31 21:00", result),
+        )
+    report = summarize(db)
+    assert report["last_step_stages"] == {"blocked": 1}
+    assert report["step_qa_detail_categories"] == {"missing_artifact": 1}
+    assert "secret" not in json.dumps(report)

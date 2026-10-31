@@ -63,8 +63,10 @@ def summarize(db_path: str | Path, *, limit: int = 500) -> dict[str, object]:
         totals = dict(conn.execute(
             "SELECT status,COUNT(*) FROM missions GROUP BY status"
         ).fetchall())
+        columns = {column[1] for column in conn.execute("PRAGMA table_info(missions)")}
+        result_column = "result_json" if "result_json" in columns else "NULL"
         blocked = conn.execute(
-            "SELECT last_error FROM missions WHERE status='blocked' "
+            f"SELECT last_error,{result_column} FROM missions WHERE status='blocked' "
             "ORDER BY julianday(updated_at) DESC LIMIT ?", (limit,),
         ).fetchall()
         recent = conn.execute(
@@ -74,17 +76,44 @@ def summarize(db_path: str | Path, *, limit: int = 500) -> dict[str, object]:
         ).fetchall()
     finally:
         conn.close()
-    categories = Counter(classify_error(value) for (value,) in blocked)
+    categories = Counter(classify_error(value) for value, _ in blocked)
     qa_details = Counter(
-        qa_detail(value) for (value,) in blocked
+        qa_detail(value) for value, _ in blocked
         if classify_error(value) == "qa_rejected"
     )
+    step_stages: Counter[str] = Counter()
+    step_qa_causes: Counter[str] = Counter()
+    for _, raw in blocked:
+        if not isinstance(raw, str):
+            step_stages["no_result_payload"] += 1
+            continue
+        try:
+            payload = json.loads(raw)
+        except (ValueError, TypeError):
+            step_stages["invalid_result_payload"] += 1
+            continue
+        steps = payload.get("steps") if isinstance(payload, dict) else None
+        if not isinstance(steps, list) or not steps:
+            step_stages["no_steps"] += 1
+            continue
+        last = steps[-1]
+        if not isinstance(last, dict):
+            step_stages["invalid_step"] += 1
+            continue
+        step_stages[str(last.get("stage") or "unknown")] += 1
+        qa_summary = last.get("qa_summary")
+        if isinstance(qa_summary, str) and qa_summary.strip():
+            step_qa_causes[qa_detail(qa_summary)] += 1
+        else:
+            step_qa_causes["no_qa_summary"] += 1
     return {
         "status_counts": totals,
         "recent_30_counts": dict(recent),
         "blocked_sampled": len(blocked),
         "blocked_reason_categories": dict(categories.most_common()),
         "qa_root_cause_categories": dict(qa_details.most_common()),
+        "last_step_stages": dict(step_stages.most_common()),
+        "step_qa_detail_categories": dict(step_qa_causes.most_common()),
         "contains_raw_error_text": False,
     }
 
