@@ -14,10 +14,10 @@ from ahos.release_gate import check_readiness, main
 
 def _make_queue(runtime: Path, *, blocked: int, completed: int) -> None:
     with sqlite3.connect(runtime / "company-service.db") as con:
-        con.execute("CREATE TABLE missions (status TEXT)")
-        con.executemany("INSERT INTO missions VALUES (?)", [
-            ("completed",) for _ in range(completed)
-        ] + [("blocked",) for _ in range(blocked)])
+        con.execute("CREATE TABLE missions (status TEXT, updated_at TEXT)")
+        con.executemany("INSERT INTO missions VALUES (?,?)", [
+            ("completed", "2026-10-31T12:00:00+00:00") for _ in range(completed)
+        ] + [("blocked", "2026-10-31T12:00:00+00:00") for _ in range(blocked)])
 
 
 def _ready_runtime(tmp_path: Path) -> tuple[Path, Path]:
@@ -102,3 +102,21 @@ def test_unverified_old_backup_blocks_release(tmp_path: Path) -> None:
     archive.write_bytes(b"old corrupt archive")
     assert next(x for x in check_readiness(runtime, repo)
                 if x.name == "verified_backup").ok is False
+
+
+def test_mass_cancellation_cannot_fake_queue_recovery(tmp_path: Path) -> None:
+    runtime, repo = _ready_runtime(tmp_path)
+    with sqlite3.connect(runtime / "company-service.db") as con:
+        con.executemany(
+            "INSERT INTO missions VALUES (?,?)",
+            [("cancelled", "2026-10-31 16:11:00")] * 65,
+        )
+    queue = next(x for x in check_readiness(runtime, repo) if x.name == "mission_queue")
+    assert not queue.ok
+    assert "cancelled=65" in queue.detail
+
+
+def test_recent_valid_completion_window_can_pass(tmp_path: Path) -> None:
+    runtime, repo = _ready_runtime(tmp_path)
+    queue = next(x for x in check_readiness(runtime, repo) if x.name == "mission_queue")
+    assert queue.ok, queue.detail

@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import sqlite3
+from collections import Counter
 import subprocess
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
@@ -89,12 +90,27 @@ def check_readiness(
         db = runtime / "company-service.db"
         # Do not open with the queue constructor: that could create/modify state.
         with sqlite3.connect(f"{db.as_uri()}?mode=ro", uri=True, timeout=3) as conn:
-            counts = dict(conn.execute("SELECT status, count(*) FROM missions GROUP BY status").fetchall())
-        blocked = counts.get("blocked", 0)
-        completed = counts.get("completed", 0)
-        total = blocked + completed
-        ok = total >= 30 and blocked / total <= 0.05
-        checks.append(Check("mission_queue", ok, f"blocked={blocked} completed={completed} required_blocked_ratio<=5%"))
+            # Use a recent window, not lifetime counts. Mixed ISO/SQLite
+            # timestamp formats cannot be ordered lexicographically.
+            rows = conn.execute(
+                "SELECT status FROM missions "
+                "ORDER BY julianday(updated_at) DESC LIMIT 100"
+            ).fetchall()
+        counts = Counter(str(row[0]) for row in rows)
+        blocked = counts["blocked"] + counts["failed"]
+        completed = counts["completed"]
+        cancelled = counts["cancelled"]
+        terminal = blocked + completed + cancelled
+        # Mass cancellation must never make blocked missions look successful.
+        ok = (len(rows) >= 30 and completed >= 20 and terminal > 0
+              and blocked / terminal <= 0.05
+              and cancelled / terminal <= 0.10)
+        checks.append(Check(
+            "mission_queue", ok,
+            f"recent={len(rows)} completed={completed} blocked_or_failed={blocked} "
+            f"cancelled={cancelled} pending={counts['pending']} "
+            "required: >=20 completed, <=5% blocked, <=10% cancelled",
+        ))
     except (OSError, sqlite3.Error, ValueError) as exc:
         checks.append(Check("mission_queue", False, f"unreadable mission queue: {type(exc).__name__}"))
 

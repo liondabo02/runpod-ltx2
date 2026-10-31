@@ -95,3 +95,15 @@ Actual result:
 - Default routing behaviour stays unchanged unless flag is opted in.
 - Deterministic provider and preflight tests: 30 passed.
 - Activation requires reconciling uncommitted production providers.py ownership and passing full release acceptance; not live now.
+
+### Live acceptance corrections and end-to-end smoke
+- In real queue history, 47 missions were cancelled at the same minute; cancelled is NOT a completed deliverable.
+- New release gate uses the latest 100 missions via SQLite julianday(updated_at), accounting for mixed timestamp formats.
+- Live latest-100 sample: 0 completed, 1 blocked/failed, 47 cancelled, 52 pending. Gate returns NOT READY.
+- The 2026-10-31 live affected regression groups returned: 49 passed.
+- Local model actual AHOS code-worker run in isolated scratch: www/game.js const a=1 -> const a=2;.
+- Isolated acceptance evidence: smoke-sandbox/artifacts/SMOKE-CODE-1_produce/ACCEPTANCE.json passed=true, CHANGES.diff and VERIFY.log.
+- Independent direct verification: python -B -c [assert game.js == const a=2;] -> ACCEPTANCE_OK.
+- Note: a Windows cp1252 terminal exception affected the smoke wrapper's final printed JSON, not the changed file or acceptance output.
+- Four focused test files now return 32 passed.
+- Live deployment still disallowed until quality, queue, backup, code ownership and trusted test gates pass.
