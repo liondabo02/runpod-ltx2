@@ -69,3 +69,21 @@ DeepSeek/operator prioritized independent tasks:
 4. Stage WAL-aware backups and prove restore of live-like data.
 5. Generate trusted test evidence tied to the exact candidate commit; never fabricate CI provenance.
 6. Only after all gates and owner approval, consider reversible versioned production rollout.
+
+## 2026-10-31 — Inference-based routing verification (separate worktree)
+
+New isolated modules:
+- ahos_core/ahos/provider_preflight.py
+- ahos_core/tests/test_provider_preflight.py
+
+Command (free, only numeric loopback endpoints):
+python -B -m ahos.provider_preflight --base-url http://127.0.0.1:11500/v1 --model qwen2.5-coder:7b --fallback-base-url http://127.0.0.1:11434/v1 --fallback-model qwen2.5-coder:1.5b --timeout 10
+
+Actual result:
+- tunnel model 7b: unavailable / timeout; previously /models returned HTTP 200
+- local 1.5b: real chat completion returned non-empty content (HTTP 200)
+- selected local qwen2.5-coder:1.5b, with explicit attempt audit
+- tests: python -B -m pytest -q tests/test_backup.py tests/test_release_gate.py tests/test_provider_preflight.py => 22 passed
+- THIS SELECTION IS NOT YET ATTACHED TO THE LIVE WORKER EXECUTOR.
+- DeepSeek should not treat /models=200 as proof of inference readiness.
+- IMPORTANT: No paid model access, real changes to live queue, or deployment.
