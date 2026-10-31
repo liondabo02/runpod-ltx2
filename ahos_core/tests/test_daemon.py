@@ -326,6 +326,8 @@ def test_no_filesystem_change_counts_as_no_evidence(tmp_path):
 def test_auto_executor_prefers_model_when_ram_allows(tmp_path, monkeypatch):
     import ahos.daemon as daemon_module
 
+    monkeypatch.setattr(daemon_module, "_remote_free_endpoint", lambda: False)
+    monkeypatch.setenv("AHOS_ALLOW_PAID_LLM", "0")
     monkeypatch.setattr(daemon_module, "_model_is_configured", lambda: True)
     scheduler = FakeScheduler()
     daemon = _daemon(
@@ -347,6 +349,8 @@ def test_auto_executor_prefers_model_when_ram_allows(tmp_path, monkeypatch):
 def test_auto_executor_falls_back_when_ram_is_low(tmp_path, monkeypatch):
     import ahos.daemon as daemon_module
 
+    monkeypatch.setattr(daemon_module, "_remote_free_endpoint", lambda: False)
+    monkeypatch.setenv("AHOS_ALLOW_PAID_LLM", "0")
     monkeypatch.setattr(daemon_module, "_model_is_configured", lambda: True)
     scheduler = FakeScheduler()
     daemon = _daemon(
