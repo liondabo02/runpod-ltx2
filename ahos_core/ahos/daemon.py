@@ -394,12 +394,21 @@ class AutonomyDaemon:
             return
         self._last_recorded_mission = mission_id
         if filesystem is not None and self.tracker is not None and self.tracker.roots():
+            verified = filesystem.get("all_verified") is True
             evidence["changed_files"] = int(filesystem.get("changed_files") or 0)
             evidence["projects"] = filesystem.get("projects") or []
             evidence["source"] = "filesystem"
-            evidence["evidence_ok"] = bool(evidence["changed_files"])
+            evidence["proof_method"] = "sha256"
+            evidence["filesystem_verified"] = verified
+            evidence["evidence_ok"] = verified and evidence["changed_files"] > 0
         else:
-            evidence["source"] = "worker-summary"
+            # A worker's narrative cannot independently prove a delivery.
+            evidence["claimed_changed_files"] = evidence["changed_files"]
+            evidence["changed_files"] = 0
+            evidence["source"] = "unverified-worker-summary"
+            evidence["proof_method"] = "none"
+            evidence["filesystem_verified"] = False
+            evidence["evidence_ok"] = False
         self.state.last_evidence = evidence
         self._append_mission(evidence)
         if evidence.get("status") == "routed" and not evidence.get("evidence_ok"):

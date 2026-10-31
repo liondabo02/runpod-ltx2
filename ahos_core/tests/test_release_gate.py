@@ -41,6 +41,8 @@ def _ready_runtime(tmp_path: Path) -> tuple[Path, Path]:
             "delivery_rate": 0.96, "missions": 100,
         }, "last_evidence": {
             "evidence_ok": True, "changed_files": 2,
+            "source": "filesystem", "proof_method": "sha256",
+            "filesystem_verified": True,
         },
     }), encoding="utf-8")
 
@@ -120,3 +122,32 @@ def test_recent_valid_completion_window_can_pass(tmp_path: Path) -> None:
     runtime, repo = _ready_runtime(tmp_path)
     queue = next(x for x in check_readiness(runtime, repo) if x.name == "mission_queue")
     assert queue.ok, queue.detail
+
+
+def test_worker_prose_is_not_release_evidence(tmp_path: Path) -> None:
+    runtime, repo = _ready_runtime(tmp_path)
+    state_file = runtime / "daemon-state.json"
+    state = json.loads(state_file.read_text(encoding="utf-8"))
+    state["last_evidence"] = {
+        "source": "worker-summary",
+        "changed_files": 10,
+        "evidence_ok": True,
+    }
+    state_file.write_text(json.dumps(state), encoding="utf-8")
+
+    report = check_readiness(runtime, repo)
+    proof = next(item for item in report if item.name == "real_delivery_evidence")
+    assert not proof.ok
+
+
+def test_partial_filesystem_scan_is_not_release_evidence(tmp_path: Path) -> None:
+    runtime, repo = _ready_runtime(tmp_path)
+    state_file = runtime / "daemon-state.json"
+    state = json.loads(state_file.read_text(encoding="utf-8"))
+    state["last_evidence"]["filesystem_verified"] = False
+    state_file.write_text(json.dumps(state), encoding="utf-8")
+    proof = next(
+        item for item in check_readiness(runtime, repo)
+        if item.name == "real_delivery_evidence"
+    )
+    assert not proof.ok

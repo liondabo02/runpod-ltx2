@@ -83,8 +83,22 @@ def check_readiness(
         checks.append(Check("delivery_quality", bool(ok), f"rate={rate} sample={sample} required>={min_delivery_rate}"))
         evidence = state.get("last_evidence") or {}
         files_changed = evidence.get("changed_files")
-        proof = evidence.get("evidence_ok") is True and isinstance(files_changed, int) and files_changed > 0
-        checks.append(Check("real_delivery_evidence", proof, f"evidence_ok={evidence.get('evidence_ok')} changed_files={files_changed}"))
+        proof = (
+            evidence.get("evidence_ok") is True
+            and evidence.get("source") == "filesystem"
+            and evidence.get("proof_method") == "sha256"
+            and evidence.get("filesystem_verified") is True
+            and isinstance(files_changed, int)
+            and not isinstance(files_changed, bool)
+            and files_changed > 0
+        )
+        checks.append(Check(
+            "real_delivery_evidence",
+            proof,
+            f"evidence_ok={evidence.get('evidence_ok')} changed_files={files_changed} "
+            f"source={evidence.get('source')} method={evidence.get('proof_method')} "
+            f"filesystem_verified={evidence.get('filesystem_verified')}",
+        ))
 
     try:
         db = runtime / "company-service.db"

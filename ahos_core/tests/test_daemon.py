@@ -222,15 +222,29 @@ def test_three_report_only_missions_pause_the_loop(tmp_path):
 
 
 def test_real_change_resets_no_evidence_streak(tmp_path):
-    scheduler = EvidenceScheduler(
+    project = tmp_path / "project"
+    project.mkdir()
+
+    class SecondTickWrites(EvidenceScheduler):
+        def tick(self):
+            result = super().tick()
+            if self.calls == 2:
+                (project / "changed.txt").write_text("real delivery", encoding="utf-8")
+            return result
+
+    scheduler = SecondTickWrites(
         [_mission("m-1", 0), _mission("m-2", 3), _mission("m-3", 0)]
     )
-    daemon = _daemon(tmp_path, scheduler, max_ticks=3, no_evidence_limit=2)
+    daemon = _daemon(
+        tmp_path, scheduler, max_ticks=3, no_evidence_limit=2,
+        tracker=DeliveryTracker([project]),
+    )
 
     daemon.run()
 
     assert not (tmp_path / "autonomy.pause").exists()
     assert read_heartbeat(tmp_path)["no_evidence_streak"] == 1
+    assert read_heartbeat(tmp_path)["last_evidence"]["proof_method"] == "sha256"
 
 
 def test_same_mission_is_not_counted_twice(tmp_path):
@@ -628,3 +642,18 @@ def test_pause_cooldown_can_be_disabled(tmp_path):
     daemon.run()
 
     assert pause.exists()
+
+
+def test_worker_self_report_cannot_count_as_verified_delivery(tmp_path):
+    """A producer cannot mark its own mission complete with a prose claim."""
+    scheduler = EvidenceScheduler([_mission("self-report", 8)])
+    daemon = _daemon(tmp_path, scheduler, max_ticks=1, no_evidence_limit=1)
+
+    daemon.run()
+
+    evidence = read_heartbeat(tmp_path)["last_evidence"]
+    assert evidence["claimed_changed_files"] == 8
+    assert evidence["changed_files"] == 0
+    assert evidence["evidence_ok"] is False
+    assert evidence["source"] == "unverified-worker-summary"
+    assert (tmp_path / "autonomy.pause").exists()
