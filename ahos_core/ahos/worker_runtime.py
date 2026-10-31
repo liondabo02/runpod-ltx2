@@ -103,26 +103,47 @@ class VirtualWorkerRuntime:
             )
 
         start = time.monotonic()
-        worker_result = executor(item, assignment.worker_id)
+        duration_ms = 0.0
+
+        def record_outcome(*, passed: bool, reason: str) -> None:
+            """Metrics reflect independent QA, not only the worker's own claim."""
+            try:
+                from . import worker_metrics
+
+                worker_metrics.record_here(
+                    worker_id=assignment.worker_id,
+                    mission_id=item.task_id,
+                    step_id=item.task_id.rsplit(":", 1)[-1],
+                    department=item.department,
+                    success=passed,
+                    duration_ms=duration_ms,
+                    reason=(reason or "")[:120],
+                )
+            except Exception:  # pragma: no cover - metrics must never break work
+                pass
+
+        try:
+            worker_result = executor(item, assignment.worker_id)
+        except Exception as exc:
+            # Worker exceptions cannot strand an assigned worker indefinitely.
+            duration_ms = (time.monotonic() - start) * 1000.0
+            self.dispatcher.complete_worker_phase(item.task_id, assignment.worker_id)
+            reason = f"worker executor raised {type(exc).__name__}"
+            record_outcome(passed=False, reason=reason)
+            return WorkforceRunResult(
+                task_id=item.task_id,
+                stage=WorkStage.BLOCKED,
+                assignment=assignment,
+                worker_result=None,
+                qa_assignment=None,
+                qa_result=None,
+                reason=reason,
+            )
         duration_ms = (time.monotonic() - start) * 1000.0
         self.dispatcher.complete_worker_phase(item.task_id, assignment.worker_id)
 
-        try:
-            from . import worker_metrics
-
-            worker_metrics.record_here(
-                worker_id=assignment.worker_id,
-                mission_id=item.task_id,
-                step_id=item.task_id.rsplit(":", 1)[-1],
-                department=item.department,
-                success=bool(worker_result.success),
-                duration_ms=duration_ms,
-                reason=(worker_result.summary or "")[:120],
-            )
-        except Exception:  # pragma: no cover - metrics must never break work
-            pass
-
         if not worker_result.success:
+            record_outcome(passed=False, reason=worker_result.summary)
             return WorkforceRunResult(
                 task_id=item.task_id,
                 stage=WorkStage.BLOCKED,
@@ -135,6 +156,7 @@ class VirtualWorkerRuntime:
 
         qa_assignment = self.dispatcher.assign_qa(item.task_id, producer_id=assignment.worker_id)
         if qa_assignment.stage is WorkStage.BLOCKED or not qa_assignment.qa_worker_id:
+            record_outcome(passed=False, reason=qa_assignment.reason)
             return WorkforceRunResult(
                 task_id=item.task_id,
                 stage=WorkStage.BLOCKED,
@@ -145,15 +167,41 @@ class VirtualWorkerRuntime:
                 reason=qa_assignment.reason,
             )
 
-        qa_result = self.qa_executor(
-            item,
-            worker_result,
-            qa_assignment.qa_worker_id,
-        )
+        try:
+            qa_result = self.qa_executor(
+                item,
+                worker_result,
+                qa_assignment.qa_worker_id,
+            )
+        except Exception as exc:
+            # The QA lease must be released even if the verifier crashes.
+            self.dispatcher.complete_qa(
+                item.task_id, qa_assignment.qa_worker_id, passed=False,
+            )
+            reason = f"QA executor raised {type(exc).__name__}"
+            record_outcome(passed=False, reason=reason)
+            return WorkforceRunResult(
+                task_id=item.task_id,
+                stage=WorkStage.BLOCKED,
+                assignment=assignment,
+                worker_result=worker_result,
+                qa_assignment=qa_assignment,
+                qa_result=QaExecutionResult(
+                    task_id=item.task_id,
+                    qa_worker_id=qa_assignment.qa_worker_id,
+                    passed=False,
+                    summary=reason,
+                ),
+                reason=reason,
+            )
         final = self.dispatcher.complete_qa(
             item.task_id,
             qa_assignment.qa_worker_id,
             passed=qa_result.passed,
+        )
+        record_outcome(
+            passed=qa_result.passed and final.stage is WorkStage.COMPLETED,
+            reason=final.reason if qa_result.passed else f"QA failed: {qa_result.summary}",
         )
 
         return WorkforceRunResult(
