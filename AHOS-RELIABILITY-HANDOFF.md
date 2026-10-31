@@ -46,3 +46,26 @@ Status: 2026-10-31. This document is a work contract, **not** proof that DeepSee
 3. SQLite WAL restore, backup integrity and no-secret backup tests pass.
 4. Scenario: task -> code diff -> test stdout -> independent QA -> owner decision.
 5. No edits to active worktrees; no service interruptions, no deployment and no paid usage.
+
+## 2026-10-31 release gate result — NOT READY
+
+Implemented ahos_core/ahos/release_gate.py as a read-only necessary-check gate (never deploys).
+Verification: python -B -m pytest -q tests/test_backup.py tests/test_release_gate.py
+Result: 12 passed in 5.81s.
+
+Live runtime preflight results:
+- heartbeat: PASS, 22 seconds old
+- delivery quality: FAIL, 0.065 over 200 missions, minimum required 0.90
+- real delivery evidence: FAIL, missing proof of changed files
+- mission queue: FAIL, 65 blocked and 200 completed
+- verified backup: FAIL, latest live backup lacks v2 manifest
+- clean source: FAIL, 282 paths not committed
+- trusted test receipt: FAIL, missing
+
+DeepSeek/operator prioritized independent tasks:
+1. Fix model execution to deliver one REAL code change with independent acceptance test, not just /models HTTP 200.
+2. Classify blocked tasks, then measure new representative delivery quality; never rewrite historic statuses to game the metric.
+3. Coordinate owners of 282 uncommitted paths; never reset their work.
+4. Stage WAL-aware backups and prove restore of live-like data.
+5. Generate trusted test evidence tied to the exact candidate commit; never fabricate CI provenance.
+6. Only after all gates and owner approval, consider reversible versioned production rollout.
