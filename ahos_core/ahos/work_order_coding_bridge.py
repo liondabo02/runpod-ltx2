@@ -6,7 +6,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
-from .coding_supervisor import CodingSupervisorStore, CodingTaskRecord
+from .coding_supervisor import CodingSupervisorStore, CodingTaskRecord, CodingTaskStatus
 from .coding_worker import CodingBacklogItem
 from .work_order import WorkOrder, WorkOrderStatus, WorkOrderStore
 
@@ -29,6 +29,10 @@ class CodingWorkContract:
     def from_json(cls, path: str | Path) -> "CodingWorkContract":
         source = Path(path)
         raw = json.loads(source.read_text(encoding="utf-8"))
+        if not isinstance(raw, dict):
+            raise CodingBridgeError("coding work contract must be a JSON object")
+        if not isinstance(raw.get("repository"), str) or not raw["repository"].strip():
+            raise CodingBridgeError("repository must be explicitly provided")
         if raw.get("schema") != "ahos.coding-work-contract.v1":
             raise CodingBridgeError("unsupported coding work contract schema")
         allowed = tuple(str(item) for item in raw.get("allowed_paths", ()))
@@ -36,7 +40,7 @@ class CodingWorkContract:
         contract = cls(
             work_order_id=str(raw.get("work_order_id", "")).strip(),
             title=str(raw.get("title", "")).strip(),
-            repository=Path(str(raw.get("repository", ""))).resolve(),
+            repository=Path(raw["repository"]).resolve(),
             base_ref=str(raw.get("base_ref", "HEAD")).strip(),
             allowed_paths=allowed,
             test_commands=tests,
@@ -52,9 +56,14 @@ class CodingWorkContract:
             raise CodingBridgeError("repository must be an existing Git worktree")
         if not self.allowed_paths:
             raise CodingBridgeError("allowed_paths must not be empty")
+        if not self.test_commands:
+            raise CodingBridgeError("at least one acceptance test command is required")
+        for command in self.test_commands:
+            if not command or not all(part.strip() for part in command):
+                raise CodingBridgeError("acceptance test commands must contain non-empty arguments")
         for value in self.allowed_paths:
             normalized = PurePosixPath(value.replace("\\", "/"))
-            if normalized.is_absolute() or ".." in normalized.parts:
+            if not value.strip() or normalized == PurePosixPath(".") or normalized.is_absolute() or ".." in normalized.parts:
                 raise CodingBridgeError(f"unsafe allowed path: {value}")
         if self.max_attempts < 1 or self.max_attempts > 5:
             raise CodingBridgeError("max_attempts must be between 1 and 5")
@@ -102,6 +111,51 @@ class WorkOrderCodingBridge:
             self.work_orders.transition(order.work_order_id, WorkOrderStatus.IN_PROGRESS)
         return record
 
+
+    @staticmethod
+    def _verify_owner_approved_evidence(record: CodingTaskRecord) -> None:
+        """Fail closed if approval evidence or the reviewed patch has changed."""
+        if not (record.owner_decision_at and record.approval_file
+                and record.patch_file and record.evidence_sha256):
+            raise CodingBridgeError("owner approval evidence is incomplete")
+        try:
+            approval_path = Path(record.approval_file)
+            patch_path = Path(record.patch_file)
+            approval_bytes = approval_path.read_bytes()
+            if hashlib.sha256(approval_bytes).hexdigest() != record.evidence_sha256:
+                raise CodingBridgeError("owner approval evidence was modified")
+            approval = json.loads(approval_bytes.decode("utf-8"))
+            if not isinstance(approval, dict):
+                raise CodingBridgeError("owner approval payload is invalid")
+            if hashlib.sha256(patch_path.read_bytes()).hexdigest() != approval.get("patch_sha256"):
+                raise CodingBridgeError("owner reviewed patch was modified")
+        except (OSError, UnicodeError, ValueError) as exc:
+            raise CodingBridgeError("owner approval evidence cannot be verified") from exc
+
+    def reconcile(self) -> tuple[WorkOrder, ...]:
+        """Update software work orders from terminal coding decisions.
+
+        COMPLETED means an owner-reviewed local patch is ready for integration.
+        It does not mean the patch was merged, deployed, or published.
+        """
+        changes: list[WorkOrder] = []
+        for order in self.work_orders.all():
+            if order.status is not WorkOrderStatus.IN_PROGRESS or order.routing_department != "software":
+                continue
+            record = self.coding.get(f"coding-{order.work_order_id}")
+            if record is None:
+                continue
+            if not record.idempotency_key.startswith(f"work-order:{order.work_order_id}:"):
+                raise CodingBridgeError("coding queue identity does not match work order")
+            if record.status is CodingTaskStatus.OWNER_APPROVED:
+                self._verify_owner_approved_evidence(record)
+                changes.append(self.work_orders.transition(order.work_order_id, WorkOrderStatus.COMPLETED))
+            elif record.status in (CodingTaskStatus.OWNER_REJECTED, CodingTaskStatus.RETRIES_EXHAUSTED):
+                changes.append(self.work_orders.transition(order.work_order_id, WorkOrderStatus.FAILED))
+            elif record.status is CodingTaskStatus.CANCELLED:
+                changes.append(self.work_orders.transition(order.work_order_id, WorkOrderStatus.CANCELLED))
+        return tuple(changes)
+
     @staticmethod
     def _require_dispatchable(order: WorkOrder | None) -> None:
         if order is None:
@@ -133,12 +187,18 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Dispatch scoped software work orders")
     parser.add_argument("--work-orders", required=True)
     parser.add_argument("--coding-queue", required=True)
-    parser.add_argument("--contracts-dir", required=True)
+    parser.add_argument("--contracts-dir", help="Optional contract folder for new dispatches")
+    parser.add_argument("--reconcile", action="store_true", help="Sync owner-reviewed coding outcomes")
     args = parser.parse_args()
-    records = dispatch_contract_directory(
-        args.work_orders, args.coding_queue, args.contracts_dir
-    )
-    print(json.dumps({"dispatched": [item.task_id for item in records]}, indent=2))
+    if not args.contracts_dir and not args.reconcile:
+        parser.error("provide --contracts-dir and/or --reconcile")
+    records = (dispatch_contract_directory(args.work_orders, args.coding_queue, args.contracts_dir)
+               if args.contracts_dir else ())
+    changed = (WorkOrderCodingBridge(WorkOrderStore(args.work_orders),
+               CodingSupervisorStore(args.coding_queue)).reconcile() if args.reconcile else ())
+    print(json.dumps({"dispatched": [item.task_id for item in records],
+                      "reconciled": [{"work_order_id": item.work_order_id,
+                                      "status": item.status.value} for item in changed]}, indent=2))
     return 0
 
 
