@@ -91,6 +91,9 @@ def check_readiness(
             and isinstance(files_changed, int)
             and not isinstance(files_changed, bool)
             and files_changed > 0
+            and isinstance(evidence.get("productive_files"), int)
+            and evidence.get("productive_files") > 0
+            and evidence.get("removed_files") == 0
         )
         checks.append(Check(
             "real_delivery_evidence",

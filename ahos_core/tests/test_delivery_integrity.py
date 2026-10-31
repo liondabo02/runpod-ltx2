@@ -76,3 +76,19 @@ def test_tracker_rejects_volatile_only_updates(tmp_path):
     after = DeliveryTracker([root]).snapshot()
     verdict = DeliveryTracker([root]).diff(before, after)
     assert verdict["changed_files"] == 0
+
+
+def test_deletion_only_is_not_accepted_as_productive_delivery(tmp_path):
+    root = tmp_path / "project"
+    root.mkdir()
+    (root / "valuable.py").write_text("keep", encoding="utf-8")
+    tracker = DeliveryTracker([root])
+    before = tracker.snapshot()
+    (root / "valuable.py").unlink()
+    after = tracker.snapshot()
+
+    evidence = tracker.diff(before, after)
+    assert evidence["changed_files"] == 1
+    assert evidence["productive_files"] == 0
+    assert evidence["removed_files"] == 1
+    assert evidence["all_verified"] is True

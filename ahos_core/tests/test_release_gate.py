@@ -42,7 +42,8 @@ def _ready_runtime(tmp_path: Path) -> tuple[Path, Path]:
         }, "last_evidence": {
             "evidence_ok": True, "changed_files": 2,
             "source": "filesystem", "proof_method": "sha256",
-            "filesystem_verified": True,
+            "filesystem_verified": True, "productive_files": 2,
+            "removed_files": 0,
         },
     }), encoding="utf-8")
 
@@ -151,3 +152,14 @@ def test_partial_filesystem_scan_is_not_release_evidence(tmp_path: Path) -> None
         if item.name == "real_delivery_evidence"
     )
     assert not proof.ok
+
+
+def test_deletion_cannot_count_as_verified_release_delivery(tmp_path: Path) -> None:
+    runtime, repo = _ready_runtime(tmp_path)
+    state_file = runtime / "daemon-state.json"
+    state = json.loads(state_file.read_text(encoding="utf-8"))
+    state["last_evidence"]["removed_files"] = 1
+    state_file.write_text(json.dumps(state), encoding="utf-8")
+    gate = next(x for x in check_readiness(runtime, repo)
+                if x.name == "real_delivery_evidence")
+    assert not gate.ok

@@ -208,6 +208,9 @@ class DeliveryTracker:
         changed = sum(item.changed for item in diffs)
         return {
             "changed_files": changed,
+            "productive_files": sum(len(item.added) + len(item.modified) for item in diffs
+                                    if not item.unverified),
+            "removed_files": sum(len(item.removed) for item in diffs),
             "all_verified": all(not item.unverified for item in diffs),
             "projects": [item.to_dict() for item in diffs],
         }

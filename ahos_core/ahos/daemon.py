@@ -400,7 +400,14 @@ class AutonomyDaemon:
             evidence["source"] = "filesystem"
             evidence["proof_method"] = "sha256"
             evidence["filesystem_verified"] = verified
-            evidence["evidence_ok"] = verified and evidence["changed_files"] > 0
+            evidence["productive_files"] = int(filesystem.get("productive_files") or 0)
+            evidence["removed_files"] = int(filesystem.get("removed_files") or 0)
+            # Deletions require a separate explicit owner authorization.
+            evidence["evidence_ok"] = (
+                verified
+                and evidence["productive_files"] > 0
+                and evidence["removed_files"] == 0
+            )
         else:
             # A worker's narrative cannot independently prove a delivery.
             evidence["claimed_changed_files"] = evidence["changed_files"]
