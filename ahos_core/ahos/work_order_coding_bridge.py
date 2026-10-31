@@ -4,7 +4,7 @@ import hashlib
 import argparse
 import json
 from dataclasses import dataclass
-from pathlib import Path, PurePosixPath
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 from .coding_supervisor import CodingSupervisorStore, CodingTaskRecord, CodingTaskStatus
 from .coding_worker import CodingBacklogItem
@@ -35,6 +35,13 @@ class CodingWorkContract:
             raise CodingBridgeError("repository must be explicitly provided")
         if raw.get("schema") != "ahos.coding-work-contract.v1":
             raise CodingBridgeError("unsupported coding work contract schema")
+        if not isinstance(raw.get("allowed_paths"), list) or not all(
+                isinstance(value, str) for value in raw["allowed_paths"]):
+            raise CodingBridgeError("allowed_paths must be a list of path strings")
+        if not isinstance(raw.get("test_commands"), list) or not all(
+                isinstance(command, list) and all(isinstance(part, str) for part in command)
+                for command in raw["test_commands"]):
+            raise CodingBridgeError("test_commands must be a list of argv string lists")
         allowed = tuple(str(item) for item in raw.get("allowed_paths", ()))
         tests = tuple(tuple(str(part) for part in command) for command in raw.get("test_commands", ()))
         contract = cls(
@@ -63,8 +70,13 @@ class CodingWorkContract:
                 raise CodingBridgeError("acceptance test commands must contain non-empty arguments")
         for value in self.allowed_paths:
             normalized = PurePosixPath(value.replace("\\", "/"))
-            if not value.strip() or normalized == PurePosixPath(".") or normalized.is_absolute() or ".." in normalized.parts:
+            windows = PureWindowsPath(value)
+            if (not value.strip() or normalized == PurePosixPath(".")
+                    or normalized.is_absolute() or windows.drive or windows.is_absolute()
+                    or ".." in normalized.parts):
                 raise CodingBridgeError(f"unsafe allowed path: {value}")
+        if not self.base_ref.strip():
+            raise CodingBridgeError("base_ref must not be empty")
         if self.max_attempts < 1 or self.max_attempts > 5:
             raise CodingBridgeError("max_attempts must be between 1 and 5")
 
@@ -195,7 +207,7 @@ def main() -> int:
     records = (dispatch_contract_directory(args.work_orders, args.coding_queue, args.contracts_dir)
                if args.contracts_dir else ())
     changed = (WorkOrderCodingBridge(WorkOrderStore(args.work_orders),
-               CodingSupervisorStore(args.coding_queue)).reconcile() if args.reconcile else ())
+               CodingSupervisorStore(args.coding_queue)).reconcile() if args.reconcile or args.contracts_dir else ())
     print(json.dumps({"dispatched": [item.task_id for item in records],
                       "reconciled": [{"work_order_id": item.work_order_id,
                                       "status": item.status.value} for item in changed]}, indent=2))
