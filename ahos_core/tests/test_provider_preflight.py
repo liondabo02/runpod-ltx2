@@ -135,3 +135,71 @@ def test_select_free_model_fails_closed_when_no_real_inference(monkeypatch):
         ("http://127.0.0.1:11434/v1", "b"),
     ))
     assert selected is None and len(attempts) == 2
+
+
+def test_runtime_provider_routing_requires_verified_generation(monkeypatch):
+    from ahos import providers
+
+    chain = [
+        providers.Provider("tunnel", "http://127.0.0.1:11500/v1", "slow"),
+        providers.Provider("local", "http://127.0.0.1:11434/v1", "good"),
+    ]
+    monkeypatch.setattr(providers, "default_chain", lambda: chain)
+    verified = []
+
+    def infer(base_url, model, *, timeout):
+        verified.append((base_url, model))
+        return provider_preflight.Preflight(
+            model == "good", model,
+            "inference_ok" if model == "good" else "unreachable_or_timeout",
+        )
+
+    monkeypatch.setattr(provider_preflight, "check_local_inference", infer)
+    env = {"AHOS_PROVIDER_INFERENCE_CHECK": "1"}
+    result = providers.apply_chain_to_env(environ=env)
+    assert result["chosen"] == "local"
+    assert env["AHOS_LLM_MODEL"] == "good"
+    assert env["AHOS_LLM_BASE_URL"] == "http://127.0.0.1:11434/v1"
+    assert env["AHOS_PROVIDER_REPORT"] == "tunnel=yok,local=ok"
+    assert len(verified) == 2
+
+
+def test_runtime_real_check_is_opt_in(monkeypatch):
+    from ahos import providers
+
+    monkeypatch.setattr(
+        providers, "default_chain",
+        lambda: [providers.Provider("tunnel", "http://127.0.0.1:11500/v1", "m")],
+    )
+    monkeypatch.setattr(provider_preflight, "check_local_inference",
+                        lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("must not run")))
+    env = {}
+    result = providers.apply_chain_to_env(environ=env, probe_fn=lambda provider: True)
+    assert result["chosen"] == "tunnel"
+
+
+def test_runtime_real_check_clears_stale_provider_when_all_down(monkeypatch):
+    from ahos import providers
+
+    monkeypatch.setattr(
+        providers, "default_chain",
+        lambda: [providers.Provider("tunnel", "http://127.0.0.1:11500/v1", "gone")],
+    )
+    monkeypatch.setattr(
+        provider_preflight, "check_local_inference",
+        lambda base, model, timeout: provider_preflight.Preflight(
+            False, model, "unreachable_or_timeout"
+        ),
+    )
+    env = {
+        "AHOS_PROVIDER_INFERENCE_CHECK": "1",
+        "AHOS_LLM_BASE_URL": "http://127.0.0.1:11500/v1",
+        "AHOS_LLM_MODEL": "gone",
+        "AHOS_LLM_API_KEY": "local-only",
+        "AHOS_ACTIVE_PROVIDER": "tunnel",
+    }
+    report = providers.apply_chain_to_env(environ=env)
+    assert report["chosen"] is None
+    assert env["AHOS_PROVIDER_INFERENCE_OK"] == "0"
+    assert "AHOS_LLM_MODEL" not in env
+    assert "AHOS_ACTIVE_PROVIDER" not in env

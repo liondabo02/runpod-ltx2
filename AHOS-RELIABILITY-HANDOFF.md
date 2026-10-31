@@ -87,3 +87,11 @@ Actual result:
 - THIS SELECTION IS NOT YET ATTACHED TO THE LIVE WORKER EXECUTOR.
 - DeepSeek should not treat /models=200 as proof of inference readiness.
 - IMPORTANT: No paid model access, real changes to live queue, or deployment.
+
+### Optional live router wiring (not enabled in production)
+- ahos_core/ahos/providers.py routes through a real tiny local inference check when AHOS_PROVIDER_INFERENCE_CHECK=1.
+- On tunnel failure it can choose local Ollama 1.5b after verified generation.
+- If all candidates fail, stale model environment variables are cleared rather than reporting false health.
+- Default routing behaviour stays unchanged unless flag is opted in.
+- Deterministic provider and preflight tests: 30 passed.
+- Activation requires reconciling uncommitted production providers.py ownership and passing full release acceptance; not live now.
