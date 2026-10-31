@@ -158,6 +158,21 @@ def check_readiness(
     except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
         checks.append(Check("clean_source_tree", False, f"git inspection failed: {type(exc).__name__}"))
 
+    try:
+        from .source_integrity import missing_tracked_imports
+
+        missing = missing_tracked_imports(repo)
+        checks.append(Check(
+            "tracked_internal_imports",
+            not missing,
+            f"untracked_import_targets={len(missing)} examples={','.join(missing[:4])}",
+        ))
+    except (OSError, ValueError, subprocess.SubprocessError) as exc:
+        checks.append(Check(
+            "tracked_internal_imports", False,
+            f"source provenance audit failed: {type(exc).__name__}",
+        ))
+
     if require_test_receipt:
         receipt_file = runtime / "release-test-receipt.json"
         try:
