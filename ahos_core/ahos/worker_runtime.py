@@ -142,6 +142,20 @@ class VirtualWorkerRuntime:
         duration_ms = (time.monotonic() - start) * 1000.0
         self.dispatcher.complete_worker_phase(item.task_id, assignment.worker_id)
 
+        if (worker_result.task_id != item.task_id
+                or worker_result.worker_id != assignment.worker_id):
+            reason = "worker result identity does not match assigned task"
+            record_outcome(passed=False, reason=reason)
+            return WorkforceRunResult(
+                task_id=item.task_id,
+                stage=WorkStage.BLOCKED,
+                assignment=assignment,
+                worker_result=worker_result,
+                qa_assignment=None,
+                qa_result=None,
+                reason=reason,
+            )
+
         if not worker_result.success:
             record_outcome(passed=False, reason=worker_result.summary)
             return WorkforceRunResult(
@@ -194,14 +208,24 @@ class VirtualWorkerRuntime:
                 ),
                 reason=reason,
             )
+        identity_ok = (
+            qa_result.task_id == item.task_id
+            and qa_result.qa_worker_id == qa_assignment.qa_worker_id
+        )
+        verified = bool(qa_result.passed and identity_ok)
         final = self.dispatcher.complete_qa(
             item.task_id,
             qa_assignment.qa_worker_id,
-            passed=qa_result.passed,
+            passed=verified,
+        )
+        reason = (
+            "QA result identity does not match assigned task or verifier"
+            if not identity_ok
+            else final.reason if verified else f"QA failed: {qa_result.summary}"
         )
         record_outcome(
-            passed=qa_result.passed and final.stage is WorkStage.COMPLETED,
-            reason=final.reason if qa_result.passed else f"QA failed: {qa_result.summary}",
+            passed=verified and final.stage is WorkStage.COMPLETED,
+            reason=reason,
         )
 
         return WorkforceRunResult(
@@ -211,11 +235,7 @@ class VirtualWorkerRuntime:
             worker_result=worker_result,
             qa_assignment=qa_assignment,
             qa_result=qa_result,
-            reason=(
-                final.reason
-                if qa_result.passed
-                else f"QA failed: {qa_result.summary}"
-            ),
+            reason=reason,
         )
 
 

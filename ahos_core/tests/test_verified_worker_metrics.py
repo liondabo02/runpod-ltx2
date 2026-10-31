@@ -123,3 +123,52 @@ def test_qa_crash_releases_verifier_and_counts_failure(tmp_path):
         assert worker_metrics.summary(tmp_path)["dev-01"]["failures"] == 1
     finally:
         worker_metrics.configure(None)
+
+
+def test_success_from_another_task_cannot_be_credited(tmp_path):
+    from ahos.worker_runtime import WorkerExecutionResult
+
+    registry = VirtualWorkforceRegistry(default_virtual_workforce())
+    worker_metrics.configure(tmp_path)
+    try:
+        def forged(item, worker):
+            return WorkerExecutionResult(
+                task_id="wrong-task", worker_id=worker, success=True,
+                summary="I finished someone else's job",
+            )
+
+        runtime = VirtualWorkerRuntime(
+            registry, executors={"dev-01": forged},
+            qa_executor=lambda *args: (_ for _ in ()).throw(AssertionError("QA should not run")),
+        )
+        outcome = runtime.run(_item("worker-mismatch"))
+        assert outcome.stage is WorkStage.BLOCKED
+        assert "identity" in outcome.reason
+        assert registry.get("dev-01").is_available
+        assert worker_metrics.summary(tmp_path)["dev-01"]["successes"] == 0
+    finally:
+        worker_metrics.configure(None)
+
+
+def test_qa_claim_for_another_task_cannot_approve_delivery(tmp_path):
+    registry = VirtualWorkforceRegistry(default_virtual_workforce())
+    worker_metrics.configure(tmp_path)
+    try:
+        def forged_qa(item, result, verifier):
+            return QaExecutionResult(
+                task_id="wrong-task", qa_worker_id=verifier,
+                passed=True, summary="looks good",
+            )
+
+        runtime = VirtualWorkerRuntime(
+            registry,
+            executors={"dev-01": make_local_text_executor(lambda *args: "written")},
+            qa_executor=forged_qa,
+        )
+        outcome = runtime.run(_item("qa-mismatch"))
+        assert outcome.stage is WorkStage.BLOCKED
+        assert "identity" in outcome.reason
+        assert registry.get("qa-01").is_available
+        assert worker_metrics.summary(tmp_path)["dev-01"]["successes"] == 0
+    finally:
+        worker_metrics.configure(None)
