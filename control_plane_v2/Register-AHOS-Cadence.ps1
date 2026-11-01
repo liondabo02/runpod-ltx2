@@ -32,7 +32,7 @@ $logFile = Join-Path $logDir 'cadence.log'
 
 switch ($Mode) {
     'register' {
-        $cmdLine = "`"$python`" -m ahos.ops_cadence --once --runtime-dir `"$RuntimeDir`" >> `"$logFile`" 2>&1"
+        $cmdLine = "set PYTHONIOENCODING=utf-8&& `"$python`" -m ahos.ops_cadence --once --runtime-dir `"$RuntimeDir`" >> `"$logFile`" 2>&1"
         $taskAction = New-ScheduledTaskAction -Execute 'cmd.exe' -Argument "/c $cmdLine" `
             -WorkingDirectory (Join-Path $repo 'ahos_core')
         $taskTrigger = New-ScheduledTaskTrigger -Daily -At $Time

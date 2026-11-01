@@ -51,6 +51,16 @@ def test_dry_run_writes_nothing(tmp_path):
     assert not (tmp_path / "company-service.db").exists()
 
 
+def test_cli_exits_zero_even_when_a_department_is_blocked(tmp_path, capsys):
+    """Ritim çalıştıysa çıkış kodu 0'dır; engellenen departman veri noktasıdır."""
+
+    from ahos.ops_cadence import main
+
+    code = main(["--runtime-dir", str(tmp_path), "--week", "2026W48", "--dry-run"])
+    assert code == 0
+    assert "results" in capsys.readouterr().out
+
+
 def test_every_department_has_a_weekly_objective(tmp_path):
     assert len(set(DEFAULT_OBJECTIVES.values())) == len(DEFAULT_OBJECTIVES)
     for department, objective in DEFAULT_OBJECTIVES.items():

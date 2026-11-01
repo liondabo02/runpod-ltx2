@@ -183,6 +183,15 @@ def write_report(runtime_dir: str | Path, results: list[CadenceResult],
 
 def main(argv: list[str] | None = None) -> int:
     import argparse
+    import sys
+
+    # Görev Zamanlayıcı gibi taze bir kabukta stdout cp1252 olabilir; Türkçe
+    # karakterler yüzünden çökmemek için akışları UTF-8'e çevir.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):  # pragma: no cover - yeniden yapılandırılamaz akış
+        pass
 
     parser = argparse.ArgumentParser(description="haftalık departman ritmi")
     parser.add_argument("--runtime-dir", default=str(Path(__file__).resolve().parents[1] / "runtime"))
@@ -202,8 +211,10 @@ def main(argv: list[str] | None = None) -> int:
         "completed": sum(1 for item in results if item.status == "completed"),
         "total": len(results),
     }, indent=2, ensure_ascii=False))
-    return 0 if all(item.status in {"completed", "planlandı", "atlandı"} or item.verified
-                    for item in results) else 1
+    # Çıkış kodu "ritim çalıştı mı" sorusunu yanıtlar, "kaç departman teslim
+    # etti" sorusunu değil: engellenen departman bir veri noktasıdır, görev
+    # hatası değildir. Sayılar raporda ve JSON çıktısında durur.
+    return 0
 
 
 if __name__ == "__main__":
