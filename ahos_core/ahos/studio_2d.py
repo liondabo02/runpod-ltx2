@@ -98,7 +98,8 @@ def _background(draw: ImageDraw.ImageDraw, kind: str, t: float, shift: float) ->
         draw.ellipse([x + 20, 500, x + 120, 560], fill=(70, 140, 70) if kind == "day" else (55, 100, 55))
 
 
-def _character(draw: ImageDraw.ImageDraw, name: str, x: int, base: int, *, t: float, talking: bool, gesture: float) -> None:
+def _character(draw: ImageDraw.ImageDraw, name: str, x: int, base: int, *, t: float,
+               talking: bool, gesture: float, mouth: float | None = None) -> None:
     colors = PALETTE.get(name, PALETTE["aden"])
     bob = int(10 * math.sin(t * 3.1)) + int(3 * math.sin(t * 7.0))
     sway = int(6 * math.sin(t * 1.9))
@@ -130,8 +131,11 @@ def _character(draw: ImageDraw.ImageDraw, name: str, x: int, base: int, *, t: fl
     eye_h = 3 if blink else 10
     draw.ellipse([x - 26, top + 52, x - 12, top + 52 + eye_h], fill=(30, 30, 30))
     draw.ellipse([x + 12, top + 52, x + 26, top + 52 + eye_h], fill=(30, 30, 30))
-    # ağız: konuşurken açılır/kapanır
-    mouth_h = int(4 + (12 if talking and (t * 7) % 2 < 1 else 2))
+    # ağız: ses zarfı varsa gerçek genlik, yoksa replik zamanlaması
+    if mouth is not None:
+        mouth_h = 3 + int(14 * max(0.0, min(1.0, mouth)))
+    else:
+        mouth_h = int(4 + (12 if talking and (t * 7) % 2 < 1 else 2))
     draw.ellipse([x - 14, top + 76, x + 14, top + 76 + mouth_h], fill=(120, 40, 40))
 
 
@@ -178,6 +182,16 @@ def render_episode(episode: Episode, out_dir: str | Path, *,
     clock = 0.0
     frame_no = 0
 
+    total_frames = int(round(episode.duration() * FPS))
+    envelope: list[float] | None = None
+    if audio is not None and Path(audio).is_file():
+        try:
+            from .studio_voice import amplitude_envelope
+
+            envelope = amplitude_envelope(audio, fps=FPS, total_frames=total_frames)
+        except Exception:  # noqa: BLE001 - zarf okunamazsa zamanlamaya düş
+            envelope = None
+
     for scene in episode.scenes:
         scene_seconds = scene.duration()
         per_frame = 1.0 / FPS
@@ -202,7 +216,11 @@ def render_episode(episode: Episode, out_dir: str | Path, *,
             for position, name in enumerate(scene.characters[:3]):
                 x = 380 + position * 320
                 gesture = math.sin(t * 1.7) if speaker == name else 0.0
-                _character(draw, name, x, 560, t=t, talking=speaker == name, gesture=max(0.0, gesture))
+                lip = None
+                if envelope is not None and speaker == name and frame_no < len(envelope):
+                    lip = envelope[frame_no]
+                _character(draw, name, x, 560, t=t, talking=speaker == name,
+                           gesture=max(0.0, gesture), mouth=lip)
 
             draw.text((40, 30), episode.title, font=_font(34), fill=(255, 255, 255))
             draw.text((40, 80), f"{scene.setting}", font=_font(24), fill=(235, 235, 235))

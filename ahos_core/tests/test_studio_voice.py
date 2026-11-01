@@ -56,6 +56,21 @@ def test_silence_has_no_energy(tmp_path):
     assert rms(silent) == 0.0
 
 
+def test_envelope_follows_the_audio(tmp_path):
+    """Dudak senkronu: sesin olduğu yerde zarf yüksek, sessizlikte sıfır."""
+
+    from ahos.studio_voice import amplitude_envelope
+
+    loud = _tone(tmp_path / "loud.wav", 0.5)
+    track = build_track([(loud, 0.0, 0.5)], 1.0, tmp_path / "envelope.wav")
+    envelope = amplitude_envelope(track, fps=10, total_frames=10)
+
+    assert len(envelope) == 10
+    assert max(envelope[:4]) > 0.5          # konuşma bölgesi
+    assert max(envelope[7:]) < 0.2          # sessizlik bölgesi
+    assert all(0.0 <= value <= 1.0 for value in envelope)
+
+
 @pytest.mark.skipif(not list_voices(), reason="kurulu SAPI sesi yok")
 def test_voiced_episode_passes_the_gate(tmp_path):
     voice = list_voices()[0]

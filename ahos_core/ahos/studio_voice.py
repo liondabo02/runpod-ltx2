@@ -147,6 +147,75 @@ def rms(path: str | Path) -> float:
     return (total / count) ** 0.5
 
 
+def amplitude_envelope(path: str | Path, *, fps: int, total_frames: int,
+                       window: float = 0.05) -> list[float]:
+    """Sesin kare başına genliği (0-1). Dudak senkronu bunu kullanır.
+
+    Her video karesi için, o kareye denk gelen ses penceresinin RMS'i alınır ve
+    dosyanın en yüksek RMS'ine göre normalize edilir. Sessizlikte 0 döner.
+    """
+
+    with wave.open(str(path), "rb") as handle:
+        rate = handle.getframerate() or SAMPLE_RATE
+        frames = array.array("h")
+        frames.frombytes(handle.readframes(handle.getnframes()))
+    if not frames or total_frames <= 0:
+        return [0.0] * max(0, total_frames)
+
+    samples_per_frame = rate / float(fps)
+    span = max(1, int(samples_per_frame * window * fps) if window else int(samples_per_frame))
+    raw: list[float] = []
+    for index in range(total_frames):
+        start = int(index * samples_per_frame)
+        chunk = frames[start:start + span]
+        if not chunk:
+            raw.append(0.0)
+            continue
+        total = 0.0
+        for value in chunk[:: max(1, len(chunk) // 256)]:
+            total += float(value) * float(value)
+        raw.append((total / max(1, len(chunk[:: max(1, len(chunk) // 256)]))) ** 0.5)
+
+    peak = max(raw) if raw else 0.0
+    if peak <= 0:
+        return [0.0] * total_frames
+    return [min(1.0, value / peak) for value in raw]
+
+
+def piper_model_path() -> Path | None:
+    """Yerel piper ses modeli (varsa). `AHOS_PIPER_VOICE` ile de verilebilir."""
+
+    import os
+
+    configured = os.environ.get("AHOS_PIPER_VOICE", "").strip()
+    if configured:
+        candidate = Path(configured)
+        return candidate if candidate.is_file() else None
+    for folder in (Path("C:/ahos-models/piper"), Path.home() / "piper-voices"):
+        if folder.is_dir():
+            models = sorted(folder.glob("*.onnx"))
+            if models:
+                return models[0]
+    return None
+
+
+def synthesize_piper(text: str, out_path: str | Path, model: Path) -> Path:
+    """Yerel piper (nöral TTS) ile sentez; model yoksa açık hata."""
+
+    import os
+
+    target = Path(out_path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    env = dict(os.environ)
+    env.setdefault("PYTHONIOENCODING", "utf-8")
+    command = [sys.executable, "-m", "piper", "--model", str(model), "--output_file", str(target)]
+    result = subprocess.run(command, input=text, capture_output=True, text=True,
+                            timeout=300, env=env)
+    if result.returncode != 0 or not target.is_file():
+        raise RuntimeError("piper hatası: " + (result.stderr or "")[-200:])
+    return target
+
+
 def main(argv: list[str] | None = None) -> int:
     import argparse
 
