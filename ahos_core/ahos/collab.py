@@ -24,9 +24,7 @@ CONTRIBUTIONS = {
     "creative": "stüdyo tarafı: görsel/ses/senaryo üret",
     "data": "veri tarafı: ölçüm kriteri ve rapor hazırla",
     "quality": "kalite tarafı: kabul kriterlerini ve test planını yaz",
-    # NOT: "hukuk" departmanı defterde yok. Eskiden buraya iş yönlendiriliyordu
-    # ve görevler sahipsiz kalıp `blocked` oluyordu. Yasal işler şimdilik genel
-    # departmana düşer; gerçek bir hukuk departmanı kurulursa buraya eklenir.
+    "hukuk": "hukuk tarafı: Türkiye (KVKK), Almanya (DSGVO), AB (AI Act) ve Dubai (DIFC) uyumunu yaz",
     "marketing": "pazarlama tarafı: tanıtım metni ve planı hazırla",
     "research": "araştırma tarafı: rakip/benchmark incelemesi yap",
     "finance": "finans tarafı: maliyet ve bütçe etkisini çıkar",
@@ -39,6 +37,8 @@ KEYWORDS = {
     "creative": ("video", "ses", "dublaj", "jenerik", "görsel", "tasarım", "senaryo"),
     "data": ("veri", "rapor", "analiz", "metrik", "istatistik"),
     "quality": ("test", "kalite", "kabul", "doğrulama"),
+    "hukuk": ("hukuk", "kvkk", "gdpr", "dsgvo", "uyum", "compliance", "sözleşme",
+              "telif", "lisans", "marka", "difc", "dubai", "bae"),
     "marketing": ("pazarlama", "tanıtım", "reklam", "sosyal medya"),
     "research": ("araştır", "rakip", "benchmark", "incele"),
     "finance": ("bütçe", "maliyet", "fatura", "fiyat"),
