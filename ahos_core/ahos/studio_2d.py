@@ -110,11 +110,18 @@ def _character(draw: ImageDraw.ImageDraw, name: str, x: int, base: int, *, t: fl
     draw.rectangle([x + 6 + step, base - 70, x + 34 + step, base], fill=colors["pants"])
     # gövde
     draw.rounded_rectangle([x - 46, top + 120, x + 46, base - 60], radius=18, fill=colors["shirt"])
-    # kollar: jest + salınım
+    # kollar: jest + salınım (koordinatlar her zaman sıralı tutulur)
     swing = int(18 * math.sin(t * 5.0))
-    arm_lift = int(40 * gesture)
-    draw.rounded_rectangle([x - 74, top + 130 - arm_lift + swing, x - 50, base - 70 - arm_lift + swing], radius=10, fill=colors["shirt"])
-    draw.rounded_rectangle([x + 50, top + 130 - swing, x + 74, base - 70 - swing], radius=10, fill=colors["shirt"])
+    arm_lift = max(0, min(90, int(40 * gesture)))
+
+    def _arm(x0: int, x1: int, y_top: int, y_bottom: int) -> None:
+        top_y, bottom_y = sorted((y_top, y_bottom))
+        if bottom_y - top_y < 12:
+            bottom_y = top_y + 12
+        draw.rounded_rectangle([x0, top_y, x1, bottom_y], radius=10, fill=colors["shirt"])
+
+    _arm(x - 74, x - 50, top + 130 - arm_lift + swing, base - 70 - arm_lift + swing)
+    _arm(x + 50, x + 74, top + 130 - swing, base - 70 - swing)
     # baş
     draw.ellipse([x - 48, top, x + 48, top + 110], fill=colors["skin"])
     draw.chord([x - 48, top - 10, x + 48, top + 70], 180, 360, fill=colors["hair"])

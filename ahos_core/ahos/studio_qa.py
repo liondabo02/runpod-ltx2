@@ -114,6 +114,7 @@ def verify_episode(
     expected_duration: float | None = None,
     subtitles: str | Path | None = None,
     expects_audio: bool = False,
+    expected_cuts: int | None = None,
     duration_tolerance: float = 0.05,
 ) -> dict:
     video_path = Path(video).resolve()
@@ -155,8 +156,11 @@ def verify_episode(
 
     if diffs and freeze_runs:
         problems.append(f"hareketsiz bölüm(ler): {freeze_runs} (slayt teslimi)")
-    if diffs and expected_scenes and cuts < max(0, expected_scenes - 1):
-        problems.append(f"sahne geçişi az: {cuts} (beklenen ≥{expected_scenes - 1})")
+    # Kesme sayısı, senaryonun görsel planına göre beyan edilir: aynı mekânda
+    # geçen ardışık sahnelerde kesme olmaması doğaldır.
+    required_cuts = expected_cuts if expected_cuts is not None else max(0, int(expected_scenes) - 1)
+    if diffs and required_cuts and cuts < required_cuts:
+        problems.append(f"sahne geçişi az: {cuts} (beklenen ≥{required_cuts})")
 
     if expects_audio and not audio_streams:
         problems.append("ses akışı yok")
