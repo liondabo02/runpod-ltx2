@@ -1,18 +1,19 @@
 """Seslendirme hattı: metni WAV'a çevirir, bölüm sesini tek parça yapar.
 
-Motor seçimi (tek adam kararı):
-- `sapi`: Windows'ta hazır gelen konuşma motoru. Ağ gerekmez, 0 $.
-  Kurulu ses(ler) hangi dilde ise onu kullanır; Türkçe ses yoksa bu bir
-  KALİTE notudur (kapı bunu ayrıca raporlar).
+Motor seçimi (tek adam kararı), kalite sırasıyla:
+- `edge`: Microsoft Edge'in nöral sesleri (edge-tts). Türkçe dahil çok dil,
+  0 $, anahtar yok; ağ gerekir. Karakter başına farklı ses verilebilir.
 - `piper`: yerel nöral TTS; `.onnx` ses modeli gerektirir (indirme gerekir).
-- `runpod`: Kokoro/Chatterbox; API anahtarı gerektirir.
+- `sapi`: Windows'ta hazır gelen motor; ağ gerekmez ama Türkçe ses yoksa
+  aksan bozuktur (kapı bunu `language_match` ile raporlar).
 
-Bu modül ağ çağrısı yapmaz; yalnızca yerel motoru sürer.
+Bu modül yalnızca seçilen motoru sürer; motor yoksa açık hata verir.
 """
 
 from __future__ import annotations
 
 import array
+import asyncio
 import json
 import shutil
 import subprocess
@@ -22,6 +23,16 @@ from dataclasses import dataclass
 from pathlib import Path
 
 SAMPLE_RATE = 22050
+
+#: Edge nöral sesleri: dil -> cinsiyet -> ses kimliği
+EDGE_VOICES = {
+    "tr": {"female": "tr-TR-EmelNeural", "male": "tr-TR-AhmetNeural"},
+    "en": {"female": "en-US-AriaNeural", "male": "en-US-GuyNeural"},
+    "de": {"female": "de-DE-KatjaNeural", "male": "de-DE-ConradNeural"},
+}
+
+#: Karakter -> cinsiyet (ses ataması için)
+CHARACTER_GENDER = {"aden": "female", "kaan": "male", "anne": "female", "baba": "male"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -214,6 +225,102 @@ def synthesize_piper(text: str, out_path: str | Path, model: Path) -> Path:
     if result.returncode != 0 or not target.is_file():
         raise RuntimeError("piper hatası: " + (result.stderr or "")[-200:])
     return target
+
+
+def edge_voice(language: str, speaker: str = "") -> str | None:
+    """Karaktere ve dile uygun Edge nöral sesini seç."""
+
+    prefix = (language or "tr").split("-")[0].lower()
+    table = EDGE_VOICES.get(prefix)
+    if not table:
+        return None
+    gender = CHARACTER_GENDER.get((speaker or "").lower(), "female")
+    return table.get(gender) or table.get("female")
+
+
+def synthesize_edge(text: str, out_path: str | Path, voice: str,
+                    *, rate: str = "+0%") -> Path:
+    """edge-tts ile MP3 üret; ffmpeg ile 22050 Hz mono WAV'a çevir."""
+
+    target = Path(out_path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    mp3 = target.with_suffix(".mp3")
+
+    try:
+        import edge_tts
+    except Exception as exc:  # noqa: BLE001
+        raise RuntimeError("edge-tts kurulu değil: " + type(exc).__name__)
+
+    async def _run() -> None:
+        communicate = edge_tts.Communicate(text, voice, rate=rate)
+        await communicate.save(str(mp3))
+
+    try:
+        asyncio.run(_run())
+    except Exception as exc:  # noqa: BLE001 - ağ/kota hatası açıkça söylenir
+        raise RuntimeError("edge-tts hatası: " + type(exc).__name__ + ": " + str(exc)[:120])
+
+    ffmpeg = shutil.which("ffmpeg")
+    if not ffmpeg:
+        raise RuntimeError("ffmpeg bulunamadı (MP3 → WAV)")
+    result = subprocess.run(
+        [ffmpeg, "-y", "-loglevel", "error", "-i", str(mp3),
+         "-ac", "1", "-ar", str(SAMPLE_RATE), str(target)],
+        capture_output=True, text=True, timeout=120,
+    )
+    mp3.unlink(missing_ok=True)
+    if result.returncode != 0 or not target.is_file():
+        raise RuntimeError("MP3 → WAV başarısız: " + (result.stderr or "")[-200:])
+    return target
+
+
+def engine_for(language: str) -> str:
+    """Kullanılabilir en iyi motoru seç (açıkça istenmişse ona uy)."""
+
+    import os
+
+    forced = os.environ.get("AHOS_VOICE_ENGINE", "").strip().lower()
+    if forced in {"edge", "piper", "sapi"}:
+        return forced
+    prefix = (language or "tr").split("-")[0].lower()
+    if prefix in EDGE_VOICES:
+        return "edge"
+    if piper_model_path() is not None:
+        return "piper"
+    return "sapi"
+
+
+def synthesize(text: str, out_path: str | Path, *, language: str = "tr",
+               speaker: str = "", engine: str | None = None) -> dict:
+    """Metni sese çevir; kullanılan motoru ve sesi raporla."""
+
+    chosen = engine or engine_for(language)
+    target = Path(out_path).with_suffix(".wav")
+
+    if chosen == "edge":
+        voice = edge_voice(language, speaker)
+        if voice is None:
+            raise RuntimeError(f"edge için ses yok: {language}")
+        path = synthesize_edge(text, target, voice)
+        return {"engine": "edge", "voice": voice, "path": str(path),
+                "language_match": True, "seconds": round(wav_duration(path), 2)}
+
+    if chosen == "piper":
+        model = piper_model_path()
+        if model is None:
+            raise RuntimeError("piper ses modeli yok (AHOS_PIPER_VOICE)")
+        path = synthesize_piper(text, target, model)
+        return {"engine": "piper", "voice": model.stem, "path": str(path),
+                "language_match": language.lower() in model.name.lower(),
+                "seconds": round(wav_duration(path), 2)}
+
+    voice = pick_voice(language)
+    path = synthesize_wav(text, target, voice=voice)
+    return {"engine": "sapi", "voice": voice.name if voice else None,
+            "culture": voice.culture if voice else None,
+            "path": str(path),
+            "language_match": bool(voice and voice.culture.lower().startswith(language.lower())),
+            "seconds": round(wav_duration(path), 2)}
 
 
 def main(argv: list[str] | None = None) -> int:

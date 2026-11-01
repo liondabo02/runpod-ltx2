@@ -71,6 +71,26 @@ def test_envelope_follows_the_audio(tmp_path):
     assert all(0.0 <= value <= 1.0 for value in envelope)
 
 
+def test_edge_voice_mapping_per_character():
+    """Aden kadın, Kaan erkek sesi alır; bilinmeyen dilde ses yok."""
+
+    from ahos.studio_voice import edge_voice
+
+    assert edge_voice("tr", "aden") == "tr-TR-EmelNeural"
+    assert edge_voice("tr", "kaan") == "tr-TR-AhmetNeural"
+    assert edge_voice("tr-TR", "bilinmeyen") == "tr-TR-EmelNeural"
+    assert edge_voice("xx", "aden") is None
+
+
+def test_engine_follows_explicit_override_and_language(monkeypatch):
+    from ahos.studio_voice import engine_for
+
+    monkeypatch.delenv("AHOS_VOICE_ENGINE", raising=False)
+    assert engine_for("tr") == "edge"        # Türkçe için nöral ses var
+    monkeypatch.setenv("AHOS_VOICE_ENGINE", "sapi")
+    assert engine_for("tr") == "sapi"        # açık istek her zaman kazanır
+
+
 @pytest.mark.skipif(not list_voices(), reason="kurulu SAPI sesi yok")
 def test_voiced_episode_passes_the_gate(tmp_path):
     voice = list_voices()[0]

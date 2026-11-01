@@ -66,9 +66,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  - {problem}")
         for note in report["notes"]:
             print(f"  · {note}")
-        voice = report.get("voice")
+        voice = report.get("voice") or {}
         if voice:
-            print(f"Ses  : {voice['name']} ({voice['culture']})")
+            print(f"Ses  : {voice.get('voice') or voice.get('name')} "
+                  f"[{voice.get('engine', 'sapi')}] · dil uyumu: {voice.get('language_match')}")
         return 0 if report["passed"] else 1
 
     console = build_default_console(runtime_dir)

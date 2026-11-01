@@ -16,6 +16,7 @@ from .studio_voice import (
     build_track,
     list_voices,
     pick_voice,
+    synthesize,
     synthesize_wav,
     wav_duration,
 )
@@ -109,23 +110,33 @@ def produce_episode(
     }, indent=2, ensure_ascii=False), encoding="utf-8")
 
     voice = None
-    if use_voice:
-        voices = list_voices()
-        voice = next((v for v in voices if voice_name and v.name == voice_name), None)
-        if voice is None:
-            voice = pick_voice(language, voices)
-
+    voice_info: dict | None = None
+    voices_used: list[dict] = []
     track = None
-    if voice is not None:
+    if use_voice:
         timeline = episode_timeline(episode)
         clips = []
         for index, row in enumerate(timeline):
             wav = out / "voice" / f"line_{index:02d}.wav"
-            synthesize_wav(row["text"], wav, voice=voice)
-            clips.append((wav, row["start"], wav_duration(wav)))
+            try:
+                info = synthesize(row["text"], wav, language=language, speaker=row["speaker"])
+            except Exception as exc:  # noqa: BLE001 - motor düşerse SAPI'ye in
+                info = synthesize(row["text"], wav, language=language,
+                                  speaker=row["speaker"], engine="sapi")
+                info["fallback_reason"] = f"{type(exc).__name__}: {exc}"[:160]
+            voice_info = info
+            entry = {"speaker": row["speaker"], "voice": info.get("voice") or info.get("name"),
+                     "engine": info.get("engine"), "language_match": info.get("language_match")}
+            if entry not in voices_used:
+                voices_used.append(entry)
+            clips.append((Path(info["path"]), row["start"], float(info["seconds"])))
         track = build_track(clips, episode.duration(), out / "voice" / "episode.wav")
+        if voice_info is not None:
+            voice_info = dict(voice_info, voices=voices_used)
 
-    manifest = render_episode(episode, out, voice=voice.name if voice else None, audio=track)
+    manifest = render_episode(episode, out,
+                              voice=(voice_info or {}).get("voice"),
+                              audio=track)
 
     distinct_backgrounds = len({scene.background for scene in episode.scenes})
     report = verify_episode(
@@ -133,14 +144,10 @@ def produce_episode(
         expected_scenes=manifest["scenes"],
         expected_duration=manifest["duration_seconds"],
         subtitles=manifest["subtitles"],
-        expects_audio=voice is not None,
+        expects_audio=track is not None,
         expected_cuts=max(0, distinct_backgrounds - 1),
     )
-    report["voice"] = (
-        {"name": voice.name, "culture": voice.culture,
-         "language_match": voice.culture.lower().startswith(language.lower())}
-        if voice else None
-    )
+    report["voice"] = voice_info
     report["manifest"] = manifest
     (out / "acceptance.json").write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
     return report
