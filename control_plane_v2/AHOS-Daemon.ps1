@@ -109,6 +109,11 @@ switch ($Action) {
             if ($LlmFree) { $env:AHOS_LLM_FREE = '1' }
             $args += @('--executor-mode', 'model')
         }
+        # Uretim politikasi: bir uretim adimi hicbir dosyayi degistirmediyse
+        # "tamamlandi" sayilmaz (no_change). Testler istemezse kapatabilir.
+        if (-not $env:AHOS_REQUIRE_PRODUCTIVE_CHANGE) {
+            $env:AHOS_REQUIRE_PRODUCTIVE_CHANGE = '1'
+        }
         $proc = Start-Process -FilePath $Python -ArgumentList $args -WorkingDirectory $CoreDir `
             -WindowStyle Hidden -PassThru `
             -RedirectStandardOutput $OutLog -RedirectStandardError $ErrLog

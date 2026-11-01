@@ -20,6 +20,35 @@ HASH_CHUNK_BYTES = 64 * 1024
 MAX_ENTRIES = 20_000
 MAX_HASHED_FILES = 4_096
 
+#: Uretim zincirindeki adim sirasi (onceki adimin hash'leri ile karsilastirma icin).
+_STEP_ORDER = ('brief', 'produce', 'review')
+
+
+def _previous_source_hashes(evidence, task_id):
+    """Onceki adimin kaynak hash kaydini dondur (yoksa None).
+
+    Amac: "derlendi" ile "teslim edildi" arasindaki farki yakalamak. Uretim
+    adimi, onceki adimdan bu yana hicbir dosyayi degistirmediyse bu bir
+    teslimat degildir.
+    """
+    mission, _, step = str(task_id).rpartition(':')
+    try:
+        index = _STEP_ORDER.index(step)
+    except ValueError:
+        return None
+    if index == 0:
+        return None
+    previous_step = _STEP_ORDER[index - 1]
+    candidates = sorted(Path(evidence).glob(f'qa-{mission}_{previous_step}-*.json'))
+    if not candidates:
+        return None
+    try:
+        payload = json.loads(candidates[-1].read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return None
+    hashes = payload.get('source_hashes')
+    return hashes if isinstance(hashes, dict) else None
+
 
 def digest_file(path, limit):
     digest = hashlib.sha256()
@@ -104,6 +133,20 @@ def make_project_qa(project_root, evidence_root, *, require_functional=False):
                     raise ValueError('İşçi kanıtı yok veya izinli kanıt alanı dışında')
             if not result.artifacts:
                 raise ValueError('İşçi kanıt dosyası sunmadı')
+            step_name = item.task_id.rsplit(':', 1)[-1]
+            productive_required = os.environ.get(
+                'AHOS_REQUIRE_PRODUCTIVE_CHANGE', '0'
+            ).strip().lower() in {'1', 'true', 'yes', 'on'}
+            if step_name != 'brief' and productive_required:
+                # "Derleniyor" tek basina teslim kaniti degildir: uretim adimi
+                # gercekten bir dosya degistirmis olmali. Uretimde daemon bu
+                # politikayi acar (AHOS_REQUIRE_PRODUCTIVE_CHANGE=1).
+                previous = _previous_source_hashes(evidence, item.task_id)
+                if previous is not None and previous == hashes:
+                    raise ValueError(
+                        'Üretim adımı hiçbir dosyayı değiştirmedi (no_change): '
+                        'teslimat yok, yalnızca mevcut hâl doğrulandı'
+                    )
             if item.task_id.rsplit(':', 1)[-1] != 'brief':
                 index = detect_web_root(root) / 'index.html'
                 # Statik web denetimi yalnız web projelerine uygulanır; web
