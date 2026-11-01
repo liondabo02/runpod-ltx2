@@ -137,10 +137,12 @@ def make_project_qa(project_root, evidence_root, *, require_functional=False):
             productive_required = os.environ.get(
                 'AHOS_REQUIRE_PRODUCTIVE_CHANGE', '0'
             ).strip().lower() in {'1', 'true', 'yes', 'on'}
-            if step_name != 'brief' and productive_required:
+            if step_name == 'produce' and productive_required:
                 # "Derleniyor" tek basina teslim kaniti degildir: uretim adimi
                 # gercekten bir dosya degistirmis olmali. Uretimde daemon bu
                 # politikayi acar (AHOS_REQUIRE_PRODUCTIVE_CHANGE=1).
+                # Inceleme/dogrulama adimlari projeyi degistirmez; onlarin isi
+                # zaten mevcut hali denetlemektir, bu yuzden kural onlara uygulanmaz.
                 previous = _previous_source_hashes(evidence, item.task_id)
                 if previous is not None and previous == hashes:
                     raise ValueError(

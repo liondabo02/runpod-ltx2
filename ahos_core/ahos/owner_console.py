@@ -1392,6 +1392,15 @@ class OwnerConsole:
                         self.artifacts_root,
                     )
                     chosen = _produce_only_executor(cloud_exec, deterministic)
+                elif getattr(project, "kind", "") == "document-workspace":
+                    # Belge departmanları: teslim, projenin deliverables/ dizinine
+                    # yazılır; proje kabul kapısı (başlık + uzunluk) doğrular.
+                    from .doc_factory import make_document_factory_executor
+
+                    chosen = make_document_factory_executor(
+                        self.runtime_dir,
+                        project_root=project.work_path or project.path,
+                    )
                 elif settings is not None:
                     model_exec = make_model_executor(
                         project.work_path or project.path,

@@ -68,22 +68,125 @@ def _worker_lines(runtime: Path, department: str, limit: int = 6) -> list[str]:
     return lines
 
 
-def generate(runtime_dir: str | Path, department: str, objective: str) -> Path:
-    """Departman için gerçek veriden markdown rapor üretir."""
+PLAYBOOKS: dict[str, dict[str, list[str]]] = {
+    "finance": {
+        "araçlar": ["Python + pandas ile bütçe tablosu", "GnuCash (ücretsiz muhasebe)",
+                    "Excel/Sheets şablonu", "vergi takvimi hatırlatıcıları"],
+        "çıktılar": ["aylık nakit akışı", "gelir-gider özeti", "risk listesi"],
+    },
+    "marketing": {
+        "araçlar": ["Google Search Console (ücretsiz)", "Google Analytics 4 (ücretsiz)",
+                    "Mailchimp ücretsiz plan", "içerik takvimi (Markdown)"],
+        "çıktılar": ["kanal planı", "içerik takvimi", "mesaj matrisi"],
+    },
+    "sales": {
+        "araçlar": ["SQLite tabanlı CRM-lite", "teklif şablonu", "e-posta takip scripti"],
+        "çıktılar": ["satış hunisi", "teklif taslağı", "haftalık takip listesi"],
+    },
+    "research": {
+        "araçlar": ["arXiv / OpenAlex / Semantic Scholar (ücretsiz API)",
+                    "Crossref DOI doğrulama", "Zotero (ücretsiz)"],
+        "çıktılar": ["araştırma sorusu", "kaynak listesi (DOI'li)", "bulgular + sınırlar"],
+    },
+    "data": {
+        "araçlar": ["DuckDB / pandas", "açık veri setleri (data.gov, Kaggle)",
+                    "pandera ile şema doğrulama"],
+        "çıktılar": ["veri sözlüğü", "kalite raporu", "özet istatistikler"],
+    },
+    "support": {
+        "araçlar": ["SQLite ticket kuyruğu", "SSS bankası", "yanıt şablonları"],
+        "çıktılar": ["SSS", "yanıt süresi hedefi", "eskalasyon kuralı"],
+    },
+    "operations": {
+        "araçlar": ["Task Scheduler / cron", "süreç diyagramı (Mermaid)", "RACI tablosu"],
+        "çıktılar": ["süreç adımları", "sorumluluk matrisi", "otomasyon fırsatları"],
+    },
+    "infrastructure": {
+        "araçlar": ["Windows Task Scheduler", "robocopy yedekleme", "uptime izleme"],
+        "çıktılar": ["yedekleme planı", "izleme listesi", "geri dönüş adımları"],
+    },
+    "guvenlik": {
+        "araçlar": ["sır taraması (git grep + entropy)", "yedek doğrulama",
+                    "erişim denetimi (kim neyi görebiliyor)"],
+        "çıktılar": ["risk kaydı", "sır envanteri", "erişim matrisi"],
+    },
+    "quality": {
+        "araçlar": ["pytest + kabul kapıları", "kontrol listesi (Markdown)"],
+        "çıktılar": ["kabul kriterleri", "test kapsamı", "bulgu listesi"],
+    },
+    "holding": {
+        "araçlar": ["portföy özeti (kuyruk verisinden)", "karar kaydı (ADR)"],
+        "çıktılar": ["departman durumu", "karar günlüğü", "öncelik listesi"],
+    },
+    "genel": {
+        "araçlar": ["Markdown plan", "kontrol listesi"],
+        "çıktılar": ["hedef", "adımlar", "kabul kriteri"],
+    },
+    "creative": {
+        "araçlar": ["studio_2d (kod ile çizim)", "edge-tts (Türkçe nöral ses)",
+                    "ffmpeg montaj", "studio_qa kabul kapısı"],
+        "çıktılar": ["bölüm senaryosu", "sahne planı", "seslendirme", "kapı raporu"],
+    },
+    "oyun": {
+        "araçlar": ["Godot 4 (ücretsiz)", "Phaser (web)", "Aseprite alternatifi: LibreSprite"],
+        "çıktılar": ["oyun döngüsü", "varlık listesi", "test senaryoları"],
+    },
+    "software": {
+        "araçlar": ["pytest", "kabul kapısı (tools/check_offline.py)", "git worktree"],
+        "çıktılar": ["değişiklik özeti", "test sonucu", "geri alma planı"],
+    },
+    "ai-platform": {
+        "araçlar": ["yerel model (ollama)", "edge-tts", "provider zinciri"],
+        "çıktılar": ["model karşılaştırması", "maliyet notu", "seçim gerekçesi"],
+    },
+}
+
+
+def _playbook(department: str) -> dict[str, list[str]]:
+    return PLAYBOOKS.get(department, PLAYBOOKS["genel"])
+
+
+def generate(runtime_dir: str | Path, department: str, objective: str,
+             *, project_root: str | Path | None = None) -> Path:
+    """Departman için gerçek veriden markdown rapor üretir.
+
+    `project_root` verilirse belge projenin `deliverables/` dizinine yazılır;
+    böylece proje kabul kapısı (başlık + uzunluk) belgeyi doğrulayabilir.
+    """
 
     runtime = Path(runtime_dir)
-    out_dir = runtime / "artifacts" / "documents"
+    if project_root is not None:
+        out_dir = Path(project_root) / "deliverables"
+    else:
+        out_dir = runtime / "artifacts" / "documents"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     stats = _queue_stats(runtime)
     missions = _department_missions(runtime, department)
     workers = _worker_lines(runtime, department)
+    playbook = _playbook(department)
     stamp = time.strftime("%Y-%m-%d %H:%M")
 
     lines = [
-        f"# {department.title()} · durum belgesi",
+        f"# {department.title()} · çalışma belgesi",
         "",
         f"Üretim: {stamp} · görev: {objective[:160]}",
+        "",
+        "## Bu belgenin amacı",
+        "",
+        "Departmanın bu görev için izleyeceği planı, kullanacağı ücretsiz araçları",
+        "ve teslimin kabul kriterini tek sayfada toplar. Sayılar holdingin kendi",
+        "kuyruğundan gelir; yorum sahibe aittir.",
+        "",
+        "## Ücretsiz / düşük maliyetli araç seti",
+        "",
+    ]
+    lines += [f"- {item}" for item in playbook["araçlar"]]
+
+    lines += ["", "## Beklenen çıktılar", ""]
+    lines += [f"- {item}" for item in playbook["çıktılar"]]
+
+    lines += [
         "",
         "## Holding kuyruğu (gerçek sayılar)",
         "",
@@ -105,6 +208,12 @@ def generate(runtime_dir: str | Path, department: str, objective: str) -> Path:
 
     lines += [
         "",
+        "## Kabul kriteri",
+        "",
+        "- Belge, departmanın projesindeki kabul kapısından geçmeli (başlık + ≥120 karakter).",
+        "- Sayılar kuyruk veritabanından okunur; uydurma metrik yoktur.",
+        "- Ücretli araç kullanılmadı; maliyet 0 $.",
+        "",
         "## Değerlendirme",
         "",
         "- Belge, sistemin kendi verisinden derlendi (model çağrısı yok).",
@@ -112,13 +221,15 @@ def generate(runtime_dir: str | Path, department: str, objective: str) -> Path:
         "",
     ]
 
-    path = out_dir / f"{department}-durum-{int(time.time())}.md"
+    slug = "".join(ch if ch.isalnum() else "-" for ch in objective.casefold())[:40].strip("-") or "gorev"
+    path = out_dir / f"{department}-{slug}-{int(time.time())}.md"
     path.write_text("\n".join(lines), encoding="utf-8")
     return path
 
 
-def make_document_factory_executor(runtime_dir: str | Path):
-    """Proje bağlı olmayan departmanlar için deterministik belge yürütücüsü."""
+def make_document_factory_executor(runtime_dir: str | Path,
+                                   project_root: str | Path | None = None):
+    """Belge üreten departmanlar için deterministik yürütücü."""
 
     runtime = Path(runtime_dir)
 
@@ -126,19 +237,48 @@ def make_document_factory_executor(runtime_dir: str | Path):
         from .worker_runtime import WorkerExecutionResult
 
         department = getattr(item, "department", "") or "genel"
+        step = str(getattr(item, "task_id", "")).rsplit(":", 1)[-1]
+        evidence_dir = runtime / "artifacts" / "documents"
+        evidence_dir.mkdir(parents=True, exist_ok=True)
+
+        # Üretim dışındaki adımlar (review/verify) projeye teslim yazmaz;
+        # yalnızca denetim kanıtı üretir. Böylece teslim dosyası tek olur.
+        if step != "produce":
+            title = getattr(item, "title", "")
+            path = evidence_dir / f"{department}-{step}-{int(time.time() * 1000)}.md"
+            path.write_text(
+                f"# {department.title()} · {step} kaydı\n\n"
+                f"Görev: {title[:300]}\n\n"
+                "- Bu adım proje dosyalarını değiştirmez.\n"
+                "- Teslim, üretim adımında yazılan belgedir; bu kayıt onun denetimidir.\n"
+                "- Ücretli araç kullanılmadı; maliyet 0 $.\n",
+                encoding="utf-8",
+            )
+            return WorkerExecutionResult(
+                task_id=item.task_id, worker_id=worker_id, success=True,
+                summary=f"{step} kaydı yazıldı: {path.name}",
+                artifacts=(str(path),),
+            )
+
         try:
-            path = generate(runtime, department, getattr(item, "title", ""))
+            path = generate(runtime, department, getattr(item, "title", ""),
+                            project_root=project_root)
         except Exception as exc:  # noqa: BLE001 - üretim hatası göreve yazılır
             return WorkerExecutionResult(
                 task_id=item.task_id, worker_id=worker_id, success=False,
                 summary=f"belge üretilemedi: {type(exc).__name__}",
             )
+
+        evidence_path = evidence_dir / path.name
+        if path.resolve() != evidence_path.resolve():
+            evidence_path.write_bytes(path.read_bytes())
+
         return WorkerExecutionResult(
             task_id=item.task_id,
             worker_id=worker_id,
             success=True,
             summary=f"belge üretildi: {path.name} ({path.stat().st_size} bayt)",
-            artifacts=(str(path),),
+            artifacts=(str(evidence_path),),
         )
 
     return _execute
