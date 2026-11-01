@@ -33,3 +33,8 @@ for _name in (
 
 # Kısa görev süresi: bir test yanlışlıkla gerçek iş başlatırsa dakikalarca asılı kalmasın.
 os.environ.setdefault("AHOS_MISSION_TIMEOUT_SECONDS", "20")
+
+# Testlerin çoğu geçici (git dışı) dizinlerde kabul kapısı sabitler. Üretimde bu
+# yalnızca açık sahip izniyle veya sürüm kontrolündeki temiz bir kapı için olur;
+# kuralın kendisi ``test_acceptance_trust.py`` içinde ayrıca sınanır.
+os.environ.setdefault("AHOS_ACCEPTANCE_ALLOW_UNTRACKED", "1")

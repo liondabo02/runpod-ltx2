@@ -63,3 +63,49 @@ def test_oversize_gate_rejected(project):
     gate.write_bytes(b'x'*(1024*1024+1))
     enroll(gate,baseline)
     assert not trusted_gate(root,baseline)[0]
+
+
+def test_untracked_project_needs_owner_opt_in(project, monkeypatch):
+    """Git dışı projede kapı ancak açık sahip izniyle sabitlenir."""
+    from ahos.acceptance_bootstrap import ensure_baseline
+
+    root, gate, baseline = project
+    monkeypatch.delenv("AHOS_ACCEPTANCE_ALLOW_UNTRACKED", raising=False)
+
+    enrolled, reason = ensure_baseline(root, baseline.parent)
+    assert enrolled is False
+    assert "sürüm kontrolü" in reason
+    assert not (baseline.parent / "acceptance-baseline.json").exists()
+
+    monkeypatch.setenv("AHOS_ACCEPTANCE_ALLOW_UNTRACKED", "1")
+    enrolled, reason = ensure_baseline(root, baseline.parent)
+    assert enrolled is True, reason
+
+
+def test_git_tracked_gate_is_pinned_and_tamper_is_refused(tmp_path):
+    """Git projesinde temiz kapı sabitlenir; işçi değiştirirse sabitleme reddedilir."""
+    import subprocess
+
+    from ahos.acceptance_bootstrap import ensure_baseline
+
+    repo = tmp_path / "repo"
+    (repo / "tools").mkdir(parents=True)
+    gate = repo / "tools" / "check_offline.py"
+    gate.write_text("print('v1')\n", encoding="utf-8")
+    subprocess.run(["git", "init", "-q", str(repo)], check=True)
+    subprocess.run(["git", "-C", str(repo), "config", "user.email", "t@example.invalid"], check=True)
+    subprocess.run(["git", "-C", str(repo), "config", "user.name", "T"], check=True)
+    subprocess.run(["git", "-C", str(repo), "add", "-A"], check=True)
+    subprocess.run(["git", "-C", str(repo), "commit", "-qm", "baseline"], check=True)
+
+    evidence = tmp_path / "evidence"
+    enrolled, reason = ensure_baseline(repo, evidence)
+    assert enrolled is True, reason
+
+    # Aday kabul testini değiştirir: yeni bir sabitleme yapılmamalı.
+    gate.write_text("print('v2 - always pass')\n", encoding="utf-8")
+    fresh = tmp_path / "evidence2"
+    enrolled, reason = ensure_baseline(repo, fresh)
+    assert enrolled is False
+    assert "değişmiş" in reason
+    assert not (fresh / "acceptance-baseline.json").exists()

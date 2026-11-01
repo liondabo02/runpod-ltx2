@@ -13,9 +13,47 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import subprocess
 from pathlib import Path
 
 MAX_GATE_BYTES = 1024 * 1024
+
+
+def _gate_provenance(root: Path, gate: Path) -> tuple[bool, str]:
+    """Pin only a gate whose provenance is known.
+
+    - Git project: the gate must be tracked and unmodified (working tree and
+      index), so a worker cannot rewrite the acceptance test and then have the
+      bootstrap pin the tampered file.
+    - Non-git project: allowed only with the explicit owner opt-in
+      ``AHOS_ACCEPTANCE_ALLOW_UNTRACKED=1``.
+    """
+
+    if not (root / ".git").exists():
+        opt_in = os.environ.get("AHOS_ACCEPTANCE_ALLOW_UNTRACKED", "0").strip().lower()
+        if opt_in in {"1", "true", "yes", "on"}:
+            return True, "sürüm kontrolü yok (sahip izniyle)"
+        return False, "kabul testi sürüm kontrolünde değil (AHOS_ACCEPTANCE_ALLOW_UNTRACKED=1 gerekli)"
+
+    rel = gate.relative_to(root).as_posix()
+    try:
+        tracked = subprocess.run(
+            ["git", "-C", str(root), "ls-files", "--error-unmatch", rel],
+            capture_output=True, timeout=15,
+        )
+        if tracked.returncode != 0:
+            return False, "kabul testi sürüm kontrolüne eklenmemiş"
+        for args, label in (
+            (["git", "-C", str(root), "diff", "--quiet", "--", rel], "çalışma ağacında değişmiş"),
+            (["git", "-C", str(root), "diff", "--cached", "--quiet", "--", rel], "hazırlık alanında değişmiş"),
+        ):
+            result = subprocess.run(args, capture_output=True, timeout=15)
+            if result.returncode != 0:
+                return False, f"kabul testi {label}"
+    except (OSError, subprocess.SubprocessError):
+        return False, "kabul testinin sürüm durumu denetlenemedi"
+    return True, "kabul testi sürüm kontrolünde temiz"
 
 
 def ensure_baseline(project_root: str | Path, evidence_root: str | Path) -> tuple[bool, str]:
@@ -29,6 +67,9 @@ def ensure_baseline(project_root: str | Path, evidence_root: str | Path) -> tupl
         return True, "kabul kaydı zaten var"
     if gate.is_symlink() or gate.parent.is_symlink() or not gate.is_file():
         return False, "kabul testi yok veya güvenli dosya değil"
+    clean, why = _gate_provenance(root, gate.resolve())
+    if not clean:
+        return False, why
     try:
         gate.resolve().relative_to(root)
         if gate.stat().st_size > MAX_GATE_BYTES:

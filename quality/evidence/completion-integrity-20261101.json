@@ -1,0 +1,22 @@
+{
+  "generated_at": "2026-11-01",
+  "database": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\ahos_core\\runtime\\company-service.db",
+  "method": "ahos.completion_integrity (salt okunur, mode=ro)",
+  "note": "Legacy kayitlar DEGISTIRILMEDI. 'inconsistent' sayisi, sonuc belgesi eksik/tutarsiz kayitlari gosterir; 'independent_qa_and_artifact_verified' sifirdir cunku satir icerigi bagimsiz QA ve artefakt teslimini kanitlamaz.",
+  "report": {
+    "ok": false,
+    "total_completed_status": 2692,
+    "audited": 2692,
+    "not_audited": 0,
+    "payload_categories": {
+      "consistent_but_unverified": 209,
+      "missing_result": 2072,
+      "no_steps": 25,
+      "result_not_completed": 386
+    },
+    "inconsistent": 2483,
+    "independent_qa_and_artifact_verified": 0,
+    "proof_limitation": "row payload alone cannot independently prove QA or artifact delivery",
+    "contains_raw_task_data": false
+  }
+}
