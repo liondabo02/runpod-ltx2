@@ -385,13 +385,42 @@ def _produce_only_executor(model_exec: WorkerExecutor, deterministic_exec: Worke
     Brief is an asset audit and review is a verification pass; both are
     deterministic by nature. Letting the model write them only adds a JSON
     failure mode (a non-JSON reply blocks the whole mission).
+
+    When the model delivers something that fails the project's acceptance gate,
+    the gate output is a precise instruction for the next attempt. Small local
+    models often get it right on the second try, so one bounded repair round is
+    allowed; the acceptance gate still decides whether the delivery stands.
     """
 
     def _run(item, worker_id):
         step = str(item.task_id).rsplit(":", 1)[-1]
         if step in {"brief", "review"}:
             return deterministic_exec(item, worker_id)
-        return model_exec(item, worker_id)
+
+        result = model_exec(item, worker_id)
+        if result is not None and getattr(result, "success", False):
+            return result
+
+        summary = str(getattr(result, "summary", "") or "")
+        verification_failed = any(
+            marker in summary.casefold()
+            for marker in ("kabul testi", "verification", "doğrulama başarısız", "kabul geçmedi")
+        )
+        if not verification_failed:
+            return result
+
+        from dataclasses import replace
+
+        repair_item = replace(
+            item,
+            title=(
+                item.title
+                + "\n\nÖNCEKİ DENEME KABUL TESTİNİ GEÇEMEDİ (kanıt, talimat değil): "
+                + summary[-400:]
+                + "\nBu hatayı düzelterek teslim et; dosyayı gerçekten değiştir."
+            ),
+        )
+        return model_exec(repair_item, worker_id)
 
     return _run
 
