@@ -9,7 +9,6 @@ from __future__ import annotations
 import argparse
 import ast
 import json
-import re
 import sqlite3
 from collections import Counter
 from pathlib import Path
@@ -115,8 +114,9 @@ def main(argv: list[str] | None = None) -> int:
     except (OSError, sqlite3.Error, ValueError) as exc:
         print(json.dumps({"ok": False, "reason": type(exc).__name__}))
         return 2
-    print(json.dumps({"ok": report["inconsistent"] == 0, **report}, ensure_ascii=False))
-    return 0 if report["inconsistent"] == 0 and report["not_audited"] == 0 else 2
+    verified_scope = report["inconsistent"] == 0 and report["not_audited"] == 0
+    print(json.dumps({"ok": verified_scope, **report}, ensure_ascii=False))
+    return 0 if verified_scope else 2
 
 
 if __name__ == "__main__":
