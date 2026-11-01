@@ -63,3 +63,43 @@ def test_valid_result_saves_matching_status(tmp_path):
     row = queue.get("mission-1")
     assert row.status is QueueStatus.COMPLETED
     assert '"status": "completed"' in row.result_json
+
+
+def test_company_loop_rejection_blocks_and_releases_lease(tmp_path):
+    from ahos.autonomous_company import CompanyLoop
+
+    queue = PersistentMissionQueue(tmp_path / "missions.db")
+    queue.enqueue(
+        mission_id="mission-1",
+        objective="prove this work",
+        primary_department="software",
+    )
+
+    loop = CompanyLoop(
+        queue=queue,
+        owner="isolated-worker",
+        executor=lambda mission: _result(ident="wrong-mission", status=MissionStatus.COMPLETED),
+    )
+    outcome = loop.run_once()
+    assert outcome is not None
+    assert outcome.status is QueueStatus.BLOCKED
+    assert outcome.lease_owner is None
+    assert "completion_integrity_rejected" in (outcome.last_error or "")
+    assert '"status": "blocked"' in (outcome.result_json or "")
+    assert loop.run_once() is None
+
+
+def test_owner_console_rejected_completion_is_blocked_and_unleased(tmp_path):
+    from types import SimpleNamespace
+    from ahos.owner_console import OwnerConsole
+
+    queue = _running(tmp_path)
+    console = SimpleNamespace(queue=queue)
+    OwnerConsole._record(
+        console, "mission-1", "worker-1",
+        _result(ident="some-other-task", status=MissionStatus.COMPLETED),
+    )
+    record = queue.get("mission-1")
+    assert record.status is QueueStatus.BLOCKED
+    assert record.lease_owner is None
+    assert "completion_integrity_rejected" in record.last_error

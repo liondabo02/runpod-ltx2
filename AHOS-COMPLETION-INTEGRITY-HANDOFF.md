@@ -37,3 +37,14 @@ Date: 2026-11-01. Status: code and tests ready in independent worktree; NOT LIVE
 - Worktree: C:\actions-runner\_work\AHOS-COMPLETION-INTEGRITY-20261101
 - Branch: fix/ahos-completion-integrity-20261101
 - No paid models, live queue mutations, process interruptions, deployment or file deletion performed.
+## 2026-11-01 per-turn DeepSeek collision check and lease fix
+- Compared the live worktree with this branch BEFORE editing. Live branch remains feature/agent-control-plane (head ecd6dbd); candidate initially clean (head 06c1b62).
+- Live had 199 git porcelain entries (290 actual changed/untracked paths). DeepSeek Harness process count 14. Main daemon.py, owner_console.py and autonomous_company.py remain dirty and likely in use.
+- New read-only tools/parallel_agent_preflight.py: compares Git merge-base, committed deltas, unstaged and untracked paths; redacts sensitive filenames; returns nonzero if an ownership collision/dirty live tree exists.
+- Actual collision preflight found 6 overlapping paths: autonomous_company.py, daemon.py, owner_console.py, providers.py, worker_runtime.py and tests/test_daemon.py. DO NOT cherry-pick/merge these without reviewing live owners' modifications.
+- Added failure-safe recording when queue.complete rejects an invalid result. Both CompanyLoop and OwnerConsole now record the mission BLOCKED, release the lease and suppress a fake completion. The error reason records an exception TYPE, not raw task data.
+- New tests verify a wrong-mission claimed completion cannot strand a lease in either execution path.
+- Legacy queue.complete still accepts a valid, zero-step MissionResult.COMPLETED. This remains an important residual risk: no proof of independent QA/file diff merely from status. Require an explicit verified receipt before enabling a strict production gate.
+- Live daemon's direct SQL document bypass remains present and active. The staged patch in this branch is not applied to the live tree and did not pass git apply --check on the mixed-line-ending file; actual owner must review/rebase.
+- Current daemon-state last tick was stale despite agent-office HTTP 200. Never equate a responsive UI with a working production queue.
+- New scripts and tests are in the separate fix/ahos-completion-integrity-20261101 branch only. No writes to live queue, no deployment, no paid calls.

@@ -613,11 +613,28 @@ class CompanyLoop:
             return self.queue.get(mission.mission_id)
 
         if result.status is MissionStatus.COMPLETED:
-            self.queue.complete(
-                mission.mission_id,
-                owner=self.owner,
-                result=result,
-            )
+            try:
+                self.queue.complete(
+                    mission.mission_id,
+                    owner=self.owner,
+                    result=result,
+                )
+            except ValueError as exc:
+                # A failed completion validation must not strand the lease.
+                # Preserve the original result in diagnostics if needed,
+                # but persist a safe BLOCKED state, never a fake completion.
+                self.queue.block(
+                    mission.mission_id,
+                    owner=self.owner,
+                    result=MissionResult(
+                        mission_id=mission.mission_id,
+                        objective=mission.objective,
+                        manager_id=result.manager_id,
+                        status=MissionStatus.BLOCKED,
+                        steps=(),
+                        reason=f"completion_integrity_rejected:{type(exc).__name__}",
+                    ),
+                )
         elif result.status is MissionStatus.WAITING_OWNER_APPROVAL:
             self.queue.wait_for_owner_approval(
                 mission.mission_id,

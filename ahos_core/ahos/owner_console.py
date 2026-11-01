@@ -1215,7 +1215,22 @@ class OwnerConsole:
     def _record(self, mission_id: str, owner: str, result: MissionResult) -> None:
         assert self.queue is not None
         if result.status is MissionStatus.COMPLETED:
-            self.queue.complete(mission_id, owner=owner, result=result)
+            try:
+                self.queue.complete(mission_id, owner=owner, result=result)
+            except ValueError as exc:
+                # Invalid completion must not leave a claimed lease stranded.
+                self.queue.block(
+                    mission_id,
+                    owner=owner,
+                    result=MissionResult(
+                        mission_id=mission_id,
+                        objective=result.objective,
+                        manager_id=result.manager_id,
+                        status=MissionStatus.BLOCKED,
+                        steps=(),
+                        reason=f"completion_integrity_rejected:{type(exc).__name__}",
+                    ),
+                )
         elif result.status is MissionStatus.WAITING_OWNER_APPROVAL:
             self.queue.wait_for_owner_approval(
                 mission_id,
