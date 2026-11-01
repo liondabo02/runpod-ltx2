@@ -9,10 +9,17 @@ on:
     branches: [main, "feature/agent-control-plane"]
   pull_request:
 
+# Ayni dal icin yeni bir push eskisini iptal eder; iptal edilen kosu
+# "exit code 143 (SIGTERM)" olarak gorunur ve gercek bir test hatasi degildir.
+concurrency:
+  group: ahos-core-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   tests:
     name: ahos-core tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -37,7 +44,12 @@ jobs:
         working-directory: ahos_core
         env:
           PYTHONIOENCODING: utf-8
-        run: python -m pytest -q -p no:cacheprovider
+          # Bazi testler git commit atar; kosucuda kimlik tanimli olmayabilir.
+          GIT_AUTHOR_NAME: AHOS CI
+          GIT_AUTHOR_EMAIL: ci@example.invalid
+          GIT_COMMITTER_NAME: AHOS CI
+          GIT_COMMITTER_EMAIL: ci@example.invalid
+        run: python -m pytest -q -p no:cacheprovider --durations=10 --maxfail=25
 
       - name: Tamamlanma korumasi (negatif test)
         working-directory: ahos_core

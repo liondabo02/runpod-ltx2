@@ -38,3 +38,10 @@ os.environ.setdefault("AHOS_MISSION_TIMEOUT_SECONDS", "20")
 # yalnızca açık sahip izniyle veya sürüm kontrolündeki temiz bir kapı için olur;
 # kuralın kendisi ``test_acceptance_trust.py`` içinde ayrıca sınanır.
 os.environ.setdefault("AHOS_ACCEPTANCE_ALLOW_UNTRACKED", "1")
+
+# Bazı testler geçici repolarda `git commit` atar. CI kosucusunda global git
+# kimligi tanimli olmayabilir; ortam degiskenleri her yerde calisir.
+os.environ.setdefault("GIT_AUTHOR_NAME", "AHOS Test")
+os.environ.setdefault("GIT_AUTHOR_EMAIL", "test@example.invalid")
+os.environ.setdefault("GIT_COMMITTER_NAME", "AHOS Test")
+os.environ.setdefault("GIT_COMMITTER_EMAIL", "test@example.invalid")
