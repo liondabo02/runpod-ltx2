@@ -168,13 +168,45 @@ def _subtitle_band(draw: ImageDraw.ImageDraw, text: str) -> None:
 
 
 def render_episode(episode: Episode, out_dir: str | Path, *,
-                   voice: str | None = None, audio: str | Path | None = None) -> dict:
+                   voice: str | None = None, audio: str | Path | None = None,
+                   stream: bool | None = None) -> dict:
     out = Path(out_dir)
     frames_dir = out / "frames"
     if frames_dir.exists():
         shutil.rmtree(frames_dir)
-    frames_dir.mkdir(parents=True, exist_ok=True)
     out.mkdir(parents=True, exist_ok=True)
+
+    ffmpeg = shutil.which("ffmpeg")
+    if not ffmpeg:
+        raise RuntimeError("ffmpeg bulunamadı")
+
+    total_frames = int(round(episode.duration() * FPS))
+    # Uzun bölümlerde binlerce PNG diske yazılmasın: kareler doğrudan ffmpeg'e
+    # akıtılır. Kısa bölümlerde kareler diskte kalır (hata ayıklama kolaylığı).
+    use_stream = (total_frames > 1500) if stream is None else bool(stream)
+    silent_video = out / "episode.nosound.mp4"
+    encoder = None
+    if use_stream:
+        encoder = subprocess.Popen(
+            [ffmpeg, "-y", "-loglevel", "error", "-f", "image2pipe",
+             "-vcodec", "png", "-r", str(FPS), "-i", "-",
+             "-c:v", "libx264", "-pix_fmt", "yuv420p", "-movflags", "+faststart",
+             str(silent_video)],
+            stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+        )
+    else:
+        frames_dir.mkdir(parents=True, exist_ok=True)
+
+    def emit(image) -> None:
+        if encoder is not None:
+            import io
+
+            buffer = io.BytesIO()
+            image.save(buffer, format="PNG")
+            encoder.stdin.write(buffer.getvalue())
+        else:
+            image.save(frames_dir / f"frame_{frame_no:05d}.png")
+
 
     planned: list[tuple[str, float, float, str, str]] = []
     srt: list[str] = []
@@ -225,7 +257,7 @@ def render_episode(episode: Episode, out_dir: str | Path, *,
             draw.text((40, 30), episode.title, font=_font(34), fill=(255, 255, 255))
             draw.text((40, 80), f"{scene.setting}", font=_font(24), fill=(235, 235, 235))
             _subtitle_band(draw, caption)
-            image.save(frames_dir / f"frame_{frame_no:05d}.png")
+            emit(image)
             frame_no += 1
             t += per_frame
 
@@ -246,19 +278,21 @@ def render_episode(episode: Episode, out_dir: str | Path, *,
     ]
     (out / "timeline.json").write_text(json.dumps(timeline, indent=2, ensure_ascii=False), encoding="utf-8")
 
-    ffmpeg = shutil.which("ffmpeg")
-    if not ffmpeg:
-        raise RuntimeError("ffmpeg bulunamadı")
-    silent_video = out / "episode.nosound.mp4"
-    command = [
-        ffmpeg, "-y", "-loglevel", "error",
-        "-framerate", str(FPS), "-i", str(frames_dir / "frame_%05d.png"),
-        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-movflags", "+faststart",
-        str(silent_video),
-    ]
-    result = subprocess.run(command, capture_output=True, text=True, timeout=1800)
-    if result.returncode != 0:
-        raise RuntimeError("ffmpeg hatası: " + (result.stderr or "")[-300:])
+    if encoder is not None:
+        encoder.stdin.close()
+        stderr = encoder.stderr.read().decode("utf-8", "replace") if encoder.stderr else ""
+        if encoder.wait(timeout=1800) != 0:
+            raise RuntimeError("ffmpeg akış hatası: " + stderr[-300:])
+    else:
+        command = [
+            ffmpeg, "-y", "-loglevel", "error",
+            "-framerate", str(FPS), "-i", str(frames_dir / "frame_%05d.png"),
+            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-movflags", "+faststart",
+            str(silent_video),
+        ]
+        result = subprocess.run(command, capture_output=True, text=True, timeout=1800)
+        if result.returncode != 0:
+            raise RuntimeError("ffmpeg hatası: " + (result.stderr or "")[-300:])
 
     video_path = out / "episode.mp4"
     if audio is not None and Path(audio).is_file():
