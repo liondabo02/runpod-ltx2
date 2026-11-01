@@ -92,6 +92,9 @@ class PersistentMissionQueue:
                 ON missions(status, next_attempt_at, created_at)
                 """
             )
+            from .completion_db_guard import install_completion_guards
+
+            install_completion_guards(conn)
 
     def enqueue(
         self,

@@ -48,3 +48,13 @@ Date: 2026-11-01. Status: code and tests ready in independent worktree; NOT LIVE
 - Live daemon's direct SQL document bypass remains present and active. The staged patch in this branch is not applied to the live tree and did not pass git apply --check on the mixed-line-ending file; actual owner must review/rebase.
 - Current daemon-state last tick was stale despite agent-office HTTP 200. Never equate a responsive UI with a working production queue.
 - New scripts and tests are in the separate fix/ahos-completion-integrity-20261101 branch only. No writes to live queue, no deployment, no paid calls.
+
+## 2026-11-01 01:20 Berlin — completion wave and database hardening
+- Closing per-turn scan revealed 2,000 rows switched to completed during a single minute, 2026-10-31 23:58 UTC (2026-11-01 00:58 Berlin), with missing result_json. This likely reflects a bulk SQL status transition; the initiating program/agent is NOT established.
+- Complete read-only audit then showed 2,687 completed-status rows: 2,072 no result, 386 nested result.status=blocked, 25 no steps, 204 internally consistent but still not independently verified by file/test/QA.
+- No retroactive status changes, deletes, or migration on live data. NEVER count the 2,000-row update as real work completion.
+- New read-only tools/completion_wave.py reports only aggregate timestamps and counts; no objectives, IDs or error contents.
+- New ahos_core/ahos/completion_db_guard.py installs two SQLite triggers through PersistentMissionQueue._init_schema, blocking any raw SQL UPDATE/INSERT into completed if result_json is missing, invalid, or says something other than completed. Existing old rows remain unchanged.
+- This guard enforces STATUS/PAYLOAD CONSISTENCY ONLY; it does not establish independent QA/file evidence. Zero-step completed records remain possible and need a stricter proof/QA receipt policy.
+- New release_gate check database_completion_guard verifies both actual triggers are present. A clean code merge is not evidence the running database has installed them.
+- Deployment prerequisites: review the 6 overlapping files with DeepSeek owners, test migrations on a restored copy, obtain a verified backup + rollback plan, run the full suite, and perform a controlled rollout. Never install triggers directly on live while concurrent workers own the DB.

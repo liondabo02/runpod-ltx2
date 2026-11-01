@@ -155,6 +155,35 @@ def check_readiness(
             f"cannot audit completed results: {type(exc).__name__}",
         ))
 
+    try:
+        db = runtime / "company-service.db"
+        with sqlite3.connect(f"{db.as_uri()}?mode=ro", uri=True, timeout=3) as conn:
+            definitions = dict(conn.execute(
+                "SELECT name,sql FROM sqlite_master WHERE type='trigger' "
+                "AND name IN (?,?)",
+                ("ahos_completed_result_guard_update", "ahos_completed_result_guard_insert"),
+            ).fetchall())
+        required = {"ahos_completed_result_guard_update", "ahos_completed_result_guard_insert"}
+        installed = (
+            required <= definitions.keys()
+            and all(
+                "raise(abort" in (sql or "").casefold().replace(" ", "")
+                and "result_json" in (sql or "").casefold()
+                for sql in definitions.values()
+            )
+        )
+        checks.append(Check(
+            "database_completion_guard",
+            installed,
+            f"installed={len(definitions)} required=2 "
+            f"guarded={installed}",
+        ))
+    except (OSError, sqlite3.Error, ValueError) as exc:
+        checks.append(Check(
+            "database_completion_guard", False,
+            f"cannot verify completion triggers: {type(exc).__name__}",
+        ))
+
     archives = sorted((runtime / "backups").glob("runtime-*.zip"), key=lambda path: path.stat().st_mtime, reverse=True)
     if not archives:
         checks.append(Check("verified_backup", False, "no runtime snapshot"))

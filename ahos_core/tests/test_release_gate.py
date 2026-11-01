@@ -15,6 +15,9 @@ from ahos.release_gate import check_readiness, main
 def _make_queue(runtime: Path, *, blocked: int, completed: int) -> None:
     with sqlite3.connect(runtime / "company-service.db") as con:
         con.execute("CREATE TABLE missions (status TEXT, updated_at TEXT, result_json TEXT)")
+        from ahos.completion_db_guard import install_completion_guards
+
+        install_completion_guards(con)
         valid_result = json.dumps({
             "status": "completed", "steps": [
                 {"stage": "completed", "qa_summary": "independent pass"}
@@ -196,10 +199,15 @@ def test_fresh_idle_daemon_is_healthy_but_not_proof_of_work(tmp_path: Path) -> N
 def test_completed_column_with_blocked_result_blocks_release(tmp_path: Path) -> None:
     runtime, repo = _ready_runtime(tmp_path)
     with sqlite3.connect(runtime / "company-service.db") as con:
+        # Recreate a legacy invalid record from before the guard existed.
+        con.execute("DROP TRIGGER ahos_completed_result_guard_update")
         con.execute(
             "UPDATE missions SET result_json=? WHERE status='completed'",
             (json.dumps({"status": "blocked", "steps": []}),),
         )
+        from ahos.completion_db_guard import install_completion_guards
+
+        install_completion_guards(con)
     report = check_readiness(runtime, repo)
     check = next(x for x in report if x.name == "completed_result_consistency")
     assert not check.ok
@@ -220,3 +228,16 @@ def test_direct_sql_status_update_blocks_release(tmp_path: Path) -> None:
     )
     assert not gate.ok
     assert "daemon.py" in gate.detail
+
+
+def test_missing_db_completion_triggers_prevent_release(tmp_path: Path) -> None:
+    runtime, repo = _ready_runtime(tmp_path)
+    checks = check_readiness(runtime, repo)
+    assert next(x for x in checks if x.name == "database_completion_guard").ok
+
+    with sqlite3.connect(runtime / "company-service.db") as conn:
+        conn.execute("DROP TRIGGER ahos_completed_result_guard_insert")
+    checks = check_readiness(runtime, repo)
+    guard = next(x for x in checks if x.name == "database_completion_guard")
+    assert not guard.ok
+    assert "installed=1" in guard.detail
