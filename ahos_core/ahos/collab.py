@@ -166,3 +166,223 @@ def status(runtime_dir: str | Path, ticket: str) -> dict:
         "total": len(parts),
         "progress": round(done / len(parts), 2) if parts else 0.0,
     }
+
+
+# --- yürütme, devir ve portföy -------------------------------------------------
+
+
+def _missions_by_status(runtime: Path) -> dict[str, str]:
+    db = runtime / "company-service.db"
+    states: dict[str, str] = {}
+    if db.exists():
+        try:
+            with sqlite3.connect(db) as con:
+                for mission, state in con.execute("select mission_id, status from missions"):
+                    states[mission] = state
+        except sqlite3.Error:
+            pass
+    return states
+
+
+def dispatch(runtime_dir: str | Path, *, ticket: str | None = None, limit: int = 10) -> list[dict]:
+    """Bir iş birliği biletinin bekleyen parçalarını gerçekten çalıştırır.
+
+    `launch()` yalnızca kuyruğa bırakır; bu fonksiyon parçaları normal görev
+    zincirinden geçirir (brief → üretim → proje kapısı → bağımsız QA) ve
+    sonuçları döndürür. Böylece "tek istek, çok departman" gerçekten üretir.
+    """
+
+    from .autonomous_company import PersistentMissionQueue
+    from .owner_console import build_default_console
+
+    runtime = Path(runtime_dir)
+    queue = PersistentMissionQueue(runtime / "company-service.db")
+    console = build_default_console(runtime)
+    states = _missions_by_status(runtime)
+    results: list[dict] = []
+
+    db_path = runtime / "collaborations.jsonl"
+    records: list[dict] = []
+    if db_path.exists():
+        for line in db_path.read_text(encoding="utf-8", errors="replace").splitlines():
+            try:
+                records.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+
+    for record in records:
+        if ticket and record.get("ticket") != ticket:
+            continue
+        for part in record.get("parts", []):
+            if len(results) >= limit:
+                return results
+            mission_id = part.get("mission")
+            if not mission_id or states.get(mission_id) != "pending":
+                continue
+            spec = console.book.get(part.get("department"))
+            if spec is None:
+                results.append({"mission": mission_id, "status": "atlandı",
+                                "reason": "departman yok"})
+                continue
+            with sqlite3.connect(runtime / "company-service.db") as con:
+                con.execute(
+                    "UPDATE missions SET status='running', lease_owner='collab', lease_until=?, "
+                    "attempts=attempts+1, updated_at=datetime('now') "
+                    "WHERE mission_id=? AND status='pending'",
+                    (time.time() + 1800, mission_id),
+                )
+            mission = queue.get(mission_id)
+            result = console._execute(spec, mission.objective, mission.mission_id)
+            try:
+                queue.complete(mission_id, owner="collab", result=result)
+                status = "completed"
+            except Exception as exc:  # noqa: BLE001
+                status = "failed"
+                try:
+                    queue.fail(mission_id, owner="collab", error=f"{type(exc).__name__}: {exc}"[:160])
+                except Exception:  # noqa: BLE001
+                    pass
+            results.append({"mission": mission_id, "department": part.get("department"),
+                            "status": status})
+    return results
+
+
+def portfolio(runtime_dir: str | Path) -> dict:
+    """CEO görünümü: departman bazında görev dağılımı ve iş birliği özeti."""
+
+    runtime = Path(runtime_dir)
+    db = runtime / "company-service.db"
+    departments: dict[str, dict[str, int]] = {}
+    if db.exists():
+        try:
+            with sqlite3.connect(db) as con:
+                for department, state, count in con.execute(
+                    "select primary_department, status, count(*) from missions "
+                    "group by primary_department, status"
+                ):
+                    departments.setdefault(department or "bilinmeyen", {})[state] = count
+        except sqlite3.Error:
+            pass
+
+    tickets: list[dict] = []
+    path = runtime / "collaborations.jsonl"
+    if path.exists():
+        for line in path.read_text(encoding="utf-8", errors="replace").splitlines()[-20:]:
+            try:
+                record = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            tickets.append({"ticket": record.get("ticket"), "parts": len(record.get("parts", []))})
+
+    handoffs = load_handoffs(runtime)
+    return {
+        "departments": departments,
+        "recent_tickets": tickets,
+        "handoffs": {
+            "total": len(handoffs),
+            "pending": sum(1 for h in handoffs if h["status"] == "pending"),
+            "done": sum(1 for h in handoffs if h["status"] == "done"),
+        },
+    }
+
+
+# --- departmanlar arası devir (handoff) ---------------------------------------
+
+
+def _handoff_path(runtime: Path) -> Path:
+    return runtime / "handoffs.jsonl"
+
+
+def load_handoffs(runtime_dir: str | Path) -> list[dict]:
+    path = _handoff_path(Path(runtime_dir))
+    if not path.exists():
+        return []
+    items: list[dict] = []
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        try:
+            items.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
+    return items
+
+
+def handoff(runtime_dir: str | Path, source: str, target: str, objective: str,
+            *, depends_on: list[str] | None = None) -> dict:
+    """Bir departmanın diğerine iş devretmesi (denetlenebilir kayıt)."""
+
+    runtime = Path(runtime_dir)
+    record = {
+        "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "handoff_id": f"H-{source}-{target}-{int(time.time() * 1000)}",
+        "from": source,
+        "to": target,
+        "objective": objective,
+        "depends_on": list(depends_on or []),
+        "status": "pending",
+        "mission": "",
+    }
+    path = _handoff_path(runtime)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+    return record
+
+
+def dispatch_handoffs(runtime_dir: str | Path, *, limit: int = 5) -> list[dict]:
+    """Bağımlılığı tamamlanmış devirleri çalıştırır."""
+
+    from .autonomous_company import PersistentMissionQueue
+    from .owner_console import build_default_console
+
+    runtime = Path(runtime_dir)
+    states = _missions_by_status(runtime)
+    queue = PersistentMissionQueue(runtime / "company-service.db")
+    console = build_default_console(runtime)
+    results: list[dict] = []
+    records = load_handoffs(runtime)
+
+    for record in records:
+        if len(results) >= limit:
+            break
+        if record.get("status") != "pending":
+            continue
+        if any(dep not in {m for m, s in states.items() if s == "completed"}
+               for dep in record.get("depends_on", [])):
+            continue
+        spec = console.book.get(record["to"])
+        if spec is None:
+            record["status"] = "failed"
+            results.append(record)
+            continue
+        mission_id = f"{record['handoff_id']}-M"
+        try:
+            queue.enqueue(mission_id=mission_id, objective=record["objective"],
+                          primary_department=record["to"], max_attempts=1)
+        except sqlite3.IntegrityError:
+            results.append(record)
+            continue
+        with sqlite3.connect(runtime / "company-service.db") as con:
+            con.execute(
+                "UPDATE missions SET status='running', lease_owner='handoff', lease_until=?, "
+                "attempts=attempts+1, updated_at=datetime('now') "
+                "WHERE mission_id=? AND status='pending'",
+                (time.time() + 1800, mission_id),
+            )
+        mission = queue.get(mission_id)
+        result = console._execute(spec, mission.objective, mission.mission_id)
+        try:
+            queue.complete(mission_id, owner="handoff", result=result)
+            record["status"] = "done"
+        except Exception as exc:  # noqa: BLE001
+            record["status"] = "failed"
+            try:
+                queue.fail(mission_id, owner="handoff", error=f"{type(exc).__name__}: {exc}"[:160])
+            except Exception:  # noqa: BLE001
+                pass
+        record["mission"] = mission_id
+        results.append(record)
+
+    path = _handoff_path(runtime)
+    path.write_text("\n".join(json.dumps(item, ensure_ascii=False) for item in records) + "\n",
+                    encoding="utf-8")
+    return results

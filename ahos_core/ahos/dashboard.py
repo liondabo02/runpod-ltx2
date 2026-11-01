@@ -109,6 +109,22 @@ def _cadence(runtime: Path) -> list[dict]:
     return out
 
 
+def _tunnel(timeout: float = 3.0) -> dict:
+    """Yerel model tüneli ayakta mı (sağlamlık kontrolü)."""
+
+    import urllib.error
+    import urllib.request
+
+    url = "http://127.0.0.1:11500/v1/models"
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as response:
+            payload = json.loads(response.read().decode("utf-8", "replace"))
+        models = [item.get("id") for item in payload.get("data", []) if item.get("id")]
+        return {"up": True, "models": models}
+    except Exception as exc:  # noqa: BLE001 - tünel kapalı olabilir
+        return {"up": False, "error": f"{type(exc).__name__}", "models": []}
+
+
 def collect(runtime_dir: str | Path) -> dict:
     runtime = Path(runtime_dir)
     return {
@@ -117,6 +133,7 @@ def collect(runtime_dir: str | Path) -> dict:
         "spend": _spend(runtime / "model-spend.jsonl"),
         "departments": _departments(runtime),
         "cadence": _cadence(runtime),
+        "tunnel": _tunnel(),
     }
 
 
@@ -141,6 +158,13 @@ def render_markdown(snapshot: dict) -> str:
         "## Maliyet",
         "",
         f"- model çağrısı: {snapshot['spend']['calls']} · harcama: **{snapshot['spend']['usd']} $**",
+    ]
+    tunnel = snapshot.get("tunnel") or {}
+    if tunnel.get("up"):
+        lines.append(f"- model tüneli: **açık** ({', '.join(tunnel.get('models') or []) or 'model yok'})")
+    else:
+        lines.append(f"- model tüneli: **kapalı** ({tunnel.get('error', 'bilinmiyor')})")
+    lines += [
         "",
         "## Departmanlar",
         "",

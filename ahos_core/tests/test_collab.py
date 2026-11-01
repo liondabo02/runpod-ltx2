@@ -1,92 +1,43 @@
+"""Departmanlar arası iş birliği: bölme, devir ve portföy."""
+
 from __future__ import annotations
 
 import json
-import sqlite3
-from pathlib import Path
 
-from ahos import collab
+from ahos.collab import handoff, load_handoffs, portfolio, split
 
 
-def _runtime(tmp_path: Path) -> Path:
-    runtime = tmp_path / "runtime"
-    runtime.mkdir()
-    con = sqlite3.connect(runtime / "company-service.db")
-    con.execute(
-        "create table missions (mission_id text primary key, objective text, primary_department text, "
-        "status text, attempts integer, max_attempts integer, next_attempt_at text, "
-        "lease_owner text, lease_until text, created_at text, updated_at text, "
-        "last_error text, result_json text)"
-    )
-    con.commit()
-    con.close()
-    return runtime
-
-
-def test_split_uses_multiple_departments() -> None:
-    parts = collab.split("oyun için video hazırla ve test et")
-
-    departments = {part.department for part in parts}
+def test_split_names_the_right_departments():
+    parts = split("oyun için yeni bir level tasarla ve test et")
+    departments = [part.department for part in parts]
 
     assert "oyun" in departments
-    assert len(parts) >= 2
+    assert "quality" in departments
+    assert len(parts) <= 3
+    assert all(part.objective for part in parts)
 
 
-def test_split_falls_back_to_genel() -> None:
-    parts = collab.split("alakasız bir istek")
-
-    assert parts[0].department == "genel"
-
-
-def test_split_limits_departments() -> None:
-    parts = collab.split("oyun kod video test rapor hukuk pazarlama bütçe", limit=2)
-
-    assert len(parts) == 2
+def test_split_falls_back_to_genel():
+    parts = split("bilinmeyen konu")
+    assert [part.department for part in parts] == ["genel"]
 
 
-def test_launch_creates_missions_and_record(tmp_path) -> None:
-    runtime = _runtime(tmp_path)
+def test_handoff_is_recorded_and_read_back(tmp_path):
+    record = handoff(tmp_path, "oyun", "software", "oyun motorunu hazırla",
+                     depends_on=["M-1"])
+    assert record["status"] == "pending"
+    assert record["from"] == "oyun" and record["to"] == "software"
 
-    collaboration = collab.launch(runtime, "oyun için video ve test hazırla")
-
-    assert collaboration.ticket.startswith("COL-")
-    assert collaboration.missions
-    record = (runtime / "collaborations.jsonl").read_text(encoding="utf-8").splitlines()
-    assert len(record) == 1
-
-
-def test_status_reports_progress(tmp_path) -> None:
-    runtime = _runtime(tmp_path)
-    collaboration = collab.launch(runtime, "oyun ve software işi")
-
-    con = sqlite3.connect(runtime / "company-service.db")
-    # Tamamlanma ancak tutarli bir result_json + bagimsiz QA kaydi ile yazilabilir.
-    result = json.dumps(
-        {
-            "status": "completed",
-            "steps": [{"stage": "completed", "worker_id": "w-1", "qa_worker_id": "qa-1"}],
-            "delivery": {"verified": 1, "qa_worker_ids": ["qa-1"]},
-        }
-    )
-    for mission in collaboration.missions:
-        con.execute(
-            "insert or replace into missions "
-            "(mission_id, objective, primary_department, status, result_json) "
-            "values (?,?,?,?,?)",
-            (mission, "x", "oyun", "completed", result),
-        )
-    con.commit()
-    con.close()
-
-    payload = collab.status(runtime, collaboration.ticket)
-
-    assert payload["found"] is True
-    assert payload["completed"] == payload["total"]
-    assert payload["progress"] == 1.0
+    stored = load_handoffs(tmp_path)
+    assert len(stored) == 1
+    assert stored[0]["depends_on"] == ["M-1"]
+    assert json.loads((tmp_path / "handoffs.jsonl").read_text(encoding="utf-8").strip())["to"] == "software"
 
 
-def test_status_unknown_ticket(tmp_path) -> None:
-    runtime = _runtime(tmp_path)
+def test_portfolio_summarises_departments_and_handoffs(tmp_path):
+    handoff(tmp_path, "oyun", "software", "motor")
+    report = portfolio(tmp_path)
 
-    payload = collab.status(runtime, "COL-YOK")
-
-    assert payload["found"] is False
+    assert report["handoffs"]["total"] == 1
+    assert report["handoffs"]["pending"] == 1
+    assert isinstance(report["departments"], dict)

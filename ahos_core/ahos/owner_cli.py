@@ -8,6 +8,8 @@ from pathlib import Path
 from .owner_console import build_default_console
 
 CARTOON = re.compile(r"(?i)\b(çizgi\s*film|çizgi\s*dizi|animasyon|bölüm|episode|cartoon)\b")
+GAME = re.compile(r"(?i)\b(oyun|game)\b")
+AUDIT = re.compile(r"(?i)^\s*(denetle|analiz\s*et|audit)\b")
 
 
 def _slug(text: str) -> str:
@@ -49,6 +51,36 @@ def main(argv: list[str] | None = None) -> int:
     runtime_dir.mkdir(parents=True, exist_ok=True)
 
     text = " ".join(args.command).strip() or "durum"
+
+    # Oyun talebi doğrudan oyun hattına gider: oynanabilir HTML5 çıktısı üretir.
+    if GAME.search(text) and "departman" not in text.casefold():
+        from .game_builder import GameBrief, audit_game, build_game
+
+        brief = re.sub(r"(?i)\b(oyun\w*|yap|üret|hazırla|oluştur)\b", " ", text)
+        brief = " ".join(brief.split()) or text
+        out = runtime_dir / "games" / _slug(brief)
+        manifest = build_game(GameBrief(title=brief.title()[:48], item_name=brief), out)
+        gate = audit_game(manifest["file"])
+        print(f"Oyun : {out}")
+        print(f"Dosya: {manifest['file']}")
+        print(f"Kapı : {'GEÇTİ' if gate['passed'] else 'KALDI'} ({manifest['bytes']} bayt)")
+        for problem in gate["problems"]:
+            print(f"  - {problem}")
+        return 0 if gate["passed"] else 1
+
+    # "denetle <yol>" → statik uygulama denetimi (eksikleri ve düzeltmeleri).
+    if AUDIT.search(text):
+        from .app_audit import audit_path
+
+        target = AUDIT.split(text, maxsplit=1)[-1].strip().strip('"')
+        report = audit_path(target) if target else {"passed": False, "score": 0,
+                                                    "findings": [{"severity": "high",
+                                                                  "issue": "yol verilmedi",
+                                                                  "fix": "denetle <klasör|index.html>"}]}
+        print(f"Denetim: {report.get('file', target)} · skor {report.get('score')}")
+        for finding in report["findings"][:12]:
+            print(f"  [{finding['severity']}] {finding['issue']} → {finding['fix']}")
+        return 0 if report.get("passed") else 1
 
     # Çizgi film talebi doğrudan stüdyo hattına gider: belge değil bölüm üretir.
     if CARTOON.search(text) and "departman" not in text.casefold():
