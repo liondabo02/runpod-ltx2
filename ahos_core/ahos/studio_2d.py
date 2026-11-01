@@ -135,6 +135,26 @@ def _character(draw: ImageDraw.ImageDraw, name: str, x: int, base: int, *, t: fl
     draw.ellipse([x - 14, top + 76, x + 14, top + 76 + mouth_h], fill=(120, 40, 40))
 
 
+def episode_timeline(episode: Episode) -> list[dict]:
+    """Repliklerin mutlak zaman çizelgesi (ses miksajı için)."""
+
+    rows: list[dict] = []
+    clock = 0.0
+    for scene in episode.scenes:
+        cursor = 0.0
+        for line in scene.lines:
+            rows.append({
+                "scene_id": scene.scene_id,
+                "start": round(clock + cursor, 3),
+                "end": round(clock + cursor + line.seconds, 3),
+                "speaker": line.speaker,
+                "text": line.text,
+            })
+            cursor += line.seconds
+        clock += scene.duration()
+    return rows
+
+
 def _subtitle_band(draw: ImageDraw.ImageDraw, text: str) -> None:
     if not text:
         return
@@ -143,7 +163,8 @@ def _subtitle_band(draw: ImageDraw.ImageDraw, text: str) -> None:
     draw.text((60, HEIGHT - 104), text[:110], font=font, fill=(255, 255, 255))
 
 
-def render_episode(episode: Episode, out_dir: str | Path, *, voice: str | None = None) -> dict:
+def render_episode(episode: Episode, out_dir: str | Path, *,
+                   voice: str | None = None, audio: str | Path | None = None) -> dict:
     out = Path(out_dir)
     frames_dir = out / "frames"
     if frames_dir.exists():
@@ -151,6 +172,7 @@ def render_episode(episode: Episode, out_dir: str | Path, *, voice: str | None =
     frames_dir.mkdir(parents=True, exist_ok=True)
     out.mkdir(parents=True, exist_ok=True)
 
+    planned: list[tuple[str, float, float, str, str]] = []
     srt: list[str] = []
     index = 1
     clock = 0.0
@@ -191,25 +213,50 @@ def render_episode(episode: Episode, out_dir: str | Path, *, voice: str | None =
 
         for start, end, _speaker, text in schedule:
             srt.append(f"{index}\n{_ts(clock + start)} --> {_ts(clock + end)}\n{text}\n")
+            planned.append((scene.scene_id, clock + start, clock + end, _speaker, text))
             index += 1
         clock += scene_seconds
 
     srt_path = out / "episode.srt"
     srt_path.write_text("\n".join(srt), encoding="utf-8")
 
+    # konuşma zaman çizelgesi (ses miksajı ve dudak hareketi için)
+    timeline = [
+        {"scene_id": scene_id, "start": round(start, 3), "end": round(end, 3),
+         "speaker": speaker, "text": text}
+        for scene_id, start, end, speaker, text in planned
+    ]
+    (out / "timeline.json").write_text(json.dumps(timeline, indent=2, ensure_ascii=False), encoding="utf-8")
+
     ffmpeg = shutil.which("ffmpeg")
     if not ffmpeg:
         raise RuntimeError("ffmpeg bulunamadı")
-    video_path = out / "episode.mp4"
+    silent_video = out / "episode.nosound.mp4"
     command = [
         ffmpeg, "-y", "-loglevel", "error",
         "-framerate", str(FPS), "-i", str(frames_dir / "frame_%05d.png"),
         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-movflags", "+faststart",
-        str(video_path),
+        str(silent_video),
     ]
     result = subprocess.run(command, capture_output=True, text=True, timeout=1800)
     if result.returncode != 0:
         raise RuntimeError("ffmpeg hatası: " + (result.stderr or "")[-300:])
+
+    video_path = out / "episode.mp4"
+    if audio is not None and Path(audio).is_file():
+        mux = [
+            ffmpeg, "-y", "-loglevel", "error",
+            "-i", str(silent_video), "-i", str(audio),
+            "-c:v", "copy", "-c:a", "aac", "-strict", "-2", "-b:a", "128k",
+            "-af", "apad", "-t", f"{episode.duration():.3f}",
+            "-movflags", "+faststart", str(video_path),
+        ]
+        muxed = subprocess.run(mux, capture_output=True, text=True, timeout=1800)
+        if muxed.returncode != 0:
+            raise RuntimeError("ses miksajı başarısız: " + (muxed.stderr or "")[-300:])
+        silent_video.unlink(missing_ok=True)
+    else:
+        silent_video.replace(video_path)
 
     manifest = {
         "title": episode.title,
@@ -220,6 +267,8 @@ def render_episode(episode: Episode, out_dir: str | Path, *, voice: str | None =
         "resolution": [WIDTH, HEIGHT],
         "video": str(video_path),
         "subtitles": str(srt_path),
+        "audio": str(audio) if audio is not None else None,
+        "timeline": str(out / "timeline.json"),
         "frames": frame_no,
         "voice": voice or "none",
     }

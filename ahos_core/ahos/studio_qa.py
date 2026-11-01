@@ -26,6 +26,28 @@ SAMPLE_FPS = 4
 MOTION_MIN_RATIO = 0.002   # değişen piksel oranı; altı "hareketsiz"
 CUT_RATIO = 0.25           # sahne geçişi sayılan değişim oranı
 FREEZE_MIN_SAMPLES = 3      # 0.75 sn (4 fps)
+AUDIO_SILENCE_RMS = 120.0   # 16-bit WAV; altı "sessiz" sayılır
+AUDIO_TOLERANCE_SECONDS = 0.75
+
+
+def _audio_metrics(video: Path) -> dict:
+    """Sesi WAV'a çözüp süre ve RMS ölç (ffmpeg + wave)."""
+
+    if not shutil.which("ffmpeg"):
+        return {}
+    try:
+        from ahos.studio_voice import rms as wav_rms, wav_duration
+    except Exception:  # noqa: BLE001
+        return {}
+    with tempfile.TemporaryDirectory() as tmp:
+        target = Path(tmp) / "audio.wav"
+        result = _run([
+            shutil.which("ffmpeg"), "-y", "-loglevel", "error", "-i", str(video),
+            "-vn", "-ac", "1", "-ar", "22050", str(target),
+        ])
+        if result.returncode != 0 or not target.is_file():
+            return {}
+        return {"seconds": round(wav_duration(target), 2), "rms": round(wav_rms(target), 1)}
 
 
 def _run(command: list[str], timeout: float = 600.0) -> subprocess.CompletedProcess:
@@ -162,10 +184,20 @@ def verify_episode(
     if diffs and required_cuts and cuts < required_cuts:
         problems.append(f"sahne geçişi az: {cuts} (beklenen ≥{required_cuts})")
 
+    audio_metrics: dict = {}
     if expects_audio and not audio_streams:
         problems.append("ses akışı yok")
     elif not expects_audio and not audio_streams:
         notes.append("ses yok: teslim profesyonel seslendirme içermiyor")
+    elif audio_streams:
+        audio_metrics = _audio_metrics(video_path)
+        if audio_metrics.get("rms", 0.0) < AUDIO_SILENCE_RMS:
+            problems.append(f"ses neredeyse sessiz (rms {audio_metrics.get('rms', 0)})")
+        if abs(float(audio_metrics.get("seconds", 0.0)) - duration) > AUDIO_TOLERANCE_SECONDS:
+            problems.append(
+                f"ses/video süresi uyuşmuyor: ses {audio_metrics.get('seconds')}s, "
+                f"video {round(duration, 2)}s"
+            )
 
     srt_count = _count_srt(Path(subtitles)) if subtitles else 0
     if subtitles and srt_count == 0:
@@ -188,8 +220,9 @@ def verify_episode(
             "freeze_runs": freeze_runs,
             "scene_cuts": cuts,
             "subtitle_cues": srt_count,
+            "audio": audio_metrics,
         },
-        "scope": "codec/akış/süre/hareket/sahne/altyazı; içerik ve sanatsal kalite doğrulanmaz",
+        "scope": "codec/akış/süre/hareket/sahne/altyazı/ses süresi; içerik ve sanatsal kalite doğrulanmaz",
     }
 
 
