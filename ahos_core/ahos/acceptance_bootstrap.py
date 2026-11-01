@@ -63,8 +63,16 @@ def ensure_baseline(project_root: str | Path, evidence_root: str | Path) -> tupl
     gate = root / "tools" / "check_offline.py"
     baseline = Path(evidence_root) / "acceptance-baseline.json"
 
+    # Yalnizca BU projenin kaydi varsa erken don. Ayni dosyada baska
+    # projelerin kayitlari olabilir; "dosya var" demek "bu proje yetkili"
+    # demek degildir.
     if baseline.is_file() and not baseline.is_symlink():
-        return True, "kabul kaydı zaten var"
+        try:
+            existing = json.loads(baseline.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            existing = {}
+        if isinstance(existing, dict) and str(gate.resolve()).lower() in existing:
+            return True, "kabul kaydı zaten var"
     if gate.is_symlink() or gate.parent.is_symlink() or not gate.is_file():
         return False, "kabul testi yok veya güvenli dosya değil"
     clean, why = _gate_provenance(root, gate.resolve())

@@ -82,6 +82,39 @@ def test_untracked_project_needs_owner_opt_in(project, monkeypatch):
     assert enrolled is True, reason
 
 
+def test_shared_baseline_does_not_skip_a_new_project(tmp_path, monkeypatch):
+    """Aynı kanıt dosyası başka projelerin kaydını taşısa da yeni proje eklenir.
+
+    "Dosya var" demek "bu proje yetkili" demek değildir; erken dönüş yalnızca
+    bu kapının kaydı varsa yapılmalı.
+    """
+    from ahos.acceptance_bootstrap import ensure_baseline
+    from ahos.acceptance import trusted_gate
+
+    monkeypatch.setenv("AHOS_ACCEPTANCE_ALLOW_UNTRACKED", "1")
+    evidence = tmp_path / "evidence"
+
+    def project(name: str):
+        root = tmp_path / name
+        (root / "tools").mkdir(parents=True)
+        (root / "tools" / "check_offline.py").write_text("print('ok')\n", encoding="utf-8")
+        return root
+
+    first, second = project("first"), project("second")
+
+    enrolled, reason = ensure_baseline(first, evidence)
+    assert enrolled is True, reason
+    enrolled, reason = ensure_baseline(second, evidence)
+    assert enrolled is True, reason
+
+    baseline = evidence / "acceptance-baseline.json"
+    entries = json.loads(baseline.read_text(encoding="utf-8"))
+    assert len(entries) == 2
+
+    assert trusted_gate(first, baseline)[0] is True
+    assert trusted_gate(second, baseline)[0] is True
+
+
 def test_git_tracked_gate_is_pinned_and_tamper_is_refused(tmp_path):
     """Git projesinde temiz kapı sabitlenir; işçi değiştirirse sabitleme reddedilir."""
     import subprocess
