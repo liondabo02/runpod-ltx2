@@ -143,6 +143,7 @@ def test_hundred_missions_survive_a_queue_restart(tmp_path) -> None:
                 manager_id=None,
                 status=MissionStatus.COMPLETED,
                 steps=(),
+                qa_worker_id="qa-01",
                 reason="soak",
             ),
         )

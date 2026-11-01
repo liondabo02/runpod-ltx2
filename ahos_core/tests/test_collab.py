@@ -59,8 +59,14 @@ def test_status_reports_progress(tmp_path) -> None:
     collaboration = collab.launch(runtime, "oyun ve software işi")
 
     con = sqlite3.connect(runtime / "company-service.db")
-    # Tamamlanma ancak tutarli bir result_json ile yazilabilir (DB korumasi).
-    result = json.dumps({"status": "completed", "steps": []})
+    # Tamamlanma ancak tutarli bir result_json + bagimsiz QA kaydi ile yazilabilir.
+    result = json.dumps(
+        {
+            "status": "completed",
+            "steps": [{"stage": "completed", "worker_id": "w-1", "qa_worker_id": "qa-1"}],
+            "delivery": {"verified": 1, "qa_worker_ids": ["qa-1"]},
+        }
+    )
     for mission in collaboration.missions:
         con.execute(
             "insert or replace into missions "

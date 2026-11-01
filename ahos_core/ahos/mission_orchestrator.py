@@ -72,6 +72,8 @@ class MissionStepResult:
     worker_summary: str | None
     qa_summary: str | None
     reason: str
+    #: Bagimsiz dogrulayici kimligi (uretim iscisinden farkli olmali).
+    qa_worker_id: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -82,6 +84,8 @@ class MissionResult:
     status: MissionStatus
     steps: tuple[MissionStepResult, ...]
     reason: str
+    #: Adimsiz (tek atimlik) islerde bagimsiz dogrulayici kimligi.
+    qa_worker_id: str | None = None
 
 
 class ManagerPlanner(Protocol):
@@ -292,6 +296,15 @@ class MultiWorkerMissionOrchestrator:
                         run.qa_result.summary if run.qa_result else None
                     ),
                     reason=run.reason,
+                    qa_worker_id=(
+                        run.qa_result.qa_worker_id
+                        if run.qa_result
+                        else (
+                            run.qa_assignment.qa_worker_id
+                            if run.qa_assignment is not None
+                            else None
+                        )
+                    ),
                 )
 
                 ordered_results.append(result)

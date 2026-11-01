@@ -23,6 +23,7 @@ def make_waiting(queue: PersistentMissionQueue, mission_id: str = "m1"):
             manager_id="mgr-software-01",
             status=MissionStatus.WAITING_OWNER_APPROVAL,
             steps=(),
+            qa_worker_id="qa-01",
             reason="waiting",
         ),
     )

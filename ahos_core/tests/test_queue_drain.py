@@ -30,6 +30,7 @@ class FakeConsole:
             manager_id=None,
             status=MissionStatus.COMPLETED,
             steps=(),
+            qa_worker_id="qa-01",
             reason="tamam",
         )
 

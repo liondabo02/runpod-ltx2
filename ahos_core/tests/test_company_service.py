@@ -15,6 +15,7 @@ def _completed(mission):
         manager_id="mgr-software-01",
         status=MissionStatus.COMPLETED,
         steps=(),
+        qa_worker_id="qa-01",
         reason="done",
     )
 

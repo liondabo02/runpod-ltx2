@@ -27,6 +27,7 @@ def _result(
         manager_id="mgr-software-01",
         status=status,
         steps=(),
+        qa_worker_id="qa-01",
         reason=reason,
     )
 

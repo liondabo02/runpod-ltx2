@@ -56,6 +56,7 @@ def test_valid_completion_via_queue_still_succeeds(tmp_path):
             mission_id="m1", objective="do a small task",
             manager_id="manager", status=MissionStatus.COMPLETED,
             steps=(), reason="test result",
+            qa_worker_id="qa-01",
         ),
     )
     assert queue.get("m1").status is QueueStatus.COMPLETED

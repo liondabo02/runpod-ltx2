@@ -25,6 +25,7 @@ def _block(queue: PersistentMissionQueue, mission_id: str, error: str) -> None:
             manager_id=None,
             status=MissionStatus.BLOCKED,
             steps=(),
+            qa_worker_id="qa-01",
             reason=error,
         ),
     )
@@ -95,6 +96,7 @@ def test_second_reopen_uses_next_suffix(tmp_path) -> None:
             manager_id=None,
             status=MissionStatus.BLOCKED,
             steps=(),
+            qa_worker_id="qa-01",
             reason="kuyruk kilidi",
         ),
     )

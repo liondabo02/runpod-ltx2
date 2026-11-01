@@ -1,0 +1,62 @@
+name: ahos-core
+
+# AHOS cekirdegi (ahos_core) kendi test paketiyle dogrulanir.
+# Diger is akislari yalniz control_plane'i kosuyordu; bu is akisi
+# kuyruk/tamamlanma/kabul/release-gate kurallarini korur.
+
+on:
+  push:
+    branches: [main, "feature/agent-control-plane"]
+  pull_request:
+
+jobs:
+  tests:
+    name: ahos-core tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bagimliliklar (yalniz test)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "pytest>=9.1,<10"
+
+      - name: Sozdizimi kontrolu
+        run: python -m compileall -q ahos_core
+
+      - name: Testler
+        working-directory: ahos_core
+        env:
+          PYTHONIOENCODING: utf-8
+        run: python -m pytest -q -p no:cacheprovider
+
+      - name: Tamamlanma korumasi (negatif test)
+        working-directory: ahos_core
+        shell: bash
+        run: |
+          python - <<'PY'
+          import sqlite3
+          from ahos.completion_db_guard import install_completion_guards
+          con = sqlite3.connect(":memory:")
+          con.execute("CREATE TABLE missions (mission_id TEXT PRIMARY KEY, status TEXT, result_json TEXT)")
+          install_completion_guards(con)
+          con.execute("INSERT INTO missions (mission_id, status) VALUES ('m1','pending')")
+          con.commit()
+          try:
+              con.execute("UPDATE missions SET status='completed', last_error='x' WHERE mission_id='m1'")
+              con.commit()
+          except sqlite3.IntegrityError:
+              print("OK: dogrudan SQL tamamlanma reddedildi")
+              raise SystemExit(0)
+          print("HATA: dogrudan SQL tamamlanma kabul edildi")
+          raise SystemExit(1)
+          PY

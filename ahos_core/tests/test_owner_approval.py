@@ -78,6 +78,7 @@ def test_company_loop_persists_waiting_owner_approval(tmp_path: Path):
             manager_id="mgr-software-01",
             status=MissionStatus.WAITING_OWNER_APPROVAL,
             steps=(),
+            qa_worker_id="qa-01",
             reason="waiting for owner approval",
         )
 
@@ -103,6 +104,7 @@ def test_waiting_mission_can_be_requeued_after_approval(tmp_path: Path):
         manager_id="mgr-software-01",
         status=MissionStatus.WAITING_OWNER_APPROVAL,
         steps=(),
+        qa_worker_id="qa-01",
         reason="waiting",
     )
     queue.wait_for_owner_approval("m1", owner="worker", result=result)

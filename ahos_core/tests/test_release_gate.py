@@ -20,8 +20,10 @@ def _make_queue(runtime: Path, *, blocked: int, completed: int) -> None:
         install_completion_guards(con)
         valid_result = json.dumps({
             "status": "completed", "steps": [
-                {"stage": "completed", "qa_summary": "independent pass"}
+                {"stage": "completed", "worker_id": "w-1", "qa_worker_id": "qa-1",
+                 "qa_summary": "independent pass"}
             ],
+            "delivery": {"verified": 1, "qa_worker_ids": ["qa-1"]},
         })
         con.executemany("INSERT INTO missions VALUES (?,?,?)", [
             ("completed", "2026-10-31T12:00:00+00:00", valid_result)

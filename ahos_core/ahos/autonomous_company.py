@@ -325,6 +325,11 @@ class PersistentMissionQueue:
         if any(getattr(step.stage, "value", None) != "completed" for step in result.steps):
             raise ValueError("mission has a step without completed status")
         payload = self._result_payload(result)
+        if not payload["delivery"]["verified"]:
+            raise ValueError(
+                "mission has no independent QA delivery record: "
+                "her adim icin ureticiden farkli bir qa_worker_id gerekli"
+            )
         self._finish(
             mission_id,
             owner=owner,
@@ -630,12 +635,31 @@ class PersistentMissionQueue:
 
     @staticmethod
     def _result_payload(result: MissionResult) -> dict[str, object]:
+        steps_verified = bool(result.steps) and all(
+            step.stage.value == "completed"
+            and bool(step.qa_worker_id)
+            and step.qa_worker_id != step.worker_id
+            for step in result.steps
+        )
+        # Adimsiz (tek atimlik) is: dogrulayici kimligi ust seviyede verilir.
+        single_shot_verified = not result.steps and bool(result.qa_worker_id)
+        qa_ids = (
+            [step.qa_worker_id for step in result.steps]
+            if result.steps
+            else ([result.qa_worker_id] if result.qa_worker_id else [])
+        )
         return {
             "mission_id": result.mission_id,
             "objective": result.objective,
             "manager_id": result.manager_id,
             "status": result.status.value,
             "reason": result.reason,
+            # Teslim kaydi: is bagimsiz bir QA tarafindan dogrulanmis mi?
+            "delivery": {
+                "verified": steps_verified or single_shot_verified,
+                "producer_ids": [step.worker_id for step in result.steps],
+                "qa_worker_ids": qa_ids,
+            },
             "steps": [
                 {
                     "step_id": step.step.step_id,
@@ -644,6 +668,7 @@ class PersistentMissionQueue:
                     "stage": step.stage.value,
                     "worker_summary": step.worker_summary,
                     "qa_summary": step.qa_summary,
+                    "qa_worker_id": step.qa_worker_id,
                     "reason": step.reason,
                 }
                 for step in result.steps

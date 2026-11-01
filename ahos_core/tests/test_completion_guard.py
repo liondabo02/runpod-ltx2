@@ -15,6 +15,7 @@ def _result(*, ident="mission-1", status=MissionStatus.COMPLETED, steps=()):
     return MissionResult(
         mission_id=ident, objective="one isolated task",
         manager_id="manager", status=status, steps=steps, reason="test",
+        qa_worker_id="qa-1",
     )
 
 
