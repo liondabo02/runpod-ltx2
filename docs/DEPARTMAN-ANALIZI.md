@@ -5,22 +5,22 @@ bugün ürettiği teslim türü ve kullandığı ücretsiz araç seti.
 
 | Departman | Ajan | Yetkinlik | Proje | Kapı | Teslim türü |
 |---|---|---|---|---|---|
-| Yapay Zekâ Platformu (`ai-platform`) | 0 | 0 | ai-platform-workspace | var (pinned) | belge |
-| Çizgi Film Stüdyosu (`creative`) | 0 | 0 | creative-workspace | var (pinned) | çizgi film bölümü |
-| Veri Departmanı (`data`) | 0 | 0 | data-workspace | var (pinned) | belge |
-| Finans Departmanı (`finance`) | 0 | 0 | finance-workspace | var (pinned) | belge |
-| Genel İş Departmanı (`genel`) | 0 | 0 | genel-workspace | var (pinned) | belge |
-| Güvenlik ve Kaynak Koruma Departmanı (`guvenlik`) | 0 | 0 | guvenlik-workspace | var (pinned) | belge |
-| Holding Yönetimi (CEO) (`holding`) | 0 | 0 | holding-workspace | var (pinned) | belge |
-| Altyapı Departmanı (`infrastructure`) | 0 | 0 | infrastructure-workspace | var (pinned) | belge |
-| Pazarlama Departmanı (`marketing`) | 0 | 0 | marketing-workspace | var (pinned) | belge |
-| Operasyon Departmanı (`operations`) | 0 | 0 | operations-workspace | var (pinned) | belge |
-| Oyun Geliştirme Departmanı (`oyun`) | 0 | 0 | oyun-workspace | var (pinned) | belge |
-| Kalite Departmanı (`quality`) | 0 | 0 | quality-workspace | var (pinned) | belge |
-| Araştırma Departmanı (`research`) | 0 | 0 | research-workspace | var (pinned) | belge |
-| Satış Departmanı (`sales`) | 0 | 0 | sales-workspace | var (pinned) | belge |
-| Yazılım Şirketi (`software`) | 0 | 0 | pilot-software | var (pinned) | kod |
-| Müşteri Destek Departmanı (`support`) | 0 | 0 | support-workspace | var (pinned) | belge |
+| Yapay Zekâ Platformu (`ai-platform`) | 4 | 4 | ai-platform-workspace | var (pinned) | belge |
+| Çizgi Film Stüdyosu (`creative`) | 15 | 30 | creative-workspace | var (pinned) | çizgi film bölümü |
+| Veri Departmanı (`data`) | 2 | 8 | data-workspace | var (pinned) | belge |
+| Finans Departmanı (`finance`) | 2 | 8 | finance-workspace | var (pinned) | belge |
+| Genel İş Departmanı (`genel`) | 7 | 12 | genel-workspace | var (pinned) | belge |
+| Güvenlik ve Kaynak Koruma Departmanı (`guvenlik`) | 5 | 4 | guvenlik-workspace | var (pinned) | belge |
+| Holding Yönetimi (CEO) (`holding`) | 2 | 4 | holding-workspace | var (pinned) | belge |
+| Altyapı Departmanı (`infrastructure`) | 2 | 9 | infrastructure-workspace | var (pinned) | belge |
+| Pazarlama Departmanı (`marketing`) | 2 | 8 | marketing-workspace | var (pinned) | belge |
+| Operasyon Departmanı (`operations`) | 2 | 8 | operations-workspace | var (pinned) | belge |
+| Oyun Geliştirme Departmanı (`oyun`) | 15 | 34 | oyun-workspace | var (pinned) | belge |
+| Kalite Departmanı (`quality`) | 2 | 9 | quality-workspace | var (pinned) | belge |
+| Araştırma Departmanı (`research`) | 2 | 8 | research-workspace | var (pinned) | belge |
+| Satış Departmanı (`sales`) | 2 | 8 | sales-workspace | var (pinned) | belge |
+| Yazılım Şirketi (`software`) | 13 | 29 | pilot-software | var (pinned) | kod |
+| Müşteri Destek Departmanı (`support`) | 2 | 8 | support-workspace | var (pinned) | belge |
 
 ## Üretim koşusu kanıtı (bu oturum)
 
