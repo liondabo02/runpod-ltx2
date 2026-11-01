@@ -5,7 +5,7 @@ bugün ürettiği teslim türü ve kullandığı ücretsiz araç seti.
 
 | Departman | Ajan | Yetkinlik | Proje | Kapı | Teslim türü |
 |---|---|---|---|---|---|
-| Yapay Zekâ Platformu (`ai-platform`) | 0 | 0 | harun-ai-foundry | var (pinsiz) | kod |
+| Yapay Zekâ Platformu (`ai-platform`) | 0 | 0 | ai-platform-workspace | var (pinned) | belge |
 | Çizgi Film Stüdyosu (`creative`) | 0 | 0 | creative-workspace | var (pinned) | çizgi film bölümü |
 | Veri Departmanı (`data`) | 0 | 0 | data-workspace | var (pinned) | belge |
 | Finans Departmanı (`finance`) | 0 | 0 | finance-workspace | var (pinned) | belge |
@@ -15,7 +15,7 @@ bugün ürettiği teslim türü ve kullandığı ücretsiz araç seti.
 | Altyapı Departmanı (`infrastructure`) | 0 | 0 | infrastructure-workspace | var (pinned) | belge |
 | Pazarlama Departmanı (`marketing`) | 0 | 0 | marketing-workspace | var (pinned) | belge |
 | Operasyon Departmanı (`operations`) | 0 | 0 | operations-workspace | var (pinned) | belge |
-| Oyun Geliştirme Departmanı (`oyun`) | 0 | 0 | mipiluna | var (pinned) | kod |
+| Oyun Geliştirme Departmanı (`oyun`) | 0 | 0 | oyun-workspace | var (pinned) | belge |
 | Kalite Departmanı (`quality`) | 0 | 0 | quality-workspace | var (pinned) | belge |
 | Araştırma Departmanı (`research`) | 0 | 0 | research-workspace | var (pinned) | belge |
 | Satış Departmanı (`sales`) | 0 | 0 | sales-workspace | var (pinned) | belge |
@@ -44,7 +44,7 @@ Maliyet: 0 $ — model çağrısı yok, ücretli araç yok.
 
 - **Araçlar**: yerel model (ollama), edge-tts, provider zinciri
 - **Çıktılar**: model karşılaştırması, maliyet notu, seçim gerekçesi
-- **Durum**: altyapı hazır, ilk koşu bekliyor
+- **Durum**: üretim koşusu yapıldı
 
 ## Çizgi Film Stüdyosu (`creative`)
 
@@ -56,7 +56,7 @@ Maliyet: 0 $ — model çağrısı yok, ücretli araç yok.
 
 - **Araçlar**: DuckDB / pandas, açık veri setleri (data.gov, Kaggle), pandera ile şema doğrulama
 - **Çıktılar**: veri sözlüğü, kalite raporu, özet istatistikler
-- **Durum**: altyapı hazır, ilk koşu bekliyor
+- **Durum**: üretim koşusu yapıldı
 
 ## Finans Departmanı (`finance`)
 
@@ -68,25 +68,25 @@ Maliyet: 0 $ — model çağrısı yok, ücretli araç yok.
 
 - **Araçlar**: Markdown plan, kontrol listesi
 - **Çıktılar**: hedef, adımlar, kabul kriteri
-- **Durum**: altyapı hazır, ilk koşu bekliyor
+- **Durum**: üretim koşusu yapıldı
 
 ## Güvenlik ve Kaynak Koruma Departmanı (`guvenlik`)
 
 - **Araçlar**: sır taraması (git grep + entropy), yedek doğrulama, erişim denetimi (kim neyi görebiliyor)
 - **Çıktılar**: risk kaydı, sır envanteri, erişim matrisi
-- **Durum**: altyapı hazır, ilk koşu bekliyor
+- **Durum**: üretim koşusu yapıldı
 
 ## Holding Yönetimi (CEO) (`holding`)
 
 - **Araçlar**: portföy özeti (kuyruk verisinden), karar kaydı (ADR)
 - **Çıktılar**: departman durumu, karar günlüğü, öncelik listesi
-- **Durum**: altyapı hazır, ilk koşu bekliyor
+- **Durum**: üretim koşusu yapıldı
 
 ## Altyapı Departmanı (`infrastructure`)
 
 - **Araçlar**: Windows Task Scheduler, robocopy yedekleme, uptime izleme
 - **Çıktılar**: yedekleme planı, izleme listesi, geri dönüş adımları
-- **Durum**: altyapı hazır, ilk koşu bekliyor
+- **Durum**: üretim koşusu yapıldı
 
 ## Pazarlama Departmanı (`marketing`)
 
@@ -98,31 +98,31 @@ Maliyet: 0 $ — model çağrısı yok, ücretli araç yok.
 
 - **Araçlar**: Task Scheduler / cron, süreç diyagramı (Mermaid), RACI tablosu
 - **Çıktılar**: süreç adımları, sorumluluk matrisi, otomasyon fırsatları
-- **Durum**: altyapı hazır, ilk koşu bekliyor
+- **Durum**: üretim koşusu yapıldı
 
 ## Oyun Geliştirme Departmanı (`oyun`)
 
 - **Araçlar**: Godot 4 (ücretsiz), Phaser (web), Aseprite alternatifi: LibreSprite
 - **Çıktılar**: oyun döngüsü, varlık listesi, test senaryoları
-- **Durum**: altyapı hazır, ilk koşu bekliyor
+- **Durum**: üretim koşusu yapıldı
 
 ## Kalite Departmanı (`quality`)
 
 - **Araçlar**: pytest + kabul kapıları, kontrol listesi (Markdown)
 - **Çıktılar**: kabul kriterleri, test kapsamı, bulgu listesi
-- **Durum**: altyapı hazır, ilk koşu bekliyor
+- **Durum**: üretim koşusu yapıldı
 
 ## Araştırma Departmanı (`research`)
 
 - **Araçlar**: arXiv / OpenAlex / Semantic Scholar (ücretsiz API), Crossref DOI doğrulama, Zotero (ücretsiz)
 - **Çıktılar**: araştırma sorusu, kaynak listesi (DOI'li), bulgular + sınırlar
-- **Durum**: altyapı hazır, ilk koşu bekliyor
+- **Durum**: üretim koşusu yapıldı
 
 ## Satış Departmanı (`sales`)
 
 - **Araçlar**: SQLite tabanlı CRM-lite, teklif şablonu, e-posta takip scripti
 - **Çıktılar**: satış hunisi, teklif taslağı, haftalık takip listesi
-- **Durum**: altyapı hazır, ilk koşu bekliyor
+- **Durum**: üretim koşusu yapıldı
 
 ## Yazılım Şirketi (`software`)
 
@@ -134,4 +134,4 @@ Maliyet: 0 $ — model çağrısı yok, ücretli araç yok.
 
 - **Araçlar**: SQLite ticket kuyruğu, SSS bankası, yanıt şablonları
 - **Çıktılar**: SSS, yanıt süresi hedefi, eskalasyon kuralı
-- **Durum**: altyapı hazır, ilk koşu bekliyor
+- **Durum**: üretim koşusu yapıldı
