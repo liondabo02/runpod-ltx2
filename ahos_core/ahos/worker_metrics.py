@@ -8,6 +8,7 @@ instead of inventing performance numbers.
 from __future__ import annotations
 
 import json
+import math
 import threading
 import time
 from datetime import datetime, timezone
@@ -75,10 +76,34 @@ def _entries(runtime_dir: str | Path) -> list[dict[str, object]]:
         if not line.strip():
             continue
         try:
-            rows.append(json.loads(line))
+            row = json.loads(line)
         except json.JSONDecodeError:
             continue
+        if not isinstance(row, dict) or not isinstance(row.get('success'), bool):
+            continue
+        try:
+            duration = float(row.get('duration_ms') or 0)
+        except (ValueError, TypeError):
+            continue
+        if not math.isfinite(duration) or duration < 0:
+            continue
+        rows.append(row)
     return rows
+
+
+def selection_score(row: dict[str, object]) -> float:
+    """Smoothed Wilson lower bound, not a claim of future competence.
+
+    Two prior observations keep an untried worker eligible; larger successful
+    samples beat one lucky run. Costs/capabilities/availability remain hard gates.
+    """
+    try:
+        runs = max(0, int(row.get('runs') or 0))
+        successes = min(runs, max(0, int(row.get('successes') or 0)))
+    except (ValueError, TypeError, OverflowError):
+        runs, successes = 0, 0
+    n, p, z = runs + 2, (successes + 1) / (runs + 2), 1.96
+    return (p + z*z/(2*n) - z*math.sqrt(p*(1-p)/n + z*z/(4*n*n))) / (1 + z*z/n)
 
 
 def summary(runtime_dir: str | Path) -> dict[str, dict[str, object]]:
@@ -99,9 +124,12 @@ def summary(runtime_dir: str | Path) -> dict[str, dict[str, object]]:
                 "last_error": "",
                 "last_at": "",
                 "department": row.get("department") or "",
+                "reassignments": 0,
             },
         )
         item["runs"] = int(item["runs"]) + 1
+        if str(row.get("reason") or "").startswith("yeniden atama"):
+            item["reassignments"] = int(item["reassignments"]) + 1
         if row.get("success"):
             item["successes"] = int(item["successes"]) + 1
         else:

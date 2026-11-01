@@ -28,6 +28,16 @@ $LogFile = Join-Path $RuntimeDir 'watchdog.log'
 $DaemonScript = if ($DaemonScriptPath) { $DaemonScriptPath } else { Join-Path $PSScriptRoot 'AHOS-Daemon.ps1' }
 $ErrorFile = Join-Path $RuntimeDir 'errors.jsonl'
 
+# Model/modeless yapılandırması: runtime/model.env varsa ortama yükle.
+$ModelEnv = Join-Path $RuntimeDir 'model.env'
+if (Test-Path $ModelEnv) {
+    Get-Content $ModelEnv -Encoding UTF8 | ForEach-Object {
+        if ($_ -match '^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$') {
+            Set-Item -Path "Env:$($Matches[1])" -Value $Matches[2].Trim()
+        }
+    }
+}
+
 function Write-Log([string]$Message) {
     $line = '{0} {1}' -f (Get-Date -Format 'yyyy-MM-ddTHH:mm:ss'), $Message
     Add-Content -Path $LogFile -Value $line -Encoding utf8

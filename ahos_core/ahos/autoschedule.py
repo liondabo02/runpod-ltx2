@@ -78,7 +78,8 @@ class BoundedScheduler:
         unique_missions = list(dict.fromkeys(item for item in raw_missions if item))
         self.state = AutoState(
             hour_key=str(payload.get("hour_key") or ""),
-            missions_this_hour=len(unique_missions),
+            # The mission list spans the session, not just the current hour.
+            missions_this_hour=max(0, int(payload.get("missions_this_hour") or 0)),
             missions_total=int(payload.get("missions_total") or 0),
             status=str(payload.get("status") or "idle"),
             last_reason=str(payload.get("last_reason") or ""),
@@ -143,7 +144,7 @@ class BoundedScheduler:
         # Aynı görev kimliği tekrar sayılmaz: eski kilit döngüleri kotayı
         # şişiriyordu ve sistem gereksiz yere "kota doldu" diyordu.
         if mission_id and mission_id in self.state.missions:
-            self.state.status = "running"
+            self.state.status = "idle"
             self.state.last_reason = f"{mission_id}: {status} (tekrar, sayılmadı)"
             self._save()
             return self.state.status

@@ -37,6 +37,8 @@ def recover(
     """
 
     now = time.time() if now is None else now
+    if reopen_limit < 1 or attempts_cap < 1:
+        raise ValueError("recovery limits must be positive")
     stamp = _utc_now()
     report = {"expired_leases": 0, "reopened_stuck": 0, "gave_up": 0}
 
@@ -85,7 +87,7 @@ def recover(
                 WHERE mission_id=?
                 """,
                 (
-                    min(attempts_cap, max(2, int(row["max_attempts"] or 1) + 1)),
+                    min(attempts_cap, max(attempts + 1, int(row["max_attempts"] or 1) + 1)),
                     stamp,
                     STUCK_ERROR,
                     row["mission_id"],

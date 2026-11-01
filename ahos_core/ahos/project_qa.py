@@ -1,4 +1,8 @@
-"""Independent bounded static web acceptance; no model or project code execution."""
+"""Bounded integrity/browser checks and owner-pinned functional acceptance.
+
+No model calls. An existing trusted acceptance script runs with a timeout;
+production callers require it, while legacy static-only callers are explicit.
+"""
 import hashlib
 import json
 import os
@@ -59,7 +63,7 @@ def _browser_smoke(index, evidence, task_id):
     }
 
 
-def make_project_qa(project_root, evidence_root):
+def make_project_qa(project_root, evidence_root, *, require_functional=False):
     root = Path(project_root).resolve()
     evidence = Path(evidence_root).resolve()
 
@@ -70,6 +74,7 @@ def make_project_qa(project_root, evidence_root):
         problems = []
         hashes = {}
         browser = None
+        functional_verified = False
         try:
             if result.task_id != item.task_id or not result.success:
                 raise ValueError('İşçi sonucu görevle eşleşmiyor veya başarısız')
@@ -113,47 +118,52 @@ def make_project_qa(project_root, evidence_root):
                             'Tarayıcı duman testi başarısız: '
                             + str(browser.get('problems') or 'sayfa yüklenemedi')
                         )
-                    gate = root / 'tools' / 'check_offline.py'
-                    if gate.is_file():
-                        from .acceptance import trusted_gate
+                gate = root / 'tools' / 'check_offline.py'
+                if require_functional and not gate.is_file():
+                    raise ValueError('Bağımsız işlevsel kabul testi yok; ürün tamamlandı sayılamaz')
+                if gate.is_file():
+                    from .acceptance import trusted_gate
 
-                        trusted, reason, _digest = trusted_gate(
-                            root, evidence / 'acceptance-baseline.json'
+                    trusted, reason, _digest = trusted_gate(
+                        root, evidence / 'acceptance-baseline.json'
+                    )
+                    if not trusted:
+                        raise ValueError('Kabul testi güvenilir değil: ' + reason)
+                    # Windows konsolu cp1252 olduğunda kapı betiği Türkçe
+                    # karakter basarken UnicodeEncodeError ile çöküyordu;
+                    # alt sürece kodlamayı açıkça ver.
+                    gate_env = dict(os.environ)
+                    gate_env['PYTHONIOENCODING'] = 'utf-8'
+                    gate_env['PYTHONUTF8'] = '1'
+                    acceptance = subprocess.run(
+                        [sys.executable, str(gate)],
+                        capture_output=True,
+                        text=True,
+                        encoding='utf-8',
+                        errors='replace',
+                        timeout=120,
+                        cwd=str(root),
+                        env=gate_env,
+                    )
+                    if acceptance.returncode != 0:
+                        detail = (acceptance.stdout or acceptance.stderr or '').strip()
+                        raise ValueError(
+                            'Kabul testi başarısız (check_offline): '
+                            + (detail.splitlines()[-1] if detail else 'çıktı yok')[:160]
                         )
-                        if not trusted:
-                            raise ValueError('Kabul testi güvenilir değil: ' + reason)
-                        # Windows konsolu cp1252 olduğunda kapı betiği Türkçe
-                        # karakter basarken UnicodeEncodeError ile çöküyordu;
-                        # alt sürece kodlamayı açıkça ver.
-                        gate_env = dict(os.environ)
-                        gate_env['PYTHONIOENCODING'] = 'utf-8'
-                        gate_env['PYTHONUTF8'] = '1'
-                        acceptance = subprocess.run(
-                            [sys.executable, str(gate)],
-                            capture_output=True,
-                            text=True,
-                            encoding='utf-8',
-                            errors='replace',
-                            timeout=120,
-                            cwd=str(root),
-                            env=gate_env,
-                        )
-                        if acceptance.returncode != 0:
-                            detail = (acceptance.stdout or acceptance.stderr or '').strip()
-                            raise ValueError(
-                                'Kabul testi başarısız (check_offline): '
-                                + detail.splitlines()[-1][:160]
-                            )
+                functional_verified = gate.is_file()
             # Fence changes occurring between inventory and acceptance.
             for name, digest in hashes.items():
                 if digest_file(root / name, MAX_PROJECT_BYTES)[0] != digest:
                     raise ValueError('Dosya bağımsız denetim sırasında değişti')
-        except (OSError, ValueError) as exc:
-            problems.append(str(exc) if isinstance(exc, ValueError) else 'Dosya okunamadı')
+        except (OSError, ValueError, subprocess.TimeoutExpired) as exc:
+            problems.append('Kabul testi zaman aşımı' if isinstance(exc, subprocess.TimeoutExpired)
+                            else str(exc) if isinstance(exc, ValueError) else 'Dosya okunamadı')
         passed = not problems
         record = dict(task_id=item.task_id, producer=result.worker_id, verifier=qa_worker_id,
                       passed=passed, scope='file integrity + headless DOM smoke for web when enabled; functionality and human fit unverified',
                       source_hashes=hashes, problems=problems, model_calls=0,
+                      functional_required=require_functional, functional_verified=functional_verified,
                       browser=browser)
         evidence.mkdir(parents=True, exist_ok=True)
         safe = re.sub('[^A-Za-z0-9_-]', '_', item.task_id)[:100]

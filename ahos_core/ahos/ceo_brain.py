@@ -18,7 +18,7 @@ CAUSES = {
     "queue_stuck": (
         "Görev sıraya girdi ama hiç çalışmadı",
         "Kuyruk kilidi / bayat iş kalemi",
-        "Kuyruk satırını taze kimlikle yeniden aç; iş kalemini sıfırla",
+        "Sahiplik ve kira geçmişini denetle; tamamlanmış adımı sıfırlama, sınırlı kurtarma planı çıkar",
         "software",
     ),
     "patch_missing": (
@@ -54,7 +54,7 @@ CAUSES = {
     "budget": (
         "Model bütçesi doldu",
         "Günlük tavan aşıldı",
-        "Tavanı yükselt veya yerel modele düş",
+        "Mevcut bütçeyi koru; ücretsiz uç uygunsa kullan, değilse beklet ve sahibine bildir",
         "holding",
     ),
     "model": (
@@ -64,13 +64,24 @@ CAUSES = {
         "software",
     ),
 }
+CAUSES.update({
+    "authorization": ("Model yetkilendirmesi reddedildi", "HTTP 401/403 erişim hatası",
+                      "Anahtarı göstermeden erişim ve endpoint yapılandırmasını doğrula; aynı isteği körlemesine tekrarlama", "ai-platform"),
+    "unknown": ("Nedeni henüz doğrulanmamış hata", "Mevcut kanıt kök nedeni belirlemiyor",
+                "Ham hata kaydını incele ve izole yeniden üretim testi oluştur", "software"),
+})
 
 
 def _classify(text: str) -> str:
     lowered = text.casefold()
     if not lowered.strip():
         return "queue_stuck"
-    if "kez bulundu" in lowered or "4 kez" in lowered:
+    if re.search(r"\b(?:401|403)\b", lowered):
+        return "authorization"
+    matches = re.search(r"\b(\d+)\s+kez bulundu", lowered)
+    if matches and int(matches.group(1)) == 0:
+        return "patch_missing"
+    if matches and int(matches.group(1)) > 1:
         return "patch_ambiguous"
     if "bulunamadı" in lowered or "bulunamadi" in lowered:
         return "patch_missing"
@@ -86,7 +97,7 @@ def _classify(text: str) -> str:
         return "model"
     if "sahiplenilemedi" in lowered or "başka işçide" in lowered or "kapalı" in lowered:
         return "queue_stuck"
-    return "queue_stuck"
+    return "unknown"
 
 
 def collect(runtime_dir: str | Path, limit: int = 200) -> list[dict]:
@@ -96,10 +107,10 @@ def collect(runtime_dir: str | Path, limit: int = 200) -> list[dict]:
     if not db.is_file():
         return []
     try:
-        con = sqlite3.connect(str(db))
+        con = sqlite3.connect(db.resolve().as_uri() + "?mode=ro", uri=True)
         con.row_factory = sqlite3.Row
         rows = con.execute(
-            "select mission_id, objective, primary_department, result_json "
+            "select mission_id, objective, primary_department, result_json, last_error "
             "from missions where status in ('blocked','failed') order by rowid desc limit ?",
             (limit,),
         ).fetchall()
@@ -112,8 +123,16 @@ def collect(runtime_dir: str | Path, limit: int = 200) -> list[dict]:
             payload = json.loads(row["result_json"] or "{}")
         except json.JSONDecodeError:
             payload = {}
+        if not isinstance(payload, dict):
+            payload = {}
         steps = payload.get("steps") or []
-        text = " ".join(str(step.get("worker_summary") or "") for step in steps)
+        if not isinstance(steps, list):
+            steps = []
+        text = " ".join([
+            str(row['last_error'] or ''), str(payload.get('reason') or ''),
+            *[str(step.get('reason') or step.get('worker_summary') or '')
+              for step in steps if isinstance(step, dict)],
+        ]).strip()
         result.append(
             {
                 "mission_id": str(row["mission_id"]),
@@ -130,12 +149,17 @@ def diagnose(runtime_dir: str | Path) -> dict:
     """Group failures by cause with evidence and a concrete fix."""
 
     rows = collect(runtime_dir)
-    grouped: dict[str, list[dict]] = {}
+    grouped: dict[tuple[str, str], list[dict]] = {}
     for row in rows:
-        grouped.setdefault(str(row["cause"]), []).append(row)
+        cause = str(row['cause'])
+        # A backend acceptance failure belongs to the backend department,
+        # not always the game team. Keep distinct owners in distinct findings.
+        owner = str(row.get('department') or '') if cause == 'acceptance' else ''
+        grouped.setdefault((cause, owner), []).append(row)
     findings = []
-    for cause, items in sorted(grouped.items(), key=lambda item: len(item[1]), reverse=True):
+    for (cause, origin), items in sorted(grouped.items(), key=lambda item: len(item[1]), reverse=True):
         label, root, fix, owner = CAUSES.get(cause, CAUSES["queue_stuck"])
+        owner = origin or owner
         findings.append(
             {
                 "cause": cause,

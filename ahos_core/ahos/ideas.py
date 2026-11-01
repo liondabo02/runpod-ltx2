@@ -15,12 +15,45 @@ import hashlib
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
+from .studio_lock import idea_writer
+
+def _write_idea(path, payload):
+    # Keep the previous committed idea intact during transient Windows locks.
+    import os
+    import time
+    import uuid
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(path.name + '.' + uuid.uuid4().hex + '.tmp')
+    try:
+        with temporary.open('x', encoding='utf-8') as handle:
+            json.dump(payload, handle, ensure_ascii=False, indent=2)
+            handle.flush()
+            os.fsync(handle.fileno())
+        for attempt in range(5):
+            try:
+                os.replace(temporary, path)
+                break
+            except PermissionError:
+                if attempt == 4:
+                    raise
+                time.sleep(0.02 * (attempt + 1))
+    finally:
+        temporary.unlink(missing_ok=True)
+
 
 TASK_TEMPLATES = (
     ("cekirdek", "temel akisi kur ve calistir"),
     ("arayuz", "kullanici arayuzunu ekle ve dogrula"),
     ("kalite", "kabul testi ve hata sinirini ekle"),
 )
+
+
+def _standard_limit(task: dict) -> int:
+    try:
+        return min(3, max(1, int(task.get('max_attempts', 2))))
+    except (TypeError, ValueError, OverflowError):
+        return 2
 
 
 @dataclass
@@ -75,6 +108,7 @@ def build_tasks(text: str, department_name: str) -> list[dict]:
     return tasks
 
 
+@idea_writer
 def submit(console, runtime_dir: str | Path, text: str) -> Idea:
     """Route an idea to a department (creating one if needed) and store its tasks."""
 
@@ -96,9 +130,7 @@ def submit(console, runtime_dir: str | Path, text: str) -> Idea:
         department_name=spec.name,
         tasks=build_tasks(text, spec.name),
     )
-    (ideas_dir / f"{idea_id}.json").write_text(
-        json.dumps(idea.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8"
-    )
+    _write_idea(ideas_dir / f"{idea_id}.json", idea.to_dict())
     return idea
 
 
@@ -139,31 +171,48 @@ def pending_tasks(runtime_dir: str | Path) -> list[tuple[Idea, dict]]:
                     from .studio_department import ready
                     if not ready(task, idea.tasks):
                         continue
+                    if task.get('stage') == 'qa':
+                        from .studio_review import approval_matches
+                        if not approval_matches(runtime, idea.idea_id):
+                            continue
                 rows.append((idea, task))
     return rows
 
 
+@idea_writer
 def claim_next(runtime_dir: str | Path) -> tuple[Idea, dict] | None:
     """Mark the next pending task as running and return it."""
 
     rows = pending_tasks(runtime_dir)
     if not rows:
         return None
-    idea, task = rows[0]
     runtime = Path(runtime_dir)
+    selected = None
+    for idea, task in rows:
+        if task.get('workflow') != 'studio-production-v1' and int(task.get('attempts') or 0) >= _standard_limit(task):
+            task['status'] = 'blocked'
+            task['blocker'] = task.get('blocker') or 'Yeniden deneme sınırı doldu; yeni plan veya kapsam gerekli'
+            idea.status = 'blocked'
+            _write_idea(runtime / 'ideas' / f'{idea.idea_id}.json', idea.to_dict())
+            continue
+        selected = idea, task
+        break
+    if selected is None:
+        return None
+    idea, task = selected
     path = runtime / "ideas" / f"{idea.idea_id}.json"
     for item in idea.tasks:
         if item is task:
             item["status"] = "running"
-            if item.get('workflow') == 'studio-production-v1':
-                item['attempts'] = item.get('attempts', 0) + 1
+            item['attempts'] = item.get('attempts', 0) + 1
     if all(item.get("status") in {"running", "done"} for item in idea.tasks):
         idea.status = "running"
-    path.write_text(json.dumps(idea.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
+    _write_idea(path, idea.to_dict())
     return idea, task
 
 
-def complete(idea_id: str, task_id: str, runtime_dir: str | Path, *, success: bool) -> None:
+@idea_writer
+def complete(idea_id: str, task_id: str, runtime_dir: str | Path, *, success: bool, blocker: str = '') -> None:
     runtime = Path(runtime_dir)
     path = runtime / "ideas" / f"{idea_id}.json"
     payload = _load(path)
@@ -173,18 +222,20 @@ def complete(idea_id: str, task_id: str, runtime_dir: str | Path, *, success: bo
         if item.get("task_id") == task_id:
             if item.get('workflow') == 'studio-production-v1':
                 from .studio_department import acceptance
-                issues = acceptance(runtime, idea_id, item) if success else ['Üretim yürütücüsü başarısız oldu']
+                issues = acceptance(runtime, idea_id, item) if success else [blocker or 'Üretim yürütücüsü başarısız oldu']
                 item['blocker'] = '; '.join(issues)
                 item['status'] = 'done' if not issues else ('blocked' if success or item.get('attempts',0)>=item.get('max_attempts',2) else 'pending')
             else:
-                item["status"] = "done" if success else "pending"
+                item['blocker'] = '' if success else (blocker or 'bağımsız teslimat doğrulanmadı')[:300]
+                item["status"] = 'done' if success else ('blocked' if item.get('attempts', 0) >= _standard_limit(item) else 'pending')
     if all(item.get("status") == "done" for item in payload.get("tasks") or []):
         payload["status"] = "done"
     elif any(item.get('status') == 'blocked' for item in payload.get('tasks', [])):
         payload['status'] = 'blocked'
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    _write_idea(path, payload)
 
 
+@idea_writer
 def recover(runtime_dir: str | Path, *, stale_minutes: int = 15) -> int:
     """Yarıda kalmış fikir görevlerini yeniden kuyruğa al.
 
@@ -212,7 +263,8 @@ def recover(runtime_dir: str | Path, *, stale_minutes: int = 15) -> int:
         changed = False
         for item in payload.get("tasks") or []:
             if item.get("status") == "running" and age_minutes >= stale_minutes:
-                item["status"] = "blocked" if item.get('workflow')=='studio-production-v1' and item.get('attempts',0)>=item.get('max_attempts',2) else "pending"
+                limit = item.get('max_attempts', 2) if item.get('workflow') == 'studio-production-v1' else _standard_limit(item)
+                item["status"] = 'blocked' if item.get('attempts', 0) >= limit else 'pending'
                 changed = True
                 recovered += 1
         if changed:
@@ -220,7 +272,7 @@ def recover(runtime_dir: str | Path, *, stale_minutes: int = 15) -> int:
                 payload["status"] = "done"
             else:
                 payload["status"] = "open"
-            path.write_text(__import__("json").dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+            _write_idea(path, payload)
     return recovered
 
 

@@ -82,6 +82,7 @@ class AutonomyRunner:
         self._active_idea: tuple[str, str] | None = None
         self._active_improvement: str | None = None
         self._active_goal: tuple[str, str] | None = None
+        self._active_queued_mission: str | None = None
         self.office = HoldingOffice(console)
         self.state = AutonomyState()
 
@@ -330,13 +331,21 @@ class AutonomyRunner:
         return list(items) if isinstance(items, list) else None
 
     def _save_plan(self, day: str, items: list[dict]) -> None:
+        import uuid
         self.plan_path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = self.plan_path.with_suffix(".tmp")
-        tmp.write_text(
-            json.dumps({"day": day, "objectives": items}, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
-        os.replace(tmp, self.plan_path)
+        tmp = self.plan_path.with_name(self.plan_path.name + '.' + uuid.uuid4().hex + '.tmp')
+        with tmp.open('x', encoding='utf-8') as handle:
+            handle.write(json.dumps({"day": day, "objectives": items}, ensure_ascii=False, indent=2))
+            handle.flush()
+            os.fsync(handle.fileno())
+        for attempt in range(5):
+            try:
+                os.replace(tmp, self.plan_path)
+                break
+            except PermissionError:
+                if attempt == 4:
+                    raise
+                time.sleep(.02 * (attempt + 1))
 
     def plan_directive(self, excluded: set[str] | None = None) -> "Directive | None":
         """Turn the model's plan for today into the next directive.
@@ -653,6 +662,25 @@ class AutonomyRunner:
             priority=0,
         )
 
+    def _pending_directive(self, excluded: set[str]) -> "Directive | None":
+        """Select existing due project work before inventing more CEO work."""
+        from .autonomous_company import QueueStatus
+        from .holding_office import Directive
+        queue = getattr(self.console, 'queue', None)
+        if queue is None:
+            return None
+        for mission in queue.list(statuses=[QueueStatus.PENDING]):
+            if mission.next_attempt_at > time.time() or mission.attempts >= mission.max_attempts:
+                continue
+            if mission.primary_department in excluded or self._project_root(mission.primary_department) is None:
+                continue
+            if self.console.book.get(mission.primary_department) is None:
+                continue
+            self._active_queued_mission = mission.mission_id
+            return Directive(kind='queued_mission', department_id=mission.primary_department,
+                             objective=mission.objective, reason='kalıcı kuyruktaki mevcut görev', priority=0)
+        return None
+
     def _recover_queue(self) -> dict:
         """Reopen orphaned missions once when a claim keeps failing."""
 
@@ -762,25 +790,6 @@ class AutonomyRunner:
         queue = getattr(self.console, "queue", None)
         if queue is None:
             return False
-        try:
-            # Görev kimliği yalnız nesne metninden türetilmiyor; kuyrukta bu
-            # departman + hedef için engellenmiş satırı bul ve onu yeniden aç.
-            with queue._connect() as conn:  # noqa: SLF001 - aynı paket
-                rows = conn.execute(
-                    """
-                    SELECT mission_id, status FROM missions
-                    WHERE primary_department = ? AND lower(objective) = lower(?)
-                      AND status IN ('blocked', 'failed')
-                    ORDER BY updated_at DESC LIMIT 1
-                    """,
-                    (spec.department_id, objective),
-                ).fetchall()
-        except Exception:  # noqa: BLE001 - queue schema is theirs
-            return False
-        if not rows:
-            return False
-        mission_id = str(rows[0]["mission_id"])
-
         day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         try:
             retries = json.loads(self._retry_budget_path().read_text(encoding="utf-8"))
@@ -789,21 +798,40 @@ class AutonomyRunner:
         if str(retries.get("day") or "") != day:
             retries = {"day": day, "ids": []}
         ids = [str(item) for item in retries.get("ids", [])]
-        if mission_id in ids and not force:
-            return False
-        ids.append(mission_id)
-        retries["ids"] = ids[-200:]
         try:
-            self._retry_budget_path().write_text(
-                json.dumps(retries, ensure_ascii=False), encoding="utf-8"
-            )
-            queue.enqueue(
-                mission_id=mission_id,
-                objective=objective,
-                primary_department=spec.department_id,
-                max_attempts=2,
-                replace_existing=True,
-            )
+            # Budget reservation and reopen are one transaction across all
+            # processes. Never overwrite a mission another worker has claimed.
+            with queue._connect() as conn:  # noqa: SLF001 - same package
+                conn.execute("BEGIN IMMEDIATE")
+                conn.execute("""CREATE TABLE IF NOT EXISTS autonomy_retry_budget (
+                    day TEXT NOT NULL, mission_id TEXT NOT NULL,
+                    PRIMARY KEY(day, mission_id))""")
+                row = conn.execute("""
+                    SELECT mission_id FROM missions
+                    WHERE primary_department=? AND lower(objective)=lower(?)
+                      AND status IN ('blocked', 'failed')
+                    ORDER BY updated_at DESC LIMIT 1
+                """, (spec.department_id, objective)).fetchone()
+                if row is None:
+                    return False
+                mission_id = str(row["mission_id"])
+                # Respect legacy reservations too. `force` is retained for
+                # call compatibility, never as an automatic budget bypass.
+                if mission_id in ids:
+                    return False
+                reserved = conn.execute(
+                    "INSERT OR IGNORE INTO autonomy_retry_budget(day, mission_id) VALUES (?, ?)",
+                    (day, mission_id),
+                )
+                if reserved.rowcount != 1:
+                    return False
+                conn.execute("""
+                    UPDATE missions SET status='pending', attempts=0,
+                        max_attempts=2, next_attempt_at=0, lease_owner=NULL,
+                        lease_until=NULL, updated_at=?, last_error=NULL,
+                        result_json=NULL
+                    WHERE mission_id=? AND status IN ('blocked', 'failed')
+                """, (_now(), mission_id))
         except Exception:  # noqa: BLE001 - retry is best effort
             return False
         return True
@@ -821,7 +849,10 @@ class AutonomyRunner:
         # Burada yalnızca *kullanılamayan* departmanlar dışlanır; bir departman
         # bugün bir görev yaptı diye günün geri kalanında tamamen kapatılmaz.
         excluded: set[str] = set()
+        self._active_queued_mission = None
         directive = self._idea_directive(excluded)
+        if directive is None:
+            directive = self._pending_directive(excluded)
         if directive is None:
             directive = self._goal_directive(excluded)
         if directive is None:
@@ -846,7 +877,7 @@ class AutonomyRunner:
         # dedupe anahtarlarıyla korunur.
         counts = self.mission_counts_today()
         kind = str(getattr(directive, "kind", "") or "")
-        if directive is not None and kind not in {"idea", "self_improvement", "goal_step"} and (
+        if directive is not None and kind not in {"idea", "self_improvement", "goal_step", "queued_mission"} and (
             self.already_executed(self._key(directive.department_id, directive.objective))
             or counts.get(directive.department_id, 0) >= 1
         ):
@@ -911,10 +942,11 @@ class AutonomyRunner:
             self._persist()
             return None
 
+        kind = str(getattr(directive, 'kind', '') or '')
         key = self._key(directive.department_id, directive.objective)
         # Fikir ve kalite görevi kendi "bitti" kayıtlarıyla korunur; günlük
         # dedupe anahtarı onları kalıcı olarak engellememeli.
-        if self.already_executed(key) and kind not in {"idea", "self_improvement", "goal_step"}:
+        if self.already_executed(key) and kind not in {"idea", "self_improvement", "goal_step", "queued_mission"}:
             self.state.skipped_duplicate += 1
             self.state.last_reason = f"tekrar engellendi: {key}"
             self._persist()
@@ -922,10 +954,45 @@ class AutonomyRunner:
 
         spec = self.console.book.get(directive.department_id)
         if spec is None:
-            self.state.status = "blocked"
-            self.state.last_reason = f"bilinmeyen departman: {directive.department_id}"
-            self._persist()
-            return None
+            # Silinmiş/yeniden adlandırılmış departman: görevi düşürmek yerine
+            # genel departmana yönlendir. Aksi halde kuyruk "idle" görünürken
+            # bekleyen işler hiç işlenmez.
+            fallback = self.console.book.get("genel")
+            if fallback is not None:
+                from dataclasses import replace as _replace
+
+                original_id = directive.department_id
+                directive = _replace(directive, department_id="genel")
+                spec = fallback
+                self.state.last_reason = (
+                    f"bilinmeyen departman {original_id} → genel'e yönlendirildi"
+                )
+            else:
+                self.state.status = "blocked"
+                self.state.last_reason = f"bilinmeyen departman: {directive.department_id}"
+                self._persist()
+                return None
+
+        # Media production has its own isolated project and adapters. It must
+        # never fall through to the generic business-document/code executor.
+        if self._active_idea is not None:
+            from .studio_runtime import _load_idea, execute_claimed
+            studio_idea = _load_idea(self.runtime_dir, self._active_idea[0])
+            studio_task = next((t for t in studio_idea['tasks'] if t['task_id'] == self._active_idea[1]), {})
+            if studio_task.get('workflow') == 'studio-production-v1':
+                result = execute_claimed(self.runtime_dir, *self._active_idea)
+                self._active_idea = None
+                delivered = result.status == 'routed'
+                if delivered:
+                    self.state.executed += 1
+                else:
+                    self.state.failed += 1
+                self.state.status = 'idle' if delivered else 'blocked'
+                self.state.last_reason = result.message[:200]
+                self.state.last_mission = result.mission.mission_id
+                self._record(key, result.mission.mission_id, directive.department_id, 'completed' if delivered else 'blocked')
+                self._persist()
+                return result
 
         if self._project_root(directive.department_id) is None:
             # Kod projesi olmayan şirket: iş, iş belgesi olarak teslim edilir.
@@ -1011,15 +1078,17 @@ class AutonomyRunner:
         started = time.monotonic()
         attempts = 0
         result: ConsoleResult | None = None
+        verdict = ""
 
-        self._reopen_blocked(
-            spec,
-            directive.objective,
-            force=kind in {"idea", "self_improvement", "goal_step"},
-        )
+        if kind != 'queued_mission':
+            self._reopen_blocked(
+                spec,
+                directive.objective,
+                force=kind in {"idea", "self_improvement", "goal_step"},
+            )
         self._ensure_acceptance_baseline(directive.department_id)
 
-        while attempts <= self.limits.max_retries:
+        while attempts <= (0 if kind == 'queued_mission' else self.limits.max_retries):
             attempts += 1
             stop_reason = self._blocked_reason()
             if stop_reason:
@@ -1030,7 +1099,8 @@ class AutonomyRunner:
                 self._record(key, "", directive.department_id, "cancelled")
                 self._persist()
                 return None
-            result = self.console.run_department_mission(spec, directive.objective)
+            result = (self.console.run_queued_mission(self._active_queued_mission)
+                      if kind == 'queued_mission' else self.console.run_department_mission(spec, directive.objective))
             elapsed = time.monotonic() - started
             if result.status == "routed":
                 break
@@ -1051,11 +1121,17 @@ class AutonomyRunner:
             self.state.skipped_duplicate += 1
             self.state.status = "idle"
             self.state.last_reason = "zaten tamamlanmış görev atlandı"
+            if self._active_idea is not None:
+                from .ideas import complete
+                complete(*self._active_idea, self.runtime_dir, success=False,
+                         blocker='Görev daha önce tamamlanmış; yeni kapsam veya doğrulanabilir yeni kanıt gerekli')
+                self._active_idea = None
             self._record(key, mission_id, directive.department_id, "skipped")
             self._persist()
             return None
 
         if result is not None and result.status == "routed":
+            delivered, verdict = self.delivery_verdict(result, directive.department_id)
             if self._active_idea is not None:
                 try:
                     from .ideas import complete
@@ -1064,12 +1140,12 @@ class AutonomyRunner:
                         self._active_idea[0],
                         self._active_idea[1],
                         self.runtime_dir,
-                        success=True,
+                        success=delivered,
+                        blocker='' if delivered else verdict[:300],
                     )
                 except Exception:  # noqa: BLE001 - fikir kaydı isteğe bağlı
                     pass
                 self._active_idea = None
-            delivered, verdict = self.delivery_verdict(result, directive.department_id)
             if not delivered:
                 # Sıfır dosya ya da doğrulanmamış kabul: başarı sayılmaz.
                 self.state.failed += 1
@@ -1146,8 +1222,8 @@ class AutonomyRunner:
                         self._active_goal[0],
                         self._active_goal[1],
                         success=False,
-                        note=result.message[:200],
-                        method=str(verdict or result.message)[:160],
+                        note=(result.message if result is not None else "sonuç yok")[:200],
+                        method=str(verdict or (result.message if result is not None else "sonuç yok"))[:160],
                     )
                 except Exception:  # noqa: BLE001
                     pass
@@ -1164,6 +1240,7 @@ class AutonomyRunner:
                         self._active_idea[1],
                         self.runtime_dir,
                         success=False,
+                        blocker=result.message[:300] if result is not None else 'sonuç yok',
                     )
                 except Exception:  # noqa: BLE001
                     pass

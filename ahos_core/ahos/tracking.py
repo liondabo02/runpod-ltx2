@@ -69,21 +69,36 @@ def track(runtime_dir: str | Path, idea_id: str) -> dict | None:
         if match is None:
             match = next((m for m in missions if title and title in m["objective"]), None)
         status = str(task.get("status") or "")
-        if match is not None and match["status"] == "completed":
+        production = task.get('workflow') == 'studio-production-v1'
+        if not production and match is not None and match["status"] == "completed":
             status = "done"
-        elif match is not None and match["status"] in {"blocked", "failed"}:
+        elif not production and match is not None and match["status"] in {"blocked", "failed"}:
             status = "blocked"
         if status == "done":
             done += 1
+        native_artifacts = []
+        if production:
+            event_path = runtime / 'studio-production' / idea_id / 'events' / f"{task.get('task_id')}-{task.get('attempts',0)}.json"
+            try:
+                event = json.loads(event_path.read_text(encoding='utf-8'))
+                if event.get('success') is True and status == 'done':
+                    base = (runtime / 'studio-production' / idea_id).resolve()
+                    native_artifacts = [str(Path(p)) for p in event.get('artifacts', []) if Path(p).resolve().is_relative_to(base) and Path(p).is_file()]
+            except (OSError, ValueError, TypeError):
+                pass
         tasks.append(
             {
                 "title": title,
                 "status": status,
                 "department": idea.get("department_id"),
                 "mission_id": match["mission_id"] if match else "",
-                "changed": match["changed"] if match else 0,
-                "blocker": match["blocker"] if match else "",
-                "output": f"{match['changed']} dosya" if match and match["changed"] else "",
+                "changed": len(native_artifacts) if production else (match["changed"] if match else 0),
+                "blocker": str(task.get('blocker') or '') if production else (match["blocker"] if match else ""),
+                "worker_id": task.get('worker_id', ''),
+                "depends_on": task.get('depends_on', []),
+                "language": task.get('language', ''),
+                "output": ', '.join(Path(p).name for p in native_artifacts) if production else (f"{match['changed']} dosya" if match and match["changed"] else ""),
+                "artifacts": native_artifacts,
             }
         )
     total = len(tasks)

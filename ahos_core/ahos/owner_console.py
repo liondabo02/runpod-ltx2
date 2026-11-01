@@ -790,6 +790,23 @@ class OwnerConsole:
             return None, best_score
         return self.book.get(best_id), best_score
 
+    def run_queued_mission(self, mission, *, executor: WorkerExecutor | None = None) -> "ConsoleResult":
+        """Resume the durable identity, whether passed a row or an ID.
+
+        Reload the authoritative row rather than trusting stale caller fields.
+        Never replace this row or consume a different queued mission.
+        """
+        mission_id = getattr(mission, "mission_id", None) or str(mission)
+        if self.queue is None:
+            return ConsoleResult(kind=CommandKind.TASK, status='blocked', message='kalıcı kuyruk bağlı değil')
+        with self._lock:
+            queued = self.queue.get(mission_id)
+            spec = self.book.get(queued.primary_department) if queued else None
+            if spec is None:
+                return ConsoleResult(kind=CommandKind.TASK, status='blocked', message='kuyruk görevi veya departmanı bulunamadı')
+            result = self._dispatch_serialized(spec, queued.objective, mission_id, executor, queued_only=True)
+            return self._console_result(spec, result)
+
     def run_department_mission(
         self,
         spec: DepartmentSpec,
@@ -825,6 +842,23 @@ class OwnerConsole:
                 "department": spec.department_id, "objective": objective[:160],
             })
             mission = self._dispatch(spec, objective, mission_id, executor)
+            # BOŞ TESLİM REDDİ: proje bağlı işte hiçbir dosya değişmediyse
+            # görev tamamlandı sayılmaz (kanıtsız iş kabul edilmez).
+            try:
+                project = self._project_for_department(spec.department_id)
+                status_text = str(getattr(mission.status, "value", mission.status))
+                if project is not None and status_text in {"completed", "routed"}:
+                    changed = sum(
+                        int(getattr(step, "changed_files", 0) or 0)
+                        for step in (getattr(mission, "steps", ()) or ())
+                    )
+                    if changed == 0:
+                        from .mission_orchestrator import MissionStatus as _MissionStatus
+
+                        mission.status = _MissionStatus.BLOCKED
+                        mission.reason = "boş teslim: hiçbir dosya değişmedi"
+            except Exception:  # noqa: BLE001 - kontrol isteğe bağlı
+                pass
             self._audit("mission.finished", mission_id, {
                 "department": spec.department_id,
                 "status": mission.status.value,
@@ -937,6 +971,7 @@ class OwnerConsole:
         objective: str,
         mission_id: str,
         executor: WorkerExecutor | None = None,
+        *, queued_only: bool = False,
     ) -> MissionResult:
         """Persist the mission in the shared queue, then execute it.
 
@@ -949,7 +984,12 @@ class OwnerConsole:
             return self._execute(spec, objective, mission_id, executor)
 
         owner = "owner-console"
+        if queued_only:
+            import uuid
+            owner = 'queued-console-' + uuid.uuid4().hex
         existing = self.queue.get(mission_id)
+        if queued_only and (existing is None or existing.status is not QueueStatus.PENDING):
+            return self._unclaimed_result(mission_id, objective)
         if existing is not None:
             if existing.status in {
                 QueueStatus.COMPLETED,
@@ -974,15 +1014,16 @@ class OwnerConsole:
                 else:
                     return self._unclaimed_result(mission_id, objective)
 
-        self.queue.enqueue(
-            mission_id=mission_id,
-            objective=objective,
-            primary_department=spec.department_id,
-            replace_existing=True,
-        )
+        if not queued_only and existing is None:
+            self.queue.enqueue(
+                mission_id=mission_id,
+                objective=objective,
+                primary_department=spec.department_id,
+                replace_existing=True,
+            )
 
-        for _ in range(200):
-            claimed = self.queue.claim_next(owner=owner)
+        for _ in range(1):
+            claimed = self.queue.claim_next(owner=owner, mission_id=mission_id)
             if claimed is None:
                 break
 
@@ -1284,8 +1325,12 @@ class OwnerConsole:
                 for worker in workforce.all():
                     executors.setdefault(worker.profile.worker_id, default)
         else:
+            # Proje bağlı olmayan departmanlar için model bağımsız belge
+            # fabrikası: gerçek veriden markdown üretir, QA'dan geçer.
             factory = self._executor_factory or (
-                lambda: make_artifact_executor(self.artifacts_root)
+                lambda: __import__(
+                    "ahos.doc_factory", fromlist=["make_document_factory_executor"]
+                ).make_document_factory_executor(self.runtime_dir)
             )
             project = self._project_for_department(spec.department_id)
             if executor is not None:
@@ -1402,9 +1447,12 @@ class OwnerConsole:
                 capabilities=frozenset({"qa", "verification"}),
             ))
         if not self._custom_qa and bound_project is None:
-            # Bağımsız kabul doğrulayıcısı yok (proje bağlı değil): otomatik
-            # geçen local_pass_qa ile görev "tamamlandı" sayılamaz.
-            qa_executor = _unverified_qa
+            # Bağımsız kabul doğrulayıcısı yok (proje bağlı değil). Belge
+            # yürütücüsü gerçek bir dosya ürettiyse kabul edilir (hash+boyut);
+            # üretmediyse fail-closed kalır.
+            import os as _os
+            _doc_qa_on = _os.environ.get("AHOS_DOCUMENT_QA", "0").strip().lower() in {"1", "true", "yes"}
+            qa_executor = _document_qa if _doc_qa_on else _unverified_qa
 
         orchestrator = MultiWorkerMissionOrchestrator(
             workforce,
@@ -1478,6 +1526,39 @@ def _default_project_roots() -> tuple[Path, ...]:
             Path.cwd(),
         )
         if root.exists()
+    )
+
+
+def _document_qa(item, result, qa_worker_id):
+    """Belge departmanları için kabul: üretilen dosya gerçekten var mı?
+
+    Anlamsal doğruluk iddia edilmez; yalnız üretim kanıtı (dosya + boyut)
+    doğrulanır. Dosya yoksa fail-closed kalır.
+    """
+
+    from .worker_runtime import QaExecutionResult
+
+    artifacts = tuple(getattr(result, "artifacts", ()) or ())
+    verified = [
+        path
+        for path in artifacts
+        if Path(str(path)).is_file() and Path(str(path)).stat().st_size > 0
+    ]
+    if verified:
+        return QaExecutionResult(
+            task_id=item.task_id,
+            qa_worker_id=qa_worker_id,
+            passed=True,
+            summary=(
+                "belge kabulü: üretilen dosya mevcut ve boş değil "
+                f"({len(verified)} dosya); anlamsal doğruluk sahibe aittir"
+            ),
+        )
+    return QaExecutionResult(
+        task_id=item.task_id,
+        qa_worker_id=qa_worker_id,
+        passed=False,
+        summary="belge kabulü: üretilmiş dosya yok (fail-closed)",
     )
 
 

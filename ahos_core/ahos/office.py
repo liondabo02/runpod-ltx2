@@ -103,7 +103,7 @@ def _recent_missions(runtime: Path, limit: int = 6) -> list[dict]:
     if not db.is_file():
         return []
     try:
-        con = sqlite3.connect(str(db))
+        con = sqlite3.connect(db.resolve().as_uri() + "?mode=ro", uri=True)
         con.row_factory = sqlite3.Row
         rows = con.execute(
             "select objective,status,updated_at,result_json from missions order by rowid desc limit ?",
@@ -168,6 +168,9 @@ def _projects(runtime: Path) -> list[dict]:
     return result
 
 
+MEDIA_SUFFIXES = {".mp4", ".webm", ".mov", ".wav", ".mp3", ".m4a", ".png", ".jpg", ".jpeg"}
+
+
 def _products(runtime: Path) -> list[dict]:
     folder = runtime / "products"
     if not folder.is_dir():
@@ -175,11 +178,17 @@ def _products(runtime: Path) -> list[dict]:
     rows = []
     for path in sorted(folder.iterdir(), key=lambda item: item.stat().st_mtime, reverse=True):
         if path.is_dir():
+            files = [p for p in path.glob("*") if p.is_file()]
+            media = [p for p in files if p.suffix.lower() in MEDIA_SUFFIXES and p.stat().st_size > 1024]
+            # "doğrulandı" için manifest YETMEZ: en az bir gerçek medya dosyası şart.
             rows.append(
                 {
                     "name": path.name,
-                    "files": len(list(path.glob("*"))),
-                    "validated": (path / "manifest.json").is_file(),
+                    "files": len(files),
+                    "media": len(media),
+                    "validated": False,
+                    "artifact_kind": "media_package" if media else "document_package",
+                    "manifest_present": (path / "manifest.json").is_file(),
                 }
             )
     return rows[:10]
@@ -194,10 +203,36 @@ def _tracks(runtime: Path) -> list[dict]:
         return []
 
 
+def _queue_delivery_rate(runtime_dir: Path) -> float:
+    """Kuyruk tabanlı teslim oranı (8766 paneliyle aynı tanım)."""
+
+    import sqlite3
+
+    db = Path(runtime_dir) / "company-service.db"
+    if not db.exists():
+        return 0.0
+    try:
+        with sqlite3.connect(db.resolve().as_uri() + "?mode=ro", uri=True) as con:
+            row = con.execute(
+                "select "
+                "sum(case when status='completed' then 1 else 0 end), "
+                "sum(case when status!='cancelled' then 1 else 0 end) "
+                "from missions"
+            ).fetchone()
+        completed, real_total = int(row[0] or 0), int(row[1] or 0)
+        return round(completed / real_total, 3) if real_total else 0.0
+    except sqlite3.Error:
+        return 0.0
+
+
 def build(runtime_dir: str | Path) -> dict:
     runtime = Path(runtime_dir)
     activity = _activity(runtime)
     departments = _departments(runtime)
+    from .department_operations import operating_contracts
+    from .live_activity import active
+    contracts = operating_contracts(departments)
+    active_workers = active()
     last_mission = activity["missions"][-1] if activity["missions"] else {}
     running = str(activity["daemon"].get("status") or "") in {"running", "idle", "quota_wait"}
 
@@ -214,9 +249,7 @@ def build(runtime_dir: str | Path) -> dict:
             brain = load_brain(runtime, worker_id)
             last_thought = (brain.get("thoughts") or [{}])[-1]
             last_idea = (brain.get("ideas") or [{}])[-1]
-            status = "working" if running and last_mission.get("status") == "routed" else "idle"
-            if str(worker.get("role") or "").lower().startswith("manager"):
-                status = "coordinating" if running else "idle"
+            status = "working" if worker_id in active_workers else "idle"
             workers.append(
                 {
                     "id": worker_id,
@@ -224,8 +257,10 @@ def build(runtime_dir: str | Path) -> dict:
                     "role": str(worker.get("role") or ""),
                     "avatar": AVATARS[(index + worker_index) % len(AVATARS)],
                     "status": status,
+                    "activity_verified": worker_id in active_workers,
                     "mood": brain.get("mood", "calm"),
-                    "thought": last_thought.get("text", ""),
+                    "thought": last_thought.get("text", "") if worker_id in active_workers else "",
+                    "last_recorded_thought": last_thought.get("text", ""),
                     "idea": last_idea.get("text", ""),
                     "memories": len(brain.get("memories") or []),
                     "delivered": int(activity["quality"].get("delivered") or 0)
@@ -239,41 +274,22 @@ def build(runtime_dir: str | Path) -> dict:
                 "name": str(department.get("name") or department_id),
                 "mission": str(department.get("mission") or ""),
                 "workers": workers,
+                "operations": contracts.get(department_id, {}),
             }
         )
 
-    # Her istekte en fazla üç işçi "düşünür": beyinleri canlı kalsın, dosya
-    # yükü sınırlı olsun.
-    flat = [(room, worker) for room in rooms for worker in room["workers"]]
-    if flat:
-        import time as _time
-
-        from .brain import reflect
-
-        quality = activity["quality"].get("delivery_rate", 0.0)
-        offset = int(_time.time()) % len(flat)
-        for step in range(min(3, len(flat))):
-            room, worker = flat[(offset + step) % len(flat)]
-            context = {
-                "department": room["id"],
-                "role": worker["role"],
-                "pending": activity["pending_ideas"] + 1,
-                "failures": int(activity["quality"].get("mission_failures") or 0),
-                "delivered": int(activity["quality"].get("delivered") or 0),
-                "last_task": str(last_mission.get("mission_id") or ""),
-                "quality_rate": quality,
-            }
-            updated = reflect(runtime, worker["id"], context)
-            worker["thought"] = (updated.get("thoughts") or [{}])[-1].get("text", "")
-            worker["idea"] = (updated.get("ideas") or [{}])[-1].get("text", "")
-            worker["mood"] = updated.get("mood", worker.get("mood", "calm"))
+    # Rendering the office never mutates worker memory or invents activity.
 
     return {
         "generated_at": __import__("time").strftime("%Y-%m-%dT%H:%M:%S"),
         "holding": {
             "daemon": activity["daemon"].get("status", "unknown"),
+            "operating_contracts": contracts,
+            "activity_scope": "verified_in_process_only",
             "executor": activity["daemon"].get("executor_mode", ""),
             "quality": activity["quality"],
+            # 8766 başkanlık paneliyle aynı formül: completed / (cancelled hariç)
+            "queue_rate": _queue_delivery_rate(runtime),
             "pending_ideas": activity["pending_ideas"],
             "last_task": str(last_mission.get("mission_id") or ""),
             "infra": activity["daemon"].get("infra", {}),

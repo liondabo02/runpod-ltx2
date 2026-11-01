@@ -25,6 +25,7 @@ ahos-offline = "ahos.offline_audit:main"
 ahos-company = "ahos.company_foundry:main"
 ahos-idea = "ahos.ideas:main"
 ahos-metrics = "ahos.failure_analytics:main"
+ahos-office = "ahos.office_server:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

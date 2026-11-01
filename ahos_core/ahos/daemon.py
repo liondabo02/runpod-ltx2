@@ -470,7 +470,9 @@ class AutonomyDaemon:
             self.state.executor_reason = (
                 "ücretsiz uzak uç"
                 if _remote_free_endpoint()
-                else f"RAM {free // (1024 ** 2)} MiB >= {floor // (1024 ** 2)} MiB"
+                else "ücretli model izni açık (AHOS_ALLOW_PAID_LLM=1)"
+                if paid
+                else f"yerel model RAM yeterli: {free // (1024 ** 2)} MiB / eşik {floor // (1024 ** 2)} MiB"
             )
         else:
             os.environ["AHOS_EXECUTOR"] = "deterministic"
@@ -478,7 +480,7 @@ class AutonomyDaemon:
             self.state.executor_reason = (
                 "model yapılandırılmadı"
                 if not _model_is_configured()
-                else f"RAM {free // (1024 ** 2)} MiB < {floor // (1024 ** 2)} MiB"
+                else f"yerel model için RAM yetersiz: {free // (1024 ** 2)} MiB < eşik {floor // (1024 ** 2)} MiB"
             )
 
     def _maybe_reset_daily_budget(self) -> None:
@@ -547,14 +549,21 @@ class AutonomyDaemon:
         """
 
         database = self.runtime_dir / "company-service.db"
-        if not database.exists():
-            return
         try:
             from .queue_recovery import recover_file
 
-            self.state.recovery = recover_file(database)
+            self.state.recovery = recover_file(database) if database.exists() else {}
         except Exception as exc:  # noqa: BLE001 - recovery must never stop the loop
             self.state.recovery = {"error": type(exc).__name__}
+        board_path = self.runtime_dir / "taskboard.json"
+        if board_path.exists():
+            try:
+                from .taskboard import TaskBoard
+
+                expired = TaskBoard(board_path).recover_expired()
+                self.state.recovery["expired_steps_blocked"] = len(expired)
+            except Exception as exc:  # preserve unreadable board and report it
+                self.state.recovery["taskboard_error"] = type(exc).__name__
 
     def _audit_projects(self) -> None:
         """Offline-independence snapshot for every bound project (read-only)."""
@@ -652,6 +661,136 @@ class AutonomyDaemon:
                 recover_ideas(self.runtime_dir)
             except Exception:  # noqa: BLE001 - fikir kurtarma isteğe bağlı
                 pass
+        # Ar-Ge departmanı: her turda çağrılır, kendi içinde 30 dakikada bir çalışır.
+        try:
+            from .arge import tick as arge_tick
+
+            arge = arge_tick(self.runtime_dir)
+            if arge.ran:
+                self.state.learning = dict(self.state.learning or {})
+                self.state.learning["arge"] = {
+                    "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                    "weakest": list(arge.weakest),
+                    "lessons": arge.lessons,
+                    "queued": list(arge.queued),
+                }
+        except Exception:  # noqa: BLE001 - Ar-Ge asla ana döngüyü durdurmaz
+            pass
+        # TÜNEL BEKÇİSİ: model köprüsü düştüyse kendiliğinden yeniden kur.
+        try:
+            from .tunnel import ensure as tunnel_ensure, probe as tunnel_probe
+
+            status = tunnel_probe(timeout=2.0)
+            if not status.up:
+                record = tunnel_ensure(self.runtime_dir, wait_seconds=8)
+                self.state.learning = dict(self.state.learning or {})
+                self.state.learning["tunnel"] = record.get("after")
+        except Exception:  # noqa: BLE001 - tünel bekçisi döngüyü durdurmaz
+            pass
+
+        # SANDBOX BESLEMESİ: kuyruk boşalmasın; her departman sürekli alıştırma
+        # yapsın. Bekleyen görev azsa yeni sandbox görevleri üretilir.
+        try:
+            import json as _json
+            import sqlite3 as _sq2
+            from .autonomous_company import PersistentMissionQueue as _Q
+
+            _db = self.runtime_dir / "company-service.db"
+            with _sq2.connect(_db) as _c2:
+                _pending = _c2.execute("select count(*) from missions where status='pending'").fetchone()[0]
+            if _pending < 8:
+                _book = _json.loads((self.runtime_dir / "departments.json").read_text(encoding="utf-8"))
+                _deps = _book.get("departments") if isinstance(_book, dict) else _book
+                _q = _Q(_db)
+                _stamp = int(time.time())
+                _made = 0
+                for _dep in (_deps or [])[:12]:
+                    _id = str(_dep.get("department_id") or "")
+                    if not _id:
+                        continue
+                    try:
+                        _q.enqueue(
+                            mission_id=f"CMD-{_id}-sandbox-{_stamp}",
+                            objective=(f"{_id} sandbox: kendi verisinden 3 maddelik durum notu "
+                                       "ve bir test sorusu üret"),
+                            primary_department=_id,
+                            max_attempts=1,
+                            replace_existing=True,
+                        )
+                        _made += 1
+                    except Exception:
+                        continue
+                if _made:
+                    self.state.learning = dict(self.state.learning or {})
+                    self.state.learning["sandbox_seeded"] = {"count": _made}
+        except Exception:  # noqa: BLE001 - besleme döngüyü durdurmaz
+            pass
+
+        # Unverified direct document completion is disabled.
+        # Documents may be generated by owner_console._execute, which
+        # routes work through the leased worker and independent QA stages.
+        # Never UPDATE missions.status='completed' outside the queue API.
+        # SÜREKLİ ÖĞRENME: boştaki çalışanlar (CEO dahil) mikro ders üretir.
+        try:
+            from .self_learning import tick as learning_tick
+
+            study = learning_tick(self.runtime_dir)
+            self.state.learning = dict(self.state.learning or {})
+            self.state.learning["self_study"] = {"count": study["count"], "at": study["at"]}
+        except Exception:  # noqa: BLE001 - öğrenme döngüyü durdurmaz
+            pass
+
+        # KRİZ YÖNETİMİ: aynı hata 3 kez tekrarlarsa CEO eskalasyonu üret.
+        try:
+            from .ceo_powers import act as crisis_act
+
+            crisis = crisis_act(self.runtime_dir)
+            if crisis.get("crisis"):
+                self.state.learning = dict(self.state.learning or {})
+                self.state.learning["crisis"] = {
+                    "at": crisis["crisis"]["at"],
+                    "cause": crisis["crisis"]["cause"],
+                    "count": crisis["crisis"]["count"],
+                }
+        except Exception:  # noqa: BLE001 - kriz yönetimi döngüyü durdurmaz
+            pass
+
+        # KUYRUK TAHLİYESİ: panelden/CEO'dan verilen görevler "pending" kalmasın.
+        # Eskiden daemon yalnız kendi ürettiği görevleri çalıştırıyordu; bu yüzden
+        # sahibin verdiği işler saatlerce bekliyordu.
+        if os.environ.get("AHOS_QUEUE_DRAIN", "1").strip().lower() not in {"0", "false", "no"}:
+            try:
+                from .owner_console import build_default_console
+                from .queue_drain import drain
+
+                console = build_default_console(self.runtime_dir)
+                # PARALEL TAHLİYE: birden çok departman aynı anda çalışsın.
+                parallel = max(1, int(os.environ.get("AHOS_DRAIN_PARALLEL", "3")))
+                per_worker = max(1, int(os.environ.get("AHOS_QUEUE_DRAIN_LIMIT", "1")))
+                if parallel == 1:
+                    drained = drain(console, owner=f"daemon-{os.getpid()}", limit=per_worker)
+                else:
+                    from concurrent.futures import ThreadPoolExecutor
+
+                    drained = []
+                    def _work(index: int):
+                        return drain(
+                            console,
+                            owner=f"daemon-{os.getpid()}-{index}",
+                            limit=per_worker,
+                        )
+
+                    with ThreadPoolExecutor(max_workers=parallel) as pool:
+                        for result in pool.map(_work, range(parallel)):
+                            drained.extend(result.get("executed", []))
+                if drained:
+                    self.state.learning = dict(self.state.learning or {})
+                    self.state.learning["queue_drain"] = {
+                        "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                        "processed": len(drained),
+                    }
+            except Exception as exc:  # noqa: BLE001 - tahliye döngüyü durdurmaz
+                self.state.last_reason = f"kuyruk tahliyesi hatası: {type(exc).__name__}"
         if self.state.ticks % 30 == 0:
             self._audit_projects()
             self._quality_report()

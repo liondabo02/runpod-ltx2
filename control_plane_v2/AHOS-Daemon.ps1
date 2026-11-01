@@ -43,6 +43,16 @@ $StopFile = Join-Path $RuntimeDir 'daemon.stop'
 $OutLog = Join-Path $RuntimeDir 'daemon.out.log'
 $ErrLog = Join-Path $RuntimeDir 'daemon.err.log'
 
+# runtime/model.env varsa ortama yükle (API anahtarı komut satırında görünmesin).
+$ModelEnv = Join-Path $RuntimeDir 'model.env'
+if (Test-Path $ModelEnv) {
+    Get-Content $ModelEnv -Encoding UTF8 | ForEach-Object {
+        if ($_ -match '^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$') {
+            Set-Item -Path "Env:$($Matches[1])" -Value $Matches[2].Trim()
+        }
+    }
+}
+
 function Get-DaemonProcess {
     if (-not (Test-Path $PidFile)) { return $null }
     try {

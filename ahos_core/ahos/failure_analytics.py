@@ -19,6 +19,11 @@ CAUSES = {
     "acceptance_failed": "kabul testi / doğrulama düştü",
     "model_unavailable": "model erişilemedi (429/404/zaman aşımı)",
     "claim_blocked": "kuyruk sahiplenilemedi",
+    "project_lock": "proje kilidi (başka görev çalışıyor)",
+    "executor_missing": "yürütücü bağlı değil",
+    "target_missing": "hedef dosya bulunamadı",
+    "worker_failed": "işçi yürütmesi başarısız (adım düştü)",
+    "mission_timeout": "görev süresi aşıldı",
     "cancelled": "acil durdurma / iptal",
     "other": "diğer",
 }
@@ -59,12 +64,30 @@ def classify_mission(row: dict) -> str:
 
 def classify_error(row: dict) -> str:
     message = (str(row.get("message") or "") + " " + str(row.get("kind") or "")).casefold()
+    if "sınırını aştı" in message or "iptal doğrulanamadı" in message:
+        return "mission_timeout"
+    if "worker execution failed" in message or "işçi" in message and "başarısız" in message:
+        return "worker_failed"
+    if "proje kilidi" in message or "sahibi " in message and "pid" in message:
+        return "project_lock"
+    if "executor_unavailable" in message or "yürütücü bağlı değil" in message or "executor" in message:
+        return "executor_missing"
+    if "dosya yok" in message or "hedef" in message and "bulunamadı" in message:
+        return "target_missing"
     if any(token in message for token in ("429", "404", "timeout", "zaman aşımı", "model")):
         return "model_unavailable"
+    if "başka işçide" in message or "baska iscide" in message or "kapalı:" in message:
+        return "claim_blocked"
+    if "check_offline" in message or "unicodeencodeerror" in message:
+        return "acceptance_failed"
     if "sahiplenilemedi" in message or "claim" in message:
         return "claim_blocked"
     if "durdur" in message or "iptal" in message:
         return "cancelled"
+    if "0 dosya" in message or "teslimat yok" in message:
+        return "no_delivery"
+    if "qa" in message or "kabul" in message or "doğrula" in message:
+        return "acceptance_failed"
     return "other"
 
 

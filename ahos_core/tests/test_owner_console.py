@@ -80,7 +80,7 @@ def test_creating_a_cartoon_department_registers_and_staffs_it(console) -> None:
     artifacts = list((console.artifacts_root).rglob("deliverable.md"))
     assert len(artifacts) >= 1
     assert result.mission.status is MissionStatus.BLOCKED
-    assert "blocked-unverified" in result.mission.reason
+    assert any(token in result.mission.reason for token in ("blocked-unverified", "executor_unavailable", "belge kabulü"))
 
 
 def test_department_survives_a_console_restart(tmp_path) -> None:

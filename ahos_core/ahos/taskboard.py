@@ -22,6 +22,7 @@ import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Callable
 
 try:  # pragma: no cover - platform import
     import msvcrt
@@ -165,8 +166,21 @@ class TaskBoard:
             "tasks": [task.to_dict() for task in tasks.values()],
         }
         tmp = self.path.with_suffix(self.path.suffix + ".tmp")
-        tmp.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
-        os.replace(tmp, self.path)
+        with tmp.open("w", encoding="utf-8") as handle:
+            handle.write(json.dumps(payload, indent=2, ensure_ascii=False))
+            handle.flush()
+            os.fsync(handle.fileno())
+        # Windows scanners/readers can briefly hold a rename-incompatible
+        # handle. Retry only that error, with the board lock still held. A
+        # persistent denial fails without modifying the last durable board.
+        for attempt in range(5):
+            try:
+                os.replace(tmp, self.path)
+                break
+            except PermissionError:
+                if attempt == 4:
+                    raise
+                time.sleep(0.02 * (attempt + 1))
 
     # --------------------------------------------------------------------- API
     @staticmethod
@@ -220,6 +234,33 @@ class TaskBoard:
     def get(self, task_id: str) -> Task | None:
         return self._locked(lambda tasks: tasks.get(task_id), write=False)
 
+    def recover_expired(self, *, now: float | None = None) -> list[str]:
+        """Fence abandoned claims; never replay an unknown worker side effect.
+
+        Completed/blocked tasks and unexpired owners are left untouched. A
+        late worker cannot complete a fenced claim; explicit replanning is
+        required before work with unknown side effects may run again.
+        """
+        moment = time.time() if now is None else float(now)
+        if not math.isfinite(moment):
+            raise ValueError("recovery time must be finite")
+
+        def mutate(tasks: dict[str, Task]) -> list[str]:
+            recovered = []
+            for task in tasks.values():
+                if task.state not in {CLAIMED, RUNNING} or task.lease_until > moment:
+                    continue
+                previous_owner = task.owner
+                task.state = BLOCKED
+                task.lease_until = 0.0
+                task.updated_at = _now_iso()
+                task.reason = "kurtarma: sahiplik süresi doldu; yan etkiler incelenmeden tekrar çalıştırılmaz"
+                self._event(task, "lease_expired", "recovery", previous_owner=previous_owner)
+                recovered.append(task.task_id)
+            return recovered
+
+        return self._locked(mutate)
+
     def claim(self, owner: str, *, lease_seconds: float = 900) -> Task | None:
         owner = owner.strip()
         if not owner:
@@ -256,10 +297,14 @@ class TaskBoard:
             raise TaskBoardError("görev süresi dolmuş; yeniden sahiplenilmeli")
         return task
 
-    def heartbeat(self, task_id: str, owner: str, *, lease_seconds: float = 900) -> Task:
+    def heartbeat(self, task_id: str, owner: str, *, lease_seconds: float = 900,
+                  validate: Callable[[], None] | None = None) -> Task:
         lease = self._lease(lease_seconds)
 
         def mutate(tasks: dict[str, Task]) -> Task:
+            # Recheck cancellation after waiting for the durable board lock.
+            if validate is not None:
+                validate()
             task = self._owned(tasks, task_id, owner)
             if task.state != RUNNING:
                 self._event(task, "started", owner)
@@ -278,11 +323,14 @@ class TaskBoard:
         evidence: list[str],
         files: list[str] | None = None,
         test_command: str = "",
+        validate: Callable[[], None] | None = None,
     ) -> Task:
         if not evidence or not any(str(item).strip() for item in evidence):
             raise ValueError("kanıtsız görev tamamlanamaz (evidence gerekli)")
 
         def mutate(tasks: dict[str, Task]) -> Task:
+            if validate is not None:
+                validate()
             task = self._owned(tasks, task_id, owner)
             task.state = DONE
             task.evidence = [str(item) for item in evidence]
@@ -308,8 +356,11 @@ class TaskBoard:
 
         return self._locked(mutate)
 
-    def release(self, task_id: str, owner: str) -> Task:
+    def release(self, task_id: str, owner: str, *,
+                validate: Callable[[], None] | None = None) -> Task:
         def mutate(tasks: dict[str, Task]) -> Task:
+            if validate is not None:
+                validate()
             task = self._owned(tasks, task_id, owner)
             task.state = QUEUED
             task.owner = ""

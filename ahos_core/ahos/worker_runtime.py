@@ -76,6 +76,77 @@ class VirtualWorkerRuntime:
         self.executors = dict(executors)
         self.qa_executor = qa_executor
 
+    def _retry_with_alternative(
+        self,
+        item: WorkItem,
+        failed: AssignmentDecision,
+        failed_result: WorkerExecutionResult,
+    ) -> tuple[AssignmentDecision, WorkerExecutionResult] | None:
+        """One bounded retry on a *different* capable worker.
+
+        The same worker is never retried, so a broken executor cannot loop.
+        """
+
+        candidates = [
+            state
+            for state in self.registry.matching_workers(
+                item.required_capabilities, department=item.department
+            )
+            if state.profile.worker_id != failed.worker_id
+            and state.profile.worker_id in self.executors
+        ]
+        if not candidates:
+            return None
+
+        try:
+            from . import worker_metrics
+
+            quality = worker_metrics.summary(worker_metrics.current_dir()) if worker_metrics.current_dir() else {}
+        except Exception:  # pragma: no cover
+            quality = {}
+        candidates.sort(
+            key=lambda state: -float(
+                quality.get(state.profile.worker_id, {}).get("success_rate", 0.0)
+            )
+        )
+
+        chosen = candidates[0]
+        self.registry.assign(chosen.profile.worker_id, item.task_id)
+        start = time.monotonic()
+        result = self.executors[chosen.profile.worker_id](item, chosen.profile.worker_id)
+        duration_ms = (time.monotonic() - start) * 1000.0
+
+        if not result.success:
+            # Basari yalnizca QA sonrasinda puanlanir; burada yalnizca
+            # basarisiz deneme deftere yazilir.
+            try:
+                from . import worker_metrics
+
+                worker_metrics.record_here(
+                    worker_id=chosen.profile.worker_id,
+                    mission_id=item.task_id,
+                    step_id=item.task_id.rsplit(":", 1)[-1],
+                    department=item.department,
+                    success=False,
+                    duration_ms=duration_ms,
+                    reason=f"yeniden atama ({failed.worker_id} başarısız): {(result.summary or '')[:80]}",
+                )
+            except Exception:  # pragma: no cover
+                pass
+            self.registry.release(chosen.profile.worker_id, item.task_id)
+            return None
+
+        self.dispatcher.complete_worker_phase(item.task_id, chosen.profile.worker_id)
+        return (
+            AssignmentDecision(
+                task_id=item.task_id,
+                worker_id=chosen.profile.worker_id,
+                stage=WorkStage.ASSIGNED,
+                reason=f"yeniden atandı: {failed.worker_id} başarısız oldu",
+            ),
+            result,
+        )
+
     def run(self, item: WorkItem) -> WorkforceRunResult:
         assignment = self.dispatcher.assign(item)
         if assignment.stage is WorkStage.BLOCKED or not assignment.worker_id:
@@ -157,16 +228,26 @@ class VirtualWorkerRuntime:
             )
 
         if not worker_result.success:
+            # Basarisiz deneme, alternatif isciye gecmeden ONCE kaydedilir;
+            # aksi halde isci metrikleri gercek denemeleri saymaz.
             record_outcome(passed=False, reason=worker_result.summary)
-            return WorkforceRunResult(
-                task_id=item.task_id,
-                stage=WorkStage.BLOCKED,
-                assignment=assignment,
-                worker_result=worker_result,
-                qa_assignment=None,
-                qa_result=None,
-                reason="worker execution failed",
-            )
+            retry = self._retry_with_alternative(item, assignment, worker_result)
+            if retry is not None:
+                assignment, worker_result = retry
+            if not worker_result.success:
+                return WorkforceRunResult(
+                    task_id=item.task_id,
+                    stage=WorkStage.BLOCKED,
+                    assignment=assignment,
+                    worker_result=worker_result,
+                    qa_assignment=None,
+                    qa_result=None,
+                    reason=(
+                        "executor_unavailable: Üretim yürütücüsü bağlı değil; sonraki adım: uygun yürütücüyü bağla ve kabul testi çalıştır"
+                        if "Üretim yürütücüsü bağlı değil" in (worker_result.summary or "")
+                        else (worker_result.summary or "worker execution failed")
+                    ),
+                )
 
         qa_assignment = self.dispatcher.assign_qa(item.task_id, producer_id=assignment.worker_id)
         if qa_assignment.stage is WorkStage.BLOCKED or not qa_assignment.qa_worker_id:

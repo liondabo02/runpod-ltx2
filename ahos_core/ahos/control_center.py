@@ -56,6 +56,12 @@ class ControlCenterState:
             live_activity.configure(self.runtime_dir / "live-events.jsonl")
         except Exception:  # pragma: no cover - defensive
             pass
+        try:
+            from .recovery import recover
+
+            recover(self.runtime_dir, self.console.queue)
+        except Exception:  # pragma: no cover - startup must not crash
+            pass
 
 
     @property
@@ -334,6 +340,126 @@ class ControlCenterState:
             else "gelişim döngüsü zaten duruyor"
         )
 
+    def systems_status(self) -> list[dict[str, object]]:
+        """One-screen status of every subsystem the holding depends on."""
+
+        import urllib.request
+
+        rows: list[dict[str, object]] = []
+        try:
+            counts = self.snapshot()["mission_counts"]
+            rows.append(
+                {
+                    "name": "AHOS kuyruğu",
+                    "state": f"pending {counts.get('pending', 0)} · "
+                    f"running {counts.get('running', 0)} · "
+                    f"blocked {counts.get('blocked', 0)}",
+                    "detail": f"runtime: {self.runtime_dir}",
+                }
+            )
+        except Exception:  # noqa: BLE001
+            rows.append({"name": "AHOS kuyruğu", "state": "okunamadı", "detail": ""})
+
+        ruflo_cli = Path(r"C:\AHOS\tools\ruflo\node_modules\ruflo\bin\ruflo.js")
+        queue = self.runtime_dir / "ruflo-queue"
+        results = self.runtime_dir / "ruflo-results"
+        queued = len(list(queue.glob("*.json"))) if queue.exists() else 0
+        done = len(list(results.glob("*.json"))) if results.exists() else 0
+        worker_pid_file = self.runtime_dir / "ruflo-worker.pid"
+        worker_pid = ""
+        if worker_pid_file.exists():
+            worker_pid = worker_pid_file.read_text(encoding="utf-8", errors="ignore").strip()
+        worker_alive = _pid_alive(worker_pid)
+        rows.append(
+            {
+                "name": "Ruflo (planlayıcı)",
+                "state": (
+                    f"kurulu · kuyruk {queued} · sonuç {done} · worker "
+                    + ("çalışıyor" if worker_alive else "kapalı")
+                    if ruflo_cli.exists()
+                    else "kurulu değil"
+                ),
+                "detail": f"CLI: {ruflo_cli} · worker pid: {worker_pid or '-'}",
+            }
+        )
+
+        tunnel = "kapalı"
+        try:
+            with urllib.request.urlopen(
+                "http://127.0.0.1:11500/api/tags", timeout=1.5
+            ) as response:
+                tunnel = f"açık ({response.status})"
+        except Exception:  # noqa: BLE001
+            tunnel = "kapalı"
+        rows.append(
+            {
+                "name": "Oracle tünel modeli",
+                "state": tunnel,
+                "detail": "http://127.0.0.1:11500 (qwen2.5-coder)",
+            }
+        )
+
+        try:
+            from .adapters import runpod
+
+            pod = runpod.status(self.runtime_dir)
+            rows.append(
+                {
+                    "name": "RunPod (GPU/video)",
+                    "state": (
+                        f"{pod['state']} · kuyruk {pod['queued']} · sonuç {pod['results']}"
+                    ),
+                    "detail": "AHOS_RUNPOD_ENABLED=1 + AHOS_RUNPOD_ENDPOINT ile açılır",
+                }
+            )
+        except Exception:  # noqa: BLE001
+            rows.append(
+                {"name": "RunPod (GPU/video)", "state": "okunamadı", "detail": ""}
+            )
+        try:
+            from .providers import default_chain, probe
+
+            checks = [
+                f"{provider.name}={'ok' if probe(provider, timeout=2.5) else 'yok'}"
+                for provider in default_chain()
+            ]
+            rows.append(
+                {
+                    "name": "Model sağlayıcı zinciri",
+                    "state": " · ".join(checks),
+                    "detail": "aktif: "
+                    + (os.environ.get("AHOS_ACTIVE_PROVIDER") or "seçilmedi"),
+                }
+            )
+        except Exception:  # noqa: BLE001
+            rows.append(
+                {"name": "Model sağlayıcı zinciri", "state": "ölçülemedi", "detail": ""}
+            )
+        return rows
+
+    def panel_directory(self) -> list[dict[str, object]]:
+        """Known local panels/offices, with a short live health probe."""
+
+        import urllib.request
+
+        candidates = [
+            ("Başkanlık paneli (üretim)", "http://127.0.0.1:8766/"),
+            ("Canlı ofis", "http://127.0.0.1:8766/office"),
+            ("Ofis sunucusu (ayrı)", "http://127.0.0.1:8799/"),
+            ("Q99 panel — browser", "http://127.0.0.1:18765/"),
+            ("Q99 panel — dashboard", "http://127.0.0.1:18766/"),
+        ]
+        rows: list[dict[str, object]] = []
+        for label, url in candidates:
+            status = "kapalı"
+            try:
+                with urllib.request.urlopen(url, timeout=1.5) as response:
+                    status = f"açık ({response.status})"
+            except Exception:  # noqa: BLE001 - probe only
+                status = "kapalı"
+            rows.append({"label": label, "url": url, "status": status})
+        return rows
+
     def mission_history(self, limit: int = 10) -> list[dict[str, object]]:
         from .autonomous_company import PersistentMissionQueue
 
@@ -435,11 +561,28 @@ class ControlCenterState:
             return "otonomi acil durduruldu"
         if action == "start":
             runner.resume()
-            result = runner.run_once()
-            runner._log_action("start", "tek tur")
-            if result is None:
-                return "başlatıldı: uygun görev yok (beklemede)"
-            return f"başlatıldı: {result.status} — {result.message[:120]}"
+            from .autoschedule import AutoLimits, BoundedScheduler
+
+            limits = AutoLimits(
+                max_missions_per_hour=6,
+                max_missions_total=3,
+                idle_sleep_seconds=0.0,
+            )
+            scheduler = BoundedScheduler(
+                runner,
+                self.runtime_dir,
+                limits=limits,
+                sleep=lambda seconds: None,
+            )
+            outcomes = scheduler.run(max_ticks=limits.max_missions_total)
+            runner._log_action("start", ",".join(outcomes))
+            state = scheduler.state
+            return (
+                f"otonomi başlatıldı: {', '.join(outcomes)} "
+                f"(bu saat {state.missions_this_hour}/{limits.max_missions_per_hour}, "
+                f"oturum {state.missions_total}/{limits.max_missions_total}, "
+                f"ücretli 0 USD)"
+            )
         raise ValueError(f"bilinmeyen işlem: {action}")
 
     def autonomy_status(self) -> dict[str, object]:
@@ -618,9 +761,112 @@ def _badge(status: str) -> str:
     return f'<span class="badge {css}">{_esc(status)}</span>'
 
 
+def _pid_alive(pid_text: str) -> bool:
+    """True when the process exists. Never signals the process itself."""
+
+    try:
+        pid = int(str(pid_text).strip())
+    except (TypeError, ValueError):
+        return False
+    if pid <= 0:
+        return False
+    if os.name == "nt":
+        import ctypes
+
+        PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+        handle = ctypes.windll.kernel32.OpenProcess(
+            PROCESS_QUERY_LIMITED_INFORMATION, False, pid
+        )
+        if handle:
+            ctypes.windll.kernel32.CloseHandle(handle)
+            return True
+        return False
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
+def render_systems_page(rows: list[dict[str, object]]) -> str:
+    body = "".join(
+        f'<tr><td><b>{_esc(str(row["name"]))}</b></td>'
+        f'<td>{_esc(str(row["state"]))}</td>'
+        f'<td class="wide">{_esc(str(row["detail"]))}</td></tr>'
+        for row in rows
+    ) or '<tr><td colspan="3">Kayıt yok.</td></tr>'
+    nav = (
+        '<nav class="nav"><a href="/">Panel</a><a href="/office">Canlı Ofis</a>'
+        '<a href="/panels">Paneller</a>'
+        '<a href="/systems">Sistemler</a><a href="/outputs">Çıktılar</a></nav>'
+    )
+    return f"""<!doctype html><html lang="tr"><head><meta charset="utf-8">
+<meta http-equiv="refresh" content="10">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AHOS — Sistemler</title>
+<style>
+body{{background:#0b1020;color:#e9eefc;font-family:system-ui,Segoe UI,sans-serif;margin:0}}
+.nav{{display:flex;gap:16px;padding:12px 24px;background:#101830;border-bottom:1px solid #26324b}}
+.nav a{{color:#7aa2ff;text-decoration:none;font-size:14px}}
+main{{padding:24px}}
+table{{width:100%;border-collapse:collapse;background:#141b2d;border-radius:12px;overflow:hidden}}
+th,td{{padding:12px 14px;border-bottom:1px solid #26324b;text-align:left;font-size:14px}}
+th{{color:#9cabca}}
+.wide{{color:#9cabca;word-break:break-all}}
+</style></head><body>
+{nav}
+<main><h1>Holding alt sistemleri</h1>
+<p style="color:#9cabca">Tek panelden izlenen gerçek durum; ölçülmeyen değer uydurulmaz.</p>
+<table><thead><tr><th>Bileşen</th><th>Durum</th><th>Ayrıntı</th></tr></thead>
+<tbody>{body}</tbody></table></main></body></html>"""
+
+
+def render_panels_page(rows: list[dict[str, object]]) -> str:
+    body = "".join(
+        f'<tr><td>{_esc(str(row["label"]))}</td>'
+        f'<td><a href="{_esc(str(row["url"]))}">{_esc(str(row["url"]))}</a></td>'
+        f'<td>{_esc(str(row["status"]))}</td></tr>'
+        for row in rows
+    ) or '<tr><td colspan="3">Kayıt yok.</td></tr>'
+    nav = (
+        '<nav class="nav"><a href="/">Panel</a><a href="/office">Canlı Ofis</a>'
+        '<a href="/outputs">Çıktılar</a><a href="/panels">Paneller</a></nav>'
+    )
+    return f"""<!doctype html><html lang="tr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AHOS — Paneller</title>
+<style>
+body{{background:#0b1020;color:#e9eefc;font-family:system-ui,Segoe UI,sans-serif;margin:0}}
+.nav{{display:flex;gap:16px;padding:12px 24px;background:#101830;border-bottom:1px solid #26324b}}
+.nav a{{color:#7aa2ff;text-decoration:none;font-size:14px}}
+main{{padding:24px}}
+table{{width:100%;border-collapse:collapse;background:#141b2d;border-radius:12px;overflow:hidden}}
+th,td{{padding:10px 14px;border-bottom:1px solid #26324b;text-align:left;font-size:14px}}
+th{{color:#9cabca;font-weight:600}}
+a{{color:#7aa2ff}}
+</style></head><body>
+{nav}
+<main><h1>Paneller ve ofisler</h1>
+<p style="color:#9cabca">Tek üretim paneli: <b>8766</b>. Diğerleri salt izleme/deneme.</p>
+<table><thead><tr><th>Panel</th><th>Adres</th><th>Durum</th></tr></thead>
+<tbody>{body}</tbody></table></main></body></html>"""
+
+
 def render_dashboard(snapshot: dict[str, object], message: str = "") -> str:
     hb = snapshot["heartbeat"]
     counts = snapshot["mission_counts"]
+
+    nav = (
+        '<nav class="nav">'
+        '<a href="/">Panel</a>'
+        '<a href="/office">Canlı Ofis</a>'
+        '<a href="/agent-office">Ajan Ofisi</a>'
+        '<a href="/outputs">Çıktılar</a>'
+        '<a href="/panels">Paneller</a>'
+        '<a href="/systems">Sistemler</a>'
+        '<a href="/api/status">API</a>'
+        "</nav>"
+    )
 
     cards = "".join(
         f'<div class="card"><div class="label">{_esc(k)}</div><div class="value">{_esc(v)}</div></div>'
@@ -713,10 +959,11 @@ def render_dashboard(snapshot: dict[str, object], message: str = "") -> str:
     workers_html = "".join(
         f'<tr><td>{_esc(w["worker_id"])}</td><td>{int(w["runs"])}</td>'
         f'<td>{float(w["success_rate"]) * 100:.0f}%</td>'
+        f'<td>{int(w.get("reassignments", 0))}</td>'
         f'<td>{float(w["avg_ms"]):.0f} ms</td>'
         f'<td class="wide">{_esc(w["last_error"] or "-")}</td></tr>'
         for w in snapshot.get("worker_quality") or ()
-    ) or '<tr><td colspan="5">Henüz ölçülmüş işçi çalışması yok.</td></tr>'
+    ) or '<tr><td colspan="6">Henüz ölçülmüş işçi çalışması yok.</td></tr>'
 
     locks_html = "".join(
         f'<li><b>{_esc(str(lock.get("mission_id") or "unknown-owner"))}</b> · '
@@ -738,6 +985,9 @@ def render_dashboard(snapshot: dict[str, object], message: str = "") -> str:
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AHOS Holding Control Center</title>
 <style>
+.nav{{display:flex;gap:16px;padding:12px 24px;background:#101830;border-bottom:1px solid var(--line)}}
+.nav a{{color:var(--accent);text-decoration:none;font-size:14px}}
+.nav a:hover{{text-decoration:underline}}
 :root{{--bg:#0b1020;--panel:#141b2d;--line:#26324b;--text:#e9eefc;--muted:#9cabca;--ok:#33d17a;--warn:#f6c85f;--bad:#ff6b6b;--accent:#7aa2ff}}
 *{{box-sizing:border-box}} body{{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text)}}
 header{{padding:24px 28px 10px;display:flex;justify-content:space-between;align-items:end}} h1{{margin:0;font-size:26px}}
@@ -760,6 +1010,7 @@ th{{color:var(--muted)}} .wide{{max-width:520px;color:var(--muted)}} .badge{{dis
 .lastmsg{{flex-basis:100%;color:var(--text)}}
 .ceo{{padding:14px 16px}} .ceo pre{{margin:0;white-space:pre-wrap;font:13px/1.6 Consolas,monospace;color:#c9d6f2}}
 </style></head><body>
+{nav}
 <header><div><h1>AHOS Holding Control Center</h1><div class="sub">Local owner console · refresh 5s · {_esc(snapshot["generated_at"])} · <a href="/office" style="color:var(--accent)">Ofis →</a> · <a href="/outputs" style="color:var(--accent)">Çıktılar →</a></div></div>{_badge(str(hb.get("state","unknown")))}</header>
 <main>{notice}<div class="grid">{cards}</div><div class="section"><h2>Sahip Komutu — Holding</h2>
 <form class="command" method="post" action="/action/command">
@@ -777,7 +1028,7 @@ th{{color:var(--muted)}} .wide{{max-width:520px;color:var(--muted)}} .badge{{dis
 <div style="align-self:center;color:var(--muted);font-size:13px">durum: <b>{_esc((snapshot.get("autonomy") or {}).get("status", "-"))}</b> · ücretli çağrı: 0</div>
 </div></div>
 <div class="section"><h2>Proje Kilitleri</h2><ul>{locks_html}</ul></div>
-<div class="section"><h2>İşçi Kalitesi (gerçek kayıtlar)</h2><table><thead><tr><th>Ajan</th><th>Görev</th><th>Başarı</th><th>Ort. süre</th><th>Son hata</th></tr></thead><tbody>{workers_html}</tbody></table></div>
+<div class="section"><h2>İşçi Kalitesi (gerçek kayıtlar)</h2><table><thead><tr><th>Ajan</th><th>Görev</th><th>Başarı</th><th>Yeniden atama</th><th>Ort. süre</th><th>Son hata</th></tr></thead><tbody>{workers_html}</tbody></table></div>
 <div class="section"><h2>Görev Geçmişi (gerçek kayıtlar)</h2><table><thead><tr><th>Görev</th><th>Departman</th><th>Durum</th><th>Süre</th><th>QA</th><th>Hata</th><th>Maliyet</th></tr></thead><tbody>{history_html}</tbody></table></div>
 <div class="section"><h2>Owner Controls</h2><div class="toolbar">
 <form method="post" action="/action/start"><button class="neutral">Start / Resume Company</button></form>
@@ -860,9 +1111,26 @@ def build_handler(state: ControlCenterState):
                 body = render_document_page(filename, document).encode("utf-8")
                 self._send(200, body, "text/html; charset=utf-8")
                 return
+            if parsed.path == "/systems":
+                body = render_systems_page(state.systems_status()).encode("utf-8")
+                self._send(200, body, "text/html; charset=utf-8")
+                return
+            if parsed.path == "/panels":
+                body = render_panels_page(state.panel_directory()).encode("utf-8")
+                self._send(200, body, "text/html; charset=utf-8")
+                return
             if parsed.path == "/office":
                 body = render_office(state.office_model()).encode("utf-8")
                 self._send(200, body, "text/html; charset=utf-8")
+                return
+            if parsed.path == "/agent-office":
+                from .office_floor import FLOOR_HTML
+                self._send(200, FLOOR_HTML.encode("utf-8"), "text/html; charset=utf-8")
+                return
+            if parsed.path == "/api/agent-office":
+                from .agent_office import snapshot as agent_snapshot
+                body = json.dumps(agent_snapshot(state.runtime_dir), ensure_ascii=False).encode("utf-8")
+                self._send(200, body, "application/json; charset=utf-8")
                 return
             if parsed.path == "/api/office":
                 body = json.dumps(state.office_model(), indent=2).encode("utf-8")

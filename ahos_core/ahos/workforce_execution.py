@@ -106,6 +106,23 @@ class VirtualWorkforceDispatcher:
                 reason="no available worker matches department/capabilities/budget",
             )
 
+        # Gerçek kalite metrikleri varsa daha başarılı ajanı öne al; yoksa
+        # registry'nin deterministik sırası korunur.
+        try:
+            from . import worker_metrics
+
+            runtime_dir = worker_metrics.current_dir()
+            quality = worker_metrics.summary(runtime_dir) if runtime_dir else {}
+        except Exception:  # pragma: no cover - metrics opsiyonel
+            quality = {}
+        if quality:
+            matches = sorted(
+                matches,
+                key=lambda state: -worker_metrics.selection_score(
+                    quality.get(state.profile.worker_id, {})
+                ),
+            )
+
         worker = matches[0]
         self.registry.assign(
             worker.profile.worker_id,

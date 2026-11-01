@@ -23,6 +23,8 @@ class QueueStatus(str, Enum):
     WAITING_OWNER_APPROVAL = "waiting_owner_approval"
     BLOCKED = "blocked"
     FAILED = "failed"
+    #: Bilinçli olarak iptal edilen (deney/test) görevler; silinmez, yalnız kapanır.
+    CANCELLED = "cancelled"
 
 
 @dataclass(frozen=True, slots=True)
@@ -215,12 +217,15 @@ class PersistentMissionQueue:
         owner: str,
         lease_seconds: int = 300,
         now: float | None = None,
+        mission_id: str | None = None,
     ) -> QueuedMission | None:
         owner = owner.strip()
         if not owner:
             raise ValueError("owner must not be empty")
         if lease_seconds < 1:
             raise ValueError("lease_seconds must be >= 1")
+        if mission_id is not None and not mission_id.strip():
+            raise ValueError('mission_id must not be empty')
 
         now = time.time() if now is None else now
         lease_until = now + lease_seconds
@@ -244,12 +249,14 @@ class PersistentMissionQueue:
                 WHERE status=?
                   AND lease_until IS NOT NULL
                   AND lease_until < ?
+                  AND (? IS NULL OR mission_id=?)
                 """,
                 (
                     QueueStatus.PENDING.value,
                     updated_at,
                     QueueStatus.RUNNING.value,
                     now,
+                    mission_id, mission_id,
                 ),
             )
 
@@ -260,10 +267,11 @@ class PersistentMissionQueue:
                 WHERE status=?
                   AND next_attempt_at <= ?
                   AND attempts < max_attempts
+                  AND (? IS NULL OR mission_id=?)
                 ORDER BY created_at ASC, mission_id ASC
                 LIMIT 1
                 """,
-                (QueueStatus.PENDING.value, now),
+                (QueueStatus.PENDING.value, now, mission_id, mission_id),
             ).fetchone()
 
             if row is None:
@@ -390,6 +398,47 @@ class PersistentMissionQueue:
             result_json=json.dumps(payload, ensure_ascii=False),
             last_error=result.reason,
         )
+
+    def block_orphan(self, mission_id: str, *, reason: str) -> bool:
+        """Block a mission that can no longer be claimed (crash recovery).
+
+        Unlike :meth:`block` this does not require a live lease: it is only for
+        missions that are pending/running but have no retries left, so nothing
+        can ever pick them up again. Returns True when a row was changed.
+        """
+
+        payload = json.dumps(
+            {
+                "mission_id": mission_id,
+                "status": "blocked",
+                "reason": reason,
+            },
+            ensure_ascii=False,
+        )
+        with self._connect() as conn:
+            cursor = conn.execute(
+                """
+                UPDATE missions
+                SET status=?,
+                    lease_owner=NULL,
+                    lease_until=NULL,
+                    updated_at=?,
+                    last_error=?,
+                    result_json=?
+                WHERE mission_id=?
+                  AND status IN (?,?)
+                """,
+                (
+                    QueueStatus.BLOCKED.value,
+                    _utc_now(),
+                    reason,
+                    payload,
+                    mission_id,
+                    QueueStatus.PENDING.value,
+                    QueueStatus.RUNNING.value,
+                ),
+            )
+            return cursor.rowcount == 1
 
     def fail(
         self,
@@ -527,6 +576,20 @@ class PersistentMissionQueue:
                 ),
             )
             if cursor.rowcount != 1:
+                # Eşzamanlı iki yürütücü aynı görevi bitirmiş olabilir. Görev
+                # zaten sonuçlanmışsa bu bir çakışma değil, yinelenen bitiştir.
+                with self._connect() as check_conn:
+                    row = check_conn.execute(
+                        "SELECT status FROM missions WHERE mission_id=?",
+                        (mission_id,),
+                    ).fetchone()
+                if row is not None and str(row["status"]) in {
+                    QueueStatus.COMPLETED.value,
+                    QueueStatus.BLOCKED.value,
+                    QueueStatus.CANCELLED.value,
+                    QueueStatus.FAILED.value,
+                }:
+                    return
                 raise RuntimeError(
                     f"mission {mission_id} could not be finalized atomically"
                 )

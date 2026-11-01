@@ -74,7 +74,7 @@ background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:
 <span class="pill">daemon <b id="dstatus">-</b></span>
 <span class="pill">mod <b id="dmode">-</b></span>
 <span class="pill">teslim <b id="rate">-</b></span>
-<span class="pill">bekleyen fikir <b id="pending">-</b></span><span class="pill">sistem <b id="infra">-</b></span><span class="pill">bilgi <b id="know">-</b></span></header>
+<span class="pill">bekleyen fikir <b id="pending">-</b></span><span class="pill">sistem <b id="infra">-</b></span><span class="pill">bilgi <b id="know">-</b></span><a href="/ofis" style="text-decoration:none;border:1px solid #27324a;border-radius:999px;padding:6px 12px;color:#eef3ff;background:#16223a">🏢 Ofis Katı</a></header>
 <div id="goalStrip">hedefler: <span id="goals">-</span></div>
 <div id="recentWrap">son görevler: <span id="recent">-</span></div>
 <section id="tab-codex" class="tabPanel"><iframe src="http://127.0.0.1:8766/office" title="Codex paneli" loading="lazy"></iframe></section><section id="tab-harun" class="tabPanel"><div id="harunInfo"></div></section><section id="tab-track" class="tabPanel"><div id="trackList"></div></section><section id="tab-products" class="tabPanel"><div id="productList"></div></section><main id="rooms"></main>
@@ -224,10 +224,24 @@ class OfficeHandler(BaseHTTPRequestHandler):
         if self.path.split("?")[0] in {"/", "/index.html"}:
             self._send(HTML.encode("utf-8"), "text/html; charset=utf-8")
             return
+        if self.path.split("?")[0] in {"/ofis", "/floor"}:
+            from .office_floor import FLOOR_HTML
+
+            self._send(FLOOR_HTML.encode("utf-8"), "text/html; charset=utf-8")
+            return
         if self.path.split("?")[0] == "/api/office":
             state = office.build(self.runtime_dir)
             self._send(
                 json.dumps(state, ensure_ascii=False).encode("utf-8"),
+                "application/json; charset=utf-8",
+            )
+            return
+        if self.path.split("?")[0] == "/api/agent-office":
+            # Ajan Ofisi deseni: tüm ajanlar tek ekranda + canlı akış.
+            from .agent_office import snapshot
+
+            self._send(
+                json.dumps(snapshot(self.runtime_dir), ensure_ascii=False).encode("utf-8"),
                 "application/json; charset=utf-8",
             )
             return
