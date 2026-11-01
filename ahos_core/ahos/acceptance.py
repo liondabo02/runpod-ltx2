@@ -2,7 +2,14 @@
 
 A project-supplied ``tools/check_offline.py`` is *not* trusted by itself: the
 candidate could rewrite it. AHOS therefore pins the SHA-256 of the acceptance
-gate the first time it accepts a project and refuses to run a modified gate.
+gate ONCE, before the task starts (``acceptance_bootstrap.ensure_baseline``),
+and refuses a gate that does not match the pin.
+
+Verification is strictly read-only: if a project has no pre-authorized pin the
+gate is refused ("önceden yetkilendirilmiş kabul kaydı yok"). It is never
+pinned on the fly, because that would let a worker edit the acceptance test and
+have the verifier authorize it in the same run.
+
 Integrity (existence/hash) is not semantic correctness; it only guarantees the
 acceptance definition did not change behind our back.
 """
@@ -28,7 +35,8 @@ def trusted_gate(
 ) -> tuple[bool, str, str | None]:
     """Return (trusted, reason, digest).
 
-    First call pins the current gate; later calls fail closed if it changed.
+    Read-only: never creates or rewrites the baseline. A missing pin is a
+    refusal, not an implicit first acceptance.
     """
 
     gate = gate_path(root)
@@ -49,12 +57,7 @@ def trusted_gate(
     key = str(gate.resolve()).lower()
     stored = baseline.get(key)
     if stored is None:
-        baseline[key] = digest
-        baseline_file.parent.mkdir(parents=True, exist_ok=True)
-        baseline_file.write_text(
-            json.dumps(baseline, indent=2, ensure_ascii=False), encoding="utf-8"
-        )
-        return True, "kabul tanımı sabitlendi (ilk kabul)", digest
+        return False, "önceden yetkilendirilmiş kabul kaydı yok", None
 
     if stored != digest:
         return (

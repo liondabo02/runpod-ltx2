@@ -72,12 +72,17 @@ def test_wrong_owner_cannot_release_but_right_owner_can(tmp_path) -> None:
 
 def test_candidate_cannot_swap_acceptance_gate(tmp_path) -> None:
     from ahos.acceptance import trusted_gate
+    from ahos.acceptance_bootstrap import ensure_baseline
 
     root = tmp_path / "proj"
     (root / "tools").mkdir(parents=True)
     gate = root / "tools" / "check_offline.py"
     gate.write_text("print('v1')\n", encoding="utf-8")
     baseline = tmp_path / "artifacts" / "acceptance-baseline.json"
+
+    # Yetkilendirme gorev ONCESI yapilir; dogrulama kendi kendine kayit uretmez.
+    enrolled, enroll_reason = ensure_baseline(root, baseline.parent)
+    assert enrolled, enroll_reason
 
     trusted, reason, digest = trusted_gate(root, baseline)
     assert trusted is True and digest
