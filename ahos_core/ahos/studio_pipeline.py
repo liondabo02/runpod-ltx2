@@ -11,6 +11,7 @@ import json
 from pathlib import Path
 
 from .studio_2d import Episode, Line, Scene, episode_timeline, render_episode
+from .studio_export import export_all
 from .studio_qa import verify_episode
 from .studio_voice import (
     build_track,
@@ -138,6 +139,21 @@ def produce_episode(
                               voice=(voice_info or {}).get("voice"),
                               audio=track)
 
+    # Kurgu programları için dışa aktarım: EDL, çekim listesi, storyboard.
+    detail = [
+        {"scene_id": scene.scene_id, "setting": scene.setting,
+         "background": scene.background, "seconds": round(scene.duration(), 3)}
+        for scene in episode.scenes
+    ]
+    timeline_rows = json.loads((out / "timeline.json").read_text(encoding="utf-8")) \
+        if (out / "timeline.json").is_file() else []
+    export_manifest = dict(manifest, scenes_detail=detail)
+    exports = export_all(export_manifest, timeline_rows, out)
+    (out / "storyboard.json").write_text(
+        json.dumps(dict(export_manifest, lines=timeline_rows), indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
     distinct_backgrounds = len({scene.background for scene in episode.scenes})
     report = verify_episode(
         manifest["video"],
@@ -148,6 +164,7 @@ def produce_episode(
         expected_cuts=max(0, distinct_backgrounds - 1),
     )
     report["voice"] = voice_info
+    report["exports"] = exports
     report["manifest"] = manifest
     (out / "acceptance.json").write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
     return report
