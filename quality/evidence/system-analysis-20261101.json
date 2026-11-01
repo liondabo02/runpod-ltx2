@@ -1,0 +1,33 @@
+{
+  "generated_at": "2026-11-01T19:01:59.420515+00:00",
+  "modules": {
+    "count": 182,
+    "lines": 43657
+  },
+  "tests": {
+    "files": 189,
+    "cases": 1091
+  },
+  "departments": {
+    "total": 16,
+    "with_project": 16,
+    "ready": 15,
+    "ready_list": [
+      "creative",
+      "data",
+      "finance",
+      "genel",
+      "guvenlik",
+      "holding",
+      "infrastructure",
+      "marketing",
+      "operations",
+      "oyun",
+      "quality",
+      "research",
+      "sales",
+      "software",
+      "support"
+    ]
+  }
+}
