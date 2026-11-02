@@ -116,13 +116,21 @@ def submit(console, runtime_dir: str | Path, text: str) -> Idea:
     ideas_dir = runtime / "ideas"
     ideas_dir.mkdir(parents=True, exist_ok=True)
 
+    idea_id = _digest(text)
+    path = ideas_dir / f"{idea_id}.json"
+    existing = _load(path)
+    if path.exists():
+        required = ('idea_id','text','department_id','department_name','tasks','status')
+        if not existing or any(key not in existing for key in required) or not isinstance(existing['tasks'], list):
+            raise ValueError('Mevcut görev kaydı okunamıyor; kayıt korunuyor, yeniden oluşturulmadı')
+        if existing['idea_id'] != idea_id:
+            raise ValueError('Görev kimliği uyuşmuyor; mevcut kayıt korunuyor')
+        # Retried owner requests must preserve progress and bounded attempts in
+        # every department, including completed/blocked non-studio workflows.
+        return Idea(**{key: existing[key] for key in ('idea_id','text','department_id','department_name','tasks','status')})
     spec, _score = console.route(text)
     if spec is None:
         spec = console._create_for_task(text)  # noqa: SLF001 - aynı paket
-    idea_id = _digest(text)
-    existing = _load(ideas_dir / f"{idea_id}.json")
-    if existing and any(t.get('workflow') == 'studio-production-v1' for t in existing.get('tasks', [])):
-        return Idea(**{key: existing[key] for key in ('idea_id','text','department_id','department_name','tasks','status')})
     idea = Idea(
         idea_id=idea_id,
         text=text.strip(),
