@@ -42,3 +42,47 @@ alanlarındadır; bu dosya periyodik güncellenir.
 ## 5) Raporlama
 
 Sayı vermeden önce **kaynağı** yaz: hangi dosya, hangi alan. Kaynaksız sayı geçersizdir.
+
+## 6) Kanıt zorunluluğu (Cline dahil tüm ajanlar)
+
+Bir ajan "yaptım/çalıştı/geçti" diyorsa **kanıt göstermek zorundadır**:
+
+1. Çalıştırdığı **tam komutu** yazar
+2. Hemen altına **ham stdout/stderr** yapıştırır (özet yok, kısaltma yok)
+3. **exit code** yazar
+4. Üretilen rapor dosyasının **`generated_at`** alanını yazar; 5 dakikadan eskiyse komutu tekrar çalıştırır
+5. Komut çalışmıyorsa `ÇALIŞTIRAMADIM: <hata>` yazar ve **durur**
+
+### Yasak ifadeler (kanıtsız kullanılırsa iddia geçersizdir)
+- "based on the verified data"
+- "would normally be called"
+- "the system is complete"
+- "shows that ... pass" (komut çıktısı olmadan)
+- hafta/phase/program takvimi üretmek
+
+### Standart komutlar
+```bash
+cd ahos_core
+python -c "import json;from pathlib import Path;from ahos.training import teach;R=Path('runtime');b=json.loads((R/'departments.json').read_text(encoding='utf-8'));print(teach(R,b.get('departments') if isinstance(b,dict) else b))"
+python -c "from pathlib import Path;from ahos.self_learning import tick,progress;R=Path('runtime');print(tick(R));print(progress(R))"
+python -c "from pathlib import Path;from ahos.health_guard import check;print(check(Path('runtime'), fix=True).to_dict())"
+python -m pytest -q --no-header --timeout=60 tests
+```
+
+### Kabul kriterleri (hepsi sağlanmadan "bitti" denemez)
+- `config/training-report.json` → `failed = 0`, `average_score = 100`
+- `config/health-report.json` → `ok = true` (panel, ofis, tünel, daemon, veritabanı)
+- `pytest` → `0 failed`
+- `runtime/learning/*.jsonl` → her departman için ≥ 1 kayıt
+
+### Kanıt kaydı
+Her oturumun kanıtı `ahos_core/config/CLINE-KANIT.md` dosyasına yazılır:
+```
+## <tarih saat>
+komut : <tam komut>
+exit  : <kod>
+çıktı : <ham stdout>
+kaynak: <dosya> → <alan>=<değer>
+```
+Bu dosyada karşılığı olmayan iddia **geçersizdir**.
+

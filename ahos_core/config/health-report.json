@@ -1,0 +1,37 @@
+{
+  "generated_at": "2026-11-03T21:29:48",
+  "ok": false,
+  "checks": [
+    {
+      "name": "servis:panel",
+      "ok": false,
+      "detail": "TimeoutError"
+    },
+    {
+      "name": "servis:office",
+      "ok": true,
+      "detail": "HTTP 200"
+    },
+    {
+      "name": "servis:tunnel",
+      "ok": true,
+      "detail": "HTTP 200"
+    },
+    {
+      "name": "daemon",
+      "ok": false,
+      "detail": "stopped · tick 108"
+    },
+    {
+      "name": "kuyruk-veritabanı",
+      "ok": true,
+      "detail": "{\"blocked\": 308, \"cancelled\": 299, \"completed\": 3398, \"failed\": 13, \"pending\": 120}"
+    },
+    {
+      "name": "engel-oranı",
+      "ok": true,
+      "detail": "308 engelli görev"
+    }
+  ],
+  "repairs": []
+}

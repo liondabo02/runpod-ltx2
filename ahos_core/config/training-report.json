@@ -1,0 +1,578 @@
+{
+  "generated_at": "2026-11-03T21:09:45",
+  "duration_seconds": 0.344,
+  "departments": 17,
+  "workers": 81,
+  "passed": 81,
+  "failed": 0,
+  "average_score": 100.0,
+  "results": [
+    {
+      "worker": "ai-platform-manager",
+      "department": "ai-platform",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "ai-platform-tool-curator",
+      "department": "ai-platform",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "ai-platform-gateway-engineer",
+      "department": "ai-platform",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "ai-platform-evaluator",
+      "department": "ai-platform",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "creative-manager",
+      "department": "creative",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "creative-story-lead",
+      "department": "creative",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "creative-story-specialist",
+      "department": "creative",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "creative-art-lead",
+      "department": "creative",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "creative-art-specialist",
+      "department": "creative",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "creative-animation-lead",
+      "department": "creative",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "creative-animation-specialist",
+      "department": "creative",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "creative-audio-lead",
+      "department": "creative",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "creative-audio-specialist",
+      "department": "creative",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "creative-localization-lead",
+      "department": "creative",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "creative-localization-specialist",
+      "department": "creative",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "creative-growth-lead",
+      "department": "creative",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "creative-growth-specialist",
+      "department": "creative",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "creative-quality-lead",
+      "department": "creative",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "creative-quality-specialist",
+      "department": "creative",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "mgr-data-01",
+      "department": "data",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "data-01",
+      "department": "data",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "mgr-finance-01",
+      "department": "finance",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "finance-01",
+      "department": "finance",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "genel-manager",
+      "department": "genel",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "genel-delivery-lead",
+      "department": "genel",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "genel-delivery-specialist",
+      "department": "genel",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "genel-quality-lead",
+      "department": "genel",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "genel-quality-specialist",
+      "department": "genel",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "genel-growth-lead",
+      "department": "genel",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "genel-growth-specialist",
+      "department": "genel",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "guvenlik-manager",
+      "department": "guvenlik",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "guvenlik-repo-guardian",
+      "department": "guvenlik",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "guvenlik-dependency-auditor",
+      "department": "guvenlik",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "guvenlik-secret-scanner",
+      "department": "guvenlik",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "guvenlik-release-guardian",
+      "department": "guvenlik",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "ceo-01",
+      "department": "holding",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "ceo-chief-of-staff-01",
+      "department": "holding",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "hukuk-manager",
+      "department": "hukuk",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "hukuk-01",
+      "department": "hukuk",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "mgr-infrastructure-01",
+      "department": "infrastructure",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "devops-01",
+      "department": "infrastructure",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "mgr-marketing-01",
+      "department": "marketing",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "marketing-01",
+      "department": "marketing",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "mgr-operations-01",
+      "department": "operations",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "ops-01",
+      "department": "operations",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "oyun-manager",
+      "department": "oyun",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "oyun-design-lead",
+      "department": "oyun",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "oyun-design-specialist",
+      "department": "oyun",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "oyun-engineering-lead",
+      "department": "oyun",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "oyun-engineering-specialist",
+      "department": "oyun",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "oyun-platform-lead",
+      "department": "oyun",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "oyun-platform-specialist",
+      "department": "oyun",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "oyun-art-lead",
+      "department": "oyun",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "oyun-art-specialist",
+      "department": "oyun",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "oyun-audio-lead",
+      "department": "oyun",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "oyun-audio-specialist",
+      "department": "oyun",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "oyun-quality-lead",
+      "department": "oyun",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "oyun-quality-specialist",
+      "department": "oyun",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "oyun-growth-lead",
+      "department": "oyun",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "oyun-growth-specialist",
+      "department": "oyun",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "mgr-quality-01",
+      "department": "quality",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "qa-01",
+      "department": "quality",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "mgr-research-01",
+      "department": "research",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "research-01",
+      "department": "research",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "mgr-sales-01",
+      "department": "sales",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "sales-01",
+      "department": "sales",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "software-manager",
+      "department": "software",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "software-product-lead",
+      "department": "software",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "software-product-specialist",
+      "department": "software",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "software-engineering-lead",
+      "department": "software",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "software-engineering-specialist",
+      "department": "software",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "software-platform-lead",
+      "department": "software",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "software-platform-specialist",
+      "department": "software",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "software-quality-lead",
+      "department": "software",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "software-quality-specialist",
+      "department": "software",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "software-growth-lead",
+      "department": "software",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "software-growth-specialist",
+      "department": "software",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "software-operations-lead",
+      "department": "software",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "software-operations-specialist",
+      "department": "software",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "mgr-support-01",
+      "department": "support",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    },
+    {
+      "worker": "support-01",
+      "department": "support",
+      "score": 100,
+      "passed": true,
+      "questions": 4
+    }
+  ]
+}
