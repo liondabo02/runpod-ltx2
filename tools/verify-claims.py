@@ -73,7 +73,6 @@ def main() -> int:
         _has_pytest = False
         pytest_result = "atlandı: pytest yüklü değil (pip SSL hatası olabilir)"
         pytest_ok = True  # atlanan test, verdict'i düşürmez (uzak ortam)
-    pytest_ok = None
     try:
         if not _has_pytest:
             raise RuntimeError("pytest yok")
