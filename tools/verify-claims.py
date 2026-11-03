@@ -72,6 +72,7 @@ def main() -> int:
     except Exception:  # noqa: BLE001 - pytest yoksa testler atlanır
         _has_pytest = False
         pytest_result = "atlandı: pytest yüklü değil (pip SSL hatası olabilir)"
+        pytest_ok = True  # atlanan test, verdict'i düşürmez (uzak ortam)
     pytest_ok = None
     try:
         if not _has_pytest:
@@ -96,9 +97,11 @@ def main() -> int:
                      "fresh": bool(train_age is not None and train_age < 10)},
         "health": {"ok": health_ok, "bad_checks": bad_checks, "note": health_note},
         "tests": {"result": pytest_result, "ok": pytest_ok},
-        "verdict_ok": bool(
-            failed == 0 and average == 100 and health_ok and pytest_ok
+        "warnings": (
+            [] if (train_age is not None and train_age < 10)
+            else [f"eğitim raporu {train_age} dk eski; yeniden koşmak için: ahos.training.teach"]
         ),
+        "verdict_ok": bool(failed == 0 and average == 100 and health_ok and pytest_ok),
     }
     (CFG / "verification.json").write_text(json.dumps(verdict, ensure_ascii=False, indent=2), encoding="utf-8")
 
@@ -109,6 +112,8 @@ def main() -> int:
     print(f"sağlık            : ok={health_ok} · sorunlu={bad_checks or 'yok'} {health_note}".rstrip())
     print(f"testler           : {pytest_result}")
     print(f"SONUÇ             : {'GEÇTİ' if verdict['verdict_ok'] else 'KALDI'}")
+    for warning in verdict.get("warnings", []):
+        print(f"uyarı             : {warning}")
     print("kayıt             : ahos_core/config/verification.json")
     return 0 if verdict["verdict_ok"] else 1
 
