@@ -1,5 +1,0 @@
-CLONE: 0
-DOSYALAR: /workspace/ahos/ahos_core ✓ EXISTS, /workspace/ahos/ahos_core/config ✓ EXISTS, /workspace/ahos/tools/verify-claims.py ✗ NOT FOUND, /workspace/ahos/AGENTS.md ✓ EXISTS
-DOĞRULAMA: verify-claims.py dosyası /workspace/ahos/tools/ dizininde bulunamadı -- dosya mevcut değil
-TESTLER: pytest modülü pip ile kurulamadı (SSL sertifika hatası). pytest -q --no-header --timeout=60 tests çalıştırılamadı.
-EXIT: clone=0

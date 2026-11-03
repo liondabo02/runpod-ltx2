@@ -1,37 +1,74 @@
-"""Training module tests"""
+"""Eğitim motoru testleri (17 departman / 81 çalışan, 8 soru)."""
+
+from __future__ import annotations
+
 import json
-import sys
-sys.path.insert(0, '.')
+import sqlite3
 from pathlib import Path
-from ahos.training import build_course, examine
 
-def test_build_course_has_8_questions():
-    """build_course should produce 8 questions"""
-    runtime = Path('/workspace/ahos/ahos_core/runtime')
-    course = build_course(runtime, 'test-dept')
-    assert len(course.questions) == 8, f"Expected 8 questions, got {len(course.questions)}"
+from ahos.training import build_course, examine, teach
 
-def test_build_course_questions_are_tuples():
-    """Each question should be a tuple of (question, answer)"""
-    runtime = Path('/workspace/ahos/ahos_core/runtime')
-    course = build_course(runtime, 'test-dept')
-    for q in course.questions:
-        assert isinstance(q, tuple) and len(q) == 2, f"Question should be tuple of 2, got {q}"
 
-def test_examine_returns_score():
-    """examine should return a dict with score"""
-    course = type('obj', (object,), {'questions': [('q1', 'a1'), ('q2', 'a2')]})()
-    result = examine(course, 'worker-01')
-    assert 'score' in result
-    assert 'passed' in result
+def _runtime(tmp_path: Path) -> Path:
+    runtime = tmp_path / "runtime"
+    runtime.mkdir()
+    con = sqlite3.connect(runtime / "company-service.db")
+    con.execute(
+        "create table missions (mission_id text, objective text, primary_department text, "
+        "status text, updated_at text)"
+    )
+    con.executemany(
+        "insert into missions values (?,?,?,?,datetime('now'))",
+        [
+            ("CMD-oyun-1", "bölüm ekle", "oyun", "completed"),
+            ("CMD-oyun-2", "düzelt", "oyun", "blocked"),
+        ],
+    )
+    con.commit()
+    con.close()
+    return runtime
 
-def test_training_report_has_departments_workers():
-    """training-report.json should have required fields"""
-    report_path = Path('/workspace/ahos/ahos_core/config/training-report.json')
-    if report_path.exists():
-        d = json.loads(report_path.read_text(encoding='utf-8'))
-        assert 'departments' in d
-        assert 'workers' in d
-        assert 'passed' in d
-        assert 'failed' in d
-        assert 'average_score' in d
+
+def test_build_course_has_eight_questions(tmp_path) -> None:
+    runtime = _runtime(tmp_path)
+
+    course = build_course(runtime, "oyun")
+
+    assert len(course.questions) == 8
+    assert all(isinstance(question, tuple) and len(question) == 2 for question in course.questions)
+
+
+def test_build_course_uses_real_queue_numbers(tmp_path) -> None:
+    runtime = _runtime(tmp_path)
+
+    course = build_course(runtime, "oyun")
+
+    assert any("tamamlandı" in fact for fact in course.facts)
+    assert any("teslim oranı" in fact for fact in course.facts)
+
+
+def test_examine_returns_score(tmp_path) -> None:
+    runtime = _runtime(tmp_path)
+    course = build_course(runtime, "oyun")
+
+    result = examine(course, "oyun-manager")
+
+    assert result["worker"] == "oyun-manager"
+    assert result["score"] == 100
+    assert result["passed"] is True
+    assert result["questions"] == 8
+
+
+def test_teach_writes_report(tmp_path) -> None:
+    runtime = _runtime(tmp_path)
+    departments = [{"department_id": "oyun", "workers": [{"worker_id": "w1"}, {"worker_id": "w2"}]}]
+
+    report = teach(runtime, departments)
+
+    assert report["departments"] == 1
+    assert report["workers"] == 2
+    assert report["failed"] == 0
+    assert report["average_score"] == 100
+    path = Path(runtime).parent / "config" / "training-report.json"
+    assert path.exists()
+    assert json.loads(path.read_text(encoding="utf-8"))["passed"] == 2
