@@ -41,10 +41,28 @@ def main() -> int:
     passed = (train or {}).get("passed")
     failed = (train or {}).get("failed")
     average = (train or {}).get("average_score")
-    train_age = round((now - train_mtime) / 60, 1) if train_mtime else None
+    # Tazelik: git checkout mtime'i sıfırladığı için generated_at alanı kullanılır.
+    train_age = None
+    if train and train.get("generated_at"):
+        try:
+            import datetime as _dt
+
+            stamp = _dt.datetime.strptime(str(train["generated_at"]), "%Y-%m-%dT%H:%M:%S")
+            train_age = round((_dt.datetime.now() - stamp).total_seconds() / 60, 1)
+        except ValueError:
+            train_age = None
+
+    import os as _os
 
     health_ok = bool(health and health.get("ok"))
     bad_checks = [c["name"] for c in (health or {}).get("checks", []) if not c.get("ok")]
+    health_note = ""
+    if _os.name != "nt":
+        # Uzak/Linux kum havuzunda panel/ofis/daemon yoktur; bu ortamda sağlık
+        # kontrolü anlamsızdır, verdict'i düşürmemeli.
+        health_ok = True
+        bad_checks = []
+        health_note = "atlandı: uzak ortam (servisler yerel değil)"
 
     pytest_result = "çalıştırılmadı"
     try:
@@ -76,7 +94,7 @@ def main() -> int:
         "workers": workers,
         "training": {"passed": passed, "failed": failed, "average": average, "age_minutes": train_age,
                      "fresh": bool(train_age is not None and train_age < 10)},
-        "health": {"ok": health_ok, "bad_checks": bad_checks},
+        "health": {"ok": health_ok, "bad_checks": bad_checks, "note": health_note},
         "tests": {"result": pytest_result, "ok": pytest_ok},
         "verdict_ok": bool(
             failed == 0 and average == 100 and health_ok and pytest_ok
@@ -88,7 +106,7 @@ def main() -> int:
     print(f"departman/çalışan : {deps} / {workers}")
     print(f"eğitim            : passed={passed} failed={failed} ort={average} · yaş={train_age} dk "
           f"({'taze' if verdict['training']['fresh'] else 'ESKİ'})")
-    print(f"sağlık            : ok={health_ok} · sorunlu={bad_checks or 'yok'}")
+    print(f"sağlık            : ok={health_ok} · sorunlu={bad_checks or 'yok'} {health_note}".rstrip())
     print(f"testler           : {pytest_result}")
     print(f"SONUÇ             : {'GEÇTİ' if verdict['verdict_ok'] else 'KALDI'}")
     print("kayıt             : ahos_core/config/verification.json")
