@@ -1,0 +1,24 @@
+{
+  "checked_at": "2026-11-03T21:55:48",
+  "departments": 17,
+  "workers": 81,
+  "training": {
+    "passed": 81,
+    "failed": 0,
+    "average": 100.0,
+    "age_minutes": 39.6,
+    "fresh": false
+  },
+  "health": {
+    "ok": false,
+    "bad_checks": [
+      "servis:panel",
+      "daemon"
+    ]
+  },
+  "tests": {
+    "result": "1162 passed in 387.32s (0:06:27)",
+    "ok": true
+  },
+  "verdict_ok": false
+}
