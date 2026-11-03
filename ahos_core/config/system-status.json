@@ -1,0 +1,13 @@
+{
+  "generated_at": "2026-11-03T20:21:30",
+  "departments": 17,
+  "workers": 81,
+  "queue": {
+    "blocked": 308,
+    "cancelled": 299,
+    "completed": 3355,
+    "failed": 13,
+    "pending": 77
+  },
+  "source_of_truth": "ahos_core/config/departments.json (runtime kopyası: ahos_core/runtime/departments.json)"
+}
