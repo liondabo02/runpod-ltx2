@@ -85,8 +85,12 @@ def build_course(runtime_dir: str | Path, department: str) -> DepartmentCourse:
     questions = [
         (f"Holding kuyruğunda kaç görev tamamlandı?", str(completed)),
         (f"Bu departmanın teslim oranı yüzde kaç?", str(rate)),
+        ("Son 3 görevden kaç tanesi tamamlandı?", str(recent[0][1]) if recent else "0"),
+        ("Bu departmanda aktif mission sayısı kaç?", str(counts.get("pending", 0) + counts.get("blocked", 0))),
         ("Hiç dosya değişmeyen görev tamamlandı sayılır mı?", "hayır"),
         ("Deterministik işler hangi yolla yapılır?", "modele göndermeden"),
+        ("Aynı hata kaç kez tekrar ederse depoya kaydedilir?", "3 kez"),
+        ("Bir çalışanın sorular %80'ine cevap verirse ne olur?", "ustalaşır (score >= 80)"),
     ]
     return DepartmentCourse(department=department, title=f"{department} · anlık eğitim", facts=facts, questions=questions)
 
