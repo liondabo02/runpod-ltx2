@@ -5,6 +5,8 @@ import json, sqlite3, time
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from . import sovereign
+
 MAX_EVENTS = 200
 
 
@@ -119,6 +121,7 @@ def tick(runtime_dir, departments: list, limit: int = 6, seed=None) -> dict:
         set_goal(mind, ctx)
         plan_steps(mind, ctx)
         calibrate(mind)
+        sovereign.embed(mind)
         to_plan_queue(runtime, mind)
         save(runtime, mind)
         thoughts.append(thought)
