@@ -1193,6 +1193,13 @@ def make_model_executor(
                     )
             except Exception:  # noqa: BLE001 - ipucu isteğe bağlı
                 pass
+            # H2: öğrenilen dersleri isteme enjekte et (öğrenme → karar bağlantısı).
+            try:
+                from .learning_feedback import apply_to_prompt
+
+                prompt = apply_to_prompt(_premium_runtime_dir(out_root), prompt)
+            except Exception:  # noqa: BLE001 - enjeksiyon isteğe bağlı
+                pass
             raw = call(SYSTEM_PROMPT, prompt, settings)
         except ModelError as exc:
             return WorkerExecutionResult(

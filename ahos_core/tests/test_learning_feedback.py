@@ -1,51 +1,60 @@
-"""Learning feedback module tests"""
-import json
-import sys
+"""learning_feedback testleri (hermetik: tmp_path kullanır)."""
+
+from __future__ import annotations
+
 from pathlib import Path
 
-# Import from ahos package
-_BASE = Path('/workspace/ahos')
-sys.path.insert(0, str(_BASE / 'ahos_core' / 'ahos'))
+from ahos.learning_feedback import apply_to_prompt, top_cards, weights
 
-from ahos.learning_feedback import weights, top_cards, apply_to_prompt
 
-def test_weights_creates_dict():
-    """weights should return a dict with kart IDs"""
-    runtime = Path('/workspace/ahos/ahos_core/runtime')
-    cards = [
-        {"id": "card-001", "passed": 4, "questions": 5, "last_seen": 0},
-        {"id": "card-002", "passed": 2, "questions": 5, "last_seen": 0},
-    ]
-    w = weights(runtime, cards)
-    assert isinstance(w, dict)
-    assert "card-001" in w
-    assert "card-002" in w
-    assert w["card-001"]["wins"] == 4
-    assert w["card-001"]["losses"] == 1
+def test_weights_creates_dict(tmp_path: Path) -> None:
+    runtime = tmp_path / "runtime"
+    runtime.mkdir()
 
-def test_top_cards_returns_sorted():
-    """top_cards should return cards sorted by weight"""
-    runtime = Path('/workspace/ahos/ahos_core/runtime')
-    w = weights(runtime, [
-        {"id": "card-A", "passed": 5, "questions": 5, "last_seen": 0},
-        {"id": "card-B", "passed": 1, "questions": 5, "last_seen": 0},
-        {"id": "card-C", "passed": 3, "questions": 5, "last_seen": 0},
-    ])
-    top = top_cards(runtime, n=2)
-    assert len(top) == 2
-    assert top[0]["id"] == "card-A"
-    assert top[0]["weight"] > top[1]["weight"]
+    result = weights(runtime, [{"id": "card-1", "passed": 4, "total": 5}])
 
-def test_apply_to_prompt_enriches():
-    """apply_to_prompt should add learned lessons to prompt"""
-    runtime = Path('/workspace/ahos/ahos_core/runtime')
-    prompt = "Plan: increase production"
-    enriched = apply_to_prompt(runtime, prompt)
+    assert result["card-1"]["wins"] == 4
+    assert result["card-1"]["losses"] == 1
+    assert (runtime / "learning" / "weights.json").exists()
+
+
+def test_top_cards_returns_sorted(tmp_path: Path) -> None:
+    runtime = tmp_path / "runtime"
+    runtime.mkdir()
+    weights(
+        runtime,
+        [
+            {"id": "low", "passed": 1, "total": 4},
+            {"id": "high", "passed": 4, "total": 4},
+        ],
+    )
+
+    cards = top_cards(runtime, n=2)
+
+    assert [card["id"] for card in cards] == ["high", "low"]
+
+
+def test_top_cards_empty_when_no_weights(tmp_path: Path) -> None:
+    runtime = tmp_path / "runtime"
+    runtime.mkdir()
+
+    assert top_cards(runtime, n=3) == []
+
+
+def test_apply_to_prompt_enriches(tmp_path: Path) -> None:
+    runtime = tmp_path / "runtime"
+    runtime.mkdir()
+    weights(runtime, [{"id": "ders-1", "passed": 3, "total": 4}])
+
+    enriched = apply_to_prompt(runtime, "TEMEL İSTEM")
+
+    assert "TEMEL İSTEM" in enriched
     assert "### Öğrenilen dersler" in enriched
-    assert "Plan: increase production" in enriched
+    assert "ders-1" in enriched
 
-def test_top_cards_empty_when_no_weights():
-    """top_cards should return empty list when no weights"""
-    runtime = Path('/workspace/ahos/ahos_core/runtime')
-    top = top_cards(runtime, n=3)
-    assert top == []
+
+def test_apply_to_prompt_unchanged_without_cards(tmp_path: Path) -> None:
+    runtime = tmp_path / "runtime"
+    runtime.mkdir()
+
+    assert apply_to_prompt(runtime, "TEMEL") == "TEMEL"
