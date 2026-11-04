@@ -118,6 +118,8 @@ def tick(runtime_dir, departments: list, limit: int = 6, seed=None) -> dict:
         model = reflect(mind)
         set_goal(mind, ctx)
         plan_steps(mind, ctx)
+        calibrate(mind)
+        to_plan_queue(runtime, mind)
         save(runtime, mind)
         thoughts.append(thought)
         if "hata" in str(model.get("lesson", "")).lower():
@@ -125,6 +127,7 @@ def tick(runtime_dir, departments: list, limit: int = 6, seed=None) -> dict:
                 f"# {dep}/{wid}\n\n{model['lesson']}\n", encoding="utf-8")
             lessons += 1
 
+    share_department_brain(runtime, departments)
     with open(runtime / "minds" / "thoughts.jsonl", "a", encoding="utf-8") as fh:
         for t in thoughts:
             fh.write(json.dumps({"at": time.strftime("%Y-%m-%dT%H:%M:%S"), "thought": t}, ensure_ascii=False) + "\n")

@@ -2,86 +2,86 @@
   "ai-platform": {
     "workers": 4,
     "top_goal": "engelli gorevleri tasfiye et",
-    "avg_confidence": 0.9
+    "avg_confidence": 0.93
   },
   "creative": {
     "workers": 15,
     "top_goal": "engelli gorevleri tasfiye et",
-    "avg_confidence": 0.9
+    "avg_confidence": 0.93
   },
   "data": {
     "workers": 2,
     "top_goal": "engelli gorevleri tasfiye et",
-    "avg_confidence": 0.9
+    "avg_confidence": 0.93
   },
   "finance": {
     "workers": 2,
     "top_goal": "engelli gorevleri tasfiye et",
-    "avg_confidence": 0.9
+    "avg_confidence": 0.93
   },
   "genel": {
     "workers": 7,
     "top_goal": "engelli gorevleri tasfiye et",
-    "avg_confidence": 0.9
+    "avg_confidence": 0.93
   },
   "guvenlik": {
     "workers": 5,
     "top_goal": "engelli gorevleri tasfiye et",
-    "avg_confidence": 0.9
+    "avg_confidence": 0.93
   },
   "holding": {
     "workers": 2,
     "top_goal": "engelli gorevleri tasfiye et",
-    "avg_confidence": 0.9
+    "avg_confidence": 0.93
   },
   "hukuk": {
     "workers": 2,
     "top_goal": "engelli gorevleri tasfiye et",
-    "avg_confidence": 0.9
+    "avg_confidence": 0.93
   },
   "infrastructure": {
     "workers": 2,
     "top_goal": "engelli gorevleri tasfiye et",
-    "avg_confidence": 0.9
+    "avg_confidence": 0.93
   },
   "marketing": {
     "workers": 2,
     "top_goal": "engelli gorevleri tasfiye et",
-    "avg_confidence": 0.9
+    "avg_confidence": 0.93
   },
   "operations": {
     "workers": 2,
     "top_goal": "engelli gorevleri tasfiye et",
-    "avg_confidence": 0.9
+    "avg_confidence": 0.93
   },
   "oyun": {
     "workers": 15,
     "top_goal": "engelli gorevleri tasfiye et",
-    "avg_confidence": 0.9
+    "avg_confidence": 0.93
   },
   "quality": {
     "workers": 2,
     "top_goal": "engelli gorevleri tasfiye et",
-    "avg_confidence": 0.9
+    "avg_confidence": 0.93
   },
   "research": {
     "workers": 2,
     "top_goal": "engelli gorevleri tasfiye et",
-    "avg_confidence": 0.9
+    "avg_confidence": 0.93
   },
   "sales": {
     "workers": 2,
     "top_goal": "engelli gorevleri tasfiye et",
-    "avg_confidence": 0.9
+    "avg_confidence": 0.93
   },
   "software": {
     "workers": 13,
     "top_goal": "engelli gorevleri tasfiye et",
-    "avg_confidence": 0.9
+    "avg_confidence": 0.93
   },
   "support": {
     "workers": 2,
     "top_goal": "engelli gorevleri tasfiye et",
-    "avg_confidence": 0.9
+    "avg_confidence": 0.93
   }
 }
