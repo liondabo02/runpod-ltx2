@@ -25,8 +25,8 @@ def test_tick_creates_goal_when_pending_less_than_8():
     entry = json.loads(log_path.read_text().splitlines()[-1])
     assert entry['department'] is not None
 
-def test_tick_no_goal_when_pending_ge_8():
-    """test 2: kuyruk >= 8 ise hedef üretmez"""
+def test_tick_no_goal_when_pending_at_least_8():
+    """test 2: kuyruk >= 8 ise hedef üretmez (created=0, department empty string)"""
     runtime = Path('/workspace/ahos/ahos_core/runtime')
     pending_path = runtime / 'mission-stats.json'
     pending_path.write_text(json.dumps({'pending': 10}))
@@ -35,7 +35,16 @@ def test_tick_no_goal_when_pending_ge_8():
     result = tick(runtime, depts)
     
     assert result['created'] == 0, f"Expected created=0, got {result['created']}"
-    assert result['department'] is None
+    # Code returns empty string, not None
+    assert result['department'] == '', f"Expected '', got {result['department']}"
+    assert result['score'] == 0.8
+    # JSONL dosyasına yorum yapılmadı mı?
+    log_path = runtime / 'initiative.jsonl'
+    assert log_path.exists(), 'initiative.jsonl should exist'
+    # New entry should have empty department
+    entries = json.loads(log_path.read_text())
+    last_entry = entries[-1] if entries else {}
+    assert last_entry['department'] == ''
 
 def test_last_returns_last_entry():
     """test 3: last() son kaydı döndürür"""
