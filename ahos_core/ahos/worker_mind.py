@@ -214,3 +214,75 @@ def department_brain(runtime_dir, departments: list) -> dict:
             "avg_confidence": round(sum(float(m["confidence"] or 0) for m in members) / len(members), 3) if members else 0,
         }
     return out
+
+def calibrate(mind: Mind) -> float:
+    """Guven kalibrasyonu: tahmin ile gercek basariyi karsilastir, faktoru duzelt."""
+    model = dict(mind.self_model or {})
+    predicted = float(model.get("confidence") or 0.5)
+    actual = mind.success_rate if mind.events else 0.5
+    error = round(actual - predicted, 3)
+    factor = float(model.get("calibration") or 1.0)
+    factor = round(max(0.5, min(1.5, factor + error * 0.2)), 3)
+    model["calibration"] = factor
+    model["calibration_error"] = error
+    model["confidence"] = round(max(0.1, min(0.99, predicted + error * 0.3)), 3)
+    mind.self_model = model
+    return factor
+
+
+def to_plan_queue(runtime_dir, mind: Mind) -> int:
+    """Beynin planini eylem kuyruguna yaz (dosya tabanli)."""
+    runtime = Path(runtime_dir)
+    steps = list((mind.self_model or {}).get("plan") or [])
+    if not steps:
+        return 0
+    path = runtime / "minds" / "plan-queue.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "a", encoding="utf-8") as fh:
+        for i, step in enumerate(steps):
+            fh.write(json.dumps({"at": time.strftime("%Y-%m-%dT%H:%M:%S"), "worker": mind.worker_id,
+                                 "department": mind.department, "step": i + 1, "action": step,
+                                 "state": "pending"}, ensure_ascii=False) + "\n")
+    return len(steps)
+
+
+def share_department_brain(runtime_dir, departments: list) -> dict:
+    """Departman ici paylasim: uyelerin dersleri tek beyin dosyasinda toplanir."""
+    runtime = Path(runtime_dir)
+    out_dir = runtime / "minds" / "departments"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    shared = {}
+    for dep in departments:
+        dep_id = str(dep.get("department_id") or "")
+        lessons = []
+        for w in dep.get("workers") or []:
+            p = runtime / "minds" / f"{w.get('worker_id')}.json"
+            if not p.exists():
+                continue
+            try:
+                d = json.loads(p.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                continue
+            lesson = str((d.get("self_model") or {}).get("lesson") or "")
+            if lesson:
+                lessons.append({"worker": d.get("worker_id"), "lesson": lesson})
+        unique = []
+        for item in lessons:
+            if item["lesson"] not in [u["lesson"] for u in unique]:
+                unique.append(item)
+        payload = {"department": dep_id, "members": len(dep.get("workers") or []),
+                   "lessons": unique[:10], "updated_at": time.strftime("%Y-%m-%dT%H:%M:%S")}
+        (out_dir / f"{dep_id}.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        shared[dep_id] = {"members": payload["members"], "lessons": len(payload["lessons"])}
+    return shared
+
+
+def read_department_brain(runtime_dir, department: str) -> list:
+    """Calisan kendi departman beynindeki dersleri okur."""
+    p = Path(runtime_dir) / "minds" / "departments" / f"{department}.json"
+    if not p.exists():
+        return []
+    try:
+        return list(json.loads(p.read_text(encoding="utf-8")).get("lessons") or [])
+    except (json.JSONDecodeError, OSError):
+        return []
