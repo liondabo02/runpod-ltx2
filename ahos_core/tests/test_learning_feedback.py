@@ -3,9 +3,7 @@ import json
 import sys
 from pathlib import Path
 
-# Import from ahos package
-_BASE = Path('/workspace/ahos')
-sys.path.insert(0, str(_BASE / 'ahos_core' / 'ahos'))
+sys.path.insert(0, '/workspace/ahos/ahos_core')
 
 from ahos.learning_feedback import weights, top_cards, apply_to_prompt
 
