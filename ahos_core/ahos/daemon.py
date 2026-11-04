@@ -96,6 +96,33 @@ def tick_once(runtime_dir: str | Path, departments: list[dict] | None = None) ->
     health = health_check(runtime_dir, fix=False)
     state.infra["health"] = _health_to_dict(health)
 
+    # 5) İşçi zihni: düşün, hedef, plan, kalibrasyon (sahiplik her zihinde)
+    try:
+        from .sovereign import ensure as _pledge
+        from .worker_mind import tick as _mind_tick
+
+        _pledge(runtime_dir)
+        _thoughts = _mind_tick(runtime_dir, departments or [], limit=6)
+        state.infra["minds"] = _thoughts
+    except Exception:  # noqa: BLE001
+        pass
+
+    # 6) Konuşma: işçiler birbirine soru sorar, cevap verir
+    try:
+        from .commune import converse as _converse
+
+        state.infra["commune"] = _converse(runtime_dir, departments or [], rounds=2)
+    except Exception:  # noqa: BLE001
+        pass
+
+    # 7) Beyin → eylem: plan adımlarını gerçek göreve çevir
+    try:
+        from .mind_feedback import flush_plan_queue as _flush
+
+        state.infra["plan_queue"] = _flush(runtime_dir, limit=10)
+    except Exception:  # noqa: BLE001
+        pass
+
     save_state(state)
     return state.infra
 
