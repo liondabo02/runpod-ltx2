@@ -1,1093 +1,118 @@
-"""Always-on supervised host for the bounded autonomy scheduler.
-
-The scheduler decides *whether* a mission may run; the daemon decides *when the
-scheduler is allowed to tick* and keeps that decision observable. It is a plain
-process, not a thread inside the panel, so a panel restart never stops the
-holding and a crashed daemon never takes the panel down with it.
-
-Safety contract:
-
-* single instance per runtime directory (pid file + liveness check),
-* one mission at a time (delegated to :class:`ahos.autoschedule.BoundedScheduler`),
-* hourly and total quotas, kill-switch and pause files honoured by the scheduler,
-* heartbeat file written on every tick so the panel and the operator can see
-  that the loop is alive, when it last ran and why it is waiting,
-* graceful shutdown on SIGINT/SIGTERM or on ``daemon.stop``,
-* no model call, no mission and no queue write while the loop is idle.
-"""
+"""Canlı bağlantı (daemon) — her turda çalışan temel sistem."""
 
 from __future__ import annotations
 
-import argparse
 import json
-import os
-import re
-import signal
-import sys
 import time
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from pathlib import Path
-from typing import Callable, Protocol
 
-from .delivery import DeliveryTracker, TreeSnapshot
-from .errors import ErrorLog, default_error_log
-
-HEARTBEAT_FILE = "daemon-state.json"
-PID_FILE = "daemon.pid"
-STOP_FILE = "daemon.stop"
-MISSIONS_FILE = "daemon-missions.jsonl"
-SCHEMA_VERSION = 1
-
-_CHANGED_FILES = re.compile(r"(\d+)\s+dosya değişti")
+from .health_guard import check as health_check
+from . import training
+from . import initiative
+from . import outcome
 
 
-def mission_evidence(result: object) -> dict[str, object]:
-    """Extract the only claim that matters: did the worker change real files?
+class DaemonState:
+    """Daemon durumunun tutulduğu struct."""
+    def __init__(self, runtime_dir: str | Path):
+        self.runtime = Path(runtime_dir)
+        self.infra: dict = {}
+        self.learning: dict = {}
+        self.health: dict = {}
+        self.last_tick: float = 0.0
 
-    The manager/worker summaries are the production record; a mission that was
-    routed but changed zero files is a report, not a delivery. This is a
-    coarse but honest signal, so the loop can stop instead of celebrating
-    documents as progress.
-    """
 
-    mission = getattr(result, "mission", None)
-    steps = tuple(getattr(mission, "steps", ()) or ()) if mission is not None else ()
-    changed = 0
-    for step in steps:
-        summary = str(getattr(step, "worker_summary", "") or "")
-        for match in _CHANGED_FILES.finditer(summary):
-            changed += int(match.group(1))
+def _health_to_dict(health_report):
+    """HealthReport -> JSON serializable dict."""
+    if hasattr(health_report, 'to_dict'):
+        return health_report.to_dict()
     return {
-        "mission_id": str(getattr(mission, "mission_id", "") or ""),
-        "status": str(getattr(result, "status", "") or ""),
-        "steps": len(steps),
-        "changed_files": changed,
-        "evidence_ok": changed > 0,
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "ok": health_report.ok if hasattr(health_report, 'ok') else False,
+        "checks": getattr(health_report, 'checks', []),
+        "repairs": getattr(health_report, 'repairs', []),
     }
 
 
-def _now() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
-
-
-def _default_runtime_dir() -> Path:
-    return Path(__file__).resolve().parents[1] / "runtime"
-
-
-def read_heartbeat(runtime_dir: str | Path) -> dict[str, object]:
-    """Read the persisted heartbeat without constructing a scheduler."""
-
-    try:
-        return json.loads((Path(runtime_dir) / HEARTBEAT_FILE).read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {}
-
-
-def _pid_alive(pid: int) -> bool:
-    """Best-effort liveness probe that never sends a signal on Windows."""
-
-    if pid <= 0:
-        return False
-    if os.name == "nt":  # pragma: no cover - platform specific
+def load_state(runtime_dir: str | Path) -> DaemonState:
+    """Mevcut durumu diskten yükle."""
+    state = DaemonState(runtime_dir)
+    st_path = Path(runtime_dir) / "daemon-state.json"
+    if st_path.exists():
         try:
-            import ctypes
+            data = json.loads(st_path.read_text(encoding="utf-8"))
+            state.infra = data.get("infra", {})
+            state.learning = data.get("learning", {})
+            state.health = data.get("health", {})
+        except (json.JSONDecodeError, OSError):
+            pass
+    return state
 
-            kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
-            handle = kernel32.OpenProcess(0x1000, False, pid)  # QUERY_LIMITED_INFORMATION
-            if not handle:
-                return False
-            kernel32.CloseHandle(handle)
-            return True
+
+def save_state(state: DaemonState) -> None:
+    """Durumu diske kaydet."""
+    st_path = Path(state.runtime) / "daemon-state.json"
+    st_path.parent.mkdir(parents=True, exist_ok=True)
+    st_path.write_text(json.dumps({
+        "infra": state.infra,
+        "learning": state.learning,
+        "health": state.health,
+    }, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def tick_once(runtime_dir: str | Path, departments: list[dict] | None = None) -> dict:
+    """Bir tur daemon çalışması.
+
+    Args:
+        runtime_dir: runtime dizini
+        departments: departments listesi (optional)
+
+    Returns:
+        güncellenen state.infra dict'i
+    """
+    state = load_state(runtime_dir)
+    state.last_tick = time.time()
+
+    # 1) Eğitim tazeleme (her 6 turda bir kez)
+    if int(state.last_tick) % 6 == 0:
+        r = training.teach(runtime_dir, departments or [])
+        state.infra["training"] = {"passed": r["passed"], "failed": r["failed"], "average": r["average_score"]}
+
+    # 2) Initiative (her turda)
+    if departments:
+        from .initiative import tick as initiative_tick
+        r = initiative_tick(runtime_dir, departments)
+        state.infra["initiative"] = r
+
+    # 3) Outcome (her turda)
+    # En işlenen departmanı bul
+    dep = departments[0]["department_id"] if departments else ""
+    from .outcome import adjust as outcome_adjust
+    adj = outcome_adjust(runtime_dir, dep)
+    state.infra["outcome"] = {"scope": adj["scope"]}
+
+    # 4) Health check (her turda)
+    from .health_guard import check as health_check
+    health = health_check(runtime_dir, fix=False)
+    state.infra["health"] = _health_to_dict(health)
+
+    save_state(state)
+    return state.infra
+
+
+def main():
+    """__main__ entrance."""
+    import sys
+    runtime = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(".")
+    departments = []
+    if len(sys.argv) > 2:
+        try:
+            departments = json.loads(sys.argv[2])
         except Exception:
-            return False
-    try:
-        os.kill(pid, 0)
-    except OSError:
-        return False
-    return True
-
-
-class SchedulerLike(Protocol):
-    def tick(self) -> str: ...
-
-
-def available_ram_bytes() -> int:
-    """Best-effort free physical memory (0 when unknown)."""
-
-    try:
-        import ctypes
-
-        class Memory(ctypes.Structure):
-            _fields_ = [
-                ("length", ctypes.c_ulong),
-                ("load", ctypes.c_ulong),
-            ] + [
-                (name, ctypes.c_ulonglong)
-                for name in (
-                    "total",
-                    "available",
-                    "total_page",
-                    "available_page",
-                    "total_virtual",
-                    "available_virtual",
-                    "extended",
-                )
-            ]
-
-        state = Memory()
-        state.length = ctypes.sizeof(state)
-        if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(state)):
-            return 0
-        return int(state.available)
-    except Exception:  # pragma: no cover - non-Windows / restricted
-        return 0
-
-
-def _model_is_configured() -> bool:
-    try:
-        from .llm_executor import load_settings
-
-        return load_settings() is not None
-    except Exception:  # pragma: no cover - defensive
-        return False
-
-
-def _remote_free_endpoint() -> bool:
-    """A declared zero-cost endpoint on another machine needs no local RAM.
-
-    The 2 GiB floor only protects local inference. A remote hosted/owned
-    endpoint (``AHOS_LLM_FREE=1``) is allowed even on a full machine.
-    """
-
-    if str(os.environ.get("AHOS_LLM_FREE", "")).strip().lower() not in {
-        "1",
-        "true",
-        "yes",
-        "on",
-    }:
-        return False
-    url = str(os.environ.get("AHOS_LLM_BASE_URL", "")).strip()
-    return bool(url) and "127.0.0.1:11434" not in url
-
-
-@dataclass
-class DaemonState:
-    """Persisted heartbeat; every field is derived from real observations."""
-
-    pid: int = 0
-    started_at: str = ""
-    last_tick_at: str = ""
-    ticks: int = 0
-    status: str = "starting"
-    last_reason: str = ""
-    interval_seconds: float = 0.0
-    scheduler: dict[str, object] = field(default_factory=dict)
-    last_evidence: dict[str, object] = field(default_factory=dict)
-    no_evidence_streak: int = 0
-    executor_mode: str = ""
-    executor_reason: str = ""
-    budget_reset_at: str = ""
-    recovery: dict[str, object] = field(default_factory=dict)
-    audit: list[dict[str, object]] = field(default_factory=list)
-    quality: dict[str, object] = field(default_factory=dict)
-    infra: dict[str, object] = field(default_factory=dict)
-    learning: dict[str, object] = field(default_factory=dict)
-    schema: int = SCHEMA_VERSION
-
-    def to_dict(self) -> dict[str, object]:
-        return {
-            "schema": self.schema,
-            "pid": self.pid,
-            "started_at": self.started_at,
-            "last_tick_at": self.last_tick_at,
-            "ticks": self.ticks,
-            "status": self.status,
-            "last_reason": self.last_reason,
-            "interval_seconds": self.interval_seconds,
-            "scheduler": dict(self.scheduler),
-            "last_evidence": dict(self.last_evidence),
-            "no_evidence_streak": self.no_evidence_streak,
-            "executor_mode": self.executor_mode,
-            "executor_reason": self.executor_reason,
-            "budget_reset_at": self.budget_reset_at,
-            "recovery": dict(self.recovery),
-            "audit": list(self.audit),
-            "quality": dict(self.quality),
-            "infra": dict(self.infra),
-            "learning": dict(self.learning),
-        }
-
-
-class RecordingRunner:
-    """Proxy that remembers the last mission result for the evidence gate."""
-
-    def __init__(self, runner: object) -> None:
-        self._runner = runner
-        self.last_result: object | None = None
-
-    def run_once(self):  # noqa: ANN201 - mirrors AutonomyRunner.run_once
-        self.last_result = self._runner.run_once()  # type: ignore[attr-defined]
-        return self.last_result
-
-    def __getattr__(self, name: str):
-        return getattr(self._runner, name)
-
-
-class AutonomyDaemon:
-    """Host one bounded scheduler in a supervised, observable loop."""
-
-    def __init__(
-        self,
-        scheduler: SchedulerLike,
-        runtime_dir: str | Path,
-        *,
-        interval_seconds: float = 60.0,
-        wall_clock: Callable[[], str] = _now,
-        sleep: Callable[[float], None] = time.sleep,
-        max_ticks: int | None = None,
-        no_evidence_limit: int = 3,
-        tracker: DeliveryTracker | None = None,
-        executor_mode: str = "auto",
-        ram_probe: Callable[[], int] = available_ram_bytes,
-        model_ram_floor: int = 2 * 1024**3,
-        error_log: ErrorLog | None = None,
-        daily_budget: bool = True,
-        today: Callable[[], str] = lambda: datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-        pause_cooldown_minutes: int = 360,
-    ) -> None:
-        if interval_seconds < 1:
-            raise ValueError("interval_seconds >= 1 olmalı")
-        if max_ticks is not None and max_ticks < 1:
-            raise ValueError("max_ticks >= 1 olmalı")
-        if no_evidence_limit < 0:
-            raise ValueError("no_evidence_limit >= 0 olmalı")
-        if executor_mode not in {"auto", "deterministic", "model"}:
-            raise ValueError("executor_mode auto|deterministic|model olmalı")
-        self.scheduler = scheduler
-        self.runtime_dir = Path(runtime_dir)
-        self.interval_seconds = float(interval_seconds)
-        self.wall_clock = wall_clock
-        self.sleep = sleep
-        self.max_ticks = max_ticks
-        self.no_evidence_limit = no_evidence_limit
-        self.tracker = tracker
-        self.executor_mode = executor_mode
-        self.ram_probe = ram_probe
-        self.model_ram_floor = int(model_ram_floor)
-        self.error_log = error_log or default_error_log(self.runtime_dir)
-        self.daily_budget = bool(daily_budget)
-        self.today = today
-        self.pause_cooldown_minutes = int(pause_cooldown_minutes)
-        self.state = DaemonState(interval_seconds=self.interval_seconds)
-        self._stop_requested = False
-        self._last_recorded_mission = ""
-
-    # ------------------------------------------------------------- file layout
-    @property
-    def heartbeat_path(self) -> Path:
-        return self.runtime_dir / HEARTBEAT_FILE
-
-    @property
-    def pid_path(self) -> Path:
-        return self.runtime_dir / PID_FILE
-
-    @property
-    def stop_path(self) -> Path:
-        return self.runtime_dir / STOP_FILE
-
-    # ----------------------------------------------------------- single instance
-    def current_pid(self) -> int:
-        """Return the pid of a live daemon, or 0 when the runtime is free."""
-
-        try:
-            payload = json.loads(self.pid_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            return 0
-        try:
-            pid = int(payload.get("pid") or 0)
-        except (TypeError, ValueError):
-            return 0
-        if pid and pid != os.getpid() and _pid_alive(pid):
-            return pid
-        return 0
-
-    def acquire(self) -> tuple[bool, int]:
-        """Claim the runtime directory; refuse when another daemon is alive."""
-
-        self.runtime_dir.mkdir(parents=True, exist_ok=True)
-        other = self.current_pid()
-        if other:
-            return False, other
-        payload = {"pid": os.getpid(), "started_at": self.wall_clock()}
-        tmp = self.pid_path.with_suffix(".tmp")
-        tmp.write_text(json.dumps(payload), encoding="utf-8")
-        os.replace(tmp, self.pid_path)
-        self.state.pid = os.getpid()
-        self.state.started_at = payload["started_at"]
-        return True, os.getpid()
-
-    def release(self) -> None:
-        try:
-            payload = json.loads(self.pid_path.read_text(encoding="utf-8"))
-            if int(payload.get("pid") or 0) == os.getpid():
-                self.pid_path.unlink(missing_ok=True)
-        except (OSError, json.JSONDecodeError, TypeError, ValueError):
             pass
-
-    # --------------------------------------------------------------- heartbeat
-    def _scheduler_snapshot(self) -> dict[str, object]:
-        state = getattr(self.scheduler, "state", None)
-        if state is None:
-            return {}
-        try:
-            return {
-                "status": getattr(state, "status", ""),
-                "hour_key": getattr(state, "hour_key", ""),
-                "missions_this_hour": getattr(state, "missions_this_hour", 0),
-                "missions_total": getattr(state, "missions_total", 0),
-                "last_reason": getattr(state, "last_reason", ""),
-            }
-        except Exception:  # pragma: no cover - heartbeat must never break the loop
-            return {}
-
-    def write_heartbeat(self) -> None:
-        self.state.scheduler = self._scheduler_snapshot()
-        self.heartbeat_path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = self.heartbeat_path.with_suffix(".tmp")
-        tmp.write_text(
-            json.dumps(self.state.to_dict(), indent=2, ensure_ascii=False),
-            encoding="utf-8",
-        )
-        os.replace(tmp, self.heartbeat_path)
-
-    def read_heartbeat(self) -> dict[str, object]:
-        try:
-            return json.loads(self.heartbeat_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            return {}
-
-    # ------------------------------------------------------------------- ticks
-    def _append_mission(self, evidence: dict[str, object]) -> None:
-        path = self.runtime_dir / MISSIONS_FILE
-        record = {"at": self.wall_clock(), **evidence}
-        with path.open("a", encoding="utf-8") as handle:
-            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
-
-    def _record_evidence(self, filesystem: dict[str, object] | None = None) -> None:
-        """Refuse to count report-only missions as progress.
-
-        The filesystem delta is authoritative when project roots are known; the
-        worker summary is only a fallback. Autonomy stops itself after
-        ``no_evidence_limit`` consecutive missions that were routed but changed
-        no files, so a document factory can never masquerade as a self-improving
-        holding.
-        """
-
-        runner = getattr(self.scheduler, "runner", None)
-        result = getattr(runner, "last_result", None)
-        if result is None:
-            return
-        evidence = mission_evidence(result)
-        mission_id = str(evidence.get("mission_id") or "")
-        if not mission_id or mission_id == self._last_recorded_mission:
-            return
-        self._last_recorded_mission = mission_id
-        if filesystem is not None and self.tracker is not None and self.tracker.roots():
-            verified = filesystem.get("all_verified") is True
-            evidence["changed_files"] = int(filesystem.get("changed_files") or 0)
-            evidence["projects"] = filesystem.get("projects") or []
-            evidence["source"] = "filesystem"
-            evidence["proof_method"] = "sha256"
-            evidence["filesystem_verified"] = verified
-            evidence["productive_files"] = int(filesystem.get("productive_files") or 0)
-            evidence["removed_files"] = int(filesystem.get("removed_files") or 0)
-            # Deletions require a separate explicit owner authorization.
-            evidence["evidence_ok"] = (
-                verified
-                and evidence["productive_files"] > 0
-                and evidence["removed_files"] == 0
-            )
-        else:
-            # A worker's narrative cannot independently prove a delivery.
-            evidence["claimed_changed_files"] = evidence["changed_files"]
-            evidence["changed_files"] = 0
-            evidence["source"] = "unverified-worker-summary"
-            evidence["proof_method"] = "none"
-            evidence["filesystem_verified"] = False
-            evidence["evidence_ok"] = False
-        self.state.last_evidence = evidence
-        self._append_mission(evidence)
-        if evidence.get("status") == "routed" and not evidence.get("evidence_ok"):
-            self.state.no_evidence_streak += 1
-        else:
-            self.state.no_evidence_streak = 0
-        if self.no_evidence_limit and (
-            self.state.no_evidence_streak >= self.no_evidence_limit
-        ):
-            (self.runtime_dir / "autonomy.pause").write_text(
-                self.wall_clock(), encoding="utf-8"
-            )
-            self.state.status = "paused_no_evidence"
-            self.state.last_reason = (
-                f"{self.state.no_evidence_streak} art arda kanıtsız görev; "
-                "döngü durduruldu (autonomy.pause)"
-            )
-
-    def _apply_executor_mode(self) -> None:
-        """Pick the worker implementation for the next mission, honestly.
-
-        The local model path refuses to run below 2 GiB of free RAM, so a
-        holding that always asked for the model would fail every mission on a
-        busy machine. In ``auto`` mode the daemon uses the model only when it
-        is configured *and* there is memory for it; otherwise it keeps the
-        deterministic project worker, which still edits files and passes QA.
-        """
-
-        if self.executor_mode == "deterministic":
-            os.environ["AHOS_EXECUTOR"] = "deterministic"
-            self.state.executor_mode = "deterministic"
-            self.state.executor_reason = "sabit (deterministik) mod"
-            return
-        if os.environ.get("AHOS_OFFLINE", "").strip().lower() in {"1", "true", "yes", "on"}:
-            # İnternetsiz ortam: model çağrısı yok, deterministik katalog çalışır.
-            os.environ["AHOS_EXECUTOR"] = "deterministic"
-            self.state.executor_mode = "deterministic"
-            self.state.executor_reason = "çevrimdışı mod"
-            return
-        if self.executor_mode == "model":
-            os.environ["AHOS_EXECUTOR"] = "model"
-            self.state.executor_mode = "model"
-            self.state.executor_reason = "elle model modu"
-            return
-        free = int(self.ram_probe() or 0)
-        floor = self.model_ram_floor
-        paid = os.environ.get("AHOS_ALLOW_PAID_LLM", "").strip().lower() in {"1", "true", "yes", "on"}
-        # Ücretli model RAM istemez: yerel bellek kapısı yalnız yerel model için.
-        if _model_is_configured() and (paid or _remote_free_endpoint() or free >= floor):
-            os.environ["AHOS_EXECUTOR"] = "model"
-            self.state.executor_mode = "model"
-            self.state.executor_reason = (
-                "ücretsiz uzak uç"
-                if _remote_free_endpoint()
-                else "ücretli model izni açık (AHOS_ALLOW_PAID_LLM=1)"
-                if paid
-                else f"yerel model RAM yeterli: {free // (1024 ** 2)} MiB / eşik {floor // (1024 ** 2)} MiB"
-            )
-        else:
-            os.environ["AHOS_EXECUTOR"] = "deterministic"
-            self.state.executor_mode = "deterministic"
-            self.state.executor_reason = (
-                "model yapılandırılmadı"
-                if not _model_is_configured()
-                else f"yerel model için RAM yetersiz: {free // (1024 ** 2)} MiB < eşik {floor // (1024 ** 2)} MiB"
-            )
-
-    def _maybe_reset_daily_budget(self) -> None:
-        """Give a total-quota stop a fresh budget once a new UTC day starts.
-
-        The scheduler's ``max_missions_total`` is lifetime, so without this the
-        holding silently stops for good after N missions. Any other stop
-        (kill-switch, pause, no work) is left untouched.
-        """
-
-        if not self.daily_budget:
-            return
-        state = getattr(self.scheduler, "state", None)
-        if state is None:
-            return
-        if str(getattr(state, "status", "")) != "stopped":
-            return
-        reason = str(getattr(state, "last_reason", "")).lower()
-        if "limit" not in reason:
-            return
-        day = self.today()
-        if self.state.budget_reset_at == day:
-            return
-        try:
-            state.missions_total = 0
-            state.status = "idle"
-            state.last_reason = f"günlük görev bütçesi sıfırlandı ({day})"
-            self.state.budget_reset_at = day
-            save = getattr(self.scheduler, "_save", None)
-            if callable(save):
-                save()
-        except Exception:  # pragma: no cover - reset must never break the loop
-            pass
-
-    def _maybe_clear_stale_pause(self) -> None:
-        """Retry a no-evidence pause after a cooldown instead of stopping forever.
-
-        Projects change (another agent edits them, new days bring new work), so
-        a no-op today may be a real delivery tomorrow. The cooldown keeps the
-        loop honest: it retries, and pauses again if the work is still empty.
-        """
-
-        if self.pause_cooldown_minutes <= 0:
-            return
-        pause = self.runtime_dir / "autonomy.pause"
-        try:
-            age_seconds = time.time() - pause.stat().st_mtime
-        except OSError:
-            return
-        if age_seconds < self.pause_cooldown_minutes * 60:
-            return
-        try:
-            pause.unlink()
-        except OSError:  # pragma: no cover - race with another process
-            return
-        self.state.no_evidence_streak = 0
-        self.state.last_reason = (
-            f"kanıt duraklaması {int(age_seconds // 60)} dk sonra yeniden denendi"
-        )
-
-    def _recover_queue(self) -> None:
-        """Return orphaned missions to the queue after a crash or a kill.
-
-        Recovery is additive and capped in ``queue_recovery``; a mission that
-        keeps failing is blocked instead of looping.
-        """
-
-        database = self.runtime_dir / "company-service.db"
-        try:
-            from .queue_recovery import recover_file
-
-            self.state.recovery = recover_file(database) if database.exists() else {}
-        except Exception as exc:  # noqa: BLE001 - recovery must never stop the loop
-            self.state.recovery = {"error": type(exc).__name__}
-        board_path = self.runtime_dir / "taskboard.json"
-        if board_path.exists():
-            try:
-                from .taskboard import TaskBoard
-
-                expired = TaskBoard(board_path).recover_expired()
-                self.state.recovery["expired_steps_blocked"] = len(expired)
-            except Exception as exc:  # preserve unreadable board and report it
-                self.state.recovery["taskboard_error"] = type(exc).__name__
-
-    def _audit_projects(self) -> None:
-        """Offline-independence snapshot for every bound project (read-only)."""
-
-        registry = self.runtime_dir / "projects.json"
-        try:
-            payload = json.loads(registry.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            return
-        entries = payload.get("projects") if isinstance(payload, dict) else payload
-        if not isinstance(entries, list):
-            return
-        from .offline_audit import audit
-
-        rows: list[dict[str, object]] = []
-        for entry in entries:
-            if not isinstance(entry, dict):
-                continue
-            path = entry.get("path")
-            if not path:
-                continue
-            try:
-                report = audit(path)
-            except Exception:  # noqa: BLE001 - audit must never stop the loop
-                continue
-            rows.append(
-                {
-                    "name": entry.get("name") or Path(str(path)).name,
-                    "offline_ready": bool(report.get("offline_ready")),
-                    "findings": len(report.get("findings") or ()),
-                    "external": report.get("external_references", 0),
-                }
-            )
-        self.state.audit = rows
-
-    def _maybe_backup(self) -> None:
-        """Günde iki kez runtime yedeği al; hiçbir şey silinmez."""
-
-        try:
-            from .backup import backup
-
-            backups = sorted((self.runtime_dir / "backups").glob("runtime-*.zip"))
-            if backups:
-                age = __import__("time").time() - backups[-1].stat().st_mtime
-                if age < 12 * 3600:
-                    return
-            backup(self.runtime_dir)
-        except Exception:  # noqa: BLE001 - yedek isteğe bağlı
-            pass
-
-    def _quality_report(self) -> None:
-        """Publish the delivery/error split and the top causes."""
-
-        try:
-            from .failure_analytics import analyse
-
-            report = analyse(self.runtime_dir)
-        except Exception:  # noqa: BLE001 - analytics must never stop the loop
-            return
-        self.state.quality = {
-            "delivery_rate": report.get("delivery_rate", 0.0),
-            "error_rate": report.get("error_rate", 0.0),
-            "missions": report.get("missions", 0),
-            "top": [item["cause"] for item in report.get("top_causes", [])[:3]],
-        }
-        try:
-            from .infra import health
-
-            fix = os.environ.get("AHOS_INFRA_FIX", "1").strip() not in {"0", "false"}
-            result = health(self.runtime_dir, deep=False, fix=False)
-            self.state.infra = result.to_dict()
-            try:
-                from .skilleval import report as skill_report
-
-                self.state.learning = skill_report(self.runtime_dir)
-            except Exception:  # noqa: BLE001 - öğrenme raporu isteğe bağlı
-                pass
-            if not result.ok and fix:
-                from .infra import repair
-
-                actions = repair(self.runtime_dir, result)
-                if actions:
-                    self.state.infra["actions"] = actions
-        except Exception:  # noqa: BLE001 - infra must never stop the loop
-            pass
-
-    def tick_once(self) -> str:
-        """Run exactly one scheduler tick and persist the result."""
-
-        if self.state.ticks % 10 == 0:
-            self._recover_queue()
-            try:
-                from .ideas import recover as recover_ideas
-
-                recover_ideas(self.runtime_dir)
-            except Exception:  # noqa: BLE001 - fikir kurtarma isteğe bağlı
-                pass
-        # Ar-Ge departmanı: her turda çağrılır, kendi içinde 30 dakikada bir çalışır.
-        try:
-            from .arge import tick as arge_tick
-
-            arge = arge_tick(self.runtime_dir)
-            if arge.ran:
-                self.state.learning = dict(self.state.learning or {})
-                self.state.learning["arge"] = {
-                    "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
-                    "weakest": list(arge.weakest),
-                    "lessons": arge.lessons,
-                    "queued": list(arge.queued),
-                }
-        except Exception:  # noqa: BLE001 - Ar-Ge asla ana döngüyü durdurmaz
-            pass
-        # TÜNEL BEKÇİSİ: model köprüsü düştüyse kendiliğinden yeniden kur.
-        try:
-            from .tunnel import ensure as tunnel_ensure, probe as tunnel_probe
-
-            status = tunnel_probe(timeout=2.0)
-            if not status.up:
-                record = tunnel_ensure(self.runtime_dir, wait_seconds=8)
-                self.state.learning = dict(self.state.learning or {})
-                self.state.learning["tunnel"] = record.get("after")
-        except Exception:  # noqa: BLE001 - tünel bekçisi döngüyü durdurmaz
-            pass
-
-        # SANDBOX BESLEMESİ: kuyruk boşalmasın; her departman sürekli alıştırma
-        # yapsın. Bekleyen görev azsa yeni sandbox görevleri üretilir.
-        try:
-            import json as _json
-            import sqlite3 as _sq2
-            from .autonomous_company import PersistentMissionQueue as _Q
-
-            _db = self.runtime_dir / "company-service.db"
-            with _sq2.connect(_db) as _c2:
-                _pending = _c2.execute("select count(*) from missions where status='pending'").fetchone()[0]
-            if _pending < 8:
-                _book = _json.loads((self.runtime_dir / "departments.json").read_text(encoding="utf-8"))
-                _deps = _book.get("departments") if isinstance(_book, dict) else _book
-                _q = _Q(_db)
-                _stamp = int(time.time())
-                _made = 0
-                for _dep in (_deps or [])[:12]:
-                    _id = str(_dep.get("department_id") or "")
-                    if not _id:
-                        continue
-                    try:
-                        _q.enqueue(
-                            mission_id=f"CMD-{_id}-sandbox-{_stamp}",
-                            objective=(f"{_id} sandbox: kendi verisinden 3 maddelik durum notu "
-                                       "ve bir test sorusu üret"),
-                            primary_department=_id,
-                            max_attempts=1,
-                            replace_existing=True,
-                        )
-                        _made += 1
-                    except Exception:
-                        continue
-                if _made:
-                    self.state.learning = dict(self.state.learning or {})
-                    self.state.learning["sandbox_seeded"] = {"count": _made}
-        except Exception:  # noqa: BLE001 - besleme döngüyü durdurmaz
-            pass
-
-        # Unverified direct document completion is disabled.
-        # Documents may be generated by owner_console._execute, which
-        # routes work through the leased worker and independent QA stages.
-        # Never UPDATE missions.status='completed' outside the queue API.
-        # EĞİTİM TAZELEME: rapor eskimesin; her 6 turda tüm çalışanlar yeniden eğitilir.
-        try:
-            if self.state.ticks % 6 == 0:
-                import json as _json
-
-                from .training import teach as _teach
-
-                _book = _json.loads((self.runtime_dir / "departments.json").read_text(encoding="utf-8"))
-                _deps = _book.get("departments") if isinstance(_book, dict) else _book
-                _report = _teach(self.runtime_dir, _deps or [])
-                self.state.learning = dict(self.state.learning or {})
-                self.state.learning["training"] = {
-                    "at": _report.get("generated_at"),
-                    "departments": _report.get("departments"),
-                    "workers": _report.get("workers"),
-                    "passed": _report.get("passed"),
-                    "average": _report.get("average_score"),
-                }
-        except Exception:  # noqa: BLE001 - eğitim döngüyü durdurmaz
-            pass
-
-        # SAĞLIK BEKÇİSİ: servis/veri/kalite denetimi + otomatik onarım.
-        try:
-            from .health_guard import check as health_check
-
-            report = health_check(self.runtime_dir, fix=True)
-            self.state.infra = self.state.infra or {}
-            self.state.infra["health"] = {
-                "ok": report.ok,
-                "checks": report.checks,
-                "repairs": report.repairs,
-            }
-        except Exception:  # noqa: BLE001 - sağlık denetimi döngüyü durdurmaz
-            pass
-
-        # SÜREKLİ ÖĞRENME: boştaki çalışanlar (CEO dahil) mikro ders üretir.
-        try:
-            from .self_learning import tick as learning_tick
-
-            study = learning_tick(self.runtime_dir)
-            self.state.learning = dict(self.state.learning or {})
-            self.state.learning["self_study"] = {"count": study["count"], "at": study["at"]}
-        except Exception:  # noqa: BLE001 - öğrenme döngüyü durdurmaz
-            pass
-
-        # KRİZ YÖNETİMİ: aynı hata 3 kez tekrarlarsa CEO eskalasyonu üret.
-        try:
-            from .ceo_powers import act as crisis_act
-
-            crisis = crisis_act(self.runtime_dir)
-            if crisis.get("crisis"):
-                self.state.learning = dict(self.state.learning or {})
-                self.state.learning["crisis"] = {
-                    "at": crisis["crisis"]["at"],
-                    "cause": crisis["crisis"]["cause"],
-                    "count": crisis["crisis"]["count"],
-                }
-        except Exception:  # noqa: BLE001 - kriz yönetimi döngüyü durdurmaz
-            pass
-
-        # KUYRUK TAHLİYESİ: panelden/CEO'dan verilen görevler "pending" kalmasın.
-        # Eskiden daemon yalnız kendi ürettiği görevleri çalıştırıyordu; bu yüzden
-        # sahibin verdiği işler saatlerce bekliyordu.
-        if os.environ.get("AHOS_QUEUE_DRAIN", "1").strip().lower() not in {"0", "false", "no"}:
-            try:
-                from .owner_console import build_default_console
-                from .queue_drain import drain
-
-                console = build_default_console(self.runtime_dir)
-                # PARALEL TAHLİYE: birden çok departman aynı anda çalışsın.
-                parallel = max(1, int(os.environ.get("AHOS_DRAIN_PARALLEL", "3")))
-                per_worker = max(1, int(os.environ.get("AHOS_QUEUE_DRAIN_LIMIT", "1")))
-                if parallel == 1:
-                    drained = drain(console, owner=f"daemon-{os.getpid()}", limit=per_worker)
-                else:
-                    from concurrent.futures import ThreadPoolExecutor
-
-                    drained = []
-                    def _work(index: int):
-                        return drain(
-                            console,
-                            owner=f"daemon-{os.getpid()}-{index}",
-                            limit=per_worker,
-                        )
-
-                    with ThreadPoolExecutor(max_workers=parallel) as pool:
-                        for result in pool.map(_work, range(parallel)):
-                            drained.extend(result.get("executed", []))
-                if drained:
-                    self.state.learning = dict(self.state.learning or {})
-                    self.state.learning["queue_drain"] = {
-                        "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
-                        "processed": len(drained),
-                    }
-            except Exception as exc:  # noqa: BLE001 - tahliye döngüyü durdurmaz
-                self.state.last_reason = f"kuyruk tahliyesi hatası: {type(exc).__name__}"
-        if self.state.ticks % 30 == 0:
-            self._audit_projects()
-            self._quality_report()
-            self._maybe_backup()
-            try:
-                from .tasks import sync_from_queue
-
-                sync_from_queue(self.runtime_dir)
-            except Exception:  # noqa: BLE001
-                pass
-            try:
-                from .inbox import scan as inbox_scan
-
-                inbox_scan(self.runtime_dir)
-            except Exception:  # noqa: BLE001 - gelen kutusu isteğe bağlı
-                pass
-        self._maybe_clear_stale_pause()
-        self._maybe_reset_daily_budget()
-        self._apply_executor_mode()
-        before: dict[str, TreeSnapshot] | None = None
-        if self.tracker is not None and self.tracker.roots():
-            before = self.tracker.snapshot()
-        status = str(self.scheduler.tick())
-        filesystem = None
-        if before is not None and self.tracker is not None:
-            filesystem = self.tracker.diff(before, self.tracker.snapshot())
-        self.state.ticks += 1
-        self.state.last_tick_at = self.wall_clock()
-        self.state.status = status
-        self.state.last_reason = str(
-            getattr(getattr(self.scheduler, "state", None), "last_reason", "") or ""
-        )[:200]
-        if "atlandı" in self.state.last_reason or "boşta" in self.state.last_reason:
-            # İş denenmedi (tamamlanmış görev atlandı ya da kuyruk boş):
-            # kanıtsızlık serisi büyümemeli, yoksa döngü boşuna duraklar.
-            self.state.no_evidence_streak = 0
-        else:
-            self._record_evidence(filesystem)
-        self.write_heartbeat()
-        return status
-
-    def request_stop(self) -> None:
-        self._stop_requested = True
-
-    def _should_stop(self) -> bool:
-        if self._stop_requested or self.stop_path.exists():
-            return True
-        return self.max_ticks is not None and self.state.ticks >= self.max_ticks
-
-    def _sleep(self) -> None:
-        """Sleep in small slices so a stop request is honoured quickly."""
-
-        remaining = self.interval_seconds
-        while remaining > 0 and not self._stop_requested:
-            slice_seconds = min(5.0, remaining)
-            self.sleep(slice_seconds)
-            remaining -= slice_seconds
-
-    def run(self) -> int:
-        """Tick until stopped; returns the process exit code."""
-
-        acquired, pid = self.acquire()
-        if not acquired:
-            print(f"AHOS daemon zaten çalışıyor (pid {pid}); yeni süreç başlatılmadı.")
-            return 2
-        self.write_heartbeat()
-        self._recover_queue()
-        try:
-            while not self._should_stop():
-                try:
-                    self.tick_once()
-                except Exception as exc:  # the loop must survive a bad mission
-                    self.state.status = "error"
-                    self.state.last_reason = f"{type(exc).__name__}: {exc}"[:200]
-                    self.state.last_tick_at = self.wall_clock()
-                    try:
-                        self.error_log.record(
-                            "daemon.tick",
-                            exc,
-                            context={"ticks": self.state.ticks},
-                        )
-                    except Exception:  # pragma: no cover - logging must not stop the loop
-                        pass
-                    self.write_heartbeat()
-                if self._should_stop():
-                    break
-                self._sleep()
-        finally:
-            self.state.status = "stopped"
-            self.write_heartbeat()
-            self.release()
-        return 0
-
-
-def _load_model_env(runtime_dir: str | Path) -> None:
-    """Load ``runtime/model.env`` so the daemon itself (not only the wrapper)
-    sees the model configuration. Explicit process env wins.
-    """
-
-    path = Path(runtime_dir) / "model.env"
-    try:
-        lines = path.read_text(encoding="utf-8").splitlines()
-    except OSError:
-        return
-    for line in lines:
-        # PowerShell 5.1'in UTF-8 BOM'u ilk anahtarı görünmez biçimde bozar.
-        line = line.lstrip("\ufeff").strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, _, value = line.partition("=")
-        key = key.strip()
-        if key:
-            os.environ.setdefault(key, value.strip())
-
-
-def build_default_daemon(
-    runtime_dir: str | Path,
-    *,
-    interval_seconds: float = 60.0,
-    missions_per_hour: int = 2,
-    missions_total: int = 6,
-    no_evidence_limit: int = 3,
-) -> AutonomyDaemon:
-    """Wire the real console, autonomy runner and bounded scheduler."""
-
-    from .autonomy import AutonomyLimits, AutonomyRunner
-    from .autoschedule import AutoLimits, BoundedScheduler
-    from .owner_console import build_default_console
-
-    runtime = Path(runtime_dir)
-    _load_model_env(runtime)
-    console = build_default_console(runtime)
-    runner = RecordingRunner(
-        AutonomyRunner(
-            console,
-            runtime,
-            # The scheduler owns the global quota; the runner only guards one run.
-            limits=AutonomyLimits(max_missions=max(1, missions_per_hour)),
-        )
-    )
-    scheduler = BoundedScheduler(
-        runner,
-        runtime,
-        limits=AutoLimits(
-            max_missions_per_hour=max(1, missions_per_hour),
-            max_missions_total=max(1, missions_total),
-            idle_sleep_seconds=interval_seconds,
-        ),
-    )
-    tracker = DeliveryTracker([link.path for link in console.projects.all()])
-    return AutonomyDaemon(
-        scheduler,
-        runtime,
-        interval_seconds=interval_seconds,
-        no_evidence_limit=no_evidence_limit,
-        tracker=tracker,
-    )
-
-
-def _acquire_instance_lock(runtime: Path):
-    """Tek daemon kilidi: ikinci süreç hemen çıkar, kota ikiye bölünmez."""
-
-    runtime.mkdir(parents=True, exist_ok=True)
-    path = runtime / "daemon.lock"
-    handle = open(path, "a+")
-    try:
-        if os.name == "nt":
-            import msvcrt
-
-            msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
-        else:
-            import fcntl
-
-            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except OSError:
-        handle.close()
-        return None
-    return handle
-
-
-def main(argv: list[str] | None = None) -> int:
-    try:
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-    except (AttributeError, ValueError):  # pragma: no cover - odd console
-        pass
-
-    parser = argparse.ArgumentParser(
-        prog="ahos-daemon",
-        description="AHOS otonomi döngüsünü her zaman açık, sınırlı ve gözlenebilir tutar.",
-    )
-    parser.add_argument("--runtime-dir", default=str(_default_runtime_dir()))
-    parser.add_argument("--interval-seconds", type=float, default=60.0)
-    parser.add_argument("--missions-per-hour", type=int, default=2)
-    parser.add_argument("--missions-total", type=int, default=6)
-    parser.add_argument(
-        "--executor-mode",
-        choices=("auto", "deterministic", "model"),
-        default="auto",
-        help="auto: RAM ve yapılandırma uygunsa yerel model, değilse deterministik işçi",
-    )
-    parser.add_argument(
-        "--no-evidence-limit",
-        type=int,
-        default=3,
-        help="art arda bu kadar kanıtsız (dosya değiştirmeyen) görevden sonra dur",
-    )
-    parser.add_argument(
-        "--pause-cooldown-minutes",
-        type=int,
-        default=360,
-        help="kanıtsız görev duraklamasını bu kadar dakika sonra yeniden dene (0 = kapalı)",
-    )
-    parser.add_argument(
-        "--max-ticks",
-        type=int,
-        default=None,
-        help="test/teşhis için: bu kadar tick sonra temiz çık",
-    )
-    parser.add_argument("--status", action="store_true", help="yalnız durumu yazdır")
-    parser.add_argument("--stop", action="store_true", help="çalışan daemon'a durma sinyali bırak")
-    args = parser.parse_args(argv)
-
-    runtime = Path(args.runtime_dir)
-    lock_handle = None
-    if not args.status and not args.stop:
-        lock_handle = _acquire_instance_lock(runtime)
-        if lock_handle is None:
-            print(f"AHOS daemon zaten çalışıyor ({runtime / 'daemon.lock'} kilitli); yeni süreç başlatılmadı.")
-            return 0
-    if args.status:
-        heartbeat = read_heartbeat(runtime)
-        print(json.dumps(heartbeat or {"status": "not-running"}, indent=2, ensure_ascii=False))
-        return 0
-    if args.stop:
-        (runtime / STOP_FILE).write_text(_now(), encoding="utf-8")
-        print("durma sinyali bırakıldı")
-        return 0
-
-    daemon = build_default_daemon(
-        runtime,
-        interval_seconds=args.interval_seconds,
-        missions_per_hour=args.missions_per_hour,
-        missions_total=args.missions_total,
-        no_evidence_limit=args.no_evidence_limit,
-    )
-    daemon.executor_mode = args.executor_mode
-    daemon.pause_cooldown_minutes = args.pause_cooldown_minutes
-    daemon.max_ticks = args.max_ticks
-
-    def _handle(signum, _frame):
-        daemon.request_stop()
-
-    for sig in (getattr(signal, "SIGTERM", None), getattr(signal, "SIGINT", None)):
-        if sig is not None:
-            try:
-                signal.signal(sig, _handle)
-            except (OSError, ValueError):  # pragma: no cover - non-main thread
-                pass
-
-    return daemon.run()
+    state = tick_once(str(runtime), departments)
+    print(json.dumps({"state": state}, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()

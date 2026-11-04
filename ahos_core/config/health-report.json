@@ -1,36 +1,36 @@
 {
-  "generated_at": "2026-11-03T21:29:48",
+  "generated_at": "2026-11-04T20:33:10",
   "ok": false,
   "checks": [
     {
       "name": "servis:panel",
       "ok": false,
-      "detail": "TimeoutError"
+      "detail": "URLError"
     },
     {
       "name": "servis:office",
-      "ok": true,
-      "detail": "HTTP 200"
+      "ok": false,
+      "detail": "URLError"
     },
     {
       "name": "servis:tunnel",
-      "ok": true,
-      "detail": "HTTP 200"
+      "ok": false,
+      "detail": "URLError"
     },
     {
       "name": "daemon",
       "ok": false,
-      "detail": "stopped · tick 108"
+      "detail": " · tick None"
     },
     {
       "name": "kuyruk-veritabanı",
-      "ok": true,
-      "detail": "{\"blocked\": 308, \"cancelled\": 299, \"completed\": 3398, \"failed\": 13, \"pending\": 120}"
+      "ok": false,
+      "detail": "{}"
     },
     {
       "name": "engel-oranı",
       "ok": true,
-      "detail": "308 engelli görev"
+      "detail": "0 engelli görev"
     }
   ],
   "repairs": []
