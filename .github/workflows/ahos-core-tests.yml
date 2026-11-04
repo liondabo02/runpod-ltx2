@@ -5,9 +5,13 @@ name: ahos-core
 # kuyruk/tamamlanma/kabul/release-gate kurallarini korur.
 
 on:
+  # Her dala push'ta kosmak e-posta yagmuru uretiyordu; artik yalniz main'e
+  # push, PR ve elle tetikleme. Feature dalini elle calistirmak icin:
+  #   Actions -> ahos-core -> Run workflow
   push:
-    branches: [main, "feature/agent-control-plane"]
+    branches: [main]
   pull_request:
+  workflow_dispatch:
 
 # Ayni dal icin yeni bir push eskisini iptal eder; iptal edilen kosu
 # "exit code 143 (SIGTERM)" olarak gorunur ve gercek bir test hatasi degildir.
