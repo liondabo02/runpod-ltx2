@@ -117,6 +117,7 @@ def tick(runtime_dir, departments: list, limit: int = 6, seed=None) -> dict:
         mind.events.append({"at": time.strftime("%Y-%m-%dT%H:%M:%S"), "kind": "think", "detail": thought[:300], "ok": True})
         model = reflect(mind)
         set_goal(mind, ctx)
+        plan_steps(mind, ctx)
         save(runtime, mind)
         thoughts.append(thought)
         if "hata" in str(model.get("lesson", "")).lower():
@@ -165,3 +166,51 @@ def summarize(runtime_dir) -> dict:
         thoughts = len(log.read_text(encoding="utf-8", errors="replace").splitlines())
     return {"workers_with_mind": len(files), "avg_success_rate": round(sum(rates) / len(rates), 3) if rates else 0.0,
             "thoughts": thoughts, "top_goals": dict(sorted(goals.items(), key=lambda kv: -kv[1])[:5])}
+
+def plan_steps(mind: Mind, ctx: dict) -> list:
+    """Hedefi 2-3 somut adima bol; guven tahmini ekle."""
+    goal = str((mind.self_model or {}).get("goal") or "")
+    if "engelli" in goal:
+        steps = ["engelli listeyi cek", "her biri icin neden yaz", "belge yoluyla kapat"]
+    elif "kuyruk" in goal:
+        steps = ["bekleyenleri say", "en eskiyi al", "teslim et"]
+    elif "hata" in goal:
+        steps = ["hata sinifini bul", "tek dosyada duzelt", "testle dogrula"]
+    elif "zor" in goal:
+        steps = ["kapasite kontrol", "uygun gorev sec", "sonucu kaydet"]
+    else:
+        steps = ["kuyrugu kontrol et", "gorev al", "sonucu kaydet"]
+    conf = 0.9 if mind.success_rate >= 0.9 else (0.6 if mind.events else 0.4)
+    mind.self_model = dict(mind.self_model or {})
+    mind.self_model["plan"] = steps
+    mind.self_model["confidence"] = conf
+    return steps
+
+
+def department_brain(runtime_dir, departments: list) -> dict:
+    """Departman beyni: uyelerin hedef/guven/plan ozeti."""
+    runtime = Path(runtime_dir)
+    out = {}
+    for dep in departments:
+        dep_id = str(dep.get("department_id") or "")
+        members = []
+        for w in dep.get("workers") or []:
+            wid = str(w.get("worker_id") or "")
+            p = runtime / "minds" / f"{wid}.json"
+            if p.exists():
+                try:
+                    d = json.loads(p.read_text(encoding="utf-8"))
+                except (json.JSONDecodeError, OSError):
+                    continue
+                m = d.get("self_model") or {}
+                members.append({"worker": wid, "goal": m.get("goal", ""), "confidence": m.get("confidence", 0),
+                                "plan": m.get("plan", [])})
+        goals = {}
+        for mem in members:
+            goals[mem["goal"]] = goals.get(mem["goal"], 0) + 1
+        out[dep_id] = {
+            "workers": len(members),
+            "top_goal": max(goals, key=goals.get) if goals else "",
+            "avg_confidence": round(sum(float(m["confidence"] or 0) for m in members) / len(members), 3) if members else 0,
+        }
+    return out

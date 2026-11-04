@@ -1,0 +1,87 @@
+{
+  "ai-platform": {
+    "workers": 4,
+    "top_goal": "engelli gorevleri tasfiye et",
+    "avg_confidence": 0.9
+  },
+  "creative": {
+    "workers": 15,
+    "top_goal": "engelli gorevleri tasfiye et",
+    "avg_confidence": 0.9
+  },
+  "data": {
+    "workers": 2,
+    "top_goal": "engelli gorevleri tasfiye et",
+    "avg_confidence": 0.9
+  },
+  "finance": {
+    "workers": 2,
+    "top_goal": "engelli gorevleri tasfiye et",
+    "avg_confidence": 0.9
+  },
+  "genel": {
+    "workers": 7,
+    "top_goal": "engelli gorevleri tasfiye et",
+    "avg_confidence": 0.9
+  },
+  "guvenlik": {
+    "workers": 5,
+    "top_goal": "engelli gorevleri tasfiye et",
+    "avg_confidence": 0.9
+  },
+  "holding": {
+    "workers": 2,
+    "top_goal": "engelli gorevleri tasfiye et",
+    "avg_confidence": 0.9
+  },
+  "hukuk": {
+    "workers": 2,
+    "top_goal": "engelli gorevleri tasfiye et",
+    "avg_confidence": 0.9
+  },
+  "infrastructure": {
+    "workers": 2,
+    "top_goal": "engelli gorevleri tasfiye et",
+    "avg_confidence": 0.9
+  },
+  "marketing": {
+    "workers": 2,
+    "top_goal": "engelli gorevleri tasfiye et",
+    "avg_confidence": 0.9
+  },
+  "operations": {
+    "workers": 2,
+    "top_goal": "engelli gorevleri tasfiye et",
+    "avg_confidence": 0.9
+  },
+  "oyun": {
+    "workers": 15,
+    "top_goal": "engelli gorevleri tasfiye et",
+    "avg_confidence": 0.9
+  },
+  "quality": {
+    "workers": 2,
+    "top_goal": "engelli gorevleri tasfiye et",
+    "avg_confidence": 0.9
+  },
+  "research": {
+    "workers": 2,
+    "top_goal": "engelli gorevleri tasfiye et",
+    "avg_confidence": 0.9
+  },
+  "sales": {
+    "workers": 2,
+    "top_goal": "engelli gorevleri tasfiye et",
+    "avg_confidence": 0.9
+  },
+  "software": {
+    "workers": 13,
+    "top_goal": "engelli gorevleri tasfiye et",
+    "avg_confidence": 0.9
+  },
+  "support": {
+    "workers": 2,
+    "top_goal": "engelli gorevleri tasfiye et",
+    "avg_confidence": 0.9
+  }
+}
