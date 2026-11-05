@@ -224,6 +224,13 @@ class OfficeHandler(BaseHTTPRequestHandler):
         if self.path.split("?")[0] in {"/", "/index.html"}:
             self._send(HTML.encode("utf-8"), "text/html; charset=utf-8")
             return
+        if self.path.split("?")[0] == "/api/roster":
+            from pathlib import Path as _Path
+
+            roster = _Path(self.runtime_dir).parent / "config" / "roster.json"
+            body = roster.read_text(encoding="utf-8") if roster.exists() else "{}"
+            self._send(body.encode("utf-8"), "application/json; charset=utf-8")
+            return
         if self.path.split("?")[0] == "/api/conversations":
             import json as _json
             from .commune import recent as _recent

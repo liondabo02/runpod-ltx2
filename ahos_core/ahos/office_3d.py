@@ -184,6 +184,19 @@ function person(x, y, z, color, working, name){
   return grp;
 }
 
+let ROSTER = {};
+fetch('/api/roster', {cache:'no-store'}).then(r => r.json()).then(d => { ROSTER = d || {}; }).catch(() => {});
+
+function speak(text){
+  try{
+    if (!('speechSynthesis' in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(String(text).slice(0, 220));
+    u.lang = 'tr-TR'; u.rate = 1.02; u.pitch = 1.0;
+    speechSynthesis.speak(u);
+  }catch(_){}
+}
+
 let built = false;
 
 function build(snap){
@@ -225,6 +238,7 @@ async function talk(){
     const r = await fetch(`/api/talk?worker=${encodeURIComponent(who.value)}&dept=${encodeURIComponent(dep)}&msg=${encodeURIComponent(msg.value)}`);
     const d = await r.json();
     reply.textContent = d.reply || '(cevap yok)';
+    speak(d.reply || '');
     msg.value = '';
   }catch(e){ reply.textContent = 'bağlantı hatası'; }
 }
@@ -248,7 +262,7 @@ function chat(list){
   if (!box) return;
   if (!list || !list.length){ box.textContent = 'henüz sohbet kaydı yok'; return; }
   box.innerHTML = list.slice(-14).reverse().map(m =>
-    `<div class="m"><span class="who">${m.from || '?'}</span> ` +
+    `<div class="m" onclick="speak(this.innerText)"><span class="who">${m.from || '?'}</span> ` +
     `<span class="dept">· ${m.department || ''}</span><br>${String(m.body || '').slice(0,150)}</div>`
   ).join('');
 }
