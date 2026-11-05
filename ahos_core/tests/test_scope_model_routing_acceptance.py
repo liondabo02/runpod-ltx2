@@ -136,3 +136,41 @@ def test_b3_missing_key_preserves_fallback(tmp_path):
     settings = _settings(base_url="https://openrouter.ai/api/v1", model="preconfigured-fallback")
     assert pick("complex", settings=settings, env={}, config_path=configuration) == "preconfigured-fallback"
     assert pick("complex", settings=settings, env={}, config_path=tmp_path / "missing.json") == "preconfigured-fallback"
+
+
+def test_a2_deterministic_queue_uses_simple_edits_without_model(tmp_path):
+    """A queued append must mutate the real project without invoking a model."""
+    queue = PersistentMissionQueue(tmp_path / "company-service.db")
+    project = _project(tmp_path)
+    objective = "www/game.js dosyasının sonuna şu yorumu ekle: // queue-proof"
+    assert classify(objective) == "deterministic"
+    queue.enqueue(mission_id="a2-simple", objective=objective, primary_department="software")
+
+    class Console:
+        runtime_dir = tmp_path
+        book = SimpleNamespace(get=lambda department: SimpleNamespace(department_id=department))
+
+        def _project_for_department(self, department):
+            return SimpleNamespace(work_path=project, path=project)
+
+        def _execute(self, *args, **kwargs):
+            raise AssertionError("deterministic work must not invoke the model")
+
+        def _record(self, mission_id, owner, result):
+            if result.status is MissionStatus.COMPLETED:
+                queue.complete(mission_id, owner=owner, result=result)
+            else:
+                queue.block(mission_id, owner=owner, result=result)
+
+    report = drain(Console(), limit=1)
+    assert report["executed"] == ["a2-simple"]
+    assert queue.get("a2-simple").status is QueueStatus.COMPLETED
+    content = (project / "www" / "game.js").read_text(encoding="utf-8")
+    assert content.endswith("// queue-proof\n")
+
+    # An idempotent repeat must not manufacture another verified delivery.
+    queue.enqueue(mission_id="a2-noop", objective=objective, primary_department="software")
+    repeated = drain(Console(), limit=1)
+    assert repeated["executed"] == ["a2-noop"]
+    assert queue.get("a2-noop").status is QueueStatus.BLOCKED
+    assert (project / "www" / "game.js").read_text(encoding="utf-8") == content

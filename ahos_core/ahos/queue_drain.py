@@ -89,14 +89,28 @@ def drain(
                 project_root = project.work_path or project.path
                 edit = parse_simple_edit(project_root, claimed.objective)
                 if edit is not None:
+                    target = Path(project_root) / edit.path
+                    before = target.read_text(encoding="utf-8", errors="replace")
                     ok, detail = apply_simple_edit(project_root, edit)
+                    after = target.read_text(encoding="utf-8", errors="replace")
+                    if edit.mode == "append":
+                        expected = before if not before or before.endswith("\n") else before + "\n"
+                        expected += edit.text
+                        if not expected.endswith("\n"):
+                            expected += "\n"
+                    else:
+                        expected = edit.text + "\n" + before
+                    # Independent read-back verification: an unchanged or
+                    # unexpected file is never a completed delivery.
+                    verified = bool(ok and after != before and after == expected)
                     result = MissionResult(
                         mission_id=claimed.mission_id,
                         objective=claimed.objective,
                         manager_id=None,
-                        status=MissionStatus.COMPLETED if ok else MissionStatus.BLOCKED,
+                        status=MissionStatus.COMPLETED if verified else MissionStatus.BLOCKED,
                         steps=(),
-                        reason=detail,
+                        reason=detail if verified else f"simple_edit_delivery_unverified: {detail}",
+                        qa_worker_id="simple-edit-file-verifier" if verified else None,
                     )
                     fast_done = True
         except Exception:  # noqa: BLE001 - hızlı yol isteğe bağlı
