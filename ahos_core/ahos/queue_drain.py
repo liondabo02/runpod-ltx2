@@ -172,6 +172,15 @@ def drain(
                 else:
                     result = console._execute(spec, claimed.objective, claimed.mission_id)
         console._record(claimed.mission_id, owner, result)
+        # SONUC -> ZIHIN: gorev sonucu isci zihnine ve outcome'a yazilir.
+        try:
+            from .mind_feedback import feedback as _feedback
+
+            _ok = str(getattr(result.status, value, result.status)) == completed
+            _feedback(console.runtime_dir, f{spec.department_id}-manager,
+                      spec.department_id, _ok)
+        except Exception:  # noqa: BLE001
+            pass
         # Agent Atrium günlüğü: kim, hangi departmanda, ne yaptı.
         try:
             from .atrium import record as chronicle_record

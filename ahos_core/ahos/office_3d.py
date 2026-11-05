@@ -8,7 +8,8 @@ from __future__ import annotations
 
 HTML = r"""<!doctype html>
 <html lang="tr"><head><meta charset="utf-8">
-<title>AHOS · Ofis Katı</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AHOS · 3D Operasyon Merkezi</title>
 <style>
   html,body{margin:0;height:100%;background:#070a12;color:#e8f0ff;font:13px/1.55 system-ui;overflow:hidden}
   #hud{position:fixed;left:16px;top:14px;background:rgba(12,18,30,.82);backdrop-filter:blur(8px);
@@ -30,11 +31,71 @@ HTML = r"""<!doctype html>
   #renders h4{margin:0 0 6px;color:#ffd39b;font-size:11px;letter-spacing:.14em}
   #renders a{color:#cfe3ff;display:block;text-decoration:none;margin:2px 0}
   #err{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#33131b;
-       border:1px solid #8d2b3d;padding:16px 20px;border-radius:14px;display:none}
+       border:1px solid #8d2b3d;padding:16px 20px;border-radius:14px;display:none;z-index:50}
+  *{box-sizing:border-box}
+  canvas{display:block;touch-action:none}
+  #hud,#chat,#inspector{z-index:10;box-shadow:0 18px 48px rgba(0,0,0,.28);border-color:rgba(130,167,208,.30)}
+  #hud{width:min(485px,calc(100vw - 30px));background:rgba(10,19,34,.93);padding:16px 18px}
+  #hud .brand{display:flex;justify-content:space-between;align-items:center;gap:8px;
+              font-size:14px;font-weight:800;letter-spacing:.035em}
+  #hud .brand strong{color:#74d6ff}
+  #hud .online{color:#ffd18c;font-size:11px;font-weight:600;white-space:nowrap}
+  #hud .online.ok{color:#70efb5}
+  #stats{font-variant-numeric:tabular-nums;color:#d6e9ff;margin:7px 0;font-size:12px}
+  #toolbar{display:flex;align-items:center;gap:7px;margin:11px 0 6px;flex-wrap:wrap}
+  #toolbar select{min-width:155px;max-width:220px;flex:1}
+  #toolbar button,#toolbar select,#inspector button{border:1px solid #38506e;border-radius:9px;
+     padding:8px 10px;background:#172b43;color:#e1efff;font:600 12px system-ui;cursor:pointer}
+  #toolbar button:hover,#inspector button:hover{background:#234363}
+  #hud small{font-size:10px;color:#90acc7}
+  #inspector{position:fixed;right:16px;top:15px;width:min(330px,calc(100vw - 32px));
+       padding:15px 17px;border:1px solid;border-radius:14px;background:rgba(10,19,34,.94)}
+  #inspector[hidden]{display:none}
+  #inspector h3{color:#92dfff;margin:0 24px 5px 0;font-size:14px}
+  #inspector .muted{font-size:12px;color:#a7b9d0}
+  #inspector .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:13px 0}
+  #inspector .metric{background:#13243b;border-radius:8px;padding:8px;font-size:11px;color:#acc5df}
+  #inspector .metric b{display:block;color:#f0f7ff;font-size:18px}
+  #inspector .focus-note{font-size:11px;color:#7be8ba}
+  #inspector .close{position:absolute;top:9px;right:10px;cursor:pointer}
+  #chat{width:min(370px,calc(100vw - 24px));max-height:42vh;display:flex;flex-direction:column;
+      overflow:hidden;padding:12px 13px;background:rgba(10,19,34,.94)}
+  #chat h4{display:flex;justify-content:space-between;margin:0 0 7px}
+  #chatbody{overflow-y:auto;overflow-x:hidden;min-height:30px;max-height:20vh;overflow-wrap:anywhere}
+  #chat .m{cursor:pointer}
+  #who,#msg{box-sizing:border-box;min-width:0;width:100%;margin-top:7px}
+  #reply{overflow:auto;max-height:8vh;overflow-wrap:anywhere}
+  @media(max-width:800px){
+    #hud{left:9px;top:9px;padding:10px 12px;width:min(430px,calc(100vw - 18px))}
+    #inspector{top:auto;right:9px;bottom:235px;padding:10px 12px;max-height:29vh;overflow:auto}
+    #chat{right:9px;bottom:9px;max-height:27vh}
+    #chatbody{max-height:8vh}
+    #toolbar select{min-width:130px}
+    #hud small{display:none}
+  }
 </style></head>
 <body>
-<div id="hud">AHOS · <b>Ofis Katı</b><br><span id="stats">yükleniyor…</span></div>
-<div id="chat"><h4>CANLI SOHBET</h4><div id="chatbody">…</div>
+<div id="hud">
+  <div class="brand"><span>AHOS <strong>3D OPERASYON MERKEZİ</strong></span>
+    <span id="connection" class="online">● Bağlanıyor</span></div>
+  <div id="stats" aria-live="polite">yükleniyor…</div>
+  <div id="toolbar">
+    <select id="deptNav" aria-label="Departman seç"><option value="">Departman seç…</option></select>
+    <button id="resetView" type="button">Genel görünüm</button>
+    <button id="toggleLabels" type="button">İsimleri gizle</button>
+  </div>
+  <small>Fareyle döndür · tekerlekle yakınlaş · odaya veya çalışana tıkla</small>
+</div>
+<aside id="inspector" hidden aria-live="polite">
+  <button class="close" type="button" id="closeInspector" aria-label="Ayrıntıları kapat">×</button>
+  <h3 id="inspectorTitle">Departman</h3>
+  <div id="inspectorText" class="muted"></div>
+  <div class="metrics"><div class="metric">Sırada<b id="detailPending">0</b></div>
+    <div class="metric">Tamamlanan<b id="detailDone">0</b></div>
+    <div class="metric">Engel<b id="detailBlocked">0</b></div></div>
+  <div id="inspectorNote" class="focus-note">Canlı veri · gerçek görev durumu</div>
+</aside>
+<div id="chat"><h4>CANLI SOHBET <span class="dept">Çalışanla konuş</span></h4><div id="chatbody">…</div>
   <select id="who"></select>
   <input id="msg" placeholder="işçiye yaz, Enter…">
   <div id="reply"></div>
@@ -46,8 +107,8 @@ HTML = r"""<!doctype html>
 import * as THREE from 'three';
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x070a12);
-scene.fog = new THREE.FogExp2(0x070a12, 0.00085);
+scene.background = new THREE.Color(0x0d1827);
+scene.fog = new THREE.FogExp2(0x0d1827, 0.00040);
 
 const camera = new THREE.PerspectiveCamera(42, innerWidth/innerHeight, 1, 6000);
 const renderer = new THREE.WebGLRenderer({antialias:true});
@@ -56,25 +117,25 @@ renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.15;
+renderer.toneMappingExposure = 1.60;
 document.body.appendChild(renderer.domElement);
 
-scene.add(new THREE.HemisphereLight(0x9fc4ff, 0x0a0f18, 0.75));
-const sun = new THREE.DirectionalLight(0xffe6c4, 1.35);
+scene.add(new THREE.HemisphereLight(0xd6eaff, 0x273b50, 1.55));
+const sun = new THREE.DirectionalLight(0xfff0d4, 2.00);
 sun.position.set(420, 620, 320);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048,2048);
 sun.shadow.camera.left=-900; sun.shadow.camera.right=900;
 sun.shadow.camera.top=900; sun.shadow.camera.bottom=-900;
 scene.add(sun);
-const rim = new THREE.DirectionalLight(0x4d8bff, 0.5); rim.position.set(-400,220,-380); scene.add(rim);
+const rim = new THREE.DirectionalLight(0x75b3ff, 0.90); rim.position.set(-400,220,-380); scene.add(rim);
 
 function woodTexture(){
   const c = document.createElement('canvas'); c.width = c.height = 512;
   const g = c.getContext('2d');
-  g.fillStyle = '#161d2a'; g.fillRect(0,0,512,512);
+  g.fillStyle = '#2b3b50'; g.fillRect(0,0,512,512);
   for (let y=0; y<512; y+=32){
-    g.fillStyle = (y/32)%2 ? '#182031' : '#141b28'; g.fillRect(0,y,512,30);
+    g.fillStyle = (y/32)%2 ? '#33485e' : '#29394e'; g.fillRect(0,y,512,30);
     g.strokeStyle = 'rgba(90,120,170,.10)'; g.beginPath(); g.moveTo(0,y+31); g.lineTo(512,y+31); g.stroke();
     for (let x=0; x<512; x+=96){ g.strokeStyle='rgba(70,100,150,.08)'; g.beginPath(); g.moveTo(x,y); g.lineTo(x,y+30); g.stroke(); }
   }
@@ -93,6 +154,10 @@ const ACCENT = [0x49c2ff,0x63e6b8,0xa78bfa,0xffb86b,0x7dd3fc,0xf472b6,0x94e2d5,0
 const rooms = new THREE.Group(); scene.add(rooms);
 const people = new THREE.Group(); scene.add(people);
 const ROSTER = {};
+const roomById = new Map();
+const avatarById = new Map();
+let currentSnapshot = null;
+let labelsVisible = true;
 fetch('/api/roster',{cache:'no-store'}).then(r=>r.json()).then(d=>{Object.assign(ROSTER, d||{});}).catch(()=>{});
 
 function label(text, sub, x, y, z, color='#cfe3ff'){
@@ -102,14 +167,16 @@ function label(text, sub, x, y, z, color='#cfe3ff'){
   g.font='700 44px system-ui'; g.fillStyle=color; g.fillText(text, 320, 62);
   if (sub){ g.font='400 30px system-ui'; g.fillStyle='#8fa6c8'; g.fillText(sub, 320, 108); }
   const spr = new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c), transparent:true, depthWrite:false}));
-  spr.position.set(x,y,z); spr.scale.set(190, 47, 1); return spr;
+  spr.position.set(x,y,z); spr.scale.set(170, 42, 1); spr.userData.label = true; return spr;
 }
 
-function makeRoom(cx, cz, w, d, accent, busy, title, sub){
+function makeRoom(cx, cz, w, d, accent, busy, title, sub, depId){
   const g = new THREE.Group(); g.position.set(cx, 0, cz);
+  g.userData = {depId, name:title};
+  roomById.set(depId, g);
 
   const base = new THREE.Mesh(new THREE.BoxGeometry(w, 10, d),
-    new THREE.MeshStandardMaterial({color: busy?0x1b3b33:0x161f2e, roughness:0.85}));
+    new THREE.MeshStandardMaterial({color: busy?0x22554c:0x26394a, roughness:0.85}));
   base.position.y = 5; base.receiveShadow = true; base.castShadow = true; g.add(base);
 
   const glass = new THREE.MeshPhysicalMaterial({
@@ -131,7 +198,7 @@ function makeRoom(cx, cz, w, d, accent, busy, title, sub){
     cap.position.set(x, y + hh/2, z); g.add(cap);
   }
 
-  const deskMat = new THREE.MeshStandardMaterial({color:0x2b3a52, roughness:0.55});
+  const deskMat = new THREE.MeshStandardMaterial({color:0x45607a, roughness:0.55});
   const cols = Math.max(2, Math.floor((w-56)/70)), rows = Math.max(1, Math.floor((d-60)/64));
   for (let r=0;r<rows;r++) for (let c=0;c<cols;c++){
     const dx = -w/2 + 44 + c*70, dz = -d/2 + 46 + r*64;
@@ -161,12 +228,13 @@ function makeRoom(cx, cz, w, d, accent, busy, title, sub){
   const lamp = new THREE.PointLight(busy?0x9effd6:0x9fc4ff, busy?1.5:0.55, 320, 2);
   lamp.position.set(0, h-14, 0); g.add(lamp);
 
+  const titleSprite = label(title, sub, 0, h+22, -4, busy ? '#9effd6' : '#e4f2ff');
+  g.add(titleSprite);
   rooms.add(g);
-  rooms.add(label(title, sub, cx, h+44, cz-4, busy ? '#9effd6' : '#cfe3ff'));
 }
 
 const avatars = [];
-function person(x, y, z, color, working, name){
+function person(x, y, z, color, working, name, depId, workerId){
   const grp = new THREE.Group();
   const body = new THREE.Mesh(new THREE.CapsuleGeometry(5.6,12,6,12),
     new THREE.MeshStandardMaterial({color, roughness:0.55, metalness:0.15}));
@@ -174,11 +242,10 @@ function person(x, y, z, color, working, name){
   const head = new THREE.Mesh(new THREE.SphereGeometry(5.4,16,14),
     new THREE.MeshStandardMaterial({color:0xf2cfae, roughness:0.75}));
   head.position.y = 31; head.castShadow = true; grp.add(head);
-  if (working){
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(10,1.0,8,32),
-      new THREE.MeshBasicMaterial({color:0x63e6b8}));
-    ring.rotation.x=-Math.PI/2; ring.position.y=6; grp.add(ring);
-  }
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(10,1.0,8,32),
+    new THREE.MeshBasicMaterial({color:0x63e6b8}));
+  ring.rotation.x=-Math.PI/2; ring.position.y=6;
+  ring.visible = Boolean(working); grp.add(ring);
   if (name){
     const c=document.createElement('canvas'); c.width=320; c.height=64;
     const g=c.getContext('2d'); g.font='600 26px system-ui'; g.textAlign='center';
@@ -187,9 +254,11 @@ function person(x, y, z, color, working, name){
     spr.position.set(0,46,0); spr.scale.set(76,15,1); grp.add(spr);
   }
   grp.position.set(x,y,z);
-  grp.userData = {name: name || '', home: {x, y, z}};
+  grp.userData = {name: name || '', workerId, depId, home: {x, y, z}};
   people.add(grp);
-  avatars.push({grp, phase: Math.random()*Math.PI*2, home:{x,z}});
+  const entry = {grp, body, ring, phase: Math.random()*Math.PI*2, home:{x,z}};
+  avatars.push(entry);
+  avatarById.set(workerId, entry);
 }
 
 let built=false;
@@ -205,19 +274,19 @@ function build(snap){
   deps.forEach((dep,i)=>{
     const cx = (i%cols - (cols-1)/2) * gw;
     const cz = (Math.floor(i/cols) - (rows-1)/2) * gd;
-    const busy = (dep.state==='çalışıyor') || (dep.pending||0) > 0;
+    const busy = dep.state==='çalışıyor';
     const accent = ACCENT[i % ACCENT.length];
-    const wname = dep.name || dep.id;
-    makeRoom(cx, cz, 240, 260, accent, busy, wname, `${(dep.workers||[]).length} kişi`);
+    const wname = dep.name || dep.department_id;
+    makeRoom(cx, cz, 240, 260, accent, busy, wname, `${(dep.workers||[]).length} kişi`, dep.department_id);
     const list = dep.workers||[];
     for (let k=0;k<Math.min(list.length,9);k++){
-      const working = busy && k < Math.min(dep.pending||0, 9);
+      const working = list[k].activity_verified === true;
       const px = cx - 74 + (k%3)*74;
       const pz = cz - 60 + Math.floor(k/3)*66;
       const raw = String(list[k].worker_id || list[k]);
       const rec = ROSTER[raw];
-      const nm = rec ? rec.name : raw.replace(/^mgr-/,'').slice(0,16);
-      person(px, 10, pz, working?0x63e6b8:0x6f92cc, working, nm);
+      const nm = list[k].name || (rec ? rec.name : raw.replace(/^mgr-/,'').slice(0,16));
+      person(px, 10, pz, working?0x63e6b8:0x6f92cc, working, nm, dep.department_id, raw);
     }
   });
 }

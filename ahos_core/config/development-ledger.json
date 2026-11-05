@@ -1,0 +1,351 @@
+{
+  "at": "2026-11-05T20:46:39",
+  "workers": 83,
+  "total_events": 1548,
+  "avg_events": 18.7,
+  "with_plan_score": 1,
+  "departments": {
+    "data": {
+      "workers": 2,
+      "events": 62,
+      "avg_rate": 100.0
+    },
+    "quality": {
+      "workers": 2,
+      "events": 61,
+      "avg_rate": 100.0
+    },
+    "research": {
+      "workers": 2,
+      "events": 60,
+      "avg_rate": 100.0
+    },
+    "sales": {
+      "workers": 2,
+      "events": 60,
+      "avg_rate": 100.0
+    },
+    "finance": {
+      "workers": 2,
+      "events": 58,
+      "avg_rate": 100.0
+    },
+    "marketing": {
+      "workers": 2,
+      "events": 57,
+      "avg_rate": 100.0
+    },
+    "operations": {
+      "workers": 2,
+      "events": 56,
+      "avg_rate": 100.0
+    },
+    "support": {
+      "workers": 2,
+      "events": 55,
+      "avg_rate": 100.0
+    },
+    "holding": {
+      "workers": 2,
+      "events": 54,
+      "avg_rate": 100.0
+    },
+    "infrastructure": {
+      "workers": 2,
+      "events": 54,
+      "avg_rate": 100.0
+    },
+    "hukuk": {
+      "workers": 2,
+      "events": 54,
+      "avg_rate": 100.0
+    },
+    "ai-platform": {
+      "workers": 5,
+      "events": 91,
+      "avg_rate": 80.0
+    },
+    "creative": {
+      "workers": 16,
+      "events": 254,
+      "avg_rate": 93.8
+    },
+    "guvenlik": {
+      "workers": 5,
+      "events": 83,
+      "avg_rate": 100.0
+    },
+    "oyun": {
+      "workers": 15,
+      "events": 208,
+      "avg_rate": 100.0
+    },
+    "genel": {
+      "workers": 7,
+      "events": 108,
+      "avg_rate": 100.0
+    },
+    "software": {
+      "workers": 13,
+      "events": 173,
+      "avg_rate": 100.0
+    }
+  },
+  "top": [
+    {
+      "worker": "mgr-data-01",
+      "department": "data",
+      "events": 33,
+      "success_rate": 100.0,
+      "strategy_versions": 1,
+      "last_strategy": {
+        "rate": 1.0,
+        "best_action": "think",
+        "avoid": "",
+        "risk_tolerance": 0.8,
+        "plan_depth": 3,
+        "updated_at": "2026-11-05T20:35:56"
+      },
+      "plan_scores": {},
+      "preferred_plan": ""
+    },
+    {
+      "worker": "mgr-quality-01",
+      "department": "quality",
+      "events": 31,
+      "success_rate": 100.0,
+      "strategy_versions": 1,
+      "last_strategy": {
+        "rate": 1.0,
+        "best_action": "think",
+        "avoid": "",
+        "risk_tolerance": 0.8,
+        "plan_depth": 3,
+        "updated_at": "2026-11-05T18:51:59"
+      },
+      "plan_scores": {},
+      "preferred_plan": ""
+    },
+    {
+      "worker": "mgr-research-01",
+      "department": "research",
+      "events": 30,
+      "success_rate": 100.0,
+      "strategy_versions": 1,
+      "last_strategy": {
+        "rate": 1.0,
+        "best_action": "think",
+        "avoid": "",
+        "risk_tolerance": 0.8,
+        "plan_depth": 3,
+        "updated_at": "2026-11-05T18:51:59"
+      },
+      "plan_scores": {},
+      "preferred_plan": ""
+    },
+    {
+      "worker": "mgr-sales-01",
+      "department": "sales",
+      "events": 30,
+      "success_rate": 100.0,
+      "strategy_versions": 1,
+      "last_strategy": {
+        "rate": 1.0,
+        "best_action": "think",
+        "avoid": "",
+        "risk_tolerance": 0.8,
+        "plan_depth": 3,
+        "updated_at": "2026-11-05T18:51:59"
+      },
+      "plan_scores": {},
+      "preferred_plan": ""
+    },
+    {
+      "worker": "qa-01",
+      "department": "quality",
+      "events": 30,
+      "success_rate": 100.0,
+      "strategy_versions": 1,
+      "last_strategy": {
+        "rate": 1.0,
+        "best_action": "think",
+        "avoid": "",
+        "risk_tolerance": 0.8,
+        "plan_depth": 3,
+        "updated_at": "2026-11-05T18:51:59"
+      },
+      "plan_scores": {},
+      "preferred_plan": ""
+    },
+    {
+      "worker": "research-01",
+      "department": "research",
+      "events": 30,
+      "success_rate": 100.0,
+      "strategy_versions": 1,
+      "last_strategy": {
+        "rate": 1.0,
+        "best_action": "think",
+        "avoid": "",
+        "risk_tolerance": 0.8,
+        "plan_depth": 3,
+        "updated_at": "2026-11-05T18:51:59"
+      },
+      "plan_scores": {},
+      "preferred_plan": ""
+    },
+    {
+      "worker": "sales-01",
+      "department": "sales",
+      "events": 30,
+      "success_rate": 100.0,
+      "strategy_versions": 1,
+      "last_strategy": {
+        "rate": 1.0,
+        "best_action": "think",
+        "avoid": "",
+        "risk_tolerance": 0.8,
+        "plan_depth": 3,
+        "updated_at": "2026-11-05T18:51:59"
+      },
+      "plan_scores": {},
+      "preferred_plan": ""
+    },
+    {
+      "worker": "data-01",
+      "department": "data",
+      "events": 29,
+      "success_rate": 100.0,
+      "strategy_versions": 1,
+      "last_strategy": {
+        "rate": 1.0,
+        "best_action": "think",
+        "avoid": "",
+        "risk_tolerance": 0.8,
+        "plan_depth": 3,
+        "updated_at": "2026-11-05T18:51:57"
+      },
+      "plan_scores": {},
+      "preferred_plan": ""
+    },
+    {
+      "worker": "finance-01",
+      "department": "finance",
+      "events": 29,
+      "success_rate": 100.0,
+      "strategy_versions": 1,
+      "last_strategy": {
+        "rate": 1.0,
+        "best_action": "think",
+        "avoid": "",
+        "risk_tolerance": 0.8,
+        "plan_depth": 3,
+        "updated_at": "2026-11-05T18:51:57"
+      },
+      "plan_scores": {},
+      "preferred_plan": ""
+    },
+    {
+      "worker": "mgr-finance-01",
+      "department": "finance",
+      "events": 29,
+      "success_rate": 100.0,
+      "strategy_versions": 1,
+      "last_strategy": {
+        "rate": 1.0,
+        "best_action": "think",
+        "avoid": "",
+        "risk_tolerance": 0.8,
+        "plan_depth": 3,
+        "updated_at": "2026-11-05T18:51:57"
+      },
+      "plan_scores": {},
+      "preferred_plan": ""
+    },
+    {
+      "worker": "mgr-marketing-01",
+      "department": "marketing",
+      "events": 29,
+      "success_rate": 100.0,
+      "strategy_versions": 1,
+      "last_strategy": {
+        "rate": 1.0,
+        "best_action": "think",
+        "avoid": "",
+        "risk_tolerance": 0.8,
+        "plan_depth": 3,
+        "updated_at": "2026-11-05T18:51:58"
+      },
+      "plan_scores": {},
+      "preferred_plan": ""
+    },
+    {
+      "worker": "marketing-01",
+      "department": "marketing",
+      "events": 28,
+      "success_rate": 100.0,
+      "strategy_versions": 1,
+      "last_strategy": {
+        "rate": 1.0,
+        "best_action": "think",
+        "avoid": "",
+        "risk_tolerance": 0.8,
+        "plan_depth": 3,
+        "updated_at": "2026-11-05T18:51:58"
+      },
+      "plan_scores": {},
+      "preferred_plan": ""
+    },
+    {
+      "worker": "mgr-operations-01",
+      "department": "operations",
+      "events": 28,
+      "success_rate": 100.0,
+      "strategy_versions": 1,
+      "last_strategy": {
+        "rate": 1.0,
+        "best_action": "think",
+        "avoid": "",
+        "risk_tolerance": 0.8,
+        "plan_depth": 3,
+        "updated_at": "2026-11-05T18:51:58"
+      },
+      "plan_scores": {},
+      "preferred_plan": ""
+    },
+    {
+      "worker": "mgr-support-01",
+      "department": "support",
+      "events": 28,
+      "success_rate": 100.0,
+      "strategy_versions": 1,
+      "last_strategy": {
+        "rate": 1.0,
+        "best_action": "think",
+        "avoid": "",
+        "risk_tolerance": 0.8,
+        "plan_depth": 3,
+        "updated_at": "2026-11-05T18:51:59"
+      },
+      "plan_scores": {},
+      "preferred_plan": ""
+    },
+    {
+      "worker": "ops-01",
+      "department": "operations",
+      "events": 28,
+      "success_rate": 100.0,
+      "strategy_versions": 1,
+      "last_strategy": {
+        "rate": 1.0,
+        "best_action": "think",
+        "avoid": "",
+        "risk_tolerance": 0.8,
+        "plan_depth": 3,
+        "updated_at": "2026-11-05T18:51:58"
+      },
+      "plan_scores": {},
+      "preferred_plan": ""
+    }
+  ]
+}
