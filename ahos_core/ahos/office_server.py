@@ -221,6 +221,47 @@ class OfficeHandler(BaseHTTPRequestHandler):
         self.wfile.write(payload)
 
     def do_GET(self):  # noqa: N802 - stdlib naming
+        from urllib.parse import unquote, urlsplit
+        route = urlsplit(self.path).path
+        render_root = (Path(self.runtime_dir) / "artifacts" / "renders").resolve()
+        if route == "/api/renders":
+            files = []
+            if render_root.is_dir():
+                for p in render_root.iterdir():
+                    try:
+                        if p.suffix.lower() not in {".mp4", ".png"} or p.is_symlink() or not p.is_file():
+                            continue
+                        if p.resolve().parent != render_root:
+                            continue
+                        stat = p.stat()
+                        files.append({"name": p.name, "size": stat.st_size, "modified": stat.st_mtime})
+                    except OSError:
+                        continue
+            files.sort(key=lambda f: (f["modified"], f["name"]), reverse=True)
+            self._send(json.dumps(files[:10], ensure_ascii=False).encode("utf-8"), "application/json; charset=utf-8")
+            return
+        if route.startswith("/renders/"):
+            name = unquote(route[len("/renders/"):])
+            target = render_root / name
+            if (not name or any(c in name for c in ("/", "\\", ":", "\0"))
+                    or target.suffix.lower() not in {".mp4", ".png"}
+                    or target.is_symlink() or target.resolve().parent != render_root):
+                self._send(b"not found", "text/plain", 404)
+                return
+            try:
+                handle = target.open("rb")
+            except OSError:
+                self._send(b"not found", "text/plain", 404)
+                return
+            with handle:
+                import os, shutil
+                self.send_response(200)
+                self.send_header("Content-Type", "video/mp4" if target.suffix.lower() == ".mp4" else "image/png")
+                self.send_header("Content-Length", str(os.fstat(handle.fileno()).st_size))
+                self.send_header("X-Content-Type-Options", "nosniff")
+                self.end_headers()
+                shutil.copyfileobj(handle, self.wfile, length=65536)
+            return
         if self.path.split("?")[0] in {"/", "/index.html"}:
             self._send(HTML.encode("utf-8"), "text/html; charset=utf-8")
             return

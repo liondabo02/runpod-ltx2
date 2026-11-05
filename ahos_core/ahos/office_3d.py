@@ -21,6 +21,7 @@ HTML = r"""<!doctype html>
   #chat .who{color:#7fe3c0;font-weight:600}
   #chat .dept{color:#7c8db0;font-size:11px}
   #err{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#33131b;border:1px solid #8d2b3d;padding:16px 20px;border-radius:12px;display:none}
+#renders{position:fixed;right:14px;top:62px;width:300px;max-height:26vh;overflow:auto;background:#101a2cee;padding:12px;border-radius:12px} #renders a{color:#8fd3ff;display:block} #mind{white-space:pre-wrap;color:#b8cbed}
 </style></head>
 <body>
 <div id="hud">AHOS · <b>Ofis Katı (3B)</b><br><span id="stats">yükleniyor…</span></div>
@@ -29,9 +30,9 @@ HTML = r"""<!doctype html>
 <div style="margin-top:8px;border-top:1px solid #22314e;padding-top:8px">
   <select id="who" style="width:100%;background:#101a2c;color:#dbe7ff;border:1px solid #2a3d5c;border-radius:8px;padding:5px;margin-bottom:6px"></select>
   <input id="msg" placeholder="işçiye yaz, Enter…" style="width:100%;background:#101a2c;color:#dbe7ff;border:1px solid #2a3d5c;border-radius:8px;padding:7px">
-  <div id="reply" style="margin-top:6px;color:#a9e6cf"></div>
+  <div id="mind"></div><div id="reply" style="margin-top:6px;color:#a9e6cf"></div>
 </div></div>
-<div id="err"></div>
+<aside id="renders"><b>ÜRETİMLER</b><div id="renderlist">yükleniyor…</div></aside><div id="err"></div>
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
@@ -161,12 +162,12 @@ function makeRoom(cx, cz, w, d, color, busy){
 function person(x, y, z, color, working, name){
   const grp = new THREE.Group();
   if (name){
-    const c = document.createElement('canvas'); c.width = 320; c.height = 64;
+    const c = document.createElement('canvas'); c.width = 768; c.height = 64;
     const g2 = c.getContext('2d');
     g2.font = '600 26px system-ui'; g2.textAlign = 'center';
-    g2.fillStyle = '#e8f2ff'; g2.fillText(name, 160, 42);
+    g2.fillStyle = '#e8f2ff'; g2.fillText(name, 384, 42);
     const spr = new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c), transparent:true, depthWrite:false}));
-    spr.position.set(0, 46, 0); spr.scale.set(74, 15, 1); grp.add(spr);
+    spr.position.set(0, 46, 0); spr.scale.set(140, 15, 1); grp.add(spr);
   }
   const body = new THREE.Mesh(new THREE.CapsuleGeometry(5.5, 12, 4, 10),
     new THREE.MeshStandardMaterial({color, roughness:0.6}));
@@ -185,7 +186,25 @@ function person(x, y, z, color, working, name){
 }
 
 let ROSTER = {};
-fetch('/api/roster', {cache:'no-store'}).then(r => r.json()).then(d => { ROSTER = d || {}; }).catch(() => {});
+async function loadRoster(){
+  const r = await fetch('/api/roster', {cache:'no-store'});
+  if (!r.ok) throw new Error('Roster yüklenemedi');
+  ROSTER = await r.json(); fillWho();
+}
+function workerLabel(id){const w=ROSTER[id]; return w ? `${w.name} · ${w.title}` : id;}
+async function renders(){
+  const box=document.getElementById('renderlist');
+  try{
+    const response=await fetch('/api/renders', {cache:'no-store'});
+    if(!response.ok) throw new Error('API');
+    const list=await response.json(); box.replaceChildren();
+    for(const f of list.slice(0,10)){
+      const a=document.createElement('a'); a.textContent=`${f.name} · ${f.size} bayt`;
+      a.href='/renders/'+encodeURIComponent(f.name); a.target='_blank'; a.rel='noopener noreferrer'; box.appendChild(a);
+    }
+    if(!list.length) box.textContent='Henüz üretim yok';
+  }catch(_){box.textContent='Üretim listesine ulaşılamadı';}
+}
 
 function speak(text){
   try{
@@ -220,7 +239,7 @@ function build(snap){
     const n = Math.min(list.length, 9);
     for (let k = 0; k < n; k++){
       const working = busy && k < Math.min(dep.pending || 0, n);
-      const wname = String((list[k] && (list[k].name || list[k].worker_id)) || '').replace(/^mgr-/, '').slice(0, 18);
+      const wname = workerLabel(String((list[k] && (list[k].worker_id || list[k].name)) || ''));
       const px = cx - 58 + (k % 3) * 58;
       const pz = cz - 46 + Math.floor(k/3) * 52;
       person(px, 8, pz, working ? 0x6ee7c0 : 0x6b8fc9, working, wname);
@@ -243,28 +262,32 @@ async function talk(){
   }catch(e){ reply.textContent = 'bağlantı hatası'; }
 }
 
-function fillWho(deps){
-  const who = document.getElementById('who');
-  if (!who || who.dataset.done) return;
-  const opts = [];
-  for (const dep of deps || []){
-    for (const w of (dep.workers || [])){
-      const id = w.name || w.worker_id || w;
-      opts.push(`<option data-dept="${dep.id || dep.department_id}" value="${id}">${dep.name || dep.id} · ${id}</option>`);
-    }
+function fillWho(){
+  const who=document.getElementById('who'); const selected=who.value;
+  who.replaceChildren();
+  for(const [id,w] of Object.entries(ROSTER)){
+    const option=document.createElement('option'); option.value=id;
+    option.dataset.dept=w.department || ''; option.textContent=workerLabel(id);
+    who.appendChild(option);
   }
-  if (opts.length){ who.innerHTML = opts.join(''); who.dataset.done = '1'; }
-  who.addEventListener('change', () => { document.getElementById('reply').textContent = ''; });
+  if(ROSTER[selected]) who.value=selected;
+  who.onchange=()=>{
+    document.getElementById('reply').textContent='';
+    const w=ROSTER[who.value];
+    document.getElementById('mind').textContent=w ? `${workerLabel(who.value)}\n${w.department_name || w.department} · durum için mesaj gönder` : '';
+  };
+  who.onchange();
 }
-
 function chat(list){
-  const box = document.getElementById('chatbody');
-  if (!box) return;
-  if (!list || !list.length){ box.textContent = 'henüz sohbet kaydı yok'; return; }
-  box.innerHTML = list.slice(-14).reverse().map(m =>
-    `<div class="m" onclick="speak(this.innerText)"><span class="who">${m.from || '?'}</span> ` +
-    `<span class="dept">· ${m.department || ''}</span><br>${String(m.body || '').slice(0,150)}</div>`
-  ).join('');
+  const box=document.getElementById('chatbody'); box.replaceChildren();
+  if(!list || !list.length){box.textContent='henüz sohbet kaydı yok';return;}
+  for(const m of list.slice(-14).reverse()){
+    const el=document.createElement('div'); el.className='m'; el.tabIndex=0;
+    el.textContent=`${workerLabel(m.from || '?')} · ${m.department || ''}: ${String(m.body || '').slice(0,150)}`;
+    el.onclick=()=>speak(el.textContent);
+    el.onkeydown=e=>{if(e.key==='Enter') speak(el.textContent);};
+    box.appendChild(el);
+  }
 }
 
 function hud(s){
@@ -278,7 +301,7 @@ async function sync(){
   try{
     const r = await fetch('/api/agent-office', {cache:'no-store'});
     const s = await r.json();
-    build(s); hud(s); fillWho(s.departments);
+    build(s); hud(s); await renders();
     try{
       const c = await (await fetch('/api/conversations', {cache:'no-store'})).json();
       chat(c);
@@ -301,7 +324,7 @@ function place(){
 }
 place();
 
-addEventListener('pointerdown', e => {drag = true; lx = e.clientX; ly = e.clientY;});
+addEventListener('pointerdown', e => {if(e.target !== renderer.domElement) return; drag = true; lx = e.clientX; ly = e.clientY;});
 addEventListener('pointerup', () => drag = false);
 addEventListener('pointermove', e => {
   if (!drag) return;
@@ -317,7 +340,7 @@ addEventListener('resize', () => {
   renderer.setSize(innerWidth, innerHeight);
 });
 
-sync(); setInterval(sync, 5000);
+loadRoster().then(()=>{sync(); setInterval(sync,5000);}).catch(e=>{const el=document.getElementById('err'); el.style.display='block'; el.textContent=e.message;});
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target && e.target.id === 'msg') talk(); });
 (function loop(){ requestAnimationFrame(loop); renderer.render(scene, camera); })();
 </script></body></html>

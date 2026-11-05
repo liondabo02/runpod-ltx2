@@ -81,7 +81,7 @@ def drain(
         result = None
         try:
             project = console._project_for_department(spec.department_id)
-            if project is not None:
+            if project is not None and not claimed.objective.startswith("render:"):
                 from .simple_edits import apply_simple_edit, parse_simple_edit
 
                 project_root = project.work_path or project.path
@@ -101,7 +101,27 @@ def drain(
             fast_done = False
 
         if not fast_done:
-            result = console._execute(spec, claimed.objective, claimed.mission_id)
+            if claimed.objective.startswith("render:"):
+                import os
+                from dataclasses import replace
+                from types import SimpleNamespace
+                from .render_task import make_render_executor
+
+                render_executor = make_render_executor(
+                    os.environ.get("AHOS_RENDER_WORKFLOW") or str(Path(__file__).resolve().parents[2] / "workflows/ltx2_text2video.json"),
+                    os.environ.get("AHOS_RENDER_OUT") or str(Path(console.runtime_dir) / "artifacts/renders"),
+                )
+                # A mission may have several worker steps. Render once, retaining
+                # the original owner objective instead of planner-generated text.
+                cached = []
+                def execute_render(item, worker_id):
+                    if not cached:
+                        cached.append(render_executor(SimpleNamespace(
+                            task_id=item.task_id, objective=claimed.objective), worker_id))
+                    return replace(cached[0], task_id=item.task_id, worker_id=worker_id)
+                result = console._execute(spec, claimed.objective, claimed.mission_id, executor=execute_render)
+            else:
+                result = console._execute(spec, claimed.objective, claimed.mission_id)
         console._record(claimed.mission_id, owner, result)
         # Agent Atrium günlüğü: kim, hangi departmanda, ne yaptı.
         try:

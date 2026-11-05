@@ -93,13 +93,30 @@ def download(record: dict, out_dir: str | Path, host: str = DEFAULT_HOST) -> lis
                     "type": item.get("type", "output"),
                 })
                 url = f"{host}/view?{query}"
-                target = out / Path(filename).name
-                try:
-                    with urllib.request.urlopen(url, timeout=60) as response:
-                        target.write_bytes(response.read())
-                    saved.append(target)
-                except (urllib.error.URLError, OSError):
+                basename = Path(filename).name
+                if not basename or basename in {".", ".."}:
                     continue
+                original = out / basename
+                # ComfyUI often reuses output names across jobs. Never overwrite
+                # a previous render or count a half-downloaded/empty file.
+                for index in range(1000):
+                    target = (original if index == 0 else
+                              out / f"{original.stem}_{index}{original.suffix}")
+                    try:
+                        with target.open("xb") as handle:
+                            with urllib.request.urlopen(url, timeout=60) as response:
+                                import shutil
+                                shutil.copyfileobj(response, handle, length=1024 * 1024)
+                        if target.stat().st_size == 0:
+                            target.unlink(missing_ok=True)
+                            break
+                        saved.append(target)
+                        break
+                    except FileExistsError:
+                        continue
+                    except (urllib.error.URLError, OSError):
+                        target.unlink(missing_ok=True)
+                        break
     return saved
 
 
@@ -115,7 +132,28 @@ def render(workflow: dict, out_dir: str | Path, host: str = DEFAULT_HOST,
 
 def fill_template(template_path: str | Path, **params) -> dict:
     """Workflow JSON'unda {{anahtar}} yer tutucularını doldurur."""
-    raw = Path(template_path).read_text(encoding="utf-8")
-    for key, value in params.items():
-        raw = raw.replace("{{" + key + "}}", str(value))
-    return json.loads(raw)
+    import re
+
+    path = Path(template_path)
+    if not path.is_file() and not path.is_absolute():
+        path = Path(__file__).resolve().parents[2] / path
+    values = {"seed": 0, "frames": 1, "width": 512, "height": 512, **params}
+    for key in ("seed", "frames", "width", "height"):
+        values[key] = int(values[key])
+        if values[key] < (0 if key == "seed" else 1):
+            raise ValueError(f"Geçersiz {key}")
+    def expand(value):
+        if isinstance(value, dict):
+            return {k: expand(v) for k, v in value.items()}
+        if isinstance(value, list):
+            return [expand(v) for v in value]
+        if isinstance(value, str):
+            match = re.fullmatch(r"\{\{(\w+)\}\}", value)
+            if match:
+                return values[match.group(1)]
+            return re.sub(r"\{\{(\w+)\}\}", lambda m: str(values[m.group(1)]), value)
+        return value
+    result = expand(json.loads(path.read_text(encoding="utf-8")))
+    if not isinstance(result, dict) or not result:
+        raise ValueError("Workflow boş veya nesne değil")
+    return result

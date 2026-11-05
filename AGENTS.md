@@ -86,3 +86,8 @@ kaynak: <dosya> → <alan>=<değer>
 ```
 Bu dosyada karşılığı olmayan iddia **geçersizdir**.
 
+
+## Sahip hedefini yürütme
+
+SORMA, YAP. Sahip bir hedef verdiğinde: hedefi görevlere böl → kuyruğa yaz → çalıştır → raporla.
+Yalnızca şunlarda sor: ücretli harcama, geri alınamaz silme, yeni hesap/anahtar.
