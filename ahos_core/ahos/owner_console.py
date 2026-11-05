@@ -1347,7 +1347,7 @@ class OwnerConsole:
     ) -> MissionResult:
         workforce = self.book.workforce()
 
-        if self._explicit_executors:
+        if self._explicit_executors and executor is None:
             executors: dict[str, WorkerExecutor] = dict(self._explicit_executors)
             default = self._explicit_executors.get("*")
             if default is not None:
