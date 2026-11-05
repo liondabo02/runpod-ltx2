@@ -71,9 +71,11 @@ def test_a2_complex_goal_transformed_and_qa_blocked(tmp_path):
             return MissionResult(mission_id, target, None, MissionStatus.BLOCKED, (), "QA not verified")
         def _record(self, mission_id, owner, result):
             queue.block(mission_id, owner=owner, result=result)
-    report = drain(Console(), limit=1)
+    console = Console()
+    report = drain(console, limit=1)
     assert report["executed"] == ["a2"]
     assert seen and seen[0][0] == converted and callable(seen[0][1])
+    assert console._scope_document is False  # no QA mode leak to next mission
     assert queue.get("a2").status is QueueStatus.BLOCKED
 
 
