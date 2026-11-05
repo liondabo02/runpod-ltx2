@@ -5,6 +5,13 @@ import os
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
+# Eski sınıf tabanlı daemon (AutonomyDaemon) kaldırıldı; güncel API
+# ahos.daemon.tick_once(runtime_dir, departments) fonksiyonel arayüzüdür.
+# Bu dosya tarihsel tasarımı test ediyor, güncel kapsam test_daemon_live.py'de.
+pytestmark = pytest.mark.skip(reason="eski AutonomyDaemon API'si kaldirildi; tick_once kullaniliyor")
+
 from ahos.daemon import AutonomyDaemon, mission_evidence, read_heartbeat
 from ahos.delivery import DeliveryTracker, diff_trees, snapshot_tree
 
