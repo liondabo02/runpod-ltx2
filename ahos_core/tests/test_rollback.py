@@ -1,61 +1,46 @@
-"""Rollback module tests"""
-import json
-import sys
-from pathlib import Path
+"""Rollback snapshots and restores use isolated pytest directories."""
+import pytest
+from ahos import rollback
 
-sys.path.insert(0, '/workspace/ahos/ahos_core')
 
-from ahos.rollback import snapshot, restore, last
+def test_snapshot_copies_files(tmp_path, monkeypatch):
+    monkeypatch.setattr(rollback, "ARTIFACTS_ROOT", tmp_path / "artifacts")
+    source = tmp_path / "project"
+    source.mkdir()
+    (source / "original.txt").write_text("rollback test content", encoding="utf-8")
+    snap = rollback.snapshot(source, ["original.txt"])
+    assert snap.is_dir()
+    assert (snap / "original.txt").read_text(encoding="utf-8") == "rollback test content"
 
-def test_snapshot_copies_files():
-    """test 1: snapshot dosyaları kopyalıyor"""
-    runtime = Path('/workspace/ahos/ahos_core/runtime')
-    
-    # Create a test file first
-    test_file = runtime / 'test-rollback-file.txt'
-    test_file.write_text('rollback test content')
-    
-    # Create a snapshot
-    snap = snapshot(runtime, ['test-rollback-file.txt'])
-    
-    # The snapshot should exist
-    assert snap.exists(), f'Snapshot directory should exist: {snap}'
-    
-    # The file should be in the snapshot
-    snap_file = snap / 'test-rollback-file.txt'
-    assert snap_file.exists(), f'File should be in snapshot: {snap_file}'
-    
-    # Content should be preserved
-    content = snap_file.read_text()
-    assert 'rollback test content' in content
 
-def test_restore_restores_content():
-    """test 2: bozulmuş bir dosya geri yüklenir"""
-    runtime = Path('/workspace/ahos/ahos_core/runtime')
-    
-    # Create and modify a test file
-    test_file = runtime / 'test-rollback-modify.txt'
-    test_file.write_text('original content')
-    
-    # Create a snapshot
-    snap = snapshot(runtime, ['test-rollback-modify.txt'])
-    
-    # Modify the file
-    test_file.write_text('modified content that should be rolled back')
-    
-    # Restore from snapshot
-    count = restore(snap, runtime)
-    
-    # File content should be restored
-    content = test_file.read_text()
-    assert content == 'rollback test content', f"Expected original content, got: {content}"
-    
-    # Restore count should be 1
-    assert count == 1, f'Expected 1 file restored, got {count}'
+def test_restore_restores_content(tmp_path, monkeypatch):
+    monkeypatch.setattr(rollback, "ARTIFACTS_ROOT", tmp_path / "artifacts")
+    source = tmp_path / "project"
+    source.mkdir()
+    target = source / "change.txt"
+    target.write_text("original content", encoding="utf-8")
+    snap = rollback.snapshot(source, ["change.txt"])
+    target.write_text("modified content", encoding="utf-8")
+    assert rollback.restore(snap, source) == 1
+    assert target.read_text(encoding="utf-8") == "original content"
 
-def test_last_finds_newest_snapshot():
-    """test 3: last() en yeni snapshot'ı buluyor"""
-    # Already tested above, just verify last() works
-    snap = last()
-    assert snap is not None, 'last() should return a Path'
-    assert snap.name.startswith('20'), f'Expected timestamp format, got: {snap.name}'
+
+def test_last_finds_newest_snapshot(tmp_path, monkeypatch):
+    monkeypatch.setattr(rollback, "ARTIFACTS_ROOT", tmp_path / "artifacts")
+    project = tmp_path / "project"
+    project.mkdir()
+    (project / "file.txt").write_text("x", encoding="utf-8")
+    earlier = rollback.snapshot(project, ["file.txt"])
+    newest = rollback.snapshot(project, ["file.txt"])
+    assert earlier != newest
+    assert newest.name.startswith("20")
+    assert rollback.last() == newest
+
+
+def test_snapshot_rejects_parent_traversal(tmp_path, monkeypatch):
+    monkeypatch.setattr(rollback, "ARTIFACTS_ROOT", tmp_path / "artifacts")
+    project = tmp_path / "project"
+    project.mkdir()
+    (tmp_path / "secret.txt").write_text("do not copy", encoding="utf-8")
+    with pytest.raises(ValueError):
+        rollback.snapshot(project, ["../secret.txt"])

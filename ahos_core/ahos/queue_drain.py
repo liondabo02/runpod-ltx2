@@ -121,7 +121,24 @@ def drain(
                     return replace(cached[0], task_id=item.task_id, worker_id=worker_id)
                 result = console._execute(spec, claimed.objective, claimed.mission_id, executor=execute_render)
             else:
-                result = console._execute(spec, claimed.objective, claimed.mission_id)
+                from .scope import as_document_objective, should_document
+
+                if should_document(claimed.objective):
+                    # Karmaşık kod görevi: belge/analiz kapsamına çevrilir.
+                    try:
+                        from .doc_factory import make_document_factory_executor
+
+                        doc_executor = make_document_factory_executor(Path(console.runtime_dir))
+                        result = console._execute(
+                            spec,
+                            as_document_objective(claimed.objective),
+                            claimed.mission_id,
+                            executor=doc_executor,
+                        )
+                    except Exception:  # noqa: BLE001 - belge yolu başarısızsa normal yol
+                        result = console._execute(spec, claimed.objective, claimed.mission_id)
+                else:
+                    result = console._execute(spec, claimed.objective, claimed.mission_id)
         console._record(claimed.mission_id, owner, result)
         # Agent Atrium günlüğü: kim, hangi departmanda, ne yaptı.
         try:

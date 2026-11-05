@@ -30,9 +30,17 @@ def snapshot(project_root: str | Path, files: list[str] | None = None) -> Path:
         Oluşturulan snapshot dizini
     """
     project_root = Path(project_root)
-    timestamp = datetime.now().strftime("%Y%mdd-%H%M%S")
-    snapshot_dir = ARTIFACTS_ROOT / "rollback" / timestamp
-    snapshot_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S-%f")
+    base = ARTIFACTS_ROOT / "rollback"
+    for suffix in range(1000):
+        snapshot_dir = base / (timestamp if suffix == 0 else f"{timestamp}-{suffix}")
+        try:
+            snapshot_dir.mkdir(parents=True, exist_ok=False)
+            break
+        except FileExistsError:
+            continue
+    else:
+        raise FileExistsError("Rollback snapshot adı oluşturulamadı")
     
     # Önemli dosyalar (eğer specified None ise)
     if files is None:
@@ -47,10 +55,16 @@ def snapshot(project_root: str | Path, files: list[str] | None = None) -> Path:
         files = [str(f.relative_to(project_root)) for f in all_files if f.is_file()]
     
     copied = 0
+    root = project_root.resolve()
     for filepath in files:
-        source = project_root / filepath
+        relative = Path(filepath)
+        if relative.is_absolute() or ".." in relative.parts:
+            raise ValueError(f"Snapshot yolu proje dışına çıkamaz: {relative.name}")
+        source = project_root / relative
+        if source.is_symlink() or not source.resolve().is_relative_to(root):
+            raise ValueError(f"Snapshot kaynağı proje dışına çıkamaz: {relative.name}")
         if source.is_file():
-            target = snapshot_dir / filepath
+            target = snapshot_dir / relative
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, target)
             copied += 1
@@ -75,10 +89,15 @@ def restore(snapshot_dir: Path, project_root: Path) -> int:
         return 0
     
     restored = 0
+    root = project_root.resolve()
     for filepath in snapshot_dir.rglob("*"):
+        if filepath.is_symlink():
+            raise ValueError("Sembolik bağlantıdan rollback yapılamaz")
         if filepath.is_file():
             relative = filepath.relative_to(snapshot_dir)
             target = project_root / relative
+            if target.is_symlink() or not target.resolve().is_relative_to(root):
+                raise ValueError("Rollback hedefi proje dışına çıkamaz")
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(filepath, target)
             restored += 1

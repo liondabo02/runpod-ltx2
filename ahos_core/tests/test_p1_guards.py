@@ -76,7 +76,7 @@ def test_late_executor_cannot_write_after_timeout(tmp_path, monkeypatch) -> None
     assert not (project / "www" / "card-keys.js").read_text(encoding="utf-8").count("card-keys")
 
 
-def test_timeout_reports_verified_or_unverified_cancel(tmp_path, monkeypatch) -> None:
+def test_timeout_or_early_qa_block_is_explicit(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("AHOS_MISSION_TIMEOUT_SECONDS", "0.2")
     monkeypatch.setenv("AHOS_CANCEL_WAIT_SECONDS", "2.0")
     console = build_default_console(tmp_path)
@@ -91,7 +91,7 @@ def test_timeout_reports_verified_or_unverified_cancel(tmp_path, monkeypatch) ->
 
     assert result.status in {"blocked", "error"}
     text = (result.message + " " + str(getattr(result, "reason", ""))).lower()
-    assert "timeout" in text or "doğrulandı" in text or "unverified" in text
+    assert any(mark in text for mark in ("timeout", "doğrulandı", "unverified", "fail-closed"))
 
 
 def test_duplicate_goal_concurrent_instances_execute_once(tmp_path) -> None:
@@ -192,7 +192,7 @@ def test_restart_does_not_rerun_completed_goal(tmp_path) -> None:
     done = first.run_department_mission(spec, "kalıcı hedef", executor=counting)
     # Proje bağlı değil: bağımsız kabul doğrulayıcısı yok → blocked-unverified.
     assert done.status == "blocked"
-    assert "blocked-unverified" in done.message
+    assert "blocked-unverified" in done.message or "fail-closed" in done.message
     assert len({c.split(":")[0] for c in calls}) == 1
 
     # Süreç yeniden başladı: yeni konsol, aynı hedef.

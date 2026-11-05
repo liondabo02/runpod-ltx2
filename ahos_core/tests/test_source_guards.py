@@ -31,7 +31,7 @@ def direct_completion_sql_sites(folder: Path) -> list[str]:
     hits: list[str] = []
     for path in sorted(folder.glob("*.py")):
         try:
-            tree = ast.parse(path.read_text(encoding="utf-8"), filename=path.name)
+            tree = ast.parse(path.read_text(encoding="utf-8-sig"), filename=path.name)
         except (OSError, SyntaxError, UnicodeError):
             hits.append(f"{path.name}:unreadable")
             continue

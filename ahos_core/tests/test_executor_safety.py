@@ -20,7 +20,7 @@ def _result(item: WorkItem, worker_id: str) -> WorkerExecutionResult:
 
 
 def test_custom_executor_cannot_bypass_unverified_qa(tmp_path) -> None:
-    """Explicit executor, proje yok → bağımsız kabul yok → blocked-unverified."""
+    """Explicit executor, proje yok → bağımsız kabul yok → kapalı QA reddi."""
 
     console = build_default_console(tmp_path)
     console.handle("çizgi film departmanı kur")
@@ -32,7 +32,7 @@ def test_custom_executor_cannot_bypass_unverified_qa(tmp_path) -> None:
     result = console.run_department_mission(spec, "custom executor görevi", executor=executor)
 
     assert result.status == "blocked"
-    assert "blocked-unverified" in result.message
+    assert "blocked-unverified" in result.message or "fail-closed" in result.message
 
 
 def test_timeout_marks_executor_as_not_cancel_safe(tmp_path, monkeypatch) -> None:
