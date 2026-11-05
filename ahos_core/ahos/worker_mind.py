@@ -116,6 +116,7 @@ def tick(runtime_dir, departments: list, limit: int = 6, seed=None) -> dict:
         thought = think(mind, ctx)
         mind.events.append({"at": time.strftime("%Y-%m-%dT%H:%M:%S"), "kind": "think", "detail": thought[:300], "ok": True})
         model = reflect(mind)
+        set_goal(mind, ctx)
         save(runtime, mind)
         thoughts.append(thought)
         if "hata" in str(model.get("lesson", "")).lower():
@@ -127,23 +128,40 @@ def tick(runtime_dir, departments: list, limit: int = 6, seed=None) -> dict:
         for t in thoughts:
             fh.write(json.dumps({"at": time.strftime("%Y-%m-%dT%H:%M:%S"), "thought": t}, ensure_ascii=False) + "\n")
     return {"thoughts": len(thoughts), "lessons": lessons, "context": ctx}
-
-
-def self_improve(mind):
-    recent = mind.events[-30:]
-    kinds = {}
-    for e in recent:
-        k = str(e.get('kind') or '?')
-        rec = kinds.setdefault(k, {'ok': 0, 'fail': 0})
-        rec['ok' if e.get('ok') else 'fail'] += 1
-    total = sum(v['ok'] + v['fail'] for v in kinds.values()) or 1
-    rate = round(sum(v['ok'] for v in kinds.values()) / total, 3)
-    best = max(kinds.items(), key=lambda kv: kv[1]['ok'])[0] if kinds else 'think'
-    worst = max(kinds.items(), key=lambda kv: kv[1]['fail'])[0] if kinds else ''
-    s = {'rate': rate, 'best_action': best, 'avoid': worst if kinds.get(worst,{}).get('fail',0) else '',
-         'risk_tolerance': round(0.3 + rate*0.5, 2), 'plan_depth': 3 if rate>=0.8 else (4 if rate>=0.5 else 5),
-         'updated_at': time.strftime('%Y-%m-%dT%H:%M:%S')}
+def set_goal(mind: Mind, ctx: dict) -> str:
+    """Baglamdan somut bir sonraki adim sec (hedef)."""
+    if ctx.get("blocked", 0) > 100:
+        goal = "engelli gorevleri tasfiye et"
+    elif ctx.get("pending", 0) > 8:
+        goal = "bekleyen kuyrugu bosalt"
+    elif mind.success_rate < 0.7 and mind.events:
+        goal = "hatali gorev tipini duzelt"
+    elif not mind.events:
+        goal = "ilk gorevi al ve tamamla"
+    else:
+        goal = "daha zor gorev iste"
     mind.self_model = dict(mind.self_model or {})
-    mind.self_model['strategy'] = s
-    mind.self_model['strategy_history'] = (list(mind.self_model.get('strategy_history') or []) + [s])[-10:]
-    return s
+    mind.self_model["goal"] = goal
+    return goal
+
+
+def summarize(runtime_dir) -> dict:
+    """Tum zihinlerin ozeti (panel/ofis icin)."""
+    runtime = Path(runtime_dir)
+    files = list((runtime / "minds").glob("*.json")) if (runtime / "minds").exists() else []
+    rates, goals, thoughts = [], {}, 0
+    for p in files:
+        try:
+            d = json.loads(p.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+        model = d.get("self_model") or {}
+        rates.append(float(model.get("success_rate", 0)))
+        g = str(model.get("goal") or "")
+        if g:
+            goals[g] = goals.get(g, 0) + 1
+    log = runtime / "minds" / "thoughts.jsonl"
+    if log.exists():
+        thoughts = len(log.read_text(encoding="utf-8", errors="replace").splitlines())
+    return {"workers_with_mind": len(files), "avg_success_rate": round(sum(rates) / len(rates), 3) if rates else 0.0,
+            "thoughts": thoughts, "top_goals": dict(sorted(goals.items(), key=lambda kv: -kv[1])[:5])}

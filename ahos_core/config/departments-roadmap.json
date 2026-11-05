@@ -1,51 +1,51 @@
 {
-  "at": "2026-11-05T18:06:59",
+  "at": "2026-11-05T18:34:55",
   "departments": {
     "ai-platform": {
-      "last_at": "2026-11-05T18:06:59",
+      "last_at": "2026-11-05T18:34:55",
       "items": [
         "engel 18 → kök neden analizi ve tekrar deneme politikası",
         "başarısız 1 → hata sınıflandırması ve önleyici kontrol",
-        "bekleyen 23 → günlük teslim hedefi ve öncelik sırası"
+        "bekleyen 43 → günlük teslim hedefi ve öncelik sırası"
       ],
       "stats": {
         "blocked": 18,
         "cancelled": 24,
         "completed": 215,
         "failed": 1,
-        "pending": 23
+        "pending": 43
       }
     },
     "creative": {
-      "last_at": "2026-11-05T18:06:59",
+      "last_at": "2026-11-05T18:34:55",
       "items": [
-        "engel 30 → kök neden analizi ve tekrar deneme politikası",
-        "bekleyen 321 → günlük teslim hedefi ve öncelik sırası",
+        "engel 39 → kök neden analizi ve tekrar deneme politikası",
+        "bekleyen 332 → günlük teslim hedefi ve öncelik sırası",
         "zihin dersleri az → departman içi konuşma turu artırılmalı"
       ],
       "stats": {
-        "blocked": 30,
+        "blocked": 39,
         "cancelled": 19,
         "completed": 747,
-        "pending": 321
+        "pending": 332
       }
     },
     "data": {
-      "last_at": "2026-11-05T18:06:59",
+      "last_at": "2026-11-05T18:34:55",
       "items": [
-        "engel 14 → kök neden analizi ve tekrar deneme politikası",
-        "bekleyen 271 → günlük teslim hedefi ve öncelik sırası",
+        "engel 23 → kök neden analizi ve tekrar deneme politikası",
+        "bekleyen 262 → günlük teslim hedefi ve öncelik sırası",
         "zihin dersleri az → departman içi konuşma turu artırılmalı"
       ],
       "stats": {
-        "blocked": 14,
+        "blocked": 23,
         "cancelled": 6,
         "completed": 694,
-        "pending": 271
+        "pending": 262
       }
     },
     "finance": {
-      "last_at": "2026-11-05T18:06:59",
+      "last_at": "2026-11-05T18:34:55",
       "items": [
         "engel 2 → kök neden analizi ve tekrar deneme politikası",
         "başarısız 1 → hata sınıflandırması ve önleyici kontrol",
@@ -60,7 +60,7 @@
       }
     },
     "genel": {
-      "last_at": "2026-11-05T18:06:59",
+      "last_at": "2026-11-05T18:34:55",
       "items": [
         "engel 2 → kök neden analizi ve tekrar deneme politikası",
         "bekleyen 21 → günlük teslim hedefi ve öncelik sırası",
@@ -74,7 +74,7 @@
       }
     },
     "guvenlik": {
-      "last_at": "2026-11-05T18:06:59",
+      "last_at": "2026-11-05T18:34:55",
       "items": [
         "engel 2 → kök neden analizi ve tekrar deneme politikası",
         "zihin dersleri az → departman içi konuşma turu artırılmalı"
@@ -87,7 +87,7 @@
       }
     },
     "holding": {
-      "last_at": "2026-11-05T18:06:59",
+      "last_at": "2026-11-05T18:34:55",
       "items": [
         "engel 2 → kök neden analizi ve tekrar deneme politikası",
         "zihin dersleri az → departman içi konuşma turu artırılmalı"
@@ -96,22 +96,23 @@
         "blocked": 2,
         "cancelled": 1,
         "completed": 136,
-        "pending": 5
+        "pending": 6
       }
     },
     "hukuk": {
-      "last_at": "2026-11-05T18:06:59",
+      "last_at": "2026-11-05T18:34:55",
       "items": [
+        "teslim oranı %56 → kapsamı küçült (tek dosya/tek adım)",
         "zihin dersleri az → departman içi konuşma turu artırılmalı"
       ],
       "stats": {
         "cancelled": 8,
-        "completed": 17,
-        "pending": 9
+        "completed": 18,
+        "pending": 14
       }
     },
     "infrastructure": {
-      "last_at": "2026-11-05T18:06:59",
+      "last_at": "2026-11-05T18:34:55",
       "items": [
         "engel 2 → kök neden analizi ve tekrar deneme politikası",
         "zihin dersleri az → departman içi konuşma turu artırılmalı"
@@ -119,11 +120,12 @@
       "stats": {
         "blocked": 2,
         "cancelled": 3,
-        "completed": 134
+        "completed": 134,
+        "pending": 3
       }
     },
     "marketing": {
-      "last_at": "2026-11-05T18:06:59",
+      "last_at": "2026-11-05T18:34:55",
       "items": [
         "engel 2 → kök neden analizi ve tekrar deneme politikası",
         "başarısız 1 → hata sınıflandırması ve önleyici kontrol",
@@ -137,7 +139,7 @@
       }
     },
     "operations": {
-      "last_at": "2026-11-05T18:06:59",
+      "last_at": "2026-11-05T18:34:55",
       "items": [
         "engel 2 → kök neden analizi ve tekrar deneme politikası",
         "zihin dersleri az → departman içi konuşma turu artırılmalı"
@@ -149,7 +151,7 @@
       }
     },
     "oyun": {
-      "last_at": "2026-11-05T18:06:59",
+      "last_at": "2026-11-05T18:34:55",
       "items": [
         "engel 2 → kök neden analizi ve tekrar deneme politikası",
         "başarısız 1 → hata sınıflandırması ve önleyici kontrol",
@@ -164,7 +166,7 @@
       }
     },
     "quality": {
-      "last_at": "2026-11-05T18:06:59",
+      "last_at": "2026-11-05T18:34:55",
       "items": [
         "engel 2 → kök neden analizi ve tekrar deneme politikası",
         "zihin dersleri az → departman içi konuşma turu artırılmalı"
@@ -176,7 +178,7 @@
       }
     },
     "research": {
-      "last_at": "2026-11-05T18:06:59",
+      "last_at": "2026-11-05T18:34:55",
       "items": [
         "başarısız 1 → hata sınıflandırması ve önleyici kontrol",
         "zihin dersleri az → departman içi konuşma turu artırılmalı"
@@ -188,22 +190,22 @@
       }
     },
     "sales": {
-      "last_at": "2026-11-05T18:06:59",
+      "last_at": "2026-11-05T18:34:55",
       "items": [
-        "engel 3 → kök neden analizi ve tekrar deneme politikası",
+        "engel 4 → kök neden analizi ve tekrar deneme politikası",
         "başarısız 1 → hata sınıflandırması ve önleyici kontrol",
         "zihin dersleri az → departman içi konuşma turu artırılmalı"
       ],
       "stats": {
-        "blocked": 3,
+        "blocked": 4,
         "cancelled": 9,
         "completed": 142,
         "failed": 1,
-        "pending": 7
+        "pending": 6
       }
     },
     "software": {
-      "last_at": "2026-11-05T18:06:59",
+      "last_at": "2026-11-05T18:34:55",
       "items": [
         "engel 3 → kök neden analizi ve tekrar deneme politikası",
         "başarısız 7 → hata sınıflandırması ve önleyici kontrol",
@@ -218,7 +220,7 @@
       }
     },
     "support": {
-      "last_at": "2026-11-05T18:06:59",
+      "last_at": "2026-11-05T18:34:55",
       "items": [
         "zihin dersleri az → departman içi konuşma turu artırılmalı"
       ],
