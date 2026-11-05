@@ -224,6 +224,11 @@ class OfficeHandler(BaseHTTPRequestHandler):
         if self.path.split("?")[0] in {"/", "/index.html"}:
             self._send(HTML.encode("utf-8"), "text/html; charset=utf-8")
             return
+        if self.path.split("?")[0] == "/ofis3d":
+            from .office_3d import render_html
+            self._send(render_html().encode("utf-8"), "text/html; charset=utf-8")
+            return
+
         if self.path.split("?")[0] in {"/ofis", "/floor"}:
             from .office_floor import FLOOR_HTML
 

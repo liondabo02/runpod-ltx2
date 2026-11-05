@@ -1124,6 +1124,9 @@ def build_handler(state: ControlCenterState):
                 self._send(200, body, "text/html; charset=utf-8")
                 return
             if parsed.path == "/agent-office":
+                from .office_3d import render_html as _render_3d
+                self._send(200, _render_3d().encode("utf-8"), "text/html; charset=utf-8")
+                return
                 from .office_floor import FLOOR_HTML
                 self._send(200, FLOOR_HTML.encode("utf-8"), "text/html; charset=utf-8")
                 return
