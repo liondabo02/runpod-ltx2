@@ -1,93 +1,93 @@
 {
-  "at": "2026-11-05T20:46:39",
-  "workers": 83,
-  "total_events": 1548,
-  "avg_events": 18.7,
+  "at": "2026-11-05T20:49:11",
+  "workers": 84,
+  "total_events": 1646,
+  "avg_events": 19.6,
   "with_plan_score": 1,
   "departments": {
     "data": {
-      "workers": 2,
-      "events": 62,
+      "workers": 3,
+      "events": 72,
       "avg_rate": 100.0
     },
     "quality": {
       "workers": 2,
-      "events": 61,
+      "events": 65,
       "avg_rate": 100.0
     },
     "research": {
       "workers": 2,
-      "events": 60,
+      "events": 64,
       "avg_rate": 100.0
     },
     "sales": {
       "workers": 2,
-      "events": 60,
+      "events": 64,
       "avg_rate": 100.0
     },
     "finance": {
       "workers": 2,
-      "events": 58,
+      "events": 62,
       "avg_rate": 100.0
     },
     "marketing": {
       "workers": 2,
-      "events": 57,
+      "events": 61,
       "avg_rate": 100.0
     },
     "operations": {
       "workers": 2,
-      "events": 56,
+      "events": 60,
       "avg_rate": 100.0
     },
     "support": {
       "workers": 2,
-      "events": 55,
+      "events": 59,
       "avg_rate": 100.0
     },
     "holding": {
       "workers": 2,
-      "events": 54,
+      "events": 58,
       "avg_rate": 100.0
     },
     "infrastructure": {
       "workers": 2,
-      "events": 54,
+      "events": 58,
       "avg_rate": 100.0
     },
     "hukuk": {
       "workers": 2,
-      "events": 54,
+      "events": 58,
       "avg_rate": 100.0
     },
     "ai-platform": {
       "workers": 5,
-      "events": 91,
+      "events": 99,
       "avg_rate": 80.0
     },
     "creative": {
       "workers": 16,
-      "events": 254,
+      "events": 278,
       "avg_rate": 93.8
     },
     "guvenlik": {
       "workers": 5,
-      "events": 83,
-      "avg_rate": 100.0
-    },
-    "oyun": {
-      "workers": 15,
-      "events": 208,
+      "events": 87,
       "avg_rate": 100.0
     },
     "genel": {
       "workers": 7,
-      "events": 108,
+      "events": 112,
+      "avg_rate": 100.0
+    },
+    "oyun": {
+      "workers": 15,
+      "events": 212,
       "avg_rate": 100.0
     },
     "software": {
       "workers": 13,
-      "events": 173,
+      "events": 177,
       "avg_rate": 100.0
     }
   },
@@ -95,7 +95,7 @@
     {
       "worker": "mgr-data-01",
       "department": "data",
-      "events": 33,
+      "events": 36,
       "success_rate": 100.0,
       "strategy_versions": 1,
       "last_strategy": {
@@ -104,7 +104,7 @@
         "avoid": "",
         "risk_tolerance": 0.8,
         "plan_depth": 3,
-        "updated_at": "2026-11-05T20:35:56"
+        "updated_at": "2026-11-05T20:49:10"
       },
       "plan_scores": {},
       "preferred_plan": ""
@@ -112,7 +112,7 @@
     {
       "worker": "mgr-quality-01",
       "department": "quality",
-      "events": 31,
+      "events": 33,
       "success_rate": 100.0,
       "strategy_versions": 1,
       "last_strategy": {
@@ -129,7 +129,7 @@
     {
       "worker": "mgr-research-01",
       "department": "research",
-      "events": 30,
+      "events": 32,
       "success_rate": 100.0,
       "strategy_versions": 1,
       "last_strategy": {
@@ -146,7 +146,7 @@
     {
       "worker": "mgr-sales-01",
       "department": "sales",
-      "events": 30,
+      "events": 32,
       "success_rate": 100.0,
       "strategy_versions": 1,
       "last_strategy": {
@@ -163,7 +163,7 @@
     {
       "worker": "qa-01",
       "department": "quality",
-      "events": 30,
+      "events": 32,
       "success_rate": 100.0,
       "strategy_versions": 1,
       "last_strategy": {
@@ -180,7 +180,7 @@
     {
       "worker": "research-01",
       "department": "research",
-      "events": 30,
+      "events": 32,
       "success_rate": 100.0,
       "strategy_versions": 1,
       "last_strategy": {
@@ -197,7 +197,7 @@
     {
       "worker": "sales-01",
       "department": "sales",
-      "events": 30,
+      "events": 32,
       "success_rate": 100.0,
       "strategy_versions": 1,
       "last_strategy": {
@@ -214,7 +214,7 @@
     {
       "worker": "data-01",
       "department": "data",
-      "events": 29,
+      "events": 31,
       "success_rate": 100.0,
       "strategy_versions": 1,
       "last_strategy": {
@@ -231,7 +231,7 @@
     {
       "worker": "finance-01",
       "department": "finance",
-      "events": 29,
+      "events": 31,
       "success_rate": 100.0,
       "strategy_versions": 1,
       "last_strategy": {
@@ -248,7 +248,7 @@
     {
       "worker": "mgr-finance-01",
       "department": "finance",
-      "events": 29,
+      "events": 31,
       "success_rate": 100.0,
       "strategy_versions": 1,
       "last_strategy": {
@@ -265,7 +265,7 @@
     {
       "worker": "mgr-marketing-01",
       "department": "marketing",
-      "events": 29,
+      "events": 31,
       "success_rate": 100.0,
       "strategy_versions": 1,
       "last_strategy": {
@@ -282,7 +282,7 @@
     {
       "worker": "marketing-01",
       "department": "marketing",
-      "events": 28,
+      "events": 30,
       "success_rate": 100.0,
       "strategy_versions": 1,
       "last_strategy": {
@@ -299,7 +299,7 @@
     {
       "worker": "mgr-operations-01",
       "department": "operations",
-      "events": 28,
+      "events": 30,
       "success_rate": 100.0,
       "strategy_versions": 1,
       "last_strategy": {
@@ -316,7 +316,7 @@
     {
       "worker": "mgr-support-01",
       "department": "support",
-      "events": 28,
+      "events": 30,
       "success_rate": 100.0,
       "strategy_versions": 1,
       "last_strategy": {
@@ -333,7 +333,7 @@
     {
       "worker": "ops-01",
       "department": "operations",
-      "events": 28,
+      "events": 30,
       "success_rate": 100.0,
       "strategy_versions": 1,
       "last_strategy": {

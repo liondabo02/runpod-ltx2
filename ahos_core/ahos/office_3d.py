@@ -289,6 +289,9 @@ function build(snap){
       person(px, 10, pz, working?0x63e6b8:0x6f92cc, working, nm, dep.department_id, raw);
     }
   });
+
+  // CEO odasi: departmanlarin onunde, altin vurgulu
+  makeRoom(0, (rows/2) * gd + 60, 320, 230, 0xffd166, true, 'CEO Ofisi', 'Holding Yönetimi');
 }
 
 function hud(s){
@@ -503,16 +506,12 @@ let t0=0;
   requestAnimationFrame(loop);
   const dt = t0 ? Math.min(0.05,(t-t0)/1000) : 0.016; t0 = t;
   for(const a of avatars){
-    // nefes + küçük yürüyüş salınımı
-    a.grp.position.y = 10 + Math.sin(t/520 + a.phase)*1.6;
-    a.grp.position.x += Math.sin(t/2100 + a.phase)*dt*6;
-    a.grp.position.z += Math.cos(t/2600 + a.phase)*dt*5;
-    a.grp.rotation.y = Math.sin(t/900 + a.phase)*0.5;
+    // Small bounded motions: agents never drift outside their room.
+    a.grp.position.y = 10 + Math.sin(t/520 + a.phase)*1.1;
+    a.grp.position.x = a.home.x + Math.sin(t/2100 + a.phase)*2;
+    a.grp.position.z = a.home.z + Math.cos(t/2600 + a.phase)*2;
+    a.grp.rotation.y = Math.sin(t/900 + a.phase)*0.22;
   }
-  rooms.children.forEach((child,i)=>{
-    if (child.isSprite) child.material.opacity = 0.75 + Math.sin(t/1400 + i)*0.2;
-  });
-  placeAround();
   renderer.render(scene,camera);
 })(0);
 </script></body></html>

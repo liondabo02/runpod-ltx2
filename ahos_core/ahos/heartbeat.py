@@ -127,6 +127,14 @@ def run(core: Path | None = None) -> dict:
     except Exception:  # noqa: BLE001
         dept = {}
 
+    # Gelisim defteri: her iscinin once/sonra durumu
+    try:
+        from .development_ledger import build as _ledger
+
+        ledger = _ledger(runtime)
+    except Exception:  # noqa: BLE001
+        ledger = {}
+
     # Oylama: departmanlar turun onceligini birlikte belirler (kolektif karar)
     try:
         from .consensus import vote as _vote
@@ -152,6 +160,7 @@ def run(core: Path | None = None) -> dict:
         "queue": queue,
         "mood": mood.to_dict(),
         "consensus": consensus,
+        "development": {k: ledger.get(k) for k in ("workers", "total_events", "avg_events", "with_plan_score")},
         "departments_improved": dept,
         "report": str(report_path.relative_to(core)),
     }

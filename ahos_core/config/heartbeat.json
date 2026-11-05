@@ -1,14 +1,14 @@
 {
-  "at": "2026-11-05T20:35:57",
+  "at": "2026-11-05T20:49:11",
   "owner": "harun",
   "departments": 17,
   "minds": {
     "thoughts": 20,
     "lessons": 20,
     "context": {
-      "completed": 3690,
+      "completed": 3708,
       "blocked": 298,
-      "pending": 627
+      "pending": 635
     }
   },
   "commune": {
@@ -18,7 +18,7 @@
   },
   "plan_queue": {
     "created": 10,
-    "pending": 930
+    "pending": 920
   },
   "training": {
     "departments": 17,
@@ -29,18 +29,18 @@
   "queue": {
     "blocked": 298,
     "cancelled": 299,
-    "completed": 3690,
+    "completed": 3708,
     "failed": 13,
-    "pending": 637
+    "pending": 645
   },
   "mood": {
-    "energy": 0.978,
-    "stress": 0.129,
+    "energy": 0.979,
+    "stress": 0.128,
     "focus": 0.91,
     "label": "motive",
     "notes": [
       "engel oranı 6%",
-      "bekleyen 637"
+      "bekleyen 645"
     ]
   },
   "consensus": {
@@ -51,6 +51,12 @@
       "gelisim": 1.0
     },
     "voters": 1
+  },
+  "development": {
+    "workers": 84,
+    "total_events": 1646,
+    "avg_events": 19.6,
+    "with_plan_score": 1
   },
   "departments_improved": {
     "departments": 17,
