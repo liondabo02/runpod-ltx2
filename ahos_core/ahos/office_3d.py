@@ -25,7 +25,12 @@ HTML = r"""<!doctype html>
 <body>
 <div id="hud">AHOS · <b>Ofis Katı (3B)</b><br><span id="stats">yükleniyor…</span></div>
 <div id="tip">sürükle: döndür · tekerlek: zoom</div>
-<div id="chat"><h4>CANLI SOHBET</h4><div id="chatbody">yükleniyor…</div></div>
+<div id="chat"><h4>CANLI SOHBET</h4><div id="chatbody">yükleniyor…</div>
+<div style="margin-top:8px;border-top:1px solid #22314e;padding-top:8px">
+  <select id="who" style="width:100%;background:#101a2c;color:#dbe7ff;border:1px solid #2a3d5c;border-radius:8px;padding:5px;margin-bottom:6px"></select>
+  <input id="msg" placeholder="işçiye yaz, Enter…" style="width:100%;background:#101a2c;color:#dbe7ff;border:1px solid #2a3d5c;border-radius:8px;padding:7px">
+  <div id="reply" style="margin-top:6px;color:#a9e6cf"></div>
+</div></div>
 <div id="err"></div>
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
@@ -153,8 +158,16 @@ function makeRoom(cx, cz, w, d, color, busy){
   return g;
 }
 
-function person(x, y, z, color, working){
+function person(x, y, z, color, working, name){
   const grp = new THREE.Group();
+  if (name){
+    const c = document.createElement('canvas'); c.width = 320; c.height = 64;
+    const g2 = c.getContext('2d');
+    g2.font = '600 26px system-ui'; g2.textAlign = 'center';
+    g2.fillStyle = '#e8f2ff'; g2.fillText(name, 160, 42);
+    const spr = new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c), transparent:true, depthWrite:false}));
+    spr.position.set(0, 46, 0); spr.scale.set(74, 15, 1); grp.add(spr);
+  }
   const body = new THREE.Mesh(new THREE.CapsuleGeometry(5.5, 12, 4, 10),
     new THREE.MeshStandardMaterial({color, roughness:0.6}));
   body.position.y = 18; body.castShadow = true; grp.add(body);
@@ -194,11 +207,40 @@ function build(snap){
     const n = Math.min(list.length, 9);
     for (let k = 0; k < n; k++){
       const working = busy && k < Math.min(dep.pending || 0, n);
+      const wname = String((list[k] && (list[k].name || list[k].worker_id)) || '').replace(/^mgr-/, '').slice(0, 18);
       const px = cx - 58 + (k % 3) * 58;
       const pz = cz - 46 + Math.floor(k/3) * 52;
-      person(px, 8, pz, working ? 0x6ee7c0 : 0x6b8fc9, working);
+      person(px, 8, pz, working ? 0x6ee7c0 : 0x6b8fc9, working, wname);
     }
   });
+}
+
+async function talk(){
+  const who = document.getElementById('who');
+  const msg = document.getElementById('msg');
+  const reply = document.getElementById('reply');
+  if (!who || !msg || !who.value || !msg.value.trim()) return;
+  const dep = who.options[who.selectedIndex].dataset.dept || '';
+  try{
+    const r = await fetch(`/api/talk?worker=${encodeURIComponent(who.value)}&dept=${encodeURIComponent(dep)}&msg=${encodeURIComponent(msg.value)}`);
+    const d = await r.json();
+    reply.textContent = d.reply || '(cevap yok)';
+    msg.value = '';
+  }catch(e){ reply.textContent = 'bağlantı hatası'; }
+}
+
+function fillWho(deps){
+  const who = document.getElementById('who');
+  if (!who || who.dataset.done) return;
+  const opts = [];
+  for (const dep of deps || []){
+    for (const w of (dep.workers || [])){
+      const id = w.name || w.worker_id || w;
+      opts.push(`<option data-dept="${dep.id || dep.department_id}" value="${id}">${dep.name || dep.id} · ${id}</option>`);
+    }
+  }
+  if (opts.length){ who.innerHTML = opts.join(''); who.dataset.done = '1'; }
+  who.addEventListener('change', () => { document.getElementById('reply').textContent = ''; });
 }
 
 function chat(list){
@@ -222,7 +264,7 @@ async function sync(){
   try{
     const r = await fetch('/api/agent-office', {cache:'no-store'});
     const s = await r.json();
-    build(s); hud(s);
+    build(s); hud(s); fillWho(s.departments);
     try{
       const c = await (await fetch('/api/conversations', {cache:'no-store'})).json();
       chat(c);
@@ -262,6 +304,7 @@ addEventListener('resize', () => {
 });
 
 sync(); setInterval(sync, 5000);
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target && e.target.id === 'msg') talk(); });
 (function loop(){ requestAnimationFrame(loop); renderer.render(scene, camera); })();
 </script></body></html>
 """
