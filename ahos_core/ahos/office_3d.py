@@ -182,8 +182,9 @@ function person(x, y, z, color, working, name){
     spr.position.set(0,46,0); spr.scale.set(76,15,1); grp.add(spr);
   }
   grp.position.set(x,y,z);
+  grp.userData = {name: name || '', home: {x, y, z}};
   people.add(grp);
-  avatars.push({grp, phase: Math.random()*Math.PI*2});
+  avatars.push({grp, phase: Math.random()*Math.PI*2, home:{x,z}});
 }
 
 let built=false;
@@ -293,13 +294,54 @@ addEventListener('resize',()=>{
 document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.id==='msg') talk(); });
 
 sync(); setInterval(sync,5000);
+
+// --- etkileşim: işçiye/odaya tıkla → kamera odaklan + kart ---
+const ray = new THREE.Raycaster();
+const ptr = new THREE.Vector2();
+let focus = null;
+
+function onClick(e){
+  ptr.x = (e.clientX/innerWidth)*2-1;
+  ptr.y = -(e.clientY/innerHeight)*2+1;
+  ray.setFromCamera(ptr, camera);
+  const hits = ray.intersectObjects([...people.children, ...rooms.children], true);
+  if (!hits.length) return;
+  let obj = hits[0].object;
+  while (obj.parent && obj.parent !== people && obj.parent !== rooms) obj = obj.parent;
+  const world = new THREE.Vector3();
+  obj.getWorldPosition(world);
+  focus = world.clone();
+  const card = document.getElementById('reply');
+  const name = obj.userData && obj.userData.name;
+  if (card && name) card.textContent = 'Seçili: ' + name;
+  if (card && !name) card.textContent = 'Oda odaklandı';
+  yaw = Math.atan2(world.x, world.z);
+  pitch = 0.62; dist = 520;
+  place();
+}
+
+function placeAround(){
+  if (!focus) return;
+  camera.lookAt(focus.x, 30, focus.z);
+}
+
+addEventListener('click', onClick);
+
 let t0=0;
 (function loop(t){
   requestAnimationFrame(loop);
-  t0=t;
+  const dt = t0 ? Math.min(0.05,(t-t0)/1000) : 0.016; t0 = t;
   for(const a of avatars){
-    a.grp.position.y = 10 + Math.sin(t/520 + a.phase)*1.4;
+    // nefes + küçük yürüyüş salınımı
+    a.grp.position.y = 10 + Math.sin(t/520 + a.phase)*1.6;
+    a.grp.position.x += Math.sin(t/2100 + a.phase)*dt*6;
+    a.grp.position.z += Math.cos(t/2600 + a.phase)*dt*5;
+    a.grp.rotation.y = Math.sin(t/900 + a.phase)*0.5;
   }
+  rooms.children.forEach((child,i)=>{
+    if (child.isSprite) child.material.opacity = 0.75 + Math.sin(t/1400 + i)*0.2;
+  });
+  placeAround();
   renderer.render(scene,camera);
 })(0);
 </script></body></html>
