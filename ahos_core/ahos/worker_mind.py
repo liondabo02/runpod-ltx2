@@ -5,7 +5,7 @@ import json, sqlite3, time
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from . import sovereign
+from . import cognition, sovereign
 
 MAX_EVENTS = 200
 
@@ -122,6 +122,13 @@ def tick(runtime_dir, departments: list, limit: int = 6, seed=None) -> dict:
         plan_steps(mind, ctx)
         calibrate(mind)
         sovereign.embed(mind)
+        forecast = cognition.predict(ctx, mind)
+        mind.self_model["reasoning"] = cognition.reason(
+            str((mind.self_model or {}).get("goal") or ""),
+            {"blocked": ctx.get("blocked", 0), "pending": ctx.get("pending", 0),
+             "rate": mind.success_rate},
+        )
+        mind.self_model["forecast"] = forecast
         to_plan_queue(runtime, mind)
         save(runtime, mind)
         thoughts.append(thought)

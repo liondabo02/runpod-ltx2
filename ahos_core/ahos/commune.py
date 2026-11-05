@@ -14,6 +14,7 @@ import random
 import time
 from pathlib import Path
 
+from . import cognition
 from .worker_mind import load, save
 
 
@@ -68,6 +69,10 @@ def converse(runtime_dir, departments: list, rounds: int = 3, seed: int | None =
             _post(runtime, asker, dep_id, topic, question)
             _post(runtime, responder, dep_id, topic, answer, reply_to=asker)
 
+            cognition.learn_from(runtime, responder, dep_id, cognition.extract_lesson(
+                {"from": asker, "body": question}), source="soru")
+            cognition.learn_from(runtime, asker, dep_id, cognition.extract_lesson(
+                {"from": responder, "body": answer}), source="cevap")
             for mind, text, kind in ((asker_mind, question, "ask"), (responder_mind, answer, "answer")):
                 mind.events.append({
                     "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
