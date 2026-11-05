@@ -119,6 +119,14 @@ def run(core: Path | None = None) -> dict:
     except Exception:  # noqa: BLE001
         pass
 
+    # Departman kendini gelistirme turu (is olsa da olmasa da)
+    try:
+        from .dept_improve import run as _dept_run
+
+        dept = _dept_run(runtime)
+    except Exception:  # noqa: BLE001
+        dept = {}
+
     summary = summarize(runtime)
     queue = _queue(runtime / "company-service.db")
     mood = mood_from(queue, float(summary.get("avg_success_rate", 0)))
@@ -134,6 +142,7 @@ def run(core: Path | None = None) -> dict:
         "training": {k: training.get(k) for k in ("departments", "workers", "passed", "average_score")},
         "queue": queue,
         "mood": mood.to_dict(),
+        "departments_improved": dept,
         "report": str(report_path.relative_to(core)),
     }
     (cfg / "heartbeat.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
