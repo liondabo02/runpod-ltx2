@@ -1,0 +1,47 @@
+{
+  "at": "2026-11-05T17:36:25",
+  "owner": "harun",
+  "departments": 17,
+  "minds": {
+    "thoughts": 20,
+    "lessons": 20,
+    "context": {
+      "completed": 3613,
+      "blocked": 310,
+      "pending": 424
+    }
+  },
+  "commune": {
+    "pairs": 34,
+    "messages": 68,
+    "departments": 17
+  },
+  "plan_queue": {
+    "created": 10,
+    "pending": 950
+  },
+  "training": {
+    "departments": 17,
+    "workers": 81,
+    "passed": 81,
+    "average_score": 100.0
+  },
+  "queue": {
+    "blocked": 310,
+    "cancelled": 299,
+    "completed": 3613,
+    "failed": 13,
+    "pending": 434
+  },
+  "mood": {
+    "energy": 0.993,
+    "stress": 0.142,
+    "focus": 0.901,
+    "label": "motive",
+    "notes": [
+      "engel oranı 7%",
+      "bekleyen 434"
+    ]
+  },
+  "report": "runtime\\reports\\2026-11-05.md"
+}
