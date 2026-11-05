@@ -92,6 +92,7 @@ def detect_crisis(runtime_dir: str | Path, *, threshold: int = ESCALATE_AFTER, w
         return None
     counts: dict[str, int] = {}
     departments: dict[str, set[str]] = {}
+    seen_missions: set[tuple[str, str]] = set()
     for line in path.read_text(encoding="utf-8", errors="replace").splitlines()[-window:]:
         try:
             row = json.loads(line)
@@ -100,6 +101,14 @@ def detect_crisis(runtime_dir: str | Path, *, threshold: int = ESCALATE_AFTER, w
         cause = str(row.get("cause") or "")
         if not cause:
             continue
+        mission_id = str(row.get("mission_id") or "")
+        # Several retries of the same task are one failing mission, not
+        # independent new evidence for generating another crisis.
+        if mission_id:
+            key = (cause, mission_id)
+            if key in seen_missions:
+                continue
+            seen_missions.add(key)
         counts[cause] = counts.get(cause, 0) + 1
         departments.setdefault(cause, set()).add(str(row.get("department") or ""))
     for cause, count in sorted(counts.items(), key=lambda kv: -kv[1]):
@@ -135,7 +144,22 @@ def act(runtime_dir: str | Path, *, threshold: int = ESCALATE_AFTER) -> dict:
         from .autonomous_company import PersistentMissionQueue
 
         queue = PersistentMissionQueue(runtime / "company-service.db")
+        existing = queue.list()
+        skipped: list[str] = []
+        prefix = f"KRİZ GÖREVİ: '{crisis.cause}'"
         for department in crisis.departments[:2]:
+            # Never generate another crisis mission while an earlier mission
+            # for the same department/cause is unresolved. Otherwise each
+            # heartbeat amplifies the backlog instead of repairing it.
+            if any(
+                item.primary_department == department
+                and item.objective.startswith(prefix)
+                and str(getattr(item.status, "value", item.status))
+                    not in {"completed", "cancelled", "failed"}
+                for item in existing
+            ):
+                skipped.append(department)
+                continue
             mission_id = f"CMD-{department}-crisis-{stamp}"
             queue.enqueue(
                 mission_id=mission_id,
@@ -145,11 +169,13 @@ def act(runtime_dir: str | Path, *, threshold: int = ESCALATE_AFTER) -> dict:
                 ),
                 primary_department=department,
                 max_attempts=2,
-                replace_existing=True,
+                replace_existing=False,
             )
             created.append(mission_id)
-    except Exception:  # noqa: BLE001 - kuyruk isteğe bağlı
-        pass
+            existing = queue.list()
+        record["skipped_duplicate_departments"] = skipped
+    except Exception as exc:  # noqa: BLE001 - fail closed, report why
+        record["enqueue_error"] = type(exc).__name__
 
     record["missions"] = created
     return {"crisis": record}

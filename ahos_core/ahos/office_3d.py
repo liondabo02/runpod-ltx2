@@ -52,7 +52,7 @@ HTML = r"""<!doctype html>
        padding:15px 17px;border:1px solid;border-radius:14px;background:rgba(10,19,34,.94)}
   #inspector[hidden]{display:none}
   #inspector h3{color:#92dfff;margin:0 24px 5px 0;font-size:14px}
-  #inspector .muted{font-size:12px;color:#a7b9d0}
+  #inspector .muted{font-size:12px;color:#a7b9d0;white-space:pre-wrap}
   #inspector .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:13px 0}
   #inspector .metric{background:#13243b;border-radius:8px;padding:8px;font-size:11px;color:#acc5df}
   #inspector .metric b{display:block;color:#f0f7ff;font-size:18px}
@@ -100,7 +100,7 @@ HTML = r"""<!doctype html>
   <input id="msg" placeholder="işçiye yaz, Enter…">
   <div id="reply"></div>
 </div>
-<div id="renders"><h4>ÜRETİMLER</h4><div id="renderlist">…</div></div>
+<div id="renders"><h4>ÜRETİMLER</h4><div id="renderlist">Kontrol ediliyor…</div></div>
 <div id="err"></div>
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
@@ -279,10 +279,12 @@ function build(snap){
     const wname = dep.name || dep.department_id;
     makeRoom(cx, cz, 240, 260, accent, busy, wname, `${(dep.workers||[]).length} kişi`, dep.department_id);
     const list = dep.workers||[];
-    for (let k=0;k<Math.min(list.length,9);k++){
+    const across=Math.max(1,Math.ceil(Math.sqrt(list.length)));
+    const lines=Math.max(1,Math.ceil(list.length/across));
+    for (let k=0;k<list.length;k++){
       const working = list[k].activity_verified === true;
-      const px = cx - 74 + (k%3)*74;
-      const pz = cz - 60 + Math.floor(k/3)*66;
+      const px = cx + (k%across-(across-1)/2)*Math.min(63,180/Math.max(1,across-1));
+      const pz = cz + (Math.floor(k/across)-(lines-1)/2)*Math.min(63,180/Math.max(1,lines-1));
       const raw = String(list[k].worker_id || list[k]);
       const rec = ROSTER[raw];
       const nm = list[k].name || (rec ? rec.name : raw.replace(/^mgr-/,'').slice(0,16));
@@ -479,6 +481,7 @@ addEventListener('resize',()=>{
 });
 document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.id==='msg') talk(); });
 
+loadRenders(); setInterval(loadRenders,15000);
 sync(); setInterval(sync,5000);
 
 // --- etkileşim: işçiye/odaya tıkla → kamera odaklan + kart ---

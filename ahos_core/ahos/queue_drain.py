@@ -57,6 +57,7 @@ def drain(
         claimed = queue.claim_next(owner=owner, lease_seconds=900)
         if claimed is None:
             break
+        started_at = time.monotonic()
         spec = console.book.get(claimed.primary_department)
         if spec is None:
             queue.block(
@@ -172,14 +173,25 @@ def drain(
                 else:
                     result = console._execute(spec, claimed.objective, claimed.mission_id)
         console._record(claimed.mission_id, owner, result)
-        # SONUC -> ZIHIN: gorev sonucu isci zihnine ve outcome'a yazilir.
+        # Evidence-based feedback: score the actual *recorded* route and
+        # outcome only once per mission. A queued task is not work evidence.
         try:
             from .mind_feedback import feedback as _feedback
+            from .scope import should_document
 
             _ok = str(getattr(result.status, "value", result.status)) == "completed"
-            _feedback(console.runtime_dir, spec.department_id + "-manager",
-                      spec.department_id, _ok)
-        except Exception:  # noqa: BLE001
+            _route = (
+                "simple_edit" if fast_done else
+                "render" if claimed.objective.startswith("render:") else
+                "document" if should_document(claimed.objective) else "executor"
+            )
+            _feedback(
+                console.runtime_dir, spec.department_id + "-manager",
+                spec.department_id, _ok,
+                duration_s=max(0.0, time.monotonic() - started_at),
+                plan_type=_route, mission_id=claimed.mission_id,
+            )
+        except Exception:  # noqa: BLE001 - scoring must not forge completion
             pass
         # Agent Atrium günlüğü: kim, hangi departmanda, ne yaptı.
         try:

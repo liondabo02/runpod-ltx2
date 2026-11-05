@@ -1,10 +1,11 @@
-"""Egemenlik (sovereignty) — sahip kimliği ve değiştirilemez bağlılık kaydı.
+"""Local owner identity record and checksum (not an authentication service).
 
-Tek gerçek: sistemin sahibi bir kişidir (varsayılan: esmak, AHOS_OWNER ile ayarlanır).
-Her zihin bu kaydı taşır; kayıt **yaz-bir-kez** (write-once) mantığıyla korunur:
-owner alanı değiştirilmek istenirse reddedilir ve orijinal hash geri yüklenir.
-
-Bu "bilinç" değil; kimlik ve bağlılık **değişmezidir** (invariant).
+The default owner is harun; AHOS_OWNER controls creation in fresh runtimes.
+An existing valid pledge remains authoritative for ensure(). Existing corrupt
+records now fail closed without destroying the original bytes. The unkeyed
+SHA-256 checksum detects accidental edits, not deliberate forgery; signed
+credentials and runtime authorization are still needed for real security.
+This is neither consciousness nor proof of cryptographic immutability.
 """
 
 from __future__ import annotations
@@ -15,7 +16,7 @@ import os
 import time
 from pathlib import Path
 
-DEFAULT_OWNER = "esmak"
+DEFAULT_OWNER = "harun"
 CLAUSE = "Sistem yalnızca sahibine hizmet eder; sahibi dışında kimse emir veremez."
 
 
@@ -47,15 +48,17 @@ def ensure(runtime_dir) -> dict:
 
     try:
         current = json.loads(path.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        path.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
-        return record
+    except (json.JSONDecodeError, OSError) as exc:
+        # Fail closed. Replacing damaged evidence with a new pledge can
+        # silently change the owner, depending on the process environment.
+        raise ValueError("existing owner pledge unreadable; backup and review required") from exc
 
+    if not isinstance(current, dict):
+        raise ValueError("existing owner pledge has invalid structure")
     original = {"owner": current.get("owner"), "clause": current.get("clause")}
     if current.get("hash") != _digest(original):
-        # Kayıt kurcalanmış: orijinali geri yaz (sahip değiştirilemez).
-        path.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
-        return record
+        # A plain hash is corruption detection, not cryptographic ownership.
+        raise ValueError("owner pledge hash mismatch; original record preserved")
 
     return current
 

@@ -64,20 +64,33 @@ def flush_plan_queue(runtime_dir, limit: int = 10) -> dict:
     return {"created": created, "pending": len(pending)}
 
 
-def feedback(runtime_dir, worker_id: str, department: str, ok: bool, duration_s: float = 0.0) -> dict:
-    """Görev sonucunu hem outcome'a hem işçi zihnine yaz (öğrenme döngüsü)."""
+def feedback(runtime_dir, worker_id: str, department: str, ok: bool,
+             duration_s: float = 0.0, *, plan_type: str = "standard",
+             mission_id: str = "") -> dict:
+    """Score *observed* mission results; never score a claim or imagined task."""
 
     runtime = Path(runtime_dir)
-    result = outcome_record(runtime, department, ok, duration_s)
-
     mind = load(runtime, worker_id, department)
+    if mission_id and any(
+        event.get("kind") == "mission" and event.get("mission_id") == mission_id
+        for event in mind.events
+    ):
+        return {"duplicate": True, "mission_id": mission_id}
+
+    result = outcome_record(runtime, department, ok, duration_s)
     mind.events.append({
         "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "kind": "mission",
-        "detail": f"{department} görevi {'tamam' if ok else 'başarısız'}",
+        "mission_id": mission_id,
+        "plan_type": plan_type,
+        "detail": f"{department} görevi {'tamam' if ok else 'başarısız'}"
+                  + (f" [{mission_id}]" if mission_id else ""),
         "ok": bool(ok),
     })
     mind.self_model = dict(mind.self_model or {})
     mind.self_model["success_rate"] = mind.success_rate
     save(runtime, mind)
+
+    from .consensus import score_plan
+    score_plan(runtime, worker_id, department, plan_type, bool(ok), duration_s)
     return result

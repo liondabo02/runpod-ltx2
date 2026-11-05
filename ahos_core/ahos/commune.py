@@ -11,11 +11,9 @@ from __future__ import annotations
 
 import json
 import random
+import sqlite3
 import time
 from pathlib import Path
-
-from . import cognition
-from .worker_mind import load, save
 
 
 def _log(runtime: Path) -> Path:
@@ -38,8 +36,35 @@ def _post(runtime: Path, sender: str, department: str, topic: str, body: str, re
     return message
 
 
+def _latest_department_result(runtime: Path, department: str) -> dict | None:
+    """Read one actual terminal mission; do not fabricate worker ownership."""
+    database = runtime / "company-service.db"
+    if not database.is_file():
+        return None
+    try:
+        with sqlite3.connect("file:" + database.as_posix() + "?mode=ro", uri=True) as con:
+            row = con.execute(
+                "select mission_id, objective, status, last_error, updated_at "
+                "from missions where primary_department=? "
+                "and status in ('completed','blocked','failed') "
+                "order by updated_at desc limit 1",
+                (department,),
+            ).fetchone()
+    except (sqlite3.Error, OSError):
+        return None
+    if row is None:
+        return None
+    return {
+        "id": str(row[0] or ""),
+        "objective": str(row[1] or "")[:130],
+        "status": str(row[2] or ""),
+        "error": str(row[3] or "")[:110],
+        "updated_at": str(row[4] or ""),
+    }
+
+
 def converse(runtime_dir, departments: list, rounds: int = 3, seed: int | None = None) -> dict:
-    """Departman içi soru-cevap turları: işçiler birbirine yazar, cevap verir."""
+    """Share verifiable department results; conversation is not model learning."""
 
     runtime = Path(runtime_dir)
     rng = random.Random(seed if seed is not None else int(time.time()))
@@ -55,32 +80,32 @@ def converse(runtime_dir, departments: list, rounds: int = 3, seed: int | None =
             if len(worker_ids) < 2:
                 continue
             asker, responder = rng.sample(worker_ids, 2)
-            asker_mind = load(runtime, asker, dep_id)
-            responder_mind = load(runtime, responder, dep_id)
-
-            topic = str((asker_mind.self_model or {}).get("goal") or "durum")
-            question = (
-                f"{dep_id} için hedefim '{topic}'. "
-                f"Planım: {' → '.join((asker_mind.self_model or {}).get('plan') or ['plan yok'])}. "
-                "Sende işe yarayan bir yöntem var mı?"
-            )
-            answer = str((responder_mind.self_model or {}).get("lesson") or "henüz dersim yok; birlikte deneyelim.")
+            record = _latest_department_result(runtime, dep_id)
+            if record:
+                topic = record["id"]
+                question = (
+                    f"{dep_id} departmanı gerçek kuyruk kaydı {record['id']} "
+                    f"({record['status']}, {record['updated_at']}): "
+                    f"{record['objective']}. Bu sonucu nasıl doğrulamalıyız?"
+                )
+                if record["status"] == "completed":
+                    advice = "Tamamlandı kaydı var; bağımsız teslim/QA kanıtını denetleyelim."
+                else:
+                    advice = (
+                        f"Engel nedeni: {record['error'] or 'kayıtta gerekçe yok'}. "
+                        "Önce sebebi ve önceki yan etkileri doğrulayalım; kör tekrar yok."
+                    )
+                answer = f"{record['id']} için veritabanı durumu {record['status']}. {advice}"
+            else:
+                topic = "kayıt yok"
+                question = f"{dep_id} için doğrulanmış tamamlanmış/engelli görev kaydı bulunamadı."
+                answer = "Gerçek görev kaydı olmadan çalıştım ya da öğrendim diyemem."
 
             _post(runtime, asker, dep_id, topic, question)
             _post(runtime, responder, dep_id, topic, answer, reply_to=asker)
-
-            cognition.learn_from(runtime, responder, dep_id, cognition.extract_lesson(
-                {"from": asker, "body": question}), source="soru")
-            cognition.learn_from(runtime, asker, dep_id, cognition.extract_lesson(
-                {"from": responder, "body": answer}), source="cevap")
-            for mind, text, kind in ((asker_mind, question, "ask"), (responder_mind, answer, "answer")):
-                mind.events.append({
-                    "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
-                    "kind": kind,
-                    "detail": text[:300],
-                    "ok": True,
-                })
-                save(runtime, mind)
+            # This read-only exchange is a status summary, not a model-based
+            # inference or a verified worker result. It must not inflate mind
+            # success rates or create fabricated 'lessons'.
 
             pairs += 1
             messages += 2

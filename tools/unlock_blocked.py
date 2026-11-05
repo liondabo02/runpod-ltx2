@@ -8,41 +8,40 @@ RUNTIME = CORE / "runtime"
 sys.path.insert(0, str(CORE))
 
 
-def main(limit: int = 40) -> int:
-    tb = RUNTIME / "taskboard.json"
-    con = sqlite3.connect(RUNTIME / "company-service.db", timeout=30)
-    blocked = [r[0] for r in con.execute("select mission_id from missions where status='blocked'").fetchall()]
-    cleared = 0
-    if tb.exists():
+def main(limit: int = 40, *, apply: bool = False) -> int:
+    """Recover *only* verified stale lock cases; preview by default.
+
+    A blocked mission may have failed QA, an invalid taskboard schema, or
+    irreversible side effects. Never update all blocked SQLite rows, clear
+    ownership evidence or rewrite the taskboard as an untyped lock dict.
+    """
+    from ahos.queue_repair import reopen_blocked
+
+    board_path = RUNTIME / "taskboard.json"
+    if board_path.exists():
+        from ahos.taskboard import TaskBoard, TaskBoardError
         try:
-            data = json.loads(tb.read_text(encoding="utf-8"))
-            locks = data.get("locks") or data
-            if isinstance(locks, dict):
-                for mid in list(locks.keys()):
-                    if mid in set(blocked):
-                        locks.pop(mid, None)
-                        cleared += 1
-                tb.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-        except Exception:
-            pass
-    n = con.execute(
-        "update missions set status='pending', attempts=0, max_attempts=2, next_attempt_at=0, "
-        "lease_owner=NULL, lease_until=NULL, last_error='yeniden: kilit temizlendi' "
-        "where status='blocked'"
-    ).rowcount
-    con.commit()
-    print(f"kilit temizlenen: {cleared} | yeniden kuyruga: {n}")
+            TaskBoard(board_path).tasks()  # read-only schema validation
+        except TaskBoardError as exc:
+            print(f"BLOCKED: taskboard invalid; repair it first: {exc}")
+            return 2
 
-    from ahos.owner_console import build_default_console
-    from ahos.queue_drain import drain
-
-    console = build_default_console(RUNTIME)
-    t0 = time.time()
-    rep = drain(console, owner=f"unlock-{int(time.time())}", limit=limit)
-    print(f"islenen: {len(rep['executed'])} | sure: {round(time.time()-t0,1)}s")
-    print("kuyruk:", dict(con.execute("select status,count(*) from missions group by status").fetchall()))
+    report = reopen_blocked(RUNTIME, limit=max(0, limit), dry_run=not apply)
+    print(json.dumps({
+        "dry_run": not apply,
+        "candidates": report["candidates"],
+        "planned": report["planned"],
+        "moved_items": report["moved_items"],
+    }, ensure_ascii=False))
+    print("No missions were marked complete; unrecoverable blocks remain blocked.")
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main(int(sys.argv[1]) if len(sys.argv) > 1 else 40))
+    import argparse
+    parser = argparse.ArgumentParser(description="Safe stale-lock recovery; dry-run by default.")
+    parser.add_argument("limit", nargs="?", type=int, default=40)
+    parser.add_argument("--apply", action="store_true",
+                        help="create fresh retry IDs for verified stale-lock failures only")
+    args = parser.parse_args()
+    raise SystemExit(main(args.limit, apply=args.apply))

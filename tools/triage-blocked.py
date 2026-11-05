@@ -29,14 +29,11 @@ from ahos.failure_analytics import classify_error
 R = Path(r"C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\ahos_core\runtime")
 LIMIT = int(sys.argv[1]) if len(sys.argv) > 1 else 25
 
-REOPEN = {
-    "claim_blocked",
-    "executor_missing",
-    "acceptance_failed",
-    "mission_timeout",
-    "model_unavailable",
-    "worker_failed",
-}
+# Legacy bulk updates were unsafe: an error category is not proof that a
+# mission can be retried without duplicate side effects or discarded QA.
+# This report is now read-only; use ahos.queue_repair.reopen_blocked with
+# an explicit dry-run and independent review for verified stale leases.
+REOPEN: set[str] = set()
 
 con = sqlite3.connect(R / "company-service.db")
 con.row_factory = sqlite3.Row

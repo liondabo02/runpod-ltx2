@@ -14,6 +14,7 @@ def test_3d_office_has_navigation_and_live_status(tmp_path):
     assert "verified_active_workers" in html
     assert "activity_verified===true" in html
     assert "roomById" in html
+    assert "for (let k=0;k<list.length;k++)" in html  # no invisible workers
     assert "renderer.domElement.addEventListener('click',onClick)" in html
 
 

@@ -86,3 +86,37 @@ def test_act_records_escalation(tmp_path) -> None:
 
 def test_act_without_crisis_is_noop(tmp_path) -> None:
     assert ceo_powers.act(tmp_path)["crisis"] is None
+
+
+
+def test_crisis_does_not_enqueue_duplicate_unresolved_missions(tmp_path) -> None:
+    from ahos.autonomous_company import PersistentMissionQueue
+
+    _retry_records(tmp_path, "acceptance_failed", 4, department="creative")
+    first = ceo_powers.act(tmp_path)
+    assert first["crisis"] is not None
+    assert len(first["crisis"]["missions"]) == 1
+
+    second = ceo_powers.act(tmp_path)
+    assert second["crisis"]["missions"] == []
+    assert second["crisis"]["skipped_duplicate_departments"] == ["creative"]
+    queue = PersistentMissionQueue(tmp_path / "company-service.db")
+    crisis = [m for m in queue.list() if m.objective.startswith("KRİZ GÖREVİ:")]
+    assert len(crisis) == 1
+
+
+
+def test_crisis_retries_of_one_mission_count_only_once(tmp_path) -> None:
+    path = tmp_path / "ceo" / "retry-policy.jsonl"
+    path.parent.mkdir(parents=True)
+    with path.open("w", encoding="utf-8") as handle:
+        for _ in range(6):
+            handle.write(json.dumps({"cause": "acceptance_failed",
+                                     "department": "creative", "mission_id": "same-1"}) + "\n")
+    assert ceo_powers.detect_crisis(tmp_path, threshold=3) is None
+    with path.open("a", encoding="utf-8") as handle:
+        for mission in ("other-2", "other-3"):
+            handle.write(json.dumps({"cause": "acceptance_failed",
+                                     "department": "creative", "mission_id": mission}) + "\n")
+    result = ceo_powers.detect_crisis(tmp_path, threshold=3)
+    assert result is not None and result.count == 3

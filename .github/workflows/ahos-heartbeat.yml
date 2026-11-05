@@ -1,7 +1,8 @@
 name: AHOS Heartbeat
 
-# Bilgisayar kapaliyken de calisir: her 30 dakikada bir zihin turu,
-# konusma, plan->gorev, egitim ve gunluk rapor uretir.
+# Github hosted runner 30 dakikada bir AYRI, gecici ortamda calisir.
+# Yerel Windows runtime/SQLite ve zihin dosyalarina bagli DEGILDIR.
+# Bu workflow PC kapaliyken yerel kuyrugu calistirmaz; yalniz repo raporu uretir.
 on:
   schedule:
     - cron: "*/30 * * * *"
@@ -37,6 +38,10 @@ jobs:
         run: |
           git config user.name "AHOS Heartbeat"
           git config user.email "heartbeat@ahos.local"
-          git add ahos_core/config/heartbeat.json ahos_core/config/report-latest.md ahos_core/config/departments.json ahos_core/config/minds-summary.json ahos_core/config/training-report.json || true
-          git diff --staged --quiet || git commit -m "heartbeat: $(date -u +%Y-%m-%dT%H:%M) turu"
-          git push || true
+          for file in ahos_core/config/heartbeat.json ahos_core/config/report-latest.md ahos_core/config/departments.json ahos_core/config/minds-summary.json ahos_core/config/training-report.json; do
+            if [ -f "$file" ]; then git add "$file"; fi
+          done
+          if ! git diff --staged --quiet; then
+            git commit -m "heartbeat: $(date -u +%Y-%m-%dT%H:%M) turu"
+            git push origin "HEAD:$GITHUB_REF_NAME"
+          fi

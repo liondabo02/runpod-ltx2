@@ -19,7 +19,13 @@ class Mind:
 
     @property
     def success_rate(self) -> float:
-        return round(sum(1 for e in self.events if e.get("ok")) / len(self.events), 3) if self.events else 0.0
+        # Thoughts, scripted conversations and owner messages are not verified
+        # work. Only actual mission outcomes belong in a success percentage.
+        observed = [e for e in self.events
+                    if e.get("kind") == "mission" and isinstance(e.get("ok"), bool)]
+        if not observed:
+            return 0.0
+        return round(sum(1 for e in observed if e["ok"]) / len(observed), 3)
 
     def to_dict(self) -> dict:
         return {"worker_id": self.worker_id, "department": self.department, "role": self.role,
@@ -68,17 +74,22 @@ def think(mind: Mind, ctx: dict) -> str:
 
 
 def reflect(mind: Mind) -> dict:
-    recent = mind.events[-20:]
-    fails = [e for e in recent if not e.get("ok")]
+    recent = [e for e in mind.events[-20:]
+              if e.get("kind") == "mission" and isinstance(e.get("ok"), bool)]
+    fails = [e for e in recent if not e["ok"]]
     if fails:
         lesson = f"'{fails[-1].get('kind', 'bilinmeyen')}' turunde hata tekrarlandi; once dogrulama yap."
     elif recent:
         lesson = "son 20 olayda hata yok; mevcut yontem ise yariyor."
     else:
         lesson = "deneyim yok; ilk gorevde not al."
-    mind.self_model = {"success_rate": mind.success_rate, "events": len(mind.events),
-                       "strength": "istikrar" if mind.success_rate >= 0.9 else "gelisim alani",
-                       "lesson": lesson, "updated_at": time.strftime("%Y-%m-%dT%H:%M:%S")}
+    # Preserve durable plan scores/strategy. Replacing the entire self model
+    # on every tick erased prior mission outcomes and made "learning" vanish.
+    model = dict(mind.self_model or {})
+    model.update({"success_rate": mind.success_rate, "events": len(mind.events),
+                  "strength": "istikrar" if mind.success_rate >= 0.9 else "gelisim alani",
+                  "lesson": lesson, "updated_at": time.strftime("%Y-%m-%dT%H:%M:%S")})
+    mind.self_model = model
     return mind.self_model
 
 

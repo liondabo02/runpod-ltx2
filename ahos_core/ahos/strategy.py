@@ -8,16 +8,19 @@ import time
 def apply(mind) -> dict:
     """Son olaylara bakıp stratejiyi günceller ve zihne yazar."""
 
-    recent = mind.events[-30:]
+    # Score real mission executions only. A thought, chat or scheduled
+    # status update is not evidence that an agent succeeded at work.
+    recent = [e for e in mind.events[-30:]
+              if e.get("kind") == "mission" and isinstance(e.get("ok"), bool)]
     kinds: dict = {}
     for event in recent:
-        key = str(event.get("kind") or "?")
+        key = str(event.get("plan_type") or "mission")
         record = kinds.setdefault(key, {"ok": 0, "fail": 0})
-        record["ok" if event.get("ok") else "fail"] += 1
+        record["ok" if event["ok"] else "fail"] += 1
 
     total = sum(v["ok"] + v["fail"] for v in kinds.values()) or 1
     rate = round(sum(v["ok"] for v in kinds.values()) / total, 3)
-    best = max(kinds.items(), key=lambda kv: kv[1]["ok"])[0] if kinds else "think"
+    best = max(kinds.items(), key=lambda kv: kv[1]["ok"])[0] if kinds else "verified_mission_missing"
     worst = max(kinds.items(), key=lambda kv: kv[1]["fail"])[0] if kinds else ""
 
     strategy = {
@@ -30,6 +33,9 @@ def apply(mind) -> dict:
     }
 
     mind.self_model = dict(mind.self_model or {})
+    previous = dict(mind.self_model.get("strategy") or {})
+    if previous.get("preferred_plan"):
+        strategy["preferred_plan"] = previous["preferred_plan"]
     mind.self_model["strategy"] = strategy
     mind.self_model["strategy_history"] = (
         list(mind.self_model.get("strategy_history") or []) + [strategy]
