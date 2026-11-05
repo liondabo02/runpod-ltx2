@@ -81,7 +81,9 @@ def drain(
         result = None
         try:
             project = console._project_for_department(spec.department_id)
-            if project is not None and not claimed.objective.startswith("render:"):
+            from .scope import classify
+            if (project is not None and not claimed.objective.startswith("render:")
+                    and classify(claimed.objective) == "deterministic"):
                 from .simple_edits import apply_simple_edit, parse_simple_edit
 
                 project_root = project.work_path or project.path
@@ -129,14 +131,30 @@ def drain(
                         from .doc_factory import make_document_factory_executor
 
                         doc_executor = make_document_factory_executor(Path(console.runtime_dir))
-                        result = console._execute(
-                            spec,
-                            as_document_objective(claimed.objective),
-                            claimed.mission_id,
-                            executor=doc_executor,
+                        prior_scope = bool(getattr(console, "_scope_document", False))
+                        try:
+                            console._scope_document = True  # per-mission document QA
+                            result = console._execute(
+                                spec,
+                                as_document_objective(claimed.objective),
+                                claimed.mission_id,
+                                executor=doc_executor,
+                            )
+                        finally:
+                            console._scope_document = prior_scope
+                        # Preserve the owner goal in the queue/audit record.
+                        from dataclasses import replace as _replace
+                        if getattr(result, "objective", None) != claimed.objective:
+                            result = _replace(result, objective=claimed.objective)
+                    except Exception as exc:  # noqa: BLE001 - fail closed, do not fake success
+                        result = MissionResult(
+                            mission_id=claimed.mission_id,
+                            objective=claimed.objective,
+                            manager_id=None,
+                            status=MissionStatus.BLOCKED,
+                            steps=(),
+                            reason=f"doc_factory_route_failed:{type(exc).__name__}",
                         )
-                    except Exception:  # noqa: BLE001 - belge yolu başarısızsa normal yol
-                        result = console._execute(spec, claimed.objective, claimed.mission_id)
                 else:
                     result = console._execute(spec, claimed.objective, claimed.mission_id)
         console._record(claimed.mission_id, owner, result)

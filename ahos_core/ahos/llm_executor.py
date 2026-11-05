@@ -432,6 +432,19 @@ def _content_mode_retry(call, settings, root: Path, item, task: str):
     return parsed
 
 
+def _repair_empty_patch(call, settings: ModelSettings, root: Path, prompt: str):
+    """One self_repair prompt for a model response without productive edits."""
+    from .self_repair import feedback_prompt
+
+    repair_prompt = feedback_prompt(
+        prompt,
+        "Model boş yama üretti: edits boş veya hiçbir dosya değişmedi. "
+        "Bir gerçek, küçük find/replace düzenlemesi üret.",
+    )
+    raw = call(STRICT_SYSTEM_PROMPT, repair_prompt, settings)
+    return parse_model_response(raw, root), raw, repair_prompt
+
+
 def _repo_map_block(root: Path, task: str) -> str:
     """Aider tarzı depo haritası: göreve en yakın dosyalar + semboller."""
 
@@ -1153,6 +1166,13 @@ def make_model_executor(
         # bulut 7b bazen 300 s'yi aşıyor ve görev zaman aşımına düşüyor.
         if transport is None:
             settings = _small_task_settings(settings, item, root)
+        # The router never switches providers: it only chooses an authorized
+        # model supported by the already-configured endpoint.
+        from .scope import classify
+        from .model_router import pick
+        selected = pick(classify(item.title), settings=settings)
+        if selected and selected != settings.model:
+            settings = replace(settings, model=selected)
         blocked_reason = _paid_guard(settings)
         if blocked_reason is not None:
             return WorkerExecutionResult(
@@ -1274,19 +1294,37 @@ def make_model_executor(
                     summary=f"model çıktısı geçersiz (sıkı deneme sonrası): {exc}",
                 )
 
+        empty_repair_used = False
         if not response.edits:
-            # İkinci adım: küçük modeller "find/replace" üretemiyor ama tam dosyayı
-            # yazabiliyor. Hedef dosya küçükse içerik modunda bir kez daha dene.
-            retried = _content_mode_retry(call, settings, root, item, item.title)
-            if retried is not None:
-                response = retried
-            else:
+            # A3: one bounded self_repair retry, never an invented success.
+            empty_repair_used = True
+            try:
+                repaired, repair_raw, repair_prompt = _repair_empty_patch(
+                    call, settings, root, prompt,
+                )
+            except ModelError:
+                repaired = None
+            if repaired is None or not repaired.edits:
                 return WorkerExecutionResult(
                     task_id=item.task_id,
                     worker_id=worker_id,
                     success=False,
-                    summary="model değişiklik üretmedi (edits boş)",
+                    summary="blocked: model boş yama; self_repair 1 deneme de boş",
                 )
+            repair_cost = estimate_cost(repair_prompt, repair_raw, settings)
+            cost += repair_cost
+            if ledger is not None:
+                _append_spend(ledger, {
+                    "at": utc_now(), "mission": item.task_id,
+                    "model": settings.model, "usd": round(repair_cost, 6),
+                    "seconds": round(time.time() - started, 2),
+                })
+            if cost > settings.max_usd_per_run:
+                return WorkerExecutionResult(
+                    task_id=item.task_id, worker_id=worker_id, success=False,
+                    summary="blocked: self_repair maliyet tavanı aşıldı",
+                )
+            response = repaired
 
         total_bytes = sum(
             len((edit.content or edit.replace).encode("utf-8"))
@@ -1456,13 +1494,52 @@ def make_model_executor(
 
         after = snapshot(root)
         changes = diff_snapshots(root, before, after, before_texts=before_texts)
-        # BOŞ YAMA REDDİ: model hiçbir dosyayı değiştirmediyse başarı sayılmaz.
+        # Even a syntactically valid edit may be a no-op. Permit exactly one
+        # self_repair attempt before blocking; never accept an unchanged tree.
+        if not changes and not empty_repair_used:
+            empty_repair_used = True
+            try:
+                repaired, repair_raw, repair_prompt = _repair_empty_patch(
+                    call, settings, root, prompt,
+                )
+                repair_cost = estimate_cost(repair_prompt, repair_raw, settings)
+                cost += repair_cost
+                if ledger is not None:
+                    _append_spend(ledger, {
+                        "at": utc_now(), "mission": item.task_id,
+                        "model": settings.model, "usd": round(repair_cost, 6),
+                        "seconds": round(time.time() - started, 2),
+                    })
+                safe = (
+                    repaired.edits
+                    and cost <= settings.max_usd_per_run
+                    and len(repaired.edits) <= require_approval_over_files
+                    and sum(len((e.content or e.replace).encode("utf-8")) for e in repaired.edits) <= settings.max_bytes
+                    and repaired.risk not in risky
+                    and not any(e.shrinks_existing(root) or e.comments_out_code() for e in repaired.edits)
+                )
+                if safe:
+                    for edit in repaired.edits:
+                        target = root / edit.path
+                        originals.setdefault(edit.path,
+                            target.read_text(encoding="utf-8", errors="replace")
+                            if target.is_file() else None)
+                        edit.apply(root)
+                    response = repaired
+                    after = snapshot(root)
+                    changes = diff_snapshots(root, before, after, before_texts=before_texts)
+            except (ModelError, OSError, ValueError):
+                pass
         if not changes:
+            for name, original in originals.items():
+                target = root / name
+                if original is None:
+                    target.unlink(missing_ok=True)
+                else:
+                    target.write_text(original, encoding="utf-8")
             return WorkerExecutionResult(
-                task_id=item.task_id,
-                worker_id=worker_id,
-                success=False,
-                summary="model boş yama döndürdü (0 dosya değişti); yeniden üretilmeli",
+                task_id=item.task_id, worker_id=worker_id, success=False,
+                summary="blocked: self_repair sonrası da boş yama (0 dosya değişti)",
             )
         diff_path = destination / "CHANGES.diff"
         diff_path.write_text(

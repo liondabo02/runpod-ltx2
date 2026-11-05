@@ -1484,13 +1484,14 @@ class OwnerConsole:
                 department="quality",
                 capabilities=frozenset({"qa", "verification"}),
             ))
-        if not self._custom_qa and bound_project is None:
-            # Bağımsız kabul doğrulayıcısı yok (proje bağlı değil). Belge
-            # yürütücüsü gerçek bir dosya ürettiyse kabul edilir (hash+boyut);
-            # üretmediyse fail-closed kalır.
+        _scope_doc = bool(getattr(self, "_scope_document", False))
+        if not self._custom_qa and (bound_project is None or _scope_doc):
+            # Bağımsız kabul doğrulayıcısı yok (proje bağlı değil) veya görev
+            # belge kapsamına çevrildi (scope). Belge yürütücüsü gerçek bir dosya
+            # ürettiyse kabul edilir (hash+boyut); üretmediyse fail-closed kalır.
             import os as _os
             _doc_qa_on = _os.environ.get("AHOS_DOCUMENT_QA", "0").strip().lower() in {"1", "true", "yes"}
-            qa_executor = _document_qa if _doc_qa_on else _unverified_qa
+            qa_executor = _document_qa if (_doc_qa_on or _scope_doc) else _unverified_qa
 
         orchestrator = MultiWorkerMissionOrchestrator(
             workforce,
