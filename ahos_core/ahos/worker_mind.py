@@ -170,3 +170,12 @@ def summarize(runtime_dir) -> dict:
         thoughts = len(log.read_text(encoding="utf-8", errors="replace").splitlines())
     return {"workers_with_mind": len(files), "avg_success_rate": round(sum(rates) / len(rates), 3) if rates else 0.0,
             "thoughts": thoughts, "top_goals": dict(sorted(goals.items(), key=lambda kv: -kv[1])[:5])}
+
+
+def emotion(mind: dict, ctx: dict) -> dict:
+    """Report simple workload pressure; this is only an operational label."""
+    failures = max(0, int(ctx.get("failures", 0)))
+    delivered = max(0, int(ctx.get("delivered", 0)))
+    mood = "stres" if failures > delivered else "motive"
+    mind["mood"] = mood
+    return {"mood": mood, "failures": failures, "delivered": delivered}

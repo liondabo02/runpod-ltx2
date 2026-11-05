@@ -78,3 +78,14 @@ def simulate(goal: str, steps: list, facts: dict) -> dict:
             note = "engel yok; bu adim gereksiz"
         outcome.append({"step": i + 1, "action": step, "ok": ok, "note": note})
     return {"goal": goal, "steps": outcome, "feasible": all(s["ok"] for s in outcome)}
+
+def plan_from_goal(goal: str) -> list[dict[str, str]]:
+    """Create a proposed plan; never claim that planned steps were executed."""
+    goal = goal.strip()
+    if not goal:
+        raise ValueError("Hedef boş olamaz")
+    return [
+        {"action": f"analyze: {goal}", "status": "planned"},
+        {"action": f"plan: {goal}", "status": "planned"},
+        {"action": f"execute: {goal}", "status": "planned"},
+    ]

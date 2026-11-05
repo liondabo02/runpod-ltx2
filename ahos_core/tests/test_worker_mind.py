@@ -1,9 +1,4 @@
-"""Worker mind module tests"""
-import sys
-from pathlib import Path
-
-sys.path.insert(0, '/workspace/ahos/ahos_core')
-
+"""Worker mind operational mood tests (no absolute paths)."""
 from ahos.worker_mind import emotion
 
 def test_emotion_high_barrier():

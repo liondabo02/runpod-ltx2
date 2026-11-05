@@ -64,11 +64,19 @@ def submit(workflow: dict, host: str = DEFAULT_HOST) -> str:
 
 def wait(prompt_id: str, host: str = DEFAULT_HOST, timeout_s: float = 300.0, poll_s: float = 2.0) -> dict:
     """Sonucu bekler; history kaydını döndürür."""
-    deadline = time.time() + timeout_s
-    while time.time() < deadline:
+    deadline = time.monotonic() + timeout_s
+    while time.monotonic() < deadline:
         history = _request(f"{host}/history/{prompt_id}", timeout=15)
         record = history.get(prompt_id)
         if record:
+            status = record.get("status") or {}
+            state = str(status.get("status_str", "")).lower()
+            if state in {"error", "failed", "failure", "interrupted", "cancelled", "canceled"}:
+                raise RuntimeError(f"ComfyUI render tamamlanamadı: {state}")
+            # A queued/running history entry must not count as a finished render.
+            if status.get("completed") is False or state in {"pending", "running"}:
+                time.sleep(poll_s)
+                continue
             return record
         time.sleep(poll_s)
     raise TimeoutError(f"ComfyUI {prompt_id} {timeout_s:.0f}s içinde bitmedi")

@@ -16,7 +16,7 @@ def test_render_queue_route(tmp_path, monkeypatch):
     monkeypatch.setenv('AHOS_RENDER_OUT', str(tmp_path/'renders'))
     calls=[]
     def fake_render(w, out):
-        calls.append(w); out.mkdir(); image=out/'frame.png'; image.write_bytes(b'png'); return [image]
+        calls.append(w); out.mkdir(); image=out/'frame.png'; image.write_bytes(b'\x89PNG\r\n\x1a\n' + b'valid-png-test'); return [image]
     monkeypatch.setattr(render_task, 'render', lambda w,out: fake_render(w, __import__('pathlib').Path(out)))
     queue=PersistentMissionQueue(tmp_path/'company-service.db')
     queue.enqueue(mission_id='render-test', objective='render: ormanda minipula', primary_department='creative')

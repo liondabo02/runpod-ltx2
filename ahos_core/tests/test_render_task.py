@@ -6,7 +6,7 @@ def test_success_and_prompt_escaping(tmp_path, monkeypatch):
     workflow = tmp_path / 'workflow.json'
     workflow.write_text(json.dumps({'1': {'text': '{{prompt}}', 'seed': '{{seed}}'}}))
     output = tmp_path / 'frame.png'
-    output.write_bytes(b'image')
+    output.write_bytes(b'\x89PNG\r\n\x1a\n' + b'valid-png-test')
     seen = []
     def fake_render(graph, out):
         seen.append(graph)
