@@ -127,6 +127,15 @@ def run(core: Path | None = None) -> dict:
     except Exception:  # noqa: BLE001
         dept = {}
 
+    # Oylama: departmanlar turun onceligini birlikte belirler (kolektif karar)
+    try:
+        from .consensus import vote as _vote
+
+        consensus = _vote(runtime, "genel", "bu turun onceligi",
+                          ["engel tasfiyesi", "kuyruk bosaltma", "gelisim"])
+    except Exception:  # noqa: BLE001
+        consensus = {}
+
     summary = summarize(runtime)
     queue = _queue(runtime / "company-service.db")
     mood = mood_from(queue, float(summary.get("avg_success_rate", 0)))
@@ -142,6 +151,7 @@ def run(core: Path | None = None) -> dict:
         "training": {k: training.get(k) for k in ("departments", "workers", "passed", "average_score")},
         "queue": queue,
         "mood": mood.to_dict(),
+        "consensus": consensus,
         "departments_improved": dept,
         "report": str(report_path.relative_to(core)),
     }
