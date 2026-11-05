@@ -12,7 +12,12 @@ import pytest
 # Bu dosya tarihsel tasarımı test ediyor, güncel kapsam test_daemon_live.py'de.
 pytestmark = pytest.mark.skip(reason="eski AutonomyDaemon API'si kaldirildi; tick_once kullaniliyor")
 
-from ahos.daemon import AutonomyDaemon, mission_evidence, read_heartbeat
+try:  # eski API kaldirildi; modul toplanabilsin diye korumali ice aktarma
+    from ahos.daemon import AutonomyDaemon, mission_evidence, read_heartbeat
+except ImportError:  # pragma: no cover
+    AutonomyDaemon = None
+    mission_evidence = None
+    read_heartbeat = None
 from ahos.delivery import DeliveryTracker, diff_trees, snapshot_tree
 
 

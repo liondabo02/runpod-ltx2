@@ -25,6 +25,10 @@ HTML = r"""<!doctype html>
   #who,#msg{width:100%;background:#0f1728;color:#e8f0ff;border:1px solid #2a3d5c;border-radius:9px;
             padding:6px;margin-top:6px;font:12px system-ui}
   #reply{margin-top:7px;color:#a9e6cf;font-size:12px}
+  #renders{position:fixed;right:16px;top:16px;width:260px;max-height:26vh;overflow:auto;
+        background:rgba(12,18,30,.88);border:1px solid #22314e;border-radius:14px;padding:10px 12px;font-size:12px}
+  #renders h4{margin:0 0 6px;color:#ffd39b;font-size:11px;letter-spacing:.14em}
+  #renders a{color:#cfe3ff;display:block;text-decoration:none;margin:2px 0}
   #err{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#33131b;
        border:1px solid #8d2b3d;padding:16px 20px;border-radius:14px;display:none}
 </style></head>
@@ -35,6 +39,7 @@ HTML = r"""<!doctype html>
   <input id="msg" placeholder="işçiye yaz, Enter…">
   <div id="reply"></div>
 </div>
+<div id="renders"><h4>ÜRETİMLER</h4><div id="renderlist">…</div></div>
 <div id="err"></div>
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
