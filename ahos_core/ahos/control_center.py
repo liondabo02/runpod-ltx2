@@ -1130,6 +1130,61 @@ def build_handler(state: ControlCenterState):
                 from .office_floor import FLOOR_HTML
                 self._send(200, FLOOR_HTML.encode("utf-8"), "text/html; charset=utf-8")
                 return
+            if parsed.path == "/api/conversations":
+                from .commune import recent as _recent_conversations
+
+                body = json.dumps(_recent_conversations(state.runtime_dir, 20),
+                                  ensure_ascii=False).encode("utf-8")
+                self._send(200, body, "application/json; charset=utf-8")
+                return
+            if parsed.path == "/api/talk":
+                from .worker_mind import load as _load_mind
+                from .worker_mind import save as _save_mind
+
+                query = parse_qs(parsed.query)
+                worker = (query.get("worker") or [""])[0].strip()
+                message = (query.get("msg") or [""])[0].strip()[:500]
+                if not worker:
+                    self._send(400, b'{"error":"worker gerekli"}', "application/json; charset=utf-8")
+                    return
+                department = (query.get("dept") or [""])[0].strip()
+                mind = _load_mind(state.runtime_dir, worker, department)
+                model = dict(mind.self_model or {})
+                strategy = model.get("strategy") or {}
+                forecast = model.get("forecast") or {}
+                mood = model.get("mood") or {}
+                plan = model.get("plan") or []
+                goal = model.get("goal") or "-"
+                rate = round(mind.success_rate * 100)
+
+                reply = (
+                    f"Ben {worker} ({mind.department}). "
+                    f"Şu anki hedefim: {goal}. "
+                    f"Planım: {' → '.join(plan) if plan else 'henüz plan yok'}. "
+                    f"Başarı oranım %{rate} ({len(mind.events)} olay), "
+                    f"risk görüşüm: {forecast.get('risk', 'bilinmiyor')}, "
+                    f"ruh halim: {mood.get('label', 'nötr')}. "
+                    f"Stratejim: en iyi eylem '{strategy.get('best_action', '-')}', "
+                    f"risk toleransı {strategy.get('risk_tolerance', '-')}. "
+                )
+                lowered = message.lower()
+                if any(word in lowered for word in ("neden", "niye")):
+                    reply += "Sebep: geçmiş olaylarıma ve kuyruk durumuna bakarak karar veriyorum."
+                elif any(word in lowered for word in ("öner", "ne yap")):
+                    reply += f"Önerim: {goal} hedefi için önce '{plan[0] if plan else 'durum analizi'}' adımını atmalıyım."
+                elif message:
+                    reply += "Mesajını not aldım; bir sonraki turda dikkate alacağım."
+
+                mind.events.append({
+                    "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                    "kind": "owner_talk",
+                    "detail": f"sahip: {message[:160]}",
+                    "ok": True,
+                })
+                _save_mind(state.runtime_dir, mind)
+                body = json.dumps({"worker": worker, "reply": reply}, ensure_ascii=False).encode("utf-8")
+                self._send(200, body, "application/json; charset=utf-8")
+                return
             if parsed.path == "/api/agent-office":
                 from .agent_office import snapshot as agent_snapshot
                 body = json.dumps(agent_snapshot(state.runtime_dir), ensure_ascii=False).encode("utf-8")

@@ -116,6 +116,11 @@ def tick(runtime_dir, departments: list, limit: int = 6, seed=None) -> dict:
         thought = think(mind, ctx)
         mind.events.append({"at": time.strftime("%Y-%m-%dT%H:%M:%S"), "kind": "think", "detail": thought[:300], "ok": True})
         model = reflect(mind)
+        try:
+            from .strategy import apply as _apply_strategy
+            _apply_strategy(mind)
+        except Exception:
+            pass
         set_goal(mind, ctx)
         save(runtime, mind)
         thoughts.append(thought)

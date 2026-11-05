@@ -224,6 +224,62 @@ class OfficeHandler(BaseHTTPRequestHandler):
         if self.path.split("?")[0] in {"/", "/index.html"}:
             self._send(HTML.encode("utf-8"), "text/html; charset=utf-8")
             return
+        if self.path.split("?")[0] == "/api/conversations":
+            import json as _json
+            from .commune import recent as _recent
+
+            payload = _json.dumps(_recent(self.runtime_dir, 20), ensure_ascii=False)
+            self._send(payload.encode("utf-8"), "application/json; charset=utf-8")
+            return
+        if self.path.split("?")[0] == "/api/talk":
+            import time as _time
+            from urllib.parse import parse_qs as _parse_qs
+
+            from .worker_mind import load as _load_mind
+            from .worker_mind import save as _save_mind
+
+            query = _parse_qs(self.path.split("?", 1)[1] if "?" in self.path else "")
+            worker = (query.get("worker") or [""])[0].strip()
+            message = (query.get("msg") or [""])[0].strip()[:500]
+            department = (query.get("dept") or [""])[0].strip()
+            if not worker:
+                self._send(b'{"error":"worker gerekli"}', "application/json; charset=utf-8")
+                return
+            mind = _load_mind(self.runtime_dir, worker, department)
+            model = dict(mind.self_model or {})
+            strategy = model.get("strategy") or {}
+            forecast = model.get("forecast") or {}
+            mood = model.get("mood") or {}
+            plan = model.get("plan") or []
+            goal = model.get("goal") or "-"
+            rate = round(mind.success_rate * 100)
+
+            reply = (
+                f"Ben {worker} ({mind.department}). Hedefim: {goal}. "
+                f"Planım: {' → '.join(plan) if plan else 'henüz plan yok'}. "
+                f"Başarım %{rate} ({len(mind.events)} olay), risk: {forecast.get('risk', 'bilinmiyor')}, "
+                f"ruh halim: {mood.get('label', 'nötr')}. "
+                f"Stratejim: en iyi eylem '{strategy.get('best_action', '-')}', "
+                f"risk toleransı {strategy.get('risk_tolerance', '-')}. "
+            )
+            lowered = message.lower()
+            if any(word in lowered for word in ("neden", "niye")):
+                reply += "Sebep: geçmiş olaylarıma ve kuyruk durumuna bakarak karar veriyorum."
+            elif any(word in lowered for word in ("öner", "ne yap")):
+                reply += f"Önerim: önce '{plan[0] if plan else 'durum analizi'}' adımını atmalıyım."
+            elif message:
+                reply += "Mesajını not aldım; sonraki turda dikkate alacağım."
+
+            mind.events.append({
+                "at": _time.strftime("%Y-%m-%dT%H:%M:%S"),
+                "kind": "owner_talk",
+                "detail": f"sahip: {message[:160]}",
+                "ok": True,
+            })
+            _save_mind(self.runtime_dir, mind)
+            body = json.dumps({"worker": worker, "reply": reply}, ensure_ascii=False).encode("utf-8")
+            self._send(body, "application/json; charset=utf-8")
+            return
         if self.path.split("?")[0] == "/ofis3d":
             from .office_3d import render_html
             self._send(render_html().encode("utf-8"), "text/html; charset=utf-8")

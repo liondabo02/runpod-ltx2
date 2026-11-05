@@ -14,11 +14,18 @@ HTML = r"""<!doctype html>
   #hud{position:fixed;left:14px;top:12px;background:#101a2ce6;border:1px solid #22314e;border-radius:12px;padding:10px 14px}
   #hud b{color:#8fd3ff}
   #tip{position:fixed;right:14px;top:12px;background:#101a2ce6;border:1px solid #22314e;border-radius:12px;padding:10px 14px;color:#9fb0cc}
+  #chat{position:fixed;right:14px;bottom:14px;width:360px;max-height:44vh;overflow:auto;
+    background:#0e1728ee;border:1px solid #22314e;border-radius:12px;padding:10px 12px;font-size:12px}
+  #chat h4{margin:0 0 6px;color:#8fd3ff;font-size:12px;letter-spacing:.06em}
+  #chat .m{margin:0 0 8px;line-height:1.35}
+  #chat .who{color:#7fe3c0;font-weight:600}
+  #chat .dept{color:#7c8db0;font-size:11px}
   #err{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#33131b;border:1px solid #8d2b3d;padding:16px 20px;border-radius:12px;display:none}
 </style></head>
 <body>
 <div id="hud">AHOS · <b>Ofis Katı (3B)</b><br><span id="stats">yükleniyor…</span></div>
 <div id="tip">sürükle: döndür · tekerlek: zoom</div>
+<div id="chat"><h4>CANLI SOHBET</h4><div id="chatbody">yükleniyor…</div></div>
 <div id="err"></div>
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
@@ -194,6 +201,16 @@ function build(snap){
   });
 }
 
+function chat(list){
+  const box = document.getElementById('chatbody');
+  if (!box) return;
+  if (!list || !list.length){ box.textContent = 'henüz sohbet kaydı yok'; return; }
+  box.innerHTML = list.slice(-14).reverse().map(m =>
+    `<div class="m"><span class="who">${m.from || '?'}</span> ` +
+    `<span class="dept">· ${m.department || ''}</span><br>${String(m.body || '').slice(0,150)}</div>`
+  ).join('');
+}
+
 function hud(s){
   const t = s.totals || {};
   document.getElementById('stats').textContent =
@@ -206,6 +223,10 @@ async function sync(){
     const r = await fetch('/api/agent-office', {cache:'no-store'});
     const s = await r.json();
     build(s); hud(s);
+    try{
+      const c = await (await fetch('/api/conversations', {cache:'no-store'})).json();
+      chat(c);
+    }catch(_){ chat(null); }
   }catch(e){
     const el = document.getElementById('err');
     el.style.display='block'; el.textContent = 'API bağlantısı yok: ' + e.message;
