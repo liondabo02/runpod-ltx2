@@ -404,6 +404,28 @@ async function talk(){
   }catch(_){ reply.textContent='bağlantı hatası'; }
 }
 
+async function loadRenders(){
+  const box=document.getElementById('renderlist');
+  if(!box)return;
+  try{
+    const r=await fetch('/api/renders',{cache:'no-store'});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const files=await r.json();
+    if(!Array.isArray(files)||!files.length){
+      box.textContent='Henüz teslim edilmiş video veya görsel yok';
+      return;
+    }
+    const links=files.slice(0,6).map(file=>{
+      const a=document.createElement('a');
+      a.href='/renders/'+encodeURIComponent(String(file.name||''));
+      a.target='_blank'; a.rel='noopener noreferrer';
+      a.textContent=String(file.name||'üretim')+' · '+(Number(file.size||0)/1048576).toFixed(1)+' MB';
+      return a;
+    });
+    box.replaceChildren(...links);
+  }catch(_){box.textContent='Üretim listesine ulaşılamadı';}
+}
+
 async function sync(){
   try{
     const response=await fetch('/api/agent-office',{cache:'no-store'});
