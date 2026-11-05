@@ -294,26 +294,92 @@ function build(snap){
 function hud(s){
   const t = s.totals||{};
   document.getElementById('stats').textContent =
-    `departman ${(s.departments||[]).length} · işçi ${t.workers??0} · çalışan ${t.working??0}`+
-    ` · tamam ${t.completed??'-'} · engel ${t.blocked??'-'}`;
+    `Departman ${t.departments??0}  ·  Çalışan ${t.verified_active_workers??0}/${t.workers??0}`+
+    `  ·  Sırada ${t.pending??0}  ·  Tamam ${t.completed??0}  ·  Engel ${t.blocked??0}`;
+  const c=document.getElementById('connection');
+  c.textContent='● Canlı · '+new Date().toLocaleTimeString('tr-TR');
+  c.classList.add('ok');
 }
 
 function chat(list){
   const box=document.getElementById('chatbody'); if(!box) return;
-  if(!list||!list.length){ box.textContent='henüz sohbet yok'; return; }
-  box.innerHTML = list.slice(-14).reverse().map(m=>
-    `<div class="m" onclick="speak(this.innerText)"><span class="who">${m.from||'?'}</span> `+
-    `<span class="dept">· ${m.department||''}</span><br>${String(m.body||'').slice(0,150)}</div>`).join('');
+  if(!Array.isArray(list)||!list.length){ box.textContent='Henüz sohbet yok'; return; }
+  const nodes = list.slice(-10).reverse().map(m=>{
+    const row=document.createElement('div'); row.className='m';
+    const who=document.createElement('span'); who.className='who';
+    who.textContent=String(m.from||'?');
+    const dept=document.createElement('span'); dept.className='dept';
+    dept.textContent=' · '+String(m.department||'');
+    const body=document.createElement('div');
+    body.textContent=String(m.body||'').slice(0,220);
+    row.append(who,dept,body);
+    row.addEventListener('click',()=>speak(body.textContent));
+    return row;
+  });
+  box.replaceChildren(...nodes);
 }
 
 function fillWho(deps){
   const who=document.getElementById('who'); if(!who||who.dataset.done) return;
-  const o=[];
   for(const dep of deps||[]) for(const w of (dep.workers||[])){
-    const raw=String(w.worker_id||w); const rec=ROSTER[raw];
-    o.push(`<option data-dept="${dep.id||dep.department_id}" value="${raw}">${dep.name||dep.id} · ${rec?rec.name:raw}</option>`);
+    const raw=String(w.worker_id||'');
+    if(!raw) continue;
+    const option=document.createElement('option');
+    option.value=raw;
+    option.dataset.dept=String(dep.department_id||'');
+    option.textContent=`${dep.name||dep.department_id} · ${w.name||ROSTER[raw]?.name||raw}`;
+    who.add(option);
   }
-  if(o.length){ who.innerHTML=o.join(''); who.dataset.done='1'; }
+  if(who.options.length){who.dataset.done='1';}
+}
+
+function fillNav(deps){
+  const nav=document.getElementById('deptNav');
+  if(nav.options.length>1) return;
+  for(const dep of deps||[]){
+    const option=document.createElement('option');
+    option.value=String(dep.department_id||'');
+    option.textContent=String(dep.name||dep.department_id||'');
+    nav.add(option);
+  }
+}
+
+function refreshActors(s){
+  for(const dep of s.departments||[]) for(const w of dep.workers||[]){
+    const actor=avatarById.get(w.worker_id);
+    if(!actor) continue;
+    const verified = w.activity_verified===true;
+    actor.ring.visible=verified;
+    actor.body.material.color.setHex(verified?0x4af4ba:0x839fc2);
+  }
+}
+
+function inspectDepartment(id, workerName=''){
+  const dep=(currentSnapshot?.departments||[]).find(d=>d.department_id===id);
+  const pane=document.getElementById('inspector');
+  if(!dep){pane.hidden=true;return;}
+  document.getElementById('inspectorTitle').textContent=workerName||dep.name||id;
+  document.getElementById('inspectorText').textContent=
+    String(dep.mission||'Bu departman için açıklama yok.')+
+    (dep.active ? '\nAktif görev: '+String(dep.active.objective||dep.active.mission_id||'') : '');
+  document.getElementById('detailPending').textContent=String(dep.pending||0);
+  document.getElementById('detailDone').textContent=String(dep.completed||0);
+  document.getElementById('detailBlocked').textContent=String(dep.blocked||0);
+  const active=(dep.workers||[]).filter(w=>w.activity_verified===true).length;
+  document.getElementById('inspectorNote').textContent=
+    `${(dep.workers||[]).length} çalışan · doğrulanmış aktif ${active} · ${dep.state||'boşta'}`;
+  pane.hidden=false;
+  const renders=document.getElementById('renders');
+  if(renders) renders.style.display='none';
+}
+
+function focusDepartment(id, workerName=''){
+  const group=roomById.get(id);
+  if(!group) return;
+  focus = new THREE.Vector3(group.position.x,30,group.position.z);
+  dist=470; pitch=.80; place();
+  document.getElementById('deptNav').value=id;
+  inspectDepartment(id,workerName);
 }
 
 function speak(t){
@@ -337,30 +403,51 @@ async function talk(){
 
 async function sync(){
   try{
-    const s=await (await fetch('/api/agent-office',{cache:'no-store'})).json();
-    build(s); hud(s); fillWho(s.departments);
-    try{ chat(await (await fetch('/api/conversations',{cache:'no-store'})).json()); }catch(_){ chat(null); }
+    const response=await fetch('/api/agent-office',{cache:'no-store'});
+    if(!response.ok) throw new Error('HTTP '+response.status);
+    const s=await response.json();
+    currentSnapshot=s;
+    build(s); hud(s); fillWho(s.departments); fillNav(s.departments);
+    refreshActors(s);
+    const selected=document.getElementById('deptNav').value;
+    if(selected && !document.getElementById('inspector').hidden) inspectDepartment(selected);
+    document.getElementById('err').style.display='none';
+    fetch('/api/conversations',{cache:'no-store'}).then(r=>r.ok?r.json():[])
+      .then(chat).catch(()=>chat(null));
   }catch(e){
     const el=document.getElementById('err'); el.style.display='block';
     el.textContent='API bağlantısı yok: '+e.message;
+    const c=document.getElementById('connection');
+    c.textContent='● Bağlantı kesildi'; c.classList.remove('ok');
   }
 }
 
-let yaw=Math.PI*0.22, pitch=0.78, dist=900, drag=false, lx=0, ly=0;
+let yaw=Math.PI*0.22, pitch=0.82, dist=1450, drag=false, lx=0, ly=0, downX=0, downY=0, moved=false;
+let focus=null;
 function place(){
-  camera.position.set(Math.sin(yaw)*Math.cos(pitch)*dist, Math.sin(pitch)*dist, Math.cos(yaw)*Math.cos(pitch)*dist);
-  camera.lookAt(0,30,0);
+  const point=focus||new THREE.Vector3(0,30,0);
+  camera.position.set(
+    point.x+Math.sin(yaw)*Math.cos(pitch)*dist,
+    point.y+Math.sin(pitch)*dist,
+    point.z+Math.cos(yaw)*Math.cos(pitch)*dist
+  );
+  camera.lookAt(point);
 }
 place();
-addEventListener('pointerdown',e=>{drag=true;lx=e.clientX;ly=e.clientY;});
-addEventListener('pointerup',()=>drag=false);
+renderer.domElement.addEventListener('pointerdown',e=>{
+  drag=true; lx=downX=e.clientX; ly=downY=e.clientY; moved=false;
+});
+addEventListener('pointerup',()=>{drag=false;});
 addEventListener('pointermove',e=>{
   if(!drag)return;
+  if(Math.hypot(e.clientX-downX,e.clientY-downY)>5) moved=true;
   yaw-=(e.clientX-lx)*0.005;
   pitch=Math.min(1.25,Math.max(0.32,pitch+(e.clientY-ly)*0.004));
   lx=e.clientX; ly=e.clientY; place();
 });
-addEventListener('wheel',e=>{dist=Math.min(2200,Math.max(320,dist+e.deltaY*0.8));place();},{passive:true});
+renderer.domElement.addEventListener('wheel',e=>{
+  e.preventDefault(); dist=Math.min(2400,Math.max(280,dist+e.deltaY*0.8));place();
+},{passive:false});
 addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
   renderer.setSize(innerWidth,innerHeight);
@@ -372,34 +459,44 @@ sync(); setInterval(sync,5000);
 // --- etkileşim: işçiye/odaya tıkla → kamera odaklan + kart ---
 const ray = new THREE.Raycaster();
 const ptr = new THREE.Vector2();
-let focus = null;
 
 function onClick(e){
-  ptr.x = (e.clientX/innerWidth)*2-1;
-  ptr.y = -(e.clientY/innerHeight)*2+1;
-  ray.setFromCamera(ptr, camera);
-  const hits = ray.intersectObjects([...people.children, ...rooms.children], true);
-  if (!hits.length) return;
-  let obj = hits[0].object;
-  while (obj.parent && obj.parent !== people && obj.parent !== rooms) obj = obj.parent;
-  const world = new THREE.Vector3();
-  obj.getWorldPosition(world);
-  focus = world.clone();
-  const card = document.getElementById('reply');
-  const name = obj.userData && obj.userData.name;
-  if (card && name) card.textContent = 'Seçili: ' + name;
-  if (card && !name) card.textContent = 'Oda odaklandı';
-  yaw = Math.atan2(world.x, world.z);
-  pitch = 0.62; dist = 520;
-  place();
+  if(moved) return;
+  ptr.x=(e.clientX/innerWidth)*2-1;
+  ptr.y=-(e.clientY/innerHeight)*2+1;
+  ray.setFromCamera(ptr,camera);
+  const hits=ray.intersectObjects([...people.children,...rooms.children],true);
+  if(!hits.length)return;
+  let obj=hits[0].object;
+  while(obj.parent && obj.parent!==people && obj.parent!==rooms) obj=obj.parent;
+  const info=obj.userData||{};
+  if(info.depId) focusDepartment(info.depId,info.workerId?info.name:'');
 }
 
-function placeAround(){
-  if (!focus) return;
-  camera.lookAt(focus.x, 30, focus.z);
+function resetView(){
+  focus=null; yaw=Math.PI*.22; pitch=.82; dist=1450; place();
+  document.getElementById('deptNav').value='';
+  document.getElementById('inspector').hidden=true;
+  const renders=document.getElementById('renders');
+  if(renders)renders.style.display='';
 }
-
-addEventListener('click', onClick);
+renderer.domElement.addEventListener('click',onClick);
+document.getElementById('resetView').addEventListener('click',resetView);
+document.getElementById('closeInspector').addEventListener('click',()=>{
+  document.getElementById('inspector').hidden=true;
+  const renders=document.getElementById('renders');
+  if(renders)renders.style.display='';
+});
+document.getElementById('deptNav').addEventListener('change',e=>{
+  if(e.target.value)focusDepartment(e.target.value);else resetView();
+});
+document.getElementById('toggleLabels').addEventListener('click',e=>{
+  labelsVisible=!labelsVisible;
+  for(const group of [rooms,people]) group.traverse(child=>{
+    if(child.isSprite)child.visible=labelsVisible;
+  });
+  e.target.textContent=labelsVisible?'İsimleri gizle':'İsimleri göster';
+});
 
 let t0=0;
 (function loop(t){

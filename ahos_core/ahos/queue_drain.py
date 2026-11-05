@@ -176,8 +176,8 @@ def drain(
         try:
             from .mind_feedback import feedback as _feedback
 
-            _ok = str(getattr(result.status, value, result.status)) == completed
-            _feedback(console.runtime_dir, f{spec.department_id}-manager,
+            _ok = str(getattr(result.status, "value", result.status)) == "completed"
+            _feedback(console.runtime_dir, spec.department_id + "-manager",
                       spec.department_id, _ok)
         except Exception:  # noqa: BLE001
             pass
