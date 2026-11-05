@@ -116,7 +116,6 @@ def tick(runtime_dir, departments: list, limit: int = 6, seed=None) -> dict:
         thought = think(mind, ctx)
         mind.events.append({"at": time.strftime("%Y-%m-%dT%H:%M:%S"), "kind": "think", "detail": thought[:300], "ok": True})
         model = reflect(mind)
-        self_improve(mind)
         save(runtime, mind)
         thoughts.append(thought)
         if "hata" in str(model.get("lesson", "")).lower():
@@ -130,38 +129,21 @@ def tick(runtime_dir, departments: list, limit: int = 6, seed=None) -> dict:
     return {"thoughts": len(thoughts), "lessons": lessons, "context": ctx}
 
 
-def self_improve(mind: Mind) -> dict:
-    """Zihin kendi gecmisinden strateji cikarir ve kendini gunceller."""
+def self_improve(mind):
     recent = mind.events[-30:]
-    kinds: dict = {}
+    kinds = {}
     for e in recent:
-        k = str(e.get("kind") or "?")
-        rec = kinds.setdefault(k, {"ok": 0, "fail": 0})
-        rec["ok" if e.get("ok") else "fail"] += 1
-
-    total = sum(v["ok"] + v["fail"] for v in kinds.values()) or 1
-    wins = sum(v["ok"] for v in kinds.values())
-    rate = round(wins / total, 3)
-
-    best = max(kinds.items(), key=lambda kv: kv[1]["ok"])[0] if kinds else "think"
-    worst = max(kinds.items(), key=lambda kv: kv[1]["fail"])[0] if kinds else ""
-
-    strategy = {
-        "rate": rate,
-        "best_action": best,
-        "avoid": worst if worst and kinds.get(worst, {}).get("fail", 0) > 0 else "",
-        "risk_tolerance": round(0.3 + rate * 0.5, 2),
-        "plan_depth": 3 if rate >= 0.8 else (4 if rate >= 0.5 else 5),
-        "updated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
-    }
+        k = str(e.get('kind') or '?')
+        rec = kinds.setdefault(k, {'ok': 0, 'fail': 0})
+        rec['ok' if e.get('ok') else 'fail'] += 1
+    total = sum(v['ok'] + v['fail'] for v in kinds.values()) or 1
+    rate = round(sum(v['ok'] for v in kinds.values()) / total, 3)
+    best = max(kinds.items(), key=lambda kv: kv[1]['ok'])[0] if kinds else 'think'
+    worst = max(kinds.items(), key=lambda kv: kv[1]['fail'])[0] if kinds else ''
+    s = {'rate': rate, 'best_action': best, 'avoid': worst if kinds.get(worst,{}).get('fail',0) else '',
+         'risk_tolerance': round(0.3 + rate*0.5, 2), 'plan_depth': 3 if rate>=0.8 else (4 if rate>=0.5 else 5),
+         'updated_at': time.strftime('%Y-%m-%dT%H:%M:%S')}
     mind.self_model = dict(mind.self_model or {})
-    previous = mind.self_model.get("strategy") or {}
-    mind.self_model["strategy"] = strategy
-    mind.self_model["strategy_history"] = (list(mind.self_model.get("strategy_history") or []) + [strategy])[-10:]
-    mind.events.append({
-        "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
-        "kind": "self_improve",
-        "detail": f"strateji güncellendi: rate={rate} best={best} risk={strategy['risk_tolerance']}",
-        "ok": True,
-    })
-    return {"strategy": strategy, "changed": strategy != previous}
+    mind.self_model['strategy'] = s
+    mind.self_model['strategy_history'] = (list(mind.self_model.get('strategy_history') or []) + [s])[-10:]
+    return s
