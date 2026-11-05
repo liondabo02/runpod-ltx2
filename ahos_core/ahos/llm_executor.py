@@ -1456,6 +1456,14 @@ def make_model_executor(
 
         after = snapshot(root)
         changes = diff_snapshots(root, before, after, before_texts=before_texts)
+        # BOŞ YAMA REDDİ: model hiçbir dosyayı değiştirmediyse başarı sayılmaz.
+        if not changes:
+            return WorkerExecutionResult(
+                task_id=item.task_id,
+                worker_id=worker_id,
+                success=False,
+                summary="model boş yama döndürdü (0 dosya değişti); yeniden üretilmeli",
+            )
         diff_path = destination / "CHANGES.diff"
         diff_path.write_text(
             "\n\n".join(change.diff for change in changes) or "(değişiklik yok)",
