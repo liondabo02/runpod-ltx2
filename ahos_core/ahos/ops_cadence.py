@@ -41,6 +41,7 @@ DEFAULT_OBJECTIVES = {
     "creative": "Bu haftanın bölüm planını ve sahne listesini hazırla",
     "oyun": "Bu haftanın oyun tasarım güncellemesini hazırla",
     "ai-platform": "Bu haftanın model ve maliyet değerlendirmesini hazırla",
+    "hukuk": "Bu haftanın KVKK/GDPR/AI Act uyum kontrol listesini hazırla",
 }
 
 
