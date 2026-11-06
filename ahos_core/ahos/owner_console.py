@@ -1461,8 +1461,9 @@ class OwnerConsole:
 
             # Denetim izole çalışma alanında yapılır; orijinal kök taranmaz.
             qa_executor = make_project_qa(
-                bound_project.work_path or bound_project.path,
+                bound_project.path,
                 self.artifacts_root,
+                work_path=bound_project.work_path,
             )
             from .virtual_workforce import WorkerRole
             # Bound to the actual deterministic QA callable above, with no model.

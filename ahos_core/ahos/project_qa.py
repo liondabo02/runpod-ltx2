@@ -92,8 +92,9 @@ def _browser_smoke(index, evidence, task_id):
     }
 
 
-def make_project_qa(project_root, evidence_root, *, require_functional=False):
-    root = Path(project_root).resolve()
+def make_project_qa(project_root, evidence_root, *, require_functional=False, work_path=None):
+    # The isolated work tree owns its tests/ suite; never run source-root tests.
+    root = Path(work_path if work_path is not None else project_root).resolve()
     evidence = Path(evidence_root).resolve()
 
     def verify(item, result, qa_worker_id):

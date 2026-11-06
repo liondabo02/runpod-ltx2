@@ -206,3 +206,36 @@ def test_browser_smoke_is_blocked_without_a_browser(tmp_path, monkeypatch) -> No
     record = json.loads(next(evidence.glob("qa-*.json")).read_text(encoding="utf-8"))
     assert record["browser"]["ok"] is False
     assert "tarayıcı bulunamadı" in record["browser"]["problems"]
+
+
+def test_work_path_is_the_project_root_for_acceptance(tmp_path, monkeypatch) -> None:
+    """When source and isolated work differ, run only work_path/tests."""
+    from ahos.acceptance_bootstrap import ensure_baseline
+
+    monkeypatch.setenv("AHOS_ACCEPTANCE_ALLOW_UNTRACKED", "1")
+    source = tmp_path / "source"
+    work = tmp_path / "isolated-work"
+    for root in (source, work):
+        (root / "tools").mkdir(parents=True)
+        (root / "tools" / "check_offline.py").write_text(
+            "# pinned gate\n", encoding="utf-8"
+        )
+        (root / "tests").mkdir()
+
+    (source / "tests" / "test_wrong_root.py").write_text(
+        "def test_wrong_root(): assert False\n", encoding="utf-8"
+    )
+    (work / "tests" / "test_right_root.py").write_text(
+        "def test_right_root(): assert True\n", encoding="utf-8"
+    )
+    evidence = _evidence(tmp_path)
+    enrolled, reason = ensure_baseline(work, evidence)
+    assert enrolled, reason
+
+    qa = make_project_qa(source, evidence, require_functional=True, work_path=work)
+    decision = qa(_item("produce"), _result("produce", evidence), "qa-01")
+
+    assert decision.passed is True, decision.summary
+    record = json.loads(next(evidence.glob("qa-*.json")).read_text(encoding="utf-8"))
+    assert "tests/test_right_root.py" in record["source_hashes"]
+    assert "tests/test_wrong_root.py" not in record["source_hashes"]

@@ -216,3 +216,26 @@ SOURCE_COMPILE_EXIT=0
 
 kaynak: ahos/acceptance.py → check_offline(project_root), ahos/project_qa.py → trusted_gate + check_offline.
 Not: git-ignored runtime altındaki üçüncü taraf site-packages için tüm ahos_core'ı compileall yapmak Windows dosya yolu kaynaklı FileNotFoundError üretti; AHOS kaynak/test kodunun compileall kontrolü temizdir.
+
+## 2026-11-06 — P1 work_path acceptance-root regression
+
+komut : cd ahos_core; ..\control_plane_v2\.venv\Scripts\python.exe -m pytest -q --no-header --timeout=120 tests/test_project_qa.py tests/test_acceptance_offline.py tests/test_qa_integration.py
+exit  : 0
+çıktı :
+```text
+...............                                                          [100%]
+15 passed in 4.54s
+TEST_EXIT=0
+COMPILE_EXIT=0
+```
+
+komut : cd ahos_core; ..\control_plane_v2\.venv\Scripts\python.exe -m pytest -q --no-header --timeout=120 tests/test_owner_console.py tests/test_project_qa.py tests/test_acceptance_offline.py
+exit  : 0
+çıktı :
+```text
+.................................................                        [100%]
+49 passed in 9.65s
+INTEGRATION_EXIT=0
+```
+
+kaynak: ahos/owner_console.py → bound_project.work_path, ahos/project_qa.py → make_project_qa(work_path), tests/test_project_qa.py → test_work_path_is_the_project_root_for_acceptance.
