@@ -1,0 +1,350 @@
+"""Kalıcı bilişsel hafıza + üstbiliş + işlevsel duygu + kolektif zeka.
+
+`worker_mind` zihnini DEĞİŞTİRMEZ; yanında `runtime/cognition/<worker>.json`
+profili tutar (mevcut hafıza korunur). `cognition.py` (öngörü) de ayrı kalır.
+
+Sınır: buradaki "duygu" işlevsel öncelik etiketidir; öznel duygu/bilinç iddiası
+yoktur ve yetki, harcama, güvenlik kurallarını değiştiremez.
+"""
+from __future__ import annotations
+
+import json
+import os
+import re
+import time
+import uuid
+from pathlib import Path
+
+SCHEMA = 1
+CAPS = {"episodic": 60, "semantic": 80, "procedural": 40, "reflection": 40}
+EMOTION_KEYS = ("curiosity", "caution", "confidence", "workload",
+                "recovery", "help_seeking", "quality_drive")
+
+
+def _now() -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%S")
+
+
+def _clamp(value: float) -> float:
+    return round(max(0.0, min(1.0, float(value))), 4)
+
+
+def _dir(runtime) -> Path:
+    path = Path(runtime) / "cognition"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def path_for(runtime, worker_id: str) -> Path:
+    safe = re.sub(r"[^A-Za-z0-9_.-]+", "_", worker_id)[:80]
+    return _dir(runtime) / f"{safe}.json"
+
+
+def new_profile(worker_id: str, department: str = "") -> dict:
+    return {
+        "schema": SCHEMA, "worker_id": worker_id, "department": department,
+        "created_at": _now(), "updated_at": _now(),
+        "memory": {"episodic": [], "semantic": [], "procedural": [], "working": {}},
+        "metacognition": {"samples": 0, "observed_rate": 0.0, "confidence": 0.5,
+                          "calibration_gap": 0.0, "error_rate": 0.0},
+        "emotion": {key: 0.5 for key in EMOTION_KEYS}, "emotion_history": [],
+        "reflection": [], "goals": {"current": "", "options": [], "chosen": ""},
+        "evidence": {"verified_missions": [], "status": "no_verified_evidence"},
+    }
+
+
+def load(runtime, worker_id: str, department: str = "") -> dict:
+    path = path_for(runtime, worker_id)
+    if not path.is_file():
+        return new_profile(worker_id, department)
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(f"cognition profile unreadable; original preserved: {path.name}") from exc
+    if not isinstance(payload, dict) or payload.get("schema") != SCHEMA:
+        raise ValueError(f"cognition profile schema mismatch: {path.name}")
+    return payload
+
+
+def save(runtime, profile: dict) -> Path:
+    profile["updated_at"] = _now()
+    path = path_for(runtime, str(profile["worker_id"]))
+    temp = path.with_name(path.name + "." + uuid.uuid4().hex + ".tmp")
+    try:
+        with temp.open("x", encoding="utf-8") as handle:
+            handle.write(json.dumps(profile, ensure_ascii=False, indent=2))
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temp, path)
+    finally:
+        temp.unlink(missing_ok=True)
+    return path
+
+
+def record_episode(profile, *, mission_id, outcome, summary="", evidence_ok=False,
+                   plan_type="") -> dict:
+    entry = {"at": _now(), "mission_id": str(mission_id), "outcome": str(outcome),
+             "summary": str(summary)[:300], "plan_type": str(plan_type),
+             "evidence_ok": bool(evidence_ok)}
+    bucket = profile["memory"]["episodic"]
+    bucket.append(entry)
+    del bucket[:-CAPS["episodic"]]
+    if evidence_ok:
+        verified = profile["evidence"].setdefault("verified_missions", [])
+        if entry["mission_id"] not in verified:
+            verified.append(entry["mission_id"])
+            del verified[:-100]
+        profile["evidence"]["status"] = "verified"
+    return entry
+
+
+def learn_semantic(profile, *, statement, source, mission_id="", verified=False) -> dict:
+    if not verified:
+        raise ValueError("semantic memory requires verified evidence")
+    entry = {"at": _now(), "statement": str(statement)[:400], "source": str(source),
+             "mission_id": str(mission_id), "verified": True}
+    bucket = profile["memory"]["semantic"]
+    if any(row.get("statement") == entry["statement"] for row in bucket):
+        return entry
+    bucket.append(entry)
+    del bucket[:-CAPS["semantic"]]
+    return entry
+
+
+def learn_procedural(profile, *, plan_type, ok, steps=None) -> dict:
+    rows = profile["memory"]["procedural"]
+    row = next((item for item in rows if item.get("plan_type") == plan_type), None)
+    if row is None:
+        row = {"plan_type": plan_type, "ok": 0, "fail": 0, "steps": [], "updated_at": ""}
+        rows.append(row)
+    row["ok" if ok else "fail"] += 1
+    if steps:
+        row["steps"] = [str(step)[:160] for step in steps][:8]
+    row["updated_at"] = _now()
+    row["rate"] = round(row["ok"] / max(1, row["ok"] + row["fail"]), 3)
+    return row
+
+
+def set_working(profile, *, mission_id, objective, steps=None) -> dict:
+    profile["memory"]["working"] = {
+        "mission_id": str(mission_id), "objective": str(objective)[:400],
+        "steps": [str(step)[:160] for step in (steps or [])][:12], "started_at": _now()}
+    return profile["memory"]["working"]
+
+
+def clear_working(profile) -> None:
+    profile["memory"]["working"] = {}
+
+
+def classify_cause(reason: str) -> str:
+    text = (reason or "").casefold()
+    for name, needle in (("timeout", "zaman aşımı"), ("model_unavailable", "model"),
+                         ("acceptance_failed", "kabul"), ("no_delivery", "değişmedi"),
+                         ("lock", "kilit"), ("permission", "yetki"), ("schema", "şema")):
+        if needle in text:
+            return name
+    return "other"
+
+
+def metacognition(profile) -> dict:
+    episodes = [row for row in profile["memory"]["episodic"] if row.get("evidence_ok") is True]
+    if episodes:
+        samples = len(episodes)
+        ok = sum(1 for row in episodes if row.get("outcome") == "completed")
+    else:
+        # Kanıtlı olay yoksa yalnız gözlenmiş prosedürel sonuçlar kullanılır.
+        rows = profile["memory"]["procedural"]
+        samples = sum(int(row.get("ok", 0)) + int(row.get("fail", 0)) for row in rows)
+        ok = sum(int(row.get("ok", 0)) for row in rows)
+    observed = round(ok / samples, 3) if samples else 0.0
+    confidence = round((ok + 1) / (samples + 2), 3)
+    result = {"samples": samples, "observed_rate": observed, "confidence": confidence,
+              "calibration_gap": round(abs(confidence - observed), 3) if samples else 0.0,
+              "error_rate": round(1 - observed, 3) if samples else 0.0,
+              "note": ("no verified evidence" if not samples
+                       else "derived from verified mission outcomes")}
+    profile["metacognition"] = result
+    return result
+
+
+def reflect(profile, *, mission_id, ok, reason="", plan_type="", evidence_ok=False) -> dict:
+    cause = "" if ok else classify_cause(reason)
+    if not evidence_ok:
+        lesson = (f"kanıt yok: {mission_id} için bağımsız QA kaydı olmadan "
+                  "başarı ya da ders üretilmedi")
+    elif ok:
+        lesson = (f"{mission_id}: {plan_type or 'görev'} yolu bağımsız QA ile doğrulandı; "
+                  "aynı yol tekrar kullanılabilir")
+    else:
+        lesson = (f"{mission_id}: {plan_type or 'görev'} yolu {cause} nedeniyle başarısız; "
+                  "önce bu nedeni doğrula, kör tekrar yok")
+    entry = {"at": _now(), "mission_id": str(mission_id), "ok": bool(ok), "cause": cause,
+             "plan_type": str(plan_type), "lesson": lesson,
+             "evidence_ok": bool(evidence_ok), "verified": bool(evidence_ok)}
+    bucket = profile["reflection"]
+    bucket.append(entry)
+    del bucket[:-CAPS["reflection"]]
+    return entry
+
+
+def plan_goal(profile, goal: str, options: list[dict]) -> dict:
+    ranked = sorted(({"option": str(item.get("option")),
+                      "score": _clamp(item.get("score", 0)),
+                      "reason": str(item.get("reason") or "")} for item in options),
+                    key=lambda row: row["score"], reverse=True)
+    profile["goals"] = {"current": str(goal), "options": ranked,
+                        "chosen": ranked[0]["option"] if ranked else "", "updated_at": _now()}
+    return profile["goals"]
+
+
+def emotion(profile, *, pending: int = 0, idle: bool = True, last_outcome: str = "") -> dict:
+    meta = metacognition(profile)
+    confidence = meta["confidence"]
+    error_rate = meta["error_rate"]
+    workload = _clamp(pending / 240 if pending else 0.0)
+    previous = dict(profile.get("emotion") or {})
+    state = {
+        "curiosity": _clamp(0.35 + (0.35 if idle else 0.0) + (1 - workload) * 0.2),
+        "caution": _clamp(0.2 + error_rate * 0.7),
+        "confidence": confidence,
+        "workload": workload,
+        "recovery": _clamp(1.0 if last_outcome == "completed"
+                           else (0.15 if last_outcome else float(previous.get("recovery", 0.5)))),
+        "help_seeking": _clamp((1 - confidence) * 0.6 + workload * 0.4),
+        "quality_drive": _clamp(0.55 + error_rate * 0.35),
+    }
+    profile["emotion"] = state
+    history = profile.setdefault("emotion_history", [])
+    history.append({"at": _now(), **state})
+    del history[:-20]
+    return state
+
+
+def emotion_priority(profile, *, pending: int = 0, idle: bool = True) -> dict:
+    state = emotion(profile, pending=pending, idle=idle)
+    if state["workload"] >= 0.8:
+        mode = "drain_backlog"
+    elif state["help_seeking"] >= 0.7:
+        mode = "ask_for_help"
+    elif state["caution"] >= 0.6:
+        mode = "verify_before_retry"
+    elif idle:
+        mode = "explore_and_learn"
+    else:
+        mode = "deliver_verified_work"
+    return {"mode": mode, "emotion": state, "authority_effect": "none", "spend_effect": "none"}
+
+
+def _collective_log(runtime) -> Path:
+    return _dir(runtime) / "_collective.jsonl"
+
+
+def _append_collective(runtime, record: dict) -> dict:
+    with _collective_log(runtime).open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+    return record
+
+
+def expert_index(runtime, departments: list[dict]) -> dict:
+    index: dict[str, list[dict]] = {}
+    for dep in departments:
+        department = str(dep.get("department_id") or "")
+        for worker in dep.get("workers") or []:
+            wid = str(worker.get("worker_id") or "")
+            if not wid:
+                continue
+            try:
+                profile = load(runtime, wid, department)
+            except ValueError:
+                continue
+            rows = profile["memory"]["procedural"]
+            runs = sum(row.get("ok", 0) + row.get("fail", 0) for row in rows)
+            ok = sum(row.get("ok", 0) for row in rows)
+            rate = round(ok / runs, 3) if runs else None
+            for capability in worker.get("capabilities") or worker.get("skills") or []:
+                key = str(capability).strip()
+                if key:
+                    index.setdefault(key, []).append(
+                        {"worker": wid, "department": department, "rate": rate, "runs": runs})
+    for rows in index.values():
+        rows.sort(key=lambda row: (-(row["rate"] or -1), -row["runs"], row["worker"]))
+    payload = {"at": _now(), "skills": len(index),
+               "workers": len({row["worker"] for rows in index.values() for row in rows})}
+    (_dir(runtime) / "_experts.json").write_text(
+        json.dumps({"summary": payload, "index": index}, ensure_ascii=False, indent=2),
+        encoding="utf-8")
+    return index
+
+
+def find_expert(runtime, skill: str, *, exclude: list[str] | None = None,
+                limit: int = 3) -> list[dict]:
+    try:
+        payload = json.loads((_dir(runtime) / "_experts.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    rows = list((payload.get("index") or {}).get(skill) or [])
+    excluded = set(exclude or [])
+    return [row for row in rows if row["worker"] not in excluded][:limit]
+
+
+def handoff(runtime, *, mission_id, from_worker, to_worker, reason, evidence_ok=False) -> dict:
+    return _append_collective(runtime, {
+        "at": _now(), "kind": "handoff", "mission_id": str(mission_id),
+        "from": str(from_worker), "to": str(to_worker), "reason": str(reason)[:240],
+        "verified": bool(evidence_ok)})
+
+
+def peer_review(runtime, *, mission_id, reviewer, verdict, note, evidence_ok=False) -> dict:
+    if verdict not in {"pass", "fail", "needs_work"}:
+        raise ValueError("verdict must be pass/fail/needs_work")
+    return _append_collective(runtime, {
+        "at": _now(), "kind": "peer_review", "mission_id": str(mission_id),
+        "reviewer": str(reviewer), "verdict": verdict, "note": str(note)[:300],
+        "verified": bool(evidence_ok)})
+
+
+def mentor_pairs(runtime, departments: list[dict]) -> list[dict]:
+    pairs = []
+    for dep in departments:
+        department = str(dep.get("department_id") or "")
+        scored = []
+        for worker in dep.get("workers") or []:
+            wid = str(worker.get("worker_id") or "")
+            if not wid:
+                continue
+            try:
+                profile = load(runtime, wid, department)
+            except ValueError:
+                continue
+            meta = metacognition(profile)
+            scored.append((wid, float(meta.get("confidence") or 0)))
+        if len(scored) < 2:
+            continue
+        scored.sort(key=lambda item: item[1])
+        pairs.append({"department": department, "mentor": scored[-1][0],
+                      "mentee": scored[0][0], "mentor_confidence": scored[-1][1],
+                      "mentee_confidence": scored[0][1]})
+    (_dir(runtime) / "_mentors.json").write_text(
+        json.dumps(pairs, ensure_ascii=False, indent=2), encoding="utf-8")
+    return pairs
+
+
+def summary(runtime) -> dict:
+    rows = []
+    for path in _dir(runtime).glob("*.json"):
+        if path.name.startswith("_"):
+            continue
+        try:
+            profile = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        rows.append({"worker": profile.get("worker_id"),
+                     "episodic": len(profile["memory"]["episodic"]),
+                     "semantic": len(profile["memory"]["semantic"]),
+                     "procedural": len(profile["memory"]["procedural"]),
+                     "evidence": profile.get("evidence", {}).get("status"),
+                     "confidence": profile["metacognition"].get("confidence")})
+    return {"profiles": len(rows),
+            "with_episodic": sum(1 for row in rows if row["episodic"]),
+            "with_verified_evidence": sum(1 for row in rows if row["evidence"] == "verified"),
+            "workers": rows}
