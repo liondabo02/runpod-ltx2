@@ -72,6 +72,48 @@ HTML = r"""<!doctype html>
     #chatbody{max-height:8vh}
     #toolbar select{min-width:130px}
     #hud small{display:none}
+    #opsBoard{left:9px;bottom:9px;width:min(300px,calc(100vw - 18px));max-height:29vh}
+    #officeSearch{max-width:170px}
+    #miniMap{height:84px}
+  }
+  #opsBoard{position:fixed;left:16px;bottom:16px;width:310px;max-height:40vh;
+    padding:13px 15px;border-radius:14px;background:rgba(10,19,34,.94);
+    border:1px solid rgba(130,167,208,.3);z-index:10;overflow:hidden;
+    box-shadow:0 18px 48px rgba(0,0,0,.28)}
+  #opsBoard h4{font-size:11px;letter-spacing:.12em;color:#8adfff;
+    margin:0 0 7px;display:flex;align-items:center;justify-content:space-between}
+  #miniMap{display:block;width:100%;height:122px;background:rgba(9,25,42,.78);
+    border:1px solid #29405d;border-radius:9px;cursor:crosshair;touch-action:manipulation}
+  #mapHint{font-size:10px;color:#a3b7d0;display:block;margin:4px 0 8px}
+  #opsEvents{max-height:105px;overflow-y:auto;display:grid;gap:4px;font-size:11px}
+  .eventLine{display:grid;grid-template-columns:60px minmax(0,1fr);gap:7px;
+    padding:4px 0;border-top:1px solid rgba(125,163,203,.13)}
+  .eventLine .eventTime{color:#8faac5;font-variant-numeric:tabular-nums}
+  .eventLine .eventDesc{color:#d9e9ff;overflow-wrap:anywhere}
+  #officeSearch{min-width:135px;flex:1;max-width:220px;
+    background:#0f1d30;border:1px solid #38506e;border-radius:9px;
+    padding:8px 10px;color:#e1efff;font:12px system-ui}
+  #toolbar button[aria-pressed="true"]{background:#345671;border-color:#71c8f2}
+  #workerDetail{margin-top:10px;padding-top:9px;border-top:1px solid #28405e;
+    font-size:11px;color:#d8ecff;white-space:pre-wrap;overflow-wrap:anywhere}
+  #workerDetail[hidden]{display:none}
+  #opsBoard button{font:11px system-ui;border:1px solid #3a536d;background:#192c44;
+    border-radius:7px;padding:4px 7px;color:#cde9ff;cursor:pointer}
+  #opsBoard button:focus-visible,#toolbar button:focus-visible,#officeSearch:focus-visible,
+  #miniMap:focus-visible{outline:2px solid #80d7ff;outline-offset:2px}
+  @media(max-width:800px){
+    #opsBoard{left:9px;bottom:9px;width:min(300px,calc(100vw - 18px));max-height:29vh}
+    #miniMap{height:80px}
+    #opsEvents{max-height:46px}
+    #officeSearch{max-width:150px}
+  }
+  @media(max-width:650px){
+    #hud{max-height:39vh;overflow-y:auto}
+    #opsBoard{bottom:calc(27vh + 19px);max-height:22vh;width:min(290px,calc(100vw - 18px))}
+    #miniMap{height:70px}
+    #opsEvents{max-height:32px}
+    #inspector{bottom:calc(27vh + 19px);right:9px;max-height:24vh}
+    #renders{display:none}
   }
 </style></head>
 <body>
@@ -81,10 +123,17 @@ HTML = r"""<!doctype html>
   <div id="stats" aria-live="polite">yükleniyor…</div>
   <div id="toolbar">
     <select id="deptNav" aria-label="Departman seç"><option value="">Departman seç…</option></select>
-    <button id="resetView" type="button">Genel görünüm</button>
+    <button id="resetView" type="button" title="Kısayol: 1">Genel görünüm</button>
+    <button id="focusCEO" type="button" title="Kısayol: 2">CEO odası</button>
+    <button id="topView" type="button" title="Kısayol: 3">Üstten bakış</button>
     <button id="toggleLabels" type="button">İsimleri gizle</button>
+    <button id="lowPower" type="button" aria-pressed="false">Performans modu</button>
+    <button id="reduceMotion" type="button" aria-pressed="false">Hareketi azalt</button>
+    <input id="officeSearch" type="search" aria-label="Departman veya çalışan ara"
+           placeholder="Departman / çalışan ara…" autocomplete="off"
+           title="Bulmak için yaz ve Enter'a bas">
   </div>
-  <small>Fareyle döndür · tekerlekle yakınlaş · odaya veya çalışana tıkla</small>
+  <small>Fareyle döndür · tıkla: oda/çalışan · 1: genel · 2: CEO · 3: kuşbakışı · /: ara</small>
 </div>
 <aside id="inspector" hidden aria-live="polite">
   <button class="close" type="button" id="closeInspector" aria-label="Ayrıntıları kapat">×</button>
@@ -94,6 +143,7 @@ HTML = r"""<!doctype html>
     <div class="metric">Tamamlanan<b id="detailDone">0</b></div>
     <div class="metric">Engel<b id="detailBlocked">0</b></div></div>
   <div id="inspectorNote" class="focus-note">Canlı veri · gerçek görev durumu</div>
+  <div id="workerDetail" hidden></div>
 </aside>
 <div id="chat"><h4>CANLI SOHBET <span class="dept">Çalışanla konuş</span></h4><div id="chatbody">…</div>
   <select id="who"></select>
@@ -101,6 +151,15 @@ HTML = r"""<!doctype html>
   <div id="reply"></div>
 </div>
 <div id="renders"><h4>ÜRETİMLER</h4><div id="renderlist">Kontrol ediliyor…</div></div>
+<section id="opsBoard" aria-label="Canlı operasyonlar ve kat planı">
+  <h4>OPERASYON RADARI <button id="collapseBoard" type="button" aria-expanded="true">Daralt</button></h4>
+  <div id="opsBody">
+    <canvas id="miniMap" width="280" height="122" tabindex="0"
+      aria-label="Departman kat planı. Odayı seçmek için noktalara tıkla."></canvas>
+    <small id="mapHint">Altın: yönetim · Yeşil: doğrulanmış aktif · Mavi: beklemede</small>
+    <div id="opsEvents" aria-live="off">Gerçek görev olayları yükleniyor…</div>
+  </div>
+</section>
 <div id="err"></div>
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
@@ -149,6 +208,12 @@ const ground = new THREE.Mesh(
   new THREE.MeshStandardMaterial({map: woodTexture(), roughness: 0.92, metalness: 0.04})
 );
 ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
+// Subtle architectural floor grid for orientation, purely decorative.
+const floorGrid = new THREE.GridHelper(3000, 30, 0x3b526d, 0x1c3045);
+floorGrid.position.y=0.8;
+floorGrid.material.transparent=true;
+floorGrid.material.opacity=0.23;
+scene.add(floorGrid);
 
 const ACCENT = [0x49c2ff,0x63e6b8,0xa78bfa,0xffb86b,0x7dd3fc,0xf472b6,0x94e2d5,0xc7d2fe];
 const rooms = new THREE.Group(); scene.add(rooms);
@@ -230,6 +295,11 @@ function makeRoom(cx, cz, w, d, accent, busy, title, sub, depId){
 
   const titleSprite = label(title, sub, 0, h+22, -4, busy ? '#9effd6' : '#e4f2ff');
   g.add(titleSprite);
+  // Room beacons indicate live, observed activity only.
+  const beacon = new THREE.Mesh(new THREE.SphereGeometry(5,12,10),
+    new THREE.MeshBasicMaterial({color:busy?0x59e8b6:0x7996b8}));
+  beacon.position.set(-w/2+16,h+10,-d/2+16);g.add(beacon);
+  g.userData.beacon=beacon;
   rooms.add(g);
 }
 
@@ -298,7 +368,8 @@ function build(snap){
   // CEO odası: grid'in önünde, altın vurgulu; CEO ve kabinesi İÇİNDE görünür.
   const ceoZ = (rows/2) * gd + 60;
   const ceoWorkers = holding ? (holding.workers||[]) : [];
-  makeRoom(0, ceoZ, 320, 230, 0xffd166, true, 'CEO Ofisi',
+  makeRoom(0, ceoZ, 320, 230, 0xffd166,
+           ceoWorkers.some(w=>w.activity_verified===true), 'CEO Ofisi',
            `${ceoWorkers.length} kişi · Holding Yönetimi`, 'holding');
   const across = Math.max(1, Math.ceil(Math.sqrt(Math.max(1, ceoWorkers.length))));
   const lines = Math.max(1, Math.ceil(ceoWorkers.length/across));
@@ -312,6 +383,87 @@ function build(snap){
     const nm = w.name || (rec ? rec.name : raw);
     person(px, 10, pz, 0xffd166, working, nm, 'holding', raw);
   }
+}
+
+// Read-only map: every node corresponds to a room from the live roster.
+const mapPoints = [];
+function drawMiniMap(snapshot){
+  const canvas=document.getElementById('miniMap');
+  const ctx=canvas.getContext('2d');
+  if(!ctx)return;
+  const w=canvas.width, h=canvas.height;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle='#081a2b'; ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle='rgba(120,166,203,.14)'; ctx.lineWidth=1;
+  for(let x=0;x<w;x+=28){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+  for(let y=0;y<h;y+=24){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+  const groups=[...roomById.entries()];
+  mapPoints.length=0;
+  if(!groups.length)return;
+  const xs=groups.map(([,g])=>g.position.x), zs=groups.map(([,g])=>g.position.z);
+  const minX=Math.min(...xs), maxX=Math.max(...xs);
+  const minZ=Math.min(...zs), maxZ=Math.max(...zs);
+  const margin=17, sx=(w-2*margin)/Math.max(1,maxX-minX);
+  const sz=(h-2*margin)/Math.max(1,maxZ-minZ);
+  const scale=Math.min(sx,sz);
+  const centerX=(minX+maxX)/2, centerZ=(minZ+maxZ)/2;
+  const departments=new Map((snapshot.departments||[]).map(d=>[d.department_id,d]));
+  for(const [id,group] of groups){
+    const dep=departments.get(id)||{};
+    const x=w/2+(group.position.x-centerX)*scale;
+    const y=h/2+(group.position.z-centerZ)*scale;
+    const active=(dep.workers||[]).some(person=>person.activity_verified===true);
+    const color=id==='holding'?'#ffd166':active?'#62e4b6':
+      (Number(dep.pending||0)>0?'#ffa87f':'#7da9e9');
+    const focused=document.getElementById('deptNav').value===id;
+    ctx.fillStyle=color;
+    ctx.beginPath();ctx.arc(x,y,focused?7:5,0,Math.PI*2);ctx.fill();
+    if(focused){
+      ctx.strokeStyle='#ffffff';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.arc(x,y,10,0,Math.PI*2);ctx.stroke();
+    }
+    mapPoints.push({x,y,id});
+  }
+}
+function chooseMiniMapPoint(x,y){
+  const found=mapPoints
+    .map(p=>({...p,d:Math.hypot(p.x-x,p.y-y)}))
+    .sort((a,b)=>a.d-b.d)[0];
+  if(found && found.d<=16)focusDepartment(found.id);
+}
+function updateOperations(snapshot){
+  drawMiniMap(snapshot);
+  const feed=Array.isArray(snapshot.feed)?snapshot.feed:[];
+  const box=document.getElementById('opsEvents');
+  if(!feed.length){box.textContent='Henüz doğrulanmış görev olayı bulunmuyor.';return;}
+  const rows=feed.slice(0,5).map(event=>{
+    const line=document.createElement('div');line.className='eventLine';
+    const time=document.createElement('span');time.className='eventTime';
+    time.textContent=String(event.at||'').slice(11,16)||'--:--';
+    const detail=document.createElement('span');detail.className='eventDesc';
+    detail.textContent=(String(event.event||'görev')+' · '+
+      String(event.detail||event.mission||'')).slice(0,140);
+    line.append(time,detail);return line;
+  });
+  box.replaceChildren(...rows);
+}
+function searchOffice(query){
+  const term=String(query||'').trim().toLocaleLowerCase('tr-TR');
+  if(!term)return false;
+  for(const dep of (currentSnapshot?.departments||[])){
+    for(const worker of (dep.workers||[])){
+      if([worker.name,worker.worker_id].some(value=>
+          String(value||'').toLocaleLowerCase('tr-TR').includes(term))){
+        focusDepartment(dep.department_id,worker.name,worker.worker_id);
+        return true;
+      }
+    }
+  }
+  const dep=(currentSnapshot?.departments||[]).find(item=>
+    [item.name,item.department_id].some(value=>
+      String(value||'').toLocaleLowerCase('tr-TR').includes(term)));
+  if(dep){focusDepartment(dep.department_id);return true;}
+  return false;
 }
 
 function hud(s){
@@ -368,6 +520,14 @@ function fillNav(deps){
 }
 
 function refreshActors(s){
+  for(const dep of s.departments||[]){
+    const group=roomById.get(dep.department_id);
+    const beacon=group?.userData?.beacon;
+    if(beacon){
+      const verified=(dep.workers||[]).some(w=>w.activity_verified===true);
+      beacon.material.color.setHex(verified?0x59e8b6:0x7996b8);
+    }
+  }
   for(const dep of s.departments||[]) for(const w of dep.workers||[]){
     const actor=avatarById.get(w.worker_id);
     if(!actor) continue;
@@ -377,11 +537,13 @@ function refreshActors(s){
   }
 }
 
-function inspectDepartment(id, workerName=''){
+let selectedWorkerId='';
+function inspectDepartment(id, workerName='', workerId=''){
   const dep=(currentSnapshot?.departments||[]).find(d=>d.department_id===id);
   const pane=document.getElementById('inspector');
   if(!dep){pane.hidden=true;return;}
-  document.getElementById('inspectorTitle').textContent=workerName||dep.name||id;
+  const worker=(dep.workers||[]).find(w=>w.worker_id===workerId);
+  document.getElementById('inspectorTitle').textContent=worker?.name||workerName||dep.name||id;
   document.getElementById('inspectorText').textContent=
     String(dep.mission||'Bu departman için açıklama yok.')+
     (dep.active ? '\nAktif görev: '+String(dep.active.objective||dep.active.mission_id||'') : '');
@@ -391,18 +553,32 @@ function inspectDepartment(id, workerName=''){
   const active=(dep.workers||[]).filter(w=>w.activity_verified===true).length;
   document.getElementById('inspectorNote').textContent=
     `${(dep.workers||[]).length} çalışan · doğrulanmış aktif ${active} · ${dep.state||'boşta'}`;
+  const detail=document.getElementById('workerDetail');
+  detail.hidden=!worker;
+  if(worker){
+    const runs=Number(worker.runs||0);
+    const success=runs>0?(Math.round(Number(worker.rate||0)*100)+'%'):'kanıt yok';
+    const activity=worker.activity_verified===true?'Doğrulanmış aktif':'Aktif görev kanıtı yok';
+    const task=worker.active_task?.task_id||'—';
+    detail.textContent=
+      `İşçi: ${worker.worker_id}\nRol: ${worker.role||'belirtilmedi'}\n`+
+      `Durum: ${activity}\nÖlçülen çalışma: ${runs} · Başarı: ${success}\n`+
+      `Son çalışma: ${worker.last_run||'kayıt yok'}\nAktif görev: ${task}\n`+
+      `Uzmanlık: ${(worker.skills||[]).join(', ')||'kayıt yok'}`;
+  }else{detail.textContent='';}
   pane.hidden=false;
   const renders=document.getElementById('renders');
   if(renders) renders.style.display='none';
 }
-
-function focusDepartment(id, workerName=''){
+function focusDepartment(id, workerName='', workerId=''){
   const group=roomById.get(id);
   if(!group) return;
   focus = new THREE.Vector3(group.position.x,30,group.position.z);
   dist=470; pitch=.80; place();
+  selectedWorkerId=workerId||'';
   document.getElementById('deptNav').value=id;
-  inspectDepartment(id,workerName);
+  inspectDepartment(id,workerName,selectedWorkerId);
+  if(currentSnapshot)drawMiniMap(currentSnapshot);
 }
 
 function speak(t){
@@ -419,6 +595,10 @@ async function talk(){
   const dep=who.options[who.selectedIndex].dataset.dept||'';
   try{
     const r=await fetch(`/api/talk?worker=${encodeURIComponent(who.value)}&dept=${encodeURIComponent(dep)}&msg=${encodeURIComponent(msg.value)}`);
+    if(!r.ok){
+      reply.textContent=r.status===403?'Sahip oturumu gerekli: /owner/login':'Sohbet API hatası: HTTP '+r.status;
+      return;
+    }
     const d=await r.json();
     reply.textContent=d.reply||'(cevap yok)'; speak(d.reply||''); msg.value='';
   }catch(_){ reply.textContent='bağlantı hatası'; }
@@ -454,8 +634,10 @@ async function sync(){
     currentSnapshot=s;
     build(s); hud(s); fillWho(s.departments); fillNav(s.departments);
     refreshActors(s);
+    updateOperations(s);
     const selected=document.getElementById('deptNav').value;
-    if(selected && !document.getElementById('inspector').hidden) inspectDepartment(selected);
+    if(selected && !document.getElementById('inspector').hidden)
+      inspectDepartment(selected,'',selectedWorkerId);
     document.getElementById('err').style.display='none';
     fetch('/api/conversations',{cache:'no-store'}).then(r=>r.ok?r.json():[])
       .then(chat).catch(()=>chat(null));
@@ -516,15 +698,18 @@ function onClick(e){
   let obj=hits[0].object;
   while(obj.parent && obj.parent!==people && obj.parent!==rooms) obj=obj.parent;
   const info=obj.userData||{};
-  if(info.depId) focusDepartment(info.depId,info.workerId?info.name:'');
+  if(info.depId) focusDepartment(info.depId,
+    info.workerId?info.name:'',info.workerId||'');
 }
 
 function resetView(){
   focus=null; yaw=Math.PI*.22; pitch=.95; dist=1700; place();
+  selectedWorkerId='';
   document.getElementById('deptNav').value='';
   document.getElementById('inspector').hidden=true;
   const renders=document.getElementById('renders');
   if(renders)renders.style.display='';
+  if(currentSnapshot)drawMiniMap(currentSnapshot);
 }
 renderer.domElement.addEventListener('click',onClick);
 document.getElementById('resetView').addEventListener('click',resetView);
@@ -544,11 +729,85 @@ document.getElementById('toggleLabels').addEventListener('click',e=>{
   e.target.textContent=labelsVisible?'İsimleri gizle':'İsimleri göster';
 });
 
+// Presentation controls. These never enqueue or approve actual missions.
+const officeMap=document.getElementById('miniMap');
+const searchBox=document.getElementById('officeSearch');
+let lowPowerMode=false;
+let reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+document.getElementById('reduceMotion').setAttribute('aria-pressed',String(reducedMotion));
+document.getElementById('reduceMotion').addEventListener('click',e=>{
+  reducedMotion=!reducedMotion;
+  e.target.setAttribute('aria-pressed',String(reducedMotion));
+  if(reducedMotion) for(const a of avatars){
+    a.grp.position.set(a.home.x,10,a.home.z);a.grp.rotation.y=0;
+  }
+});
+document.getElementById('lowPower').addEventListener('click',e=>{
+  lowPowerMode=!lowPowerMode;
+  e.target.setAttribute('aria-pressed',String(lowPowerMode));
+  renderer.setPixelRatio(lowPowerMode?1:Math.min(devicePixelRatio,2));
+  renderer.shadowMap.enabled=!lowPowerMode;
+  sun.castShadow=!lowPowerMode;
+  renderer.setSize(innerWidth,innerHeight);
+});
+document.getElementById('focusCEO').addEventListener('click',()=>focusDepartment('holding'));
+document.getElementById('topView').addEventListener('click',()=>{
+  resetView();
+  yaw=0;pitch=1.54;dist=1900;place();
+});
+searchBox.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){
+    e.preventDefault();
+    if(!searchOffice(searchBox.value)){
+      const result=document.getElementById('inspectorNote');
+      result.textContent='Arama sonucu bulunamadı.';
+    }
+  }
+});
+officeMap.addEventListener('click',e=>{
+  const rect=officeMap.getBoundingClientRect();
+  const x=(e.clientX-rect.left)*officeMap.width/rect.width;
+  const y=(e.clientY-rect.top)*officeMap.height/rect.height;
+  chooseMiniMapPoint(x,y);
+});
+let miniIndex=0;
+officeMap.addEventListener('keydown',e=>{
+  if(!mapPoints.length)return;
+  if(e.key==='ArrowRight'||e.key==='ArrowLeft'){
+    e.preventDefault();
+    miniIndex=(miniIndex+(e.key==='ArrowRight'?1:-1)+mapPoints.length)%mapPoints.length;
+    focusDepartment(mapPoints[miniIndex].id);
+  }else if(e.key==='Enter'){
+    e.preventDefault();
+    focusDepartment(mapPoints[miniIndex%mapPoints.length].id);
+  }
+});
+document.getElementById('collapseBoard').addEventListener('click',e=>{
+  const body=document.getElementById('opsBody');
+  body.hidden=!body.hidden;
+  e.target.setAttribute('aria-expanded',String(!body.hidden));
+  e.target.textContent=body.hidden?'Genişlet':'Daralt';
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    document.getElementById('inspector').hidden=true;
+    const renders=document.getElementById('renders');
+    if(renders)renders.style.display='';
+    return;
+  }
+  if(e.target?.closest?.('input,select,textarea,[contenteditable]'))return;
+  if(e.key==='1')resetView();
+  if(e.key==='2')focusDepartment('holding');
+  if(e.key==='3'){resetView();yaw=0;pitch=1.54;dist=1900;place();}
+  if(e.key==='/'){e.preventDefault();searchBox.focus();}
+});
+
 let t0=0;
 (function loop(t){
   requestAnimationFrame(loop);
   const dt = t0 ? Math.min(0.05,(t-t0)/1000) : 0.016; t0 = t;
-  for(const a of avatars){
+  if(document.hidden)return;
+  if(!reducedMotion)for(const a of avatars){
     // Small bounded motions: agents never drift outside their room.
     a.grp.position.y = 10 + Math.sin(t/520 + a.phase)*1.1;
     a.grp.position.x = a.home.x + Math.sin(t/2100 + a.phase)*2;
