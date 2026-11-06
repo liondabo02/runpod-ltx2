@@ -171,6 +171,32 @@ def main(argv: list[str] | None = None) -> int:
             item["reason"] = str(getattr(result, "reason", ""))[:200]
             print(f"  {mission_id}: {item['result']} ({item['seconds']}s)")
 
+            # queue_drain ile aynı geri besleme: gözlenmiş sonucu işçi zihnine yaz.
+            try:
+                from ahos.consensus import score_plan
+                from ahos.mind_feedback import feedback
+
+                scoring_worker = next(
+                    (str(step.worker_id) for step in result.steps
+                     if getattr(step, "worker_id", None)
+                     and getattr(step, "worker_summary", None) is not None),
+                    f"{item['department']}-manager",
+                )
+                plan_type = "document" if item["objective"].startswith("Tasarım") else "executor"
+                recorded = feedback(
+                    RUNTIME, scoring_worker, item["department"], item["result"] == "completed",
+                    duration_s=item["seconds"], plan_type=plan_type, mission_id=mission_id,
+                    record_plan_score=False,
+                )
+                if not (isinstance(recorded, dict) and recorded.get("duplicate")):
+                    score_plan(
+                        RUNTIME, scoring_worker, item["department"], plan_type,
+                        item["result"] == "completed", item["seconds"],
+                    )
+                item["scored_worker"] = scoring_worker
+            except Exception as exc:  # noqa: BLE001 - puanlama kanıtı bozmaz
+                item["score_error"] = f"{type(exc).__name__}: {exc}"[:120]
+
     with LOG.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps({
             "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
