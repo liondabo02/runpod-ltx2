@@ -22,7 +22,7 @@ def _log(runtime: Path) -> Path:
     return path
 
 
-def _post(runtime: Path, sender: str, department: str, topic: str, body: str, reply_to: str = "") -> dict:
+def _post(runtime: Path, sender: str, department: str, topic: str, body: str, reply_to: str = "", *, mission_id: str = "") -> dict:
     message = {
         "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "from": sender,
@@ -31,6 +31,8 @@ def _post(runtime: Path, sender: str, department: str, topic: str, body: str, re
         "body": body[:400],
         "reply_to": reply_to,
     }
+    if mission_id:
+        message["mission_id"] = mission_id
     with open(_log(runtime), "a", encoding="utf-8") as handle:
         handle.write(json.dumps(message, ensure_ascii=False) + "\n")
     return message
@@ -63,6 +65,66 @@ def _latest_department_result(runtime: Path, department: str) -> dict | None:
     }
 
 
+def _latest_worker_results(
+    runtime: Path, department: str, worker_ids: list[str]
+) -> dict[str, dict]:
+    """Find each worker's latest observed mission, using persisted step owners.
+
+    A matching department or manager alone is not evidence that a worker did
+    the work. The read-only query never invents ownership for missing results.
+    """
+    database = runtime / "company-service.db"
+    wanted = set(worker_ids)
+    if not database.is_file() or not wanted:
+        return {}
+
+    latest: dict[str, dict] = {}
+    try:
+        with sqlite3.connect("file:" + database.as_posix() + "?mode=ro", uri=True) as con:
+            rows = con.execute(
+                "select mission_id, objective, status, last_error, updated_at, result_json "
+                "from missions where primary_department=? "
+                "and status in ('completed','blocked','failed') and result_json is not null "
+                "order by updated_at desc, rowid desc",
+                (department,),
+            )
+            for mission_id, objective, status, error, updated_at, raw in rows:
+                try:
+                    payload = json.loads(raw)
+                except (ValueError, TypeError):
+                    continue
+                if not isinstance(payload, dict) or not isinstance(payload.get("steps"), list):
+                    continue
+                for step in payload["steps"]:
+                    if not isinstance(step, dict):
+                        continue
+                    worker = step.get("worker_id")
+                    if (not isinstance(worker, str) or worker not in wanted
+                            or worker in latest or step.get("worker_summary") is None):
+                        continue
+                    latest[worker] = {
+                        "id": str(mission_id or ""),
+                        "objective": str(objective or "")[:100],
+                        "status": str(status or ""),
+                        "error": str(error or "")[:110],
+                        "updated_at": str(updated_at or ""),
+                    }
+                if len(latest) == len(wanted):
+                    break
+    except (sqlite3.Error, OSError):
+        return {}
+    return latest
+
+
+def _mission_excerpt(record: dict, *, worker_owned: bool) -> str:
+    ownership = "Son görevim" if worker_owned else "Departmanın son kayıtlı görevi (bana ait olduğu doğrulanmadı)"
+    return (
+        f"{ownership}: mission_id={record['id']} "
+        f"objective={record['objective'][:100]}"
+        f" (durum={record['status']})"
+    )
+
+
 def converse(runtime_dir, departments: list, rounds: int = 3, seed: int | None = None) -> dict:
     """Share verifiable department results; conversation is not model learning."""
 
@@ -73,40 +135,87 @@ def converse(runtime_dir, departments: list, rounds: int = 3, seed: int | None =
         dep_id = str(dep.get("department_id") or "")
         members[dep_id] = [str(w.get("worker_id") or "") for w in dep.get("workers") or []]
 
+    # Load evidence once per department: every message can now name an observed
+    # worker mission rather than attributing a random department task to them.
+    worker_results = {
+        dep_id: _latest_worker_results(runtime, dep_id, worker_ids)
+        for dep_id, worker_ids in members.items()
+    }
+    department_results = {
+        dep_id: _latest_department_result(runtime, dep_id)
+        for dep_id in members
+    }
+
     pairs = 0
     messages = 0
     for _ in range(rounds):
         for dep_id, worker_ids in members.items():
             if len(worker_ids) < 2:
                 continue
-            asker, responder = rng.sample(worker_ids, 2)
-            record = _latest_department_result(runtime, dep_id)
-            if record:
-                topic = record["id"]
-                question = (
-                    f"{dep_id} departmanı gerçek kuyruk kaydı {record['id']} "
-                    f"({record['status']}, {record['updated_at']}): "
-                    f"{record['objective']}. Bu sonucu nasıl doğrulamalıyız?"
-                )
-                if record["status"] == "completed":
-                    advice = "Tamamlandı kaydı var; bağımsız teslim/QA kanıtını denetleyelim."
+            owned = worker_results[dep_id]
+            # Choose a worker with a recorded step whenever one exists;
+            # do not claim the sampled worker performed another worker's task.
+            attributed = [wid for wid in worker_ids if wid in owned]
+            asker = rng.choice(attributed or worker_ids)
+            candidates = [wid for wid in worker_ids if wid != asker]
+            proven_responders = [wid for wid in candidates if wid in owned]
+            responder = rng.choice(proven_responders or candidates)
+
+            asker_last = owned.get(asker)
+            responder_last = owned.get(responder)
+            reference = asker_last or responder_last or department_results[dep_id]
+            if reference:
+                topic = reference["id"]
+                if asker_last:
+                    question = (
+                        _mission_excerpt(asker_last, worker_owned=True)
+                        + ". Bu sonucu hangi bağımsız kanıtla doğrulayabiliriz?"
+                    )
+                else:
+                    question = (
+                        "Benim son görevim işçi bazında doğrulanamadı. "
+                        + _mission_excerpt(reference, worker_owned=False)
+                        + ". Bağımsız QA kanıtı var mı?"
+                    )
+                if reference["status"] == "completed":
+                    advice = "Tamamlandı kaydı var; gerçek QA ve teslim kanıtını kontrol edelim."
                 else:
                     advice = (
-                        f"Engel nedeni: {record['error'] or 'kayıtta gerekçe yok'}. "
-                        "Önce sebebi ve önceki yan etkileri doğrulayalım; kör tekrar yok."
+                        "Engel nedeni: "
+                        + (reference["error"] or "kayıtta gerekçe yok")
+                        + ". Kök nedeni kontrol edelim."
                     )
-                answer = f"{record['id']} için veritabanı durumu {record['status']}. {advice}"
+                if responder_last:
+                    answer = (
+                        _mission_excerpt(responder_last, worker_owned=True)
+                        + ". " + advice
+                    )
+                else:
+                    answer = (
+                        "Bana ait son görev kaydı doğrulanamadı. Görüşülen "
+                        f"mission_id={reference['id']} "
+                        f"objective={reference['objective'][:100]}. {advice}"
+                    )
             else:
                 topic = "kayıt yok"
-                question = f"{dep_id} için doğrulanmış tamamlanmış/engelli görev kaydı bulunamadı."
-                answer = "Gerçek görev kaydı olmadan çalıştım ya da öğrendim diyemem."
+                question = (
+                    f"{dep_id} için işçi bazında veya departmanda gerçek "
+                    "sonuçlanmış görev kaydı bulunamadı."
+                )
+                answer = (
+                    "Gerçek görev kaydı olmadan bir görev yaptığımı "
+                    "ya da öğrendiğimi iddia edemem."
+                )
 
-            _post(runtime, asker, dep_id, topic, question)
-            _post(runtime, responder, dep_id, topic, answer, reply_to=asker)
-            # This read-only exchange is a status summary, not a model-based
-            # inference or a verified worker result. It must not inflate mind
-            # success rates or create fabricated 'lessons'.
-
+            _post(
+                runtime, asker, dep_id, topic, question,
+                mission_id=(asker_last or reference or {}).get("id", ""),
+            )
+            _post(
+                runtime, responder, dep_id, topic, answer, reply_to=asker,
+                mission_id=(responder_last or reference or {}).get("id", ""),
+            )
+            # Summaries only: no synthetic mind success/lessons.
             pairs += 1
             messages += 2
 

@@ -185,3 +185,84 @@ def test_queue_drain_does_not_double_score_the_same_mission(tmp_path):
     score = worker_mind.load(tmp_path, "software-manager").self_model[
         "plan_scores"]["executor"]
     assert score["ok"] == 1 and score["fail"] == 0
+
+
+def test_converse_last_twenty_messages_reference_actual_worker_latest_mission(tmp_path):
+    """A conversation reports the speaker's latest observed step, not a peer's."""
+    import json
+
+    db = sqlite3.connect(tmp_path / "company-service.db")
+    db.execute(
+        "create table missions (mission_id text primary key, objective text, "
+        "primary_department text, status text, last_error text, updated_at text, "
+        "result_json text)"
+    )
+    departments = []
+    expected = {}
+    for i in range(12):
+        department = f"department-{i:02d}"
+        workers = [f"{department}-worker-a", f"{department}-worker-b"]
+        departments.append({
+            "department_id": department,
+            "workers": [{"worker_id": worker} for worker in workers],
+        })
+        for worker in workers:
+            for task_index in range(2):
+                mission_id = f"{worker}-mission-{task_index}"
+                objective = f"Work objective for {worker} " + "X" * 170
+                result = {
+                    "steps": [{
+                        "worker_id": worker,
+                        "worker_summary": "verified actual work",
+                        "stage": "completed",
+                    }]
+                }
+                db.execute(
+                    "insert into missions values (?, ?, ?, ?, ?, ?, ?)",
+                    (
+                        mission_id, objective, department, "completed", "",
+                        f"2026-11-06T12:00:{task_index:02d}",
+                        json.dumps(result),
+                    ),
+                )
+                if task_index == 1:
+                    expected[worker] = mission_id
+    db.commit()
+    db.close()
+
+    outcome = commune.converse(tmp_path, departments, rounds=1, seed=23)
+    assert outcome["messages"] == 24
+    last_twenty = commune.recent(tmp_path, limit=20)
+    matched = [
+        msg for msg in last_twenty
+        if msg.get("mission_id") == expected.get(msg["from"])
+        and f"mission_id={expected[msg['from']]}" in msg["body"]
+        and "objective=Work objective" in msg["body"]
+    ]
+    assert len(matched) >= 10, f"only {len(matched)} of the last 20 were grounded"
+    assert len(matched) == 20
+    assert all(len(msg["body"]) <= 400 for msg in last_twenty)
+
+
+def test_converse_no_worker_attribution_without_observed_steps(tmp_path):
+    """A department result must not be presented as a worker's own result."""
+    db = sqlite3.connect(tmp_path / "company-service.db")
+    db.execute(
+        "create table missions (mission_id text, objective text, "
+        "primary_department text, status text, last_error text, updated_at text)"
+    )
+    db.execute(
+        "insert into missions values (?, ?, ?, ?, ?, ?)",
+        ("legacy-123", "legacy objective", "research", "blocked", "", "2026-11-06"),
+    )
+    db.commit()
+    db.close()
+    departments = [{
+        "department_id": "research",
+        "workers": [{"worker_id": "research-a"}, {"worker_id": "research-b"}],
+    }]
+    commune.converse(tmp_path, departments, rounds=1, seed=4)
+    messages = commune.recent(tmp_path, limit=2)
+    assert all(msg.get("mission_id") == "legacy-123" for msg in messages)
+    assert all("mission_id=legacy-123" in msg["body"] for msg in messages)
+    assert all("Son görevim" not in msg["body"] for msg in messages)

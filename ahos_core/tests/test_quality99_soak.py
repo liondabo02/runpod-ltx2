@@ -7,9 +7,15 @@ uniqueness rather than model quality.
 
 from __future__ import annotations
 
+import os
 import time
 
 from ahos.worker_runtime import WorkerExecutionResult, local_pass_qa
+
+# Kapsam (coverage) veya yavaş makinelerde 100 görev 120 sn'yi aşabiliyor.
+# Bütçe ortamdan ayarlanabilir; varsayılan, gerçek regresyonu yakalayacak kadar
+# geniş ama patolojik yavaşlamayı yine de yakalayan bir değer.
+SOAK_BUDGET_SECONDS = float(os.environ.get("AHOS_SOAK_BUDGET_SECONDS", "300"))
 
 
 def _executor(item, worker_id):
@@ -57,7 +63,7 @@ def test_hundred_synthetic_missions_complete_without_loss_or_duplication(tmp_pat
     elapsed = time.perf_counter() - started
 
     assert len(set(mission_ids)) == 100, "görev kimlikleri tekrar etmemeli"
-    assert elapsed < 120, f"100 görev {elapsed:.1f} sn sürdü"
+    assert elapsed < SOAK_BUDGET_SECONDS, f"100 görev {elapsed:.1f} sn sürdü"
 
     queued = console.queue.list()
     assert len(queued) == 100

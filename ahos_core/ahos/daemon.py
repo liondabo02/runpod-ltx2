@@ -143,7 +143,10 @@ def _mission_counts(runtime: Path) -> tuple[int, int]:
             ).fetchone()[0]
             last_hour = con.execute(
                 "SELECT COUNT(*) FROM missions WHERE status='completed' "
-                "AND updated_at > datetime('now','-1 hour')"
+                # updated_at iki biçimde yazılabiliyor (ISO 'T' ve boşluklu);
+                # düz string karşılaştırması 'T' yüzünden hepsini "son saat"
+                # sayıyordu. datetime() ikisini de normalize eder.
+                "AND datetime(updated_at) > datetime('now','-1 hour')"
             ).fetchone()[0]
         finally:
             con.close()
