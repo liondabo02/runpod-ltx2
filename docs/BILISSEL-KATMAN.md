@@ -35,9 +35,15 @@ yaptığını ve **ne yapmadığını** kaydeder.
 ```bash
 python tools/cognition_init.py            # kuru
 python tools/cognition_init.py --apply    # 81 profil + uzman/mentor indeksi
+python tools/cognition_sync.py --once     # yeni biten görevleri artımlı işle
 python tools/eval_learning.py             # A/B politika değerlendirmesi
 python tools/acceptance_advanced.py       # 10 kabul testi (--full: tüm paket)
 ```
+
+`tools/cognition_sync.py` servis olarak 60 sn'de bir çalışır
+(`control_plane_v2/AHOS-Cognition-Sync.ps1`, `AHOS-Baslat.cmd` 6. adım) ve her
+yeni doğrulanmış görevi ilgili işçilerin profiline yazar; mission_id ile
+tekilleştirir, tekrar koşuda 0 yeni kayıt üretir.
 
 ## Sahip güvenliği
 
