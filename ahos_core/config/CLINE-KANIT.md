@@ -153,3 +153,66 @@ exit: 0
 raw status: DIFF_CHECK_EXIT=0 (CRLF conversion warnings; no whitespace errors)
 
 Remaining: local ComfyUI port 8188 unavailable; GitHub hosted 30m cron has no access to local SQLite; stored owner hash is not cryptographic authorization.
+
+## 2026-11-06 — P1: Project-local pytest acceptance gate
+
+komut : cd ahos_core; ..\control_plane_v2\.venv\Scripts\python.exe -m pytest -q --no-header tests/test_acceptance_offline.py
+exit  : 0
+çıktı :
+```text
+...                                                                      [100%]
+3 passed in 4.53s
+P1_TEST_EXIT=0
+```
+
+komut : cd ahos_core\runtime\projects\holding-core; ..\..\..\..\control_plane_v2\.venv\Scripts\python.exe -m pytest -q --no-header tests
+exit  : 0
+çıktı :
+```text
+ssssssssssssssssssssssssssssssssssss................                     [100%]
+16 passed, 36 skipped in 0.61s
+EXIT_CODE=0
+```
+
+komut : cd ahos_core; ..\control_plane_v2\.venv\Scripts\python.exe -m pytest -q --no-header --timeout=120 tests
+exit  : 0
+çıktı :
+```text
+........................................................................ [  5%]
+........................................................................ [ 11%]
+........................................................................ [ 17%]
+......................................................................ss [ 23%]
+ssssssssssssssssssssssssssssssssss...................................... [ 29%]
+........................................................................ [ 34%]
+........................................................................ [ 40%]
+........................................................................ [ 46%]
+........................................................................ [ 52%]
+........................................................................ [ 58%]
+........................................................................ [ 64%]
+........................................................................ [ 69%]
+........................................................................ [ 75%]
+........................................................................ [ 81%]
+........................................................................ [ 87%]
+........................................................................ [ 93%]
+........................................................................ [ 99%]
+............                                                             [100%]
+1200 passed, 36 skipped in 263.60s (0:04:23)
+ALL_TESTS_EXIT=0
+```
+
+komut : ..\control_plane_v2\.venv\Scripts\python.exe -m py_compile ahos_core/ahos/acceptance.py ahos_core/ahos/project_qa.py ahos_core/tests/test_acceptance_offline.py ahos_core/tests/test_project_qa.py ahos_core/tests/test_autonomy.py
+exit  : 0
+çıktı :
+```text
+COMPILE_EXIT=0
+```
+
+komut : ..\control_plane_v2\.venv\Scripts\python.exe -m compileall -q ahos_core\ahos ahos_core\tests
+exit  : 0
+çıktı :
+```text
+SOURCE_COMPILE_EXIT=0
+```
+
+kaynak: ahos/acceptance.py → check_offline(project_root), ahos/project_qa.py → trusted_gate + check_offline.
+Not: git-ignored runtime altındaki üçüncü taraf site-packages için tüm ahos_core'ı compileall yapmak Windows dosya yolu kaynaklı FileNotFoundError üretti; AHOS kaynak/test kodunun compileall kontrolü temizdir.

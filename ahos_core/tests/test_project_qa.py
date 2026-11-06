@@ -111,6 +111,10 @@ def test_acceptance_gate_with_turkish_output_is_not_encoding_blocked(
     (root / "tools" / "check_offline.py").write_text(
         "print('başarılı ş ç ğ')\n", encoding="utf-8"
     )
+    (root / "tests").mkdir()
+    (root / "tests" / "test_ok.py").write_text(
+        "def test_ok(): assert True\n", encoding="utf-8"
+    )
     evidence = _evidence(tmp_path)
     # Yeni güvenlik sözleşmesi: kabul kapısı ilk görüşte sabitlenir (pin).
     from ahos.acceptance_bootstrap import ensure_baseline

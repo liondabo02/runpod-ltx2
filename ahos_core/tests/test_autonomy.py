@@ -40,6 +40,11 @@ def test_dedupe_prevents_reruns_but_allows_next_task(tmp_path) -> None:
     (project / "tools" / "check_offline.py").write_text(
         "import sys\nsys.exit(0)\n", encoding="utf-8"
     )
+    # Functional acceptance now executes project-local pytest, not gate code.
+    (project / "tests").mkdir()
+    (project / "tests" / "test_ok.py").write_text(
+        "def test_ok(): assert True\n", encoding="utf-8"
+    )
     from ahos.acceptance_bootstrap import ensure_baseline
 
     ensure_baseline(project, tmp_path / "artifacts")
@@ -85,6 +90,11 @@ def test_cycle_exhaustion_makes_runner_idle(tmp_path, monkeypatch) -> None:
     (project / "tools").mkdir()
     (project / "tools" / "check_offline.py").write_text(
         "import sys\nsys.exit(0)\n", encoding="utf-8"
+    )
+    # Functional acceptance now executes project-local pytest, not gate code.
+    (project / "tests").mkdir()
+    (project / "tests" / "test_ok.py").write_text(
+        "def test_ok(): assert True\n", encoding="utf-8"
     )
     from ahos.acceptance_bootstrap import ensure_baseline
 
@@ -228,6 +238,11 @@ def test_routed_without_delivery_evidence_reports_blocked(tmp_path, monkeypatch)
     (project / "tools").mkdir()
     (project / "tools" / "check_offline.py").write_text(
         "import sys\nsys.exit(0)\n", encoding="utf-8"
+    )
+    # Functional acceptance now executes project-local pytest, not gate code.
+    (project / "tests").mkdir()
+    (project / "tests" / "test_ok.py").write_text(
+        "def test_ok(): assert True\n", encoding="utf-8"
     )
     ensure_baseline(project, tmp_path / "artifacts")
     console.projects.link(

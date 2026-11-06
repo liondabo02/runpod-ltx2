@@ -174,27 +174,14 @@ def make_project_qa(project_root, evidence_root, *, require_functional=False):
                     )
                     if not trusted:
                         raise ValueError('Kabul testi güvenilir değil: ' + reason)
-                    # Windows konsolu cp1252 olduğunda kapı betiği Türkçe
-                    # karakter basarken UnicodeEncodeError ile çöküyordu;
-                    # alt sürece kodlamayı açıkça ver.
-                    gate_env = dict(os.environ)
-                    gate_env['PYTHONIOENCODING'] = 'utf-8'
-                    gate_env['PYTHONUTF8'] = '1'
-                    acceptance = subprocess.run(
-                        [sys.executable, str(gate)],
-                        capture_output=True,
-                        text=True,
-                        encoding='utf-8',
-                        errors='replace',
-                        timeout=120,
-                        cwd=str(root),
-                        env=gate_env,
-                    )
-                    if acceptance.returncode != 0:
-                        detail = (acceptance.stdout or acceptance.stderr or '').strip()
+                    # Trust is pinned separately; execute the project's own
+                    # pytest suite instead of candidate-controlled gate code.
+                    from .acceptance import check_offline
+
+                    ok, detail = check_offline(root, python=sys.executable)
+                    if not ok:
                         raise ValueError(
-                            'Kabul testi başarısız (check_offline): '
-                            + (detail.splitlines()[-1] if detail else 'çıktı yok')[:160]
+                            'Kabul testi başarısız (check_offline): ' + detail
                         )
                 functional_verified = gate.is_file()
             # Fence changes occurring between inventory and acceptance.

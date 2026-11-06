@@ -6,7 +6,10 @@ step. This checker cannot approve, repair or create a baseline.
 from __future__ import annotations
 import hashlib
 import json
+import os
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 MAX_GATE_BYTES = 1024 * 1024
@@ -98,3 +101,71 @@ def enroll_gate(root, baseline_path):
         return True, "kabul testi sabitlendi"
     except (OSError, ValueError):
         return False, "kabul kaydı yazılamadı"
+
+
+def check_offline(project_root: str | Path, *, python: str | None = None) -> tuple[bool, str]:
+    """Run only the project's own pytest suite after its gate has been enrolled.
+
+    This does not execute candidate-controlled check_offline.py: that file is
+    checked separately by trusted_gate() before project_qa invokes this helper.
+    """
+    root = Path(project_root).resolve()
+    gate = gate_path(root)
+    if gate.is_symlink() or gate.parent.is_symlink() or not gate.is_file():
+        return False, "kabul testi yok (tools/check_offline.py)"
+    if not (root / "tests").is_dir() or (root / "tests").is_symlink():
+        return False, "kabul testi yok (tests/)"
+    env = dict(os.environ)
+    env["PYTHONPATH"] = str(root)
+    env["PYTHONIOENCODING"] = "utf-8"
+    env["PYTHONUTF8"] = "1"
+    try:
+        result = subprocess.run(
+            [python or sys.executable, "-m", "pytest", "-q", "--no-header", "tests"],
+            cwd=root,
+            env=env,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=120,
+        )
+    except subprocess.TimeoutExpired:
+        return False, "0 passed / 1 failed; kabul testi zaman aşımı (120s)"
+    except OSError as exc:
+        return False, f"0 passed / 1 failed; kabul testi başlatılamadı: {exc}"
+
+    output = "\n".join(part for part in (result.stdout, result.stderr) if part)
+    lines = output.splitlines()
+    # Pytest's final line carries summary counts; collection errors also fail.
+    summary = next(
+        (line for line in reversed(lines) if re.search(
+            r"\b\d+\s+(?:passed|failed|errors?)\b", line
+        )),
+        "",
+    )
+    counts = {
+        key: sum(int(count) for count, kind in re.findall(
+            r"\b(\d+)\s+(passed|failed|errors?)\b", summary
+        ) if kind == key)
+        for key in ("passed", "failed", "error", "errors")
+    }
+    passed = counts["passed"]
+    failed = counts["failed"] + counts["error"] + counts["errors"]
+    ok = result.returncode == 0 and passed > 0 and failed == 0
+    if not ok and failed == 0:
+        failed = 1  # Includes collection failures and 'no tests ran'.
+    detail = f"{passed} passed / {failed} failed"
+    if not ok:
+        error_start = next(
+            (i for i, line in enumerate(lines) if re.search(
+                r"^=+\s+(?:FAILURES|ERRORS)\s+=+$", line
+            )),
+            0,
+        )
+        excerpt = lines[error_start:error_start + 20]
+        if excerpt:
+            detail += "\n" + "\n".join(excerpt)
+        else:
+            detail += "\npytest çıktı üretmedi"
+    return ok, detail
