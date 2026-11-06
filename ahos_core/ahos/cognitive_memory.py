@@ -141,10 +141,16 @@ def clear_working(profile) -> None:
 
 def classify_cause(reason: str) -> str:
     text = (reason or "").casefold()
-    for name, needle in (("timeout", "zaman aşımı"), ("model_unavailable", "model"),
-                         ("acceptance_failed", "kabul"), ("no_delivery", "değişmedi"),
-                         ("lock", "kilit"), ("permission", "yetki"), ("schema", "şema")):
-        if needle in text:
+    for name, needles in (
+        ("timeout", ("zaman aşımı", "timeout", "timed out")),
+        ("model_unavailable", ("model",)),
+        ("acceptance_failed", ("kabul", "acceptance")),
+        ("no_delivery", ("değişmedi", "değişiklik yok", "no delivery", "changed_files")),
+        ("lock", ("kilit", "lock", "lease")),
+        ("permission", ("yetki", "permission", "denied")),
+        ("schema", ("şema", "schema")),
+    ):
+        if any(needle in text for needle in needles):
             return name
     return "other"
 
