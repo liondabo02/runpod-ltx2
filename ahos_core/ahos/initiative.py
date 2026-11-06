@@ -38,20 +38,25 @@ def tick(runtime_dir: str | Path, departments: list[dict]) -> dict:
     runtime = Path(runtime_dir)
     pending_path = runtime / "mission-stats.json"
 
-    pending = 0
-    if pending_path.exists():
+    from .queue_budget import MAX_PENDING_MISSIONS, AUTONOMOUS_RESUME_BELOW, pending_count
+
+    pending = pending_count(runtime)
+    source = "sqlite"
+    if pending is None:
+        # Legacy offline simulations used mission-stats.json. It can inform
+        # an idea-only proposal, never authority to enqueue a real mission.
+        source = "legacy_stats"
         try:
-            stats = json.loads(pending_path.read_text(encoding="utf-8"))
-            pending = stats.get("pending", 0)
-        except (json.JSONDecodeError, OSError):
-            pending = 0
+            pending = int(json.loads(pending_path.read_text(encoding="utf-8"))["pending"])
+        except (OSError, ValueError, KeyError, TypeError):
+            pending, source = MAX_PENDING_MISSIONS, "unavailable"
 
     created = 0
     department = None
     goal = ""
     score = 0.8
 
-    if pending < 8:
+    if pending < min(8, AUTONOMOUS_RESUME_BELOW) and source != "unavailable":
         dep = _weakest_department(runtime)
         if dep:
             department = dep
@@ -66,6 +71,11 @@ def tick(runtime_dir: str | Path, departments: list[dict]) -> dict:
         "department": department or "",
         "goal": goal,
         "score": score,
+        "pending": pending,
+        "pending_source": source,
+        "capacity_limit": MAX_PENDING_MISSIONS,
+        "queue_backpressure": pending >= AUTONOMOUS_RESUME_BELOW,
+        "note": "idea-only; no actual mission enqueued",
     }
     with open(log_path, "a", encoding="utf-8") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")

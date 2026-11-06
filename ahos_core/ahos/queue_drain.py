@@ -233,7 +233,25 @@ def drain(
         except Exception:  # noqa: BLE001 - politika uygulaması akışı bozmaz
             pass
 
-    return {"executed": executed, "blocked": blocked, "skipped": skipped}
+    # Admission resumes automatically when verified draining creates room.
+    # Existing plan steps remain on disk during saturation; do not claim
+    # success or delete tasks merely to achieve a queue metric.
+    from .queue_budget import pending_count, AUTONOMOUS_RESUME_BELOW
+    remaining = pending_count(console.runtime_dir)
+    resumed: dict = {"created": 0}
+    if executed and remaining is not None and remaining < AUTONOMOUS_RESUME_BELOW:
+        try:
+            from .mind_feedback import flush_plan_queue
+            resumed = flush_plan_queue(console.runtime_dir, limit=5)
+        except Exception as exc:  # noqa: BLE001 - queue drain must remain auditable
+            resumed = {"created": 0, "reason": type(exc).__name__}
+        remaining = pending_count(console.runtime_dir)
+    return {
+        "executed": executed, "blocked": blocked, "skipped": skipped,
+        "balance": {"pending": remaining, "capacity": 300,
+                    "auto_resumed_plans": int(resumed.get("created") or 0),
+                    "generation_paused": remaining is None or remaining >= AUTONOMOUS_RESUME_BELOW},
+    }
 
 
 def _failure_cause(result) -> str:

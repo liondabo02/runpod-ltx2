@@ -129,6 +129,31 @@ def converse(runtime_dir, departments: list, rounds: int = 3, seed: int | None =
     """Share verifiable department results; conversation is not model learning."""
 
     runtime = Path(runtime_dir)
+    from_runtime_book = not departments
+    cadence_file = runtime / "minds" / ".commune-cadence.json"
+    cursor = 0
+    if from_runtime_book:
+        # The daemon may pass []. Rotate a few departments per interval
+        # rather than producing a chat flood or staying silent forever.
+        try:
+            state = json.loads(cadence_file.read_text(encoding="utf-8"))
+            if time.time() - float(state.get("last_at", 0)) < 900:
+                return {"pairs": 0, "messages": 0, "departments": 0,
+                        "reason": "cooldown"}
+            cursor = int(state.get("next", 0))
+        except (OSError, ValueError, TypeError, AttributeError):
+            cursor = 0
+        try:
+            payload = json.loads((runtime / "departments.json").read_text(encoding="utf-8"))
+            complete = payload.get("departments", []) if isinstance(payload, dict) else payload
+            complete = [dep for dep in complete if isinstance(dep, dict)]
+            if complete:
+                take = min(4, len(complete))
+                departments = [complete[(cursor + i) % len(complete)]
+                               for i in range(take)]
+                cursor = (cursor + take) % len(complete)
+        except (OSError, ValueError, TypeError):
+            departments = []
     rng = random.Random(seed if seed is not None else int(time.time()))
     members: dict[str, list[str]] = {}
     for dep in departments:
@@ -219,6 +244,12 @@ def converse(runtime_dir, departments: list, rounds: int = 3, seed: int | None =
             pairs += 1
             messages += 2
 
+    if from_runtime_book and members:
+        cadence_file.parent.mkdir(parents=True, exist_ok=True)
+        cadence_file.write_text(json.dumps({
+            "last_at": time.time(), "next": cursor,
+            "department_count": len(members),
+        }), encoding="utf-8")
     return {"pairs": pairs, "messages": messages, "departments": len(members)}
 
 

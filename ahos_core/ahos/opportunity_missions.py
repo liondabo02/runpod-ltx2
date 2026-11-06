@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
-from .autonomous_company import PersistentMissionQueue, QueueStatus, QueuedMission
+from .autonomous_company import PersistentMissionQueue, QueueStatus, QueuedMission, QueueCapacityError
 from .candidate_triage import CandidateDisposition, CandidateTriage, triage_candidate
 from .opportunity_intake import OpportunityCandidate, OpportunityCandidateStore
 
@@ -123,12 +123,23 @@ class QualifiedOpportunityMissionBridge:
             )
 
         department = self._department_for(candidate, triage)
-        mission = self.queue.enqueue(
-            mission_id=mission_id,
-            objective=self._objective(candidate, triage),
-            primary_department=department,
-            max_attempts=1,
-        )
+        try:
+            mission = self.queue.enqueue(
+                mission_id=mission_id,
+                objective=self._objective(candidate, triage),
+                primary_department=department,
+                max_attempts=1,
+            )
+        except QueueCapacityError as exc:
+            # Qualified lead remains in the candidate store for later review;
+            # no fake queue receipt or unbounded backlog.
+            return OpportunityMissionDecision(
+                candidate_id=candidate.candidate_id,
+                mission_id=None,
+                queued=False,
+                primary_department=department,
+                reason=str(exc),
+            )
 
         return OpportunityMissionDecision(
             candidate_id=candidate.candidate_id,
