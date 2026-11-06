@@ -45,6 +45,10 @@ python tools/acceptance_advanced.py       # 10 kabul testi (--full: tüm paket)
 yeni doğrulanmış görevi ilgili işçilerin profiline yazar; mission_id ile
 tekilleştirir, tekrar koşuda 0 yeni kayıt üretir.
 
+`tools/collective_loop.py` 5 dk'da bir uzman indeksini + mentor eşleşmelerini
+tazeler ve engelli görevler için **devir önerisi** üretir
+(`verified=false`, başarı sayılmaz; `AHOS-Baslat.cmd` 7. adım).
+
 ## Sahip güvenliği
 
 `ahos_core/ahos/owner_auth.py`: PBKDF2 parola, süreli/kapsamlı oturum,

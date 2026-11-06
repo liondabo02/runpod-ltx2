@@ -142,7 +142,7 @@ def check_6() -> dict:
     return {"id": 6, "name": "Drain sonrası otomatik kapasite dengeleme",
             "status": "PASS" if test["exit"] == 0 else "PARTIAL",
             "evidence": {"pytest_exit": test["exit"],
-                         "note": "capacity modülü çalışma ağacında; commit bekliyor olabilir"}}
+                         "note": "kapasite modülü 470a300 ile commit'li; test main'de de geçiyor"}}
 
 
 def check_7() -> dict:
