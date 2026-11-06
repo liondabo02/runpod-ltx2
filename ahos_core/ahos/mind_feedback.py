@@ -37,9 +37,21 @@ def flush_plan_queue(runtime_dir, limit: int = 10) -> dict:
     if not pending:
         return {"created": 0}
 
+    from .queue_budget import can_generate
+    from .autonomous_company import QueueCapacityError
+
     queue = PersistentMissionQueue(runtime / "company-service.db")
+    budget = can_generate(runtime)
+    if not budget["allowed"]:
+        # Preserve every queued plan for a later drain. This is a deliberate
+        # pause, not a failure or a fictional completed task.
+        return {"created": 0, "deferred": len(pending),
+                "pending": len(pending), "reason": budget["reason"],
+                "queue_pending": budget["pending"]}
+
     stamp = int(time.time())
     created = 0
+    deferred = 0
 
     for index, entry in enumerate(pending[:limit]):
         department = str(entry.get("department") or "genel")
@@ -57,11 +69,16 @@ def flush_plan_queue(runtime_dir, limit: int = 10) -> dict:
             entry.update({"state": "queued", "mission_id": mission_id,
                           "queued_at": time.strftime("%Y-%m-%dT%H:%M:%S")})
             created += 1
+        except QueueCapacityError as exc:
+            entry["deferred_reason"] = str(exc)[:160]
+            deferred += 1
+            break
         except Exception as exc:  # noqa: BLE001
             entry.update({"state": "error", "error": type(exc).__name__})
 
     path.write_text("\n".join(json.dumps(item, ensure_ascii=False) for item in entries) + "\n", encoding="utf-8")
-    return {"created": created, "pending": len(pending)}
+    return {"created": created, "pending": len(pending),
+            "deferred": deferred, "queue_pending": can_generate(runtime)["pending"]}
 
 
 def feedback(runtime_dir, worker_id: str, department: str, ok: bool,

@@ -221,13 +221,16 @@ def snapshot_if_due(runtime_dir: str | Path, backup_root: str | Path | None = No
                 and saved.is_dir()
                 and saved.resolve().is_relative_to(root.resolve())):
             try:
-                verify(saved)
+                checked = verify(saved)
             except (OSError, ValueError, BadZipFile, KeyError, TypeError):
                 # The prior backup must never be called healthy if tampered.
                 # Preserve it for investigation and take a fresh snapshot.
                 pass
             else:
-                return {"status": "fresh", "last_snapshot": str(saved)}
+                return {
+                    "status": "fresh", "last_snapshot": str(saved),
+                    "verified": True, "files": checked["files"],
+                }
     except (OSError, KeyError, ValueError, TypeError):
         pass
 

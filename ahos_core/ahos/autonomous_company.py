@@ -16,6 +16,13 @@ def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+MAX_PENDING_MISSIONS = 300
+
+
+class QueueCapacityError(RuntimeError):
+    """No new pending mission was admitted; existing rows stay unchanged."""
+
+
 class QueueStatus(str, Enum):
     PENDING = "pending"
     RUNNING = "running"
@@ -94,6 +101,35 @@ class PersistentMissionQueue:
                 ON missions(status, next_attempt_at, created_at)
                 """
             )
+            # Defence in depth: direct SQL producers/recovery scripts must
+            # obey the same hard cap as enqueue(), even across processes.
+            # Existing backlogs are preserved; this only blocks new pending.
+            conn.execute(
+                f"""
+                CREATE TRIGGER IF NOT EXISTS ahos_pending_insert_cap
+                BEFORE INSERT ON missions
+                WHEN NEW.status='pending'
+                  AND (SELECT COUNT(*) FROM missions WHERE status='pending') >= {MAX_PENDING_MISSIONS}
+                  AND NOT EXISTS (
+                    SELECT 1 FROM missions
+                    WHERE mission_id=NEW.mission_id AND status='pending'
+                  )
+                BEGIN
+                  SELECT RAISE(ABORT, 'pending_capacity_reached');
+                END
+                """
+            )
+            conn.execute(
+                f"""
+                CREATE TRIGGER IF NOT EXISTS ahos_pending_update_cap
+                BEFORE UPDATE OF status ON missions
+                WHEN NEW.status='pending' AND OLD.status <> 'pending'
+                  AND (SELECT COUNT(*) FROM missions WHERE status='pending') >= {MAX_PENDING_MISSIONS}
+                BEGIN
+                  SELECT RAISE(ABORT, 'pending_capacity_reached');
+                END
+                """
+            )
             from .completion_db_guard import install_completion_guards
 
             install_completion_guards(conn)
@@ -123,6 +159,25 @@ class PersistentMissionQueue:
         now = _utc_now()
 
         with self._connect() as conn:
+            # BEGIN IMMEDIATE makes the read+write admission decision atomic
+            # across concurrent processes and competing autonomous producers.
+            # Never silently delete, cancel, or label queued work completed.
+            conn.execute("BEGIN IMMEDIATE")
+            current = conn.execute(
+                "SELECT status FROM missions WHERE mission_id=?", (mission_id,)
+            ).fetchone()
+            if current is None or (
+                replace_existing and current["status"] != QueueStatus.PENDING.value
+            ):
+                pending = int(conn.execute(
+                    "SELECT COUNT(*) FROM missions WHERE status=?",
+                    (QueueStatus.PENDING.value,)
+                ).fetchone()[0])
+                if pending >= MAX_PENDING_MISSIONS:
+                    raise QueueCapacityError(
+                        f"pending_capacity_reached: {pending}/{MAX_PENDING_MISSIONS}; "
+                        "new mission deferred, no existing records changed"
+                    )
             if replace_existing:
                 conn.execute(
                     """

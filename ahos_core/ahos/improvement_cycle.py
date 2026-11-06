@@ -105,6 +105,13 @@ def run_cycle(queue, departments: Iterable[str], *, limit: int = 4, stamp: str |
     created: list[str] = []
     skipped: list[str] = []
 
+    # Self-improvement is discretionary: keep headroom for owner missions.
+    # The central SQLite admission check remains the final race-safe guard.
+    from .queue_budget import can_generate
+    runtime = getattr(getattr(queue, "path", None), "parent", None)
+    if runtime is not None and not can_generate(runtime)["allowed"]:
+        return CycleResult(created=(), skipped=tuple(departments))
+
     for department in departments:
         if len(created) >= limit:
             break

@@ -157,6 +157,9 @@ def queue_research(runtime: Path, weakest: list[str]) -> tuple[str, ...]:
 
     if not weakest:
         return ()
+    from .queue_budget import can_generate
+    if not can_generate(runtime)["allowed"]:
+        return ()  # lessons can continue; do not manufacture more queue pressure
     try:
         from .autonomous_company import PersistentMissionQueue, QueueStatus
     except Exception:  # noqa: BLE001
