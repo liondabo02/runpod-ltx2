@@ -14,8 +14,11 @@ Döngü her turda:
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 import time
+import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 
 IDLE_MINUTES = 30
@@ -31,23 +34,32 @@ def _book(runtime: Path) -> list[dict]:
 
 
 def _worker_runs(runtime: Path) -> dict[str, tuple[int, float]]:
-    """worker → (koşu sayısı, son koşu zamanı)."""
-
+    """Return observed run counts and actual latest UTC timestamps per worker."""
     ledger = runtime / "worker-metrics.jsonl"
     stats: dict[str, tuple[int, float]] = {}
     if not ledger.exists():
         return stats
-    now = time.time()
+
     for line in ledger.read_text(encoding="utf-8", errors="replace").splitlines()[-2000:]:
         try:
             row = json.loads(line)
-        except json.JSONDecodeError:
+        except (ValueError, TypeError):
+            continue
+        if not isinstance(row, dict):
             continue
         worker = str(row.get("worker_id") or "")
         if not worker:
             continue
-        runs, last = stats.get(worker, (0, 0.0))
-        stats[worker] = (runs + 1, max(last, now - 60))
+        raw_at = row.get("at") or ""
+        try:
+            stamp = datetime.fromisoformat(str(raw_at).replace("Z", "+00:00"))
+            if stamp.tzinfo is None:
+                stamp = stamp.replace(tzinfo=timezone.utc)
+            actual_last = stamp.timestamp()
+        except (ValueError, TypeError, OverflowError):
+            actual_last = 0.0
+        count, previous = stats.get(worker, (0, 0.0))
+        stats[worker] = count + 1, max(previous, actual_last)
     return stats
 
 
@@ -104,32 +116,66 @@ def tick(runtime_dir: str | Path, *, limit: int = STUDY_PER_TICK) -> dict:
     directory = runtime / "learning"
     directory.mkdir(parents=True, exist_ok=True)
 
-    studied: list[str] = []
+    # Persistent round-robin: workers farther down the roster must not starve.
+    roster: list[tuple[str, str]] = []
+    seen: set[str] = set()
     for dep in departments:
-        if len(studied) >= limit:
-            break
         dep_id = str(dep.get("department_id") or "")
         for worker in dep.get("workers") or []:
-            if len(studied) >= limit:
-                break
             worker_id = str(worker.get("worker_id") or "")
-            if not worker_id:
-                continue
-            # CEO dahil herkes: koşusu az olan öğrenmeye gider.
-            worker_runs = runs.get(worker_id, (0, 0.0))[0]
-            if worker_runs > 5:
-                continue
-            lesson = _lesson(dep_id, worker_id, counts, worker_runs)
-            path = directory / f"{dep_id}.jsonl"
-            with path.open("a", encoding="utf-8") as handle:
-                handle.write(json.dumps(lesson, ensure_ascii=False) + "\n")
-            studied.append(worker_id)
+            if worker_id and worker_id not in seen:
+                seen.add(worker_id)
+                roster.append((dep_id, worker_id))
+
+    cursor_path = directory / ".cursor.json"
+    try:
+        cursor = int(json.loads(cursor_path.read_text(encoding="utf-8")).get("next", 0))
+    except (OSError, ValueError, TypeError, AttributeError):
+        cursor = 0
+    start = cursor % len(roster) if roster else 0
+    now = time.time()
+    studied: list[str] = []
+    busy = 0
+    checked = 0
+    max_count = max(0, int(limit))
+    for offset in range(len(roster)):
+        if len(studied) >= max_count:
+            break
+        dep_id, worker_id = roster[(start + offset) % len(roster)]
+        checked += 1
+        worker_runs, last_observed = runs.get(worker_id, (0, 0.0))
+        if last_observed and now - last_observed < IDLE_MINUTES * 60:
+            busy += 1
+            continue
+        lesson = _lesson(dep_id, worker_id, counts, worker_runs)
+        # A generated micro-lesson is not proof of increased model capability.
+        lesson["learning_mode"] = "deterministic_micro_lesson"
+        lesson["verified_skill_gain"] = False
+        path = directory / f"{dep_id}.jsonl"
+        with path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(lesson, ensure_ascii=False) + "\n")
+        studied.append(worker_id)
+
+    next_cursor = (start + checked) % len(roster) if roster else 0
+    temporary = cursor_path.with_name(cursor_path.name + "." + uuid.uuid4().hex + ".tmp")
+    try:
+        temporary.write_text(
+            json.dumps({"next": next_cursor, "rostered": len(roster),
+                        "updated_at": time.strftime("%Y-%m-%dT%H:%M:%S")}),
+            encoding="utf-8",
+        )
+        os.replace(temporary, cursor_path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
     summary = {
         "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "studied": studied,
         "count": len(studied),
         "departments": len(departments),
+        "rostered": len(roster),
+        "skipped_recently_active": busy,
+        "next_cursor": next_cursor,
     }
     (directory / "last-run.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8"
