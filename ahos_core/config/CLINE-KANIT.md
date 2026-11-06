@@ -279,3 +279,43 @@ PYCOMPILE_EXIT=0
 
 kaynak: ahos/queue_drain.py → _scoring_worker ve score_plan çağrısı; ahos/mind_feedback.py → record_plan_score bayrağı; tests/test_observed_learning.py → 20 gerçek-işçi-ataması simülasyonu ve çift puanlama testi.
 Not: 20 işçili kabul testi izole tmp_path ortamında sahte konsol ve gerçek SQLite + mind JSON dosyalarıyla koşar. Canlı runtime 20 ayrı çalışanı puanladı iddiası değildir.
+
+## 2026-11-06 — commune.converse worker-last-task grounding
+
+komut : cd ahos_core; ..\control_plane_v2\.venv\Scripts\python.exe -m pytest -q --no-header --timeout=120 tests/test_observed_learning.py
+exit  : 0
+çıktı :
+```text
+........                                                                 [100%]
+8 passed in 1.41s
+OBSERVED_TEST_EXIT=0
+COMPILE_EXIT=0
+```
+
+canlı kaynak : ahos_core/runtime/company-service.db (salt okunur SQLite)
+eşleşme      : result_json.steps[].worker_id + worker_summary (rastgele departman sahipliği YOK)
+çıktı :
+```text
+DEPARTMENTS 17
+ATTRIBUTED 37 DEPTS_WITH_WORKER_MISSIONS 17
+READ_ONLY_CHECK_EXIT=0
+LIVE_CONVERSE {'pairs': 34, 'messages': 68, 'departments': 17}
+LIVE_LAST20_TOTAL 20 MISSION_ID_OBJECTIVE 20 WORKER_OWN_MISSIONS 20
+LIVE_ACCEPTANCE_EXIT=0
+NOW_LAST20 20 MISSION_ID_AND_OBJECTIVE 20
+ACCEPTED True
+RECHECK_EXIT=0
+```
+
+komut : cd ahos_core; ..\control_plane_v2\.venv\Scripts\python.exe -m pytest -q --no-header --timeout=120 tests
+exit  : 0
+çıktı :
+```text
+.....................                                                    [100%]
+1209 passed, 36 skipped in 265.77s (0:04:25)
+ALL_TESTS_EXIT=0
+```
+
+Kullanıcı kabulü: conversations.jsonl dosyasının son 20 satırında en az 10 gerçek mission_id ve kısaltılmış objective.
+Sonuç: 20/20 (canlı runtime); izole tmp_path testi de 20/20.
+Güvenlik: Terminal mission olmadan kişi adına geçmiş görev uydurulmaz; eksik eşleşmede departman kaynağı olarak ayrıca işaretlenir. Önceki kayıtlar silinmedi.
