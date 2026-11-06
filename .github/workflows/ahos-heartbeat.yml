@@ -1,0 +1,78 @@
+name: AHOS Heartbeat
+
+# Default branch only: GitHub scheduled workflows require this file on main.
+# Each GitHub runner is ephemeral; it cannot operate the owner's Windows runtime.
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ahos-heartbeat
+  cancel-in-progress: false
+
+jobs:
+  beat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # main is the lightweight RunPod image branch and has no ahos_core.
+      # Load its Python heartbeat implementation from the AHOS feature branch
+      # without switching the checkout or ever committing transient sources.
+      - name: Load AHOS heartbeat sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin refs/heads/feature/agent-control-plane
+          git archive FETCH_HEAD ahos_core/ahos ahos_core/config | tar -xf -
+          test -f ahos_core/ahos/heartbeat.py
+
+      - name: Run AHOS heartbeat
+        env:
+          PYTHONPATH: ahos_core
+          PYTHONIOENCODING: utf-8
+        run: python -m ahos.heartbeat
+
+      - name: Verify heartbeat results
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path("ahos_core/config")
+          status = json.loads((root / "heartbeat.json").read_text(encoding="utf-8"))
+          assert status.get("at") and status.get("owner"), "heartbeat payload incomplete"
+          report = root / "report-latest.md"
+          assert report.is_file() and report.stat().st_size > 0, "missing heartbeat report"
+          print("AHOS heartbeat verified:", status["at"])
+          PY
+
+      - name: Commit only heartbeat report to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "AHOS Heartbeat"
+          git config user.email "heartbeat@ahos.local"
+          git add -f -- ahos_core/config/heartbeat.json ahos_core/config/report-latest.md
+          if git diff --cached --quiet; then
+            echo "No heartbeat report changes."
+            exit 0
+          fi
+          git commit -m "heartbeat: $(date -u +%Y-%m-%dT%H:%M) turu"
+          git pull --rebase origin main
+          git push origin HEAD:main
