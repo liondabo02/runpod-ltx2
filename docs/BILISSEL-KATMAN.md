@@ -17,6 +17,13 @@ yaptığını ve **ne yapmadığını** kaydeder.
 | Reflection | `reflect()` — ders + mission_id + kanıt bayrağı | Kanıtsızsa "kanıt yok" yazar |
 | İşlevsel duygu | `emotion()` / `emotion_priority()` — 7 boyut, 0..1 | Yetki/harcama etkisi `none` |
 | Kolektif zeka | `expert_index`, `find_expert`, `handoff`, `peer_review`, `mentor_pairs` | Paylaşım `verified=False` ise başarı sayılmaz |
+| Uzun vadeli hafıza | `remember_long_term()` — plan tipi + ay kümülatifleri, mission_id'li kilometre taşları | Orijinal olaylar silinmez; özet ayrı tutulur |
+| Meta-hafıza | `meta_note()` — kaynak güvenilirliği (ok/fail/reliability) | Kaynak bazlı; kanıtsız kaynak düşük güven |
+| Paylaşılan bilgi | `share_knowledge()` / `share_from_profile()` — `runtime/cognition/_shared.jsonl` | Doğrulanmış kayıt tekilleşir; öneriler `verified=false` |
+| Geri çağırma | `recall()` — kaynak, tarih, güven puanı | Semantik 1.0; kanıtlı olay 0.9; kanıtsız 0.3–0.4 |
+| Çelişki çözümü | `resolve_conflict()` — daha güvenilir kanıt kazanır | İki kayıt da saklanır |
+| Çoklu plan | `build_plans()` — ≥3 strateji, 11 zorunlu alan, skor + gerekçe | Seçim gerekçesi profile yazılır |
+| Belirsizlik değerlendirmesi | `assess_task()` — research / ask_help / safe_test / verify_first / proceed | Kanıt yoksa körlemesine `proceed` yok |
 
 ## Ne yok (iddia edilmez)
 

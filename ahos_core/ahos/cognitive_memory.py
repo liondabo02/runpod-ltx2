@@ -44,9 +44,12 @@ def new_profile(worker_id: str, department: str = "") -> dict:
     return {
         "schema": SCHEMA, "worker_id": worker_id, "department": department,
         "created_at": _now(), "updated_at": _now(),
-        "memory": {"episodic": [], "semantic": [], "procedural": [], "working": {}},
+        "memory": {"episodic": [], "semantic": [], "procedural": [], "working": {},
+                   "long_term": {"by_plan": {}, "months": {}, "milestones": []},
+                   "shared": []},
         "metacognition": {"samples": 0, "observed_rate": 0.0, "confidence": 0.5,
                           "calibration_gap": 0.0, "error_rate": 0.0},
+        "meta_memory": {}, "conflicts": [],
         "emotion": {key: 0.5 for key in EMOTION_KEYS}, "emotion_history": [],
         "reflection": [], "goals": {"current": "", "options": [], "chosen": ""},
         "evidence": {"verified_missions": [], "status": "no_verified_evidence"},
@@ -327,6 +330,206 @@ def mentor_pairs(runtime, departments: list[dict]) -> list[dict]:
     (_dir(runtime) / "_mentors.json").write_text(
         json.dumps(pairs, ensure_ascii=False, indent=2), encoding="utf-8")
     return pairs
+
+
+# --------------------------------------------------------------------------- #
+# Uzun vadeli hafıza, meta-hafıza, paylaşılan bilgi, geri çağırma
+# --------------------------------------------------------------------------- #
+
+def _long_term(profile) -> dict:
+    memory = profile.setdefault("memory", {})
+    return memory.setdefault("long_term", {"by_plan": {}, "months": {}, "milestones": []})
+
+
+def remember_long_term(profile, *, mission_id: str, plan_type: str, ok: bool,
+                       department: str = "") -> dict:
+    """Uzun vadeli gelişim: plan tipi ve ay bazında kümülatif, mission_id'li."""
+
+    long_term = _long_term(profile)
+    row = long_term["by_plan"].setdefault(
+        plan_type, {"ok": 0, "fail": 0, "last_at": ""})
+    row["ok" if ok else "fail"] += 1
+    row["last_at"] = _now()
+    month = time.strftime("%Y-%m")
+    bucket = long_term["months"].setdefault(month, {"ok": 0, "fail": 0})
+    bucket["ok" if ok else "fail"] += 1
+    long_term["milestones"].append({
+        "at": _now(), "mission_id": str(mission_id), "plan_type": str(plan_type),
+        "ok": bool(ok), "department": str(department)})
+    del long_term["milestones"][:-100]
+    return row
+
+
+def meta_note(profile, source: str, ok: bool) -> dict:
+    """Meta-hafıza: bilgi kaynağının güvenilirliğini gözlenmiş sonuçla izler."""
+
+    meta = profile.setdefault("meta_memory", {})
+    row = meta.setdefault(str(source), {"ok": 0, "fail": 0, "last_at": ""})
+    row["ok" if ok else "fail"] += 1
+    row["last_at"] = _now()
+    row["reliability"] = round(row["ok"] / max(1, row["ok"] + row["fail"]), 3)
+    return row
+
+
+def share_knowledge(runtime, *, department: str, statement: str, source: str,
+                    mission_id: str = "", verified: bool = False) -> dict:
+    """Departmanlar arası bilgi deposuna kayıt; doğrulanmışsa tekilleştirir."""
+
+    record = {"at": _now(), "department": str(department),
+              "statement": str(statement)[:400], "source": str(source),
+              "mission_id": str(mission_id), "verified": bool(verified)}
+    path = _dir(runtime) / "_shared.jsonl"
+    if verified and path.is_file():
+        for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if row.get("verified") and row.get("statement") == record["statement"]:
+                return row
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+    return record
+
+
+def share_from_profile(runtime, profile, *, statement: str, source: str,
+                       mission_id: str = "", verified: bool = False) -> dict:
+    record = share_knowledge(runtime, department=str(profile.get("department") or ""),
+                             statement=statement, source=source,
+                             mission_id=mission_id, verified=verified)
+    shared = profile["memory"].setdefault("shared", [])
+    shared.append({key: record[key] for key in
+                   ("at", "statement", "source", "mission_id", "verified")})
+    del shared[:-40]
+    return record
+
+
+def _terms(text: str) -> set[str]:
+    folded = (str(text or "").casefold()
+              .replace("ı", "i").replace("ş", "s").replace("ğ", "g")
+              .replace("ü", "u").replace("ö", "o").replace("ç", "c"))
+    return {word for word in re.findall(r"[a-z0-9]{3,}", folded)}
+
+
+def _confidence(item: dict, kind: str) -> float:
+    if kind == "semantic":
+        return 1.0 if item.get("verified") else 0.4
+    if kind == "episodic":
+        return 0.9 if item.get("evidence_ok") else 0.3
+    if kind == "shared":
+        return 0.9 if item.get("verified") else 0.4
+    if kind == "procedural":
+        return float(item.get("rate") or 0.0)
+    return 0.5
+
+
+def recall(profile, query: str, *, limit: int = 5) -> list[dict]:
+    """Kaynak + tarih + güven puanıyla hafıza geri çağırma."""
+
+    wanted = _terms(query)
+    hits: list[tuple[float, dict]] = []
+    for kind in ("semantic", "episodic", "shared", "procedural"):
+        for item in profile.get("memory", {}).get(kind) or []:
+            text = item.get("statement") or item.get("summary") or item.get("plan_type") or ""
+            overlap = len(wanted & _terms(text))
+            if not overlap and wanted:
+                continue
+            confidence = _confidence(item, kind)
+            score = round(overlap * confidence, 4) if wanted else confidence
+            hits.append((score, {"kind": kind, "text": str(text)[:300],
+                                 "source": item.get("source") or item.get("mission_id") or "",
+                                 "at": item.get("at") or item.get("updated_at") or "",
+                                 "confidence": confidence,
+                                 "mission_id": item.get("mission_id") or ""}))
+    hits.sort(key=lambda pair: (pair[0], pair[1]["at"]), reverse=True)
+    return [row for _, row in hits[:max(1, int(limit))]]
+
+
+def resolve_conflict(profile, *, existing: dict, candidate: dict) -> dict:
+    """Çelişkide daha güvenilir kanıtı seçer; kaydı silmez, çelişkiyi saklar."""
+
+    def score(item: dict) -> float:
+        if "confidence" in item:
+            return float(item["confidence"])
+        return 1.0 if item.get("verified") else 0.4
+
+    winner, loser = (candidate, existing) if score(candidate) >= score(existing) else (existing, candidate)
+    record = {"at": _now(), "existing": existing, "candidate": candidate,
+              "winner": winner, "reason": f"confidence {score(winner)} >= {score(loser)}"}
+    conflicts = profile.setdefault("conflicts", [])
+    conflicts.append(record)
+    del conflicts[:-50]
+    return record
+
+
+# --------------------------------------------------------------------------- #
+# Çok aşamalı planlama ve belirsizlik değerlendirmesi
+# --------------------------------------------------------------------------- #
+
+def build_plans(profile, *, goal: str, candidates: list[dict]) -> dict:
+    """En az üç stratejiyi zorunlu alanlarla karşılaştırır; seçimi gerekçeler."""
+
+    if len(candidates) < 3:
+        raise ValueError("at least three candidate strategies are required")
+    plans = []
+    for index, item in enumerate(candidates):
+        plan = {
+            "name": str(item.get("name") or f"strateji-{index + 1}"),
+            "goal": str(goal),
+            "steps": [str(step)[:160] for step in item.get("steps") or []][:12],
+            "tools": [str(tool) for tool in item.get("tools") or []][:8],
+            "dependencies": [str(dep) for dep in item.get("dependencies") or []][:8],
+            "expected_result": str(item.get("expected_result") or "")[:200],
+            "estimated_cost_usd": round(float(item.get("estimated_cost_usd") or 0.0), 4),
+            "risk": _clamp(item.get("risk", 0.5)),
+            "success_probability": _clamp(item.get("success_probability", 0.5)),
+            "verification": str(item.get("verification") or "bagimsiz QA"),
+            "alternative": str(item.get("alternative") or ""),
+        }
+        evidence = float(item.get("evidence_score") or 0.5)
+        plan["score"] = round(plan["success_probability"] * (1 - plan["risk"]) * 0.7
+                              + _clamp(evidence) * 0.3, 4)
+        plans.append(plan)
+    plans.sort(key=lambda plan: plan["score"], reverse=True)
+    chosen = plans[0]
+    profile["goals"] = {
+        "current": str(goal), "options": plans, "chosen": chosen["name"],
+        "rationale": (f"{chosen['name']} seçildi: skor {chosen['score']} "
+                      f"(başarı {chosen['success_probability']}, risk {chosen['risk']})"),
+        "updated_at": _now()}
+    return profile["goals"]
+
+
+def assess_task(profile, *, task: str, required_skills: list[str] | None = None) -> dict:
+    """Üstbiliş: yapabilir miyim, belirsizlik ne, kim daha uzman, QA gerekli mi?"""
+
+    meta = metacognition(profile)
+    samples = int(meta.get("samples") or 0)
+    error_rate = float(meta.get("error_rate") or 0.0)
+    confidence = float(meta.get("confidence") or 0.5)
+    similar = [row for row in profile["memory"]["episodic"]
+               if _terms(task) & _terms(row.get("summary") or "")]
+    similar_success = (sum(1 for row in similar if row.get("outcome") == "completed")
+                       / len(similar)) if similar else None
+    if samples == 0:
+        decision, reason = "research", "doğrulanmış deneyim yok; önce araştır"
+    elif error_rate >= 0.5:
+        decision, reason = "ask_help", "hata oranı yüksek; uzman desteği al"
+    elif confidence < 0.55:
+        decision, reason = "safe_test", "güven düşük; küçük güvenli test yap"
+    elif error_rate >= 0.3:
+        decision, reason = "verify_first", "geçmiş hatalar var; önce doğrula"
+    else:
+        decision, reason = "proceed", "benzer görevlerde kanıtlı başarı var"
+    return {
+        "task": str(task), "can_do": decision in {"proceed", "verify_first"},
+        "samples": samples, "confidence": confidence, "error_rate": error_rate,
+        "similar_tasks": len(similar), "similar_success": similar_success,
+        "missing_information": ([] if samples else ["doğrulanmış görev geçmişi"]),
+        "qa_required": decision != "proceed" or confidence < 0.8,
+        "decision": decision, "reason": reason,
+        "required_skills": list(required_skills or []),
+    }
 
 
 def summary(runtime) -> dict:

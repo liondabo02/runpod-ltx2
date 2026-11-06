@@ -128,11 +128,19 @@ def sync_once(*, limit: int = 300, update_index: bool = False) -> dict:
             cm.learn_procedural(profile, plan_type=plan_type, ok=ok)
             cm.reflect(profile, mission_id=mission_id, ok=ok, reason=str(error or ""),
                        plan_type=plan_type, evidence_ok=True)
+            cm.remember_long_term(profile, mission_id=str(mission_id),
+                                  plan_type=plan_type, ok=ok, department=department)
+            cm.meta_note(profile, "mission_qa", ok)
             if ok:
                 cm.learn_semantic(
                     profile,
                     statement=f"{plan_type} yolu {mission_id} görevinde bağımsız QA ile doğrulandı",
                     source=f"mission:{mission_id}", mission_id=str(mission_id), verified=True)
+                cm.share_from_profile(
+                    RUNTIME, profile,
+                    statement=f"{department} · {plan_type} yolu bağımsız QA ile doğrulandı",
+                    source=f"mission:{mission_id}", mission_id=str(mission_id),
+                    verified=True)
                 written["semantic"] += 1
             cm.metacognition(profile)
             cm.emotion(profile, pending=int(pending or 0), idle=int(pending or 0) == 0,
