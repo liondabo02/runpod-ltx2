@@ -1162,6 +1162,25 @@ def build_handler(state: ControlCenterState):
                 self._send(200, body, "application/json; charset=utf-8")
                 return
             if parsed.path == "/api/talk":
+                # This endpoint records an owner_talk event in the worker mind.
+                # Never allow unauthenticated visitors or cross-site GETs to
+                # forge instructions in a persistent memory.
+                verdict = _panel_auth.require(
+                    state.runtime_dir, self.headers.get("Cookie", ""),
+                    "/action/command",
+                )
+                origin = self.headers.get("Origin")
+                expected = {
+                    f"http://127.0.0.1:{self.server.server_port}",
+                    f"http://localhost:{self.server.server_port}",
+                    f"http://[::1]:{self.server.server_port}",
+                }
+                if (not verdict["allowed"]
+                        or self.headers.get("Sec-Fetch-Site") == "cross-site"
+                        or (origin is not None and origin not in expected)):
+                    self._send(403, b'{"error":"owner session required"}',
+                               "application/json; charset=utf-8")
+                    return
                 from .worker_mind import load as _load_mind
                 from .worker_mind import save as _save_mind
 
@@ -1219,7 +1238,11 @@ def build_handler(state: ControlCenterState):
                 self._send(200, body, "application/json; charset=utf-8")
                 return
             if parsed.path == "/api/status":
-                body = json.dumps(state.snapshot(), indent=2).encode("utf-8")
+                # This endpoint is public monitoring, not an owner session.
+                # Never disclose control or authorization tokens in JSON.
+                public_state = dict(state.snapshot())
+                public_state.pop("panel_token", None)
+                body = json.dumps(public_state, indent=2).encode("utf-8")
                 self._send(200, body, "application/json; charset=utf-8")
                 return
             if parsed.path == "/":
