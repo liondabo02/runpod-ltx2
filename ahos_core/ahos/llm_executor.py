@@ -1220,6 +1220,13 @@ def make_model_executor(
                 prompt = apply_to_prompt(_premium_runtime_dir(out_root), prompt)
             except Exception:  # noqa: BLE001 - enjeksiyon isteğe bağlı
                 pass
+            # Apply only allowlisted advice derived from a worker's
+            # QA-backed outcomes. No raw mission/chat text is injected.
+            try:
+                from .agent_growth import prompt_guidance
+                prompt += prompt_guidance(_premium_runtime_dir(out_root), worker_id)
+            except Exception:  # noqa: BLE001 - optional, fail closed
+                pass
             raw = call(SYSTEM_PROMPT, prompt, settings)
         except ModelError as exc:
             return WorkerExecutionResult(

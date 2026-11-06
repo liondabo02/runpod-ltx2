@@ -345,3 +345,47 @@ ALL_TESTS_EXIT=0
 ```
 
 Only tracked intended changes to daemon.py, self_learning.py, test_self_learning_rotation.py and this evidence in the present commit. Concurrent unrelated uncommitted agent files are left intact.
+
+## 2026-11-06 — AHOS QA-grounded growth, owner invariance and peer support
+
+Scope: `ahos/agent_growth.py`, `sovereign.py`, `daemon.py`, `self_learning.py`, `llm_executor.py`, related tests and AGENT-GROWTH.md.
+
+Evidence contract:
+- No model consciousness or sentience claim. Affective state is an explicit simulation.
+- Harun remains fixed owner despite AHOS_OWNER environment changes; existing pledge mismatch/corruption blocks growth rather than being overwritten. The unkeyed hash is NOT authentication.
+- Completed steps qualify only with independent QA and `delivery.verified=true`. Blocked steps yield failure analysis. Raw job/peer text is not injected into model prompts.
+- Growth state is separate from primary minds, using atomic worker overlays and append-only peer-support and overflow archives. No mission creation or cancellation performed.
+- Every nine-worker cycle uses a durable roster cursor. Peer mentorship is same-department, QA-backed and deduplicated.
+
+Focused test:
+```text
+49 passed in 5.15s
+FOCUSED_EXIT=0
+COMPILE_EXIT=0
+43 passed in 3.84s
+FOCUS_EXIT=0
+COMPILE_EXIT=0
+12 passed in 6.65s
+PROMPT_INTEGRATION_EXIT=0
+```
+
+AHOS full suite:
+```text
+1234 passed, 36 skipped in 182.65s (0:03:02)
+ALL_TESTS_EXIT=0
+```
+
+Live runtime acceptance with read-only SQLite + persistent separate worker overlays:
+```text
+PENDING_BEFORE 0 PENDING_AFTER 0
+GROWTH_RESULTS 9 cycles x 9 updated
+GROWTH_FILES 81
+MOODS {'curious': 47, 'focused': 33, 'cautious': 1}
+WITH_OBSERVED_EVIDENCE 34
+WITH_FAILURE_LESSONS 2
+WITH_PEER_COACHING 2
+OWNER_GUARD_HARUN True
+LIVE_GROWTH_EXIT=0
+```
+
+Not verified: a genuinely conscious agent, independently trained model weights, genuine emotion, infallible security/obedience, or automatic success on all real-world tasks. Admin credentials, GitHub permissions and API authentication require separate secure handling.
