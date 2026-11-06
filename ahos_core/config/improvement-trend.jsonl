@@ -5,3 +5,4 @@
 {"at": "2026-11-06T19:34:51", "workers": 94, "avg_success": 0.3767, "events": 3716, "workers_with_plan_score": 42, "queue": {"blocked": 43, "cancelled": 299, "completed": 3954, "failed": 13, "pending": 965}}
 {"at": "2026-11-06T19:36:16", "workers": 94, "avg_success": 0.3767, "events": 3716, "workers_with_plan_score": 42, "queue": {"blocked": 43, "cancelled": 299, "completed": 3960, "failed": 13, "pending": 966}}
 {"at": "2026-11-06T19:46:13", "workers": 94, "avg_success": 0.3767, "events": 3716, "workers_with_plan_score": 42, "queue": {"blocked": 43, "cancelled": 1121, "completed": 3961, "failed": 13, "pending": 145}}
+{"at": "2026-11-06T21:26:23", "workers": 95, "avg_success": 0.3792, "events": 3857, "workers_with_plan_score": 42, "queue": {"blocked": 43, "cancelled": 1378, "completed": 4013, "failed": 13, "pending": 2}}
