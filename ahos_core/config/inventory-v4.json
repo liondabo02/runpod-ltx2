@@ -1,0 +1,386 @@
+{
+  "at": "2026-11-07T00:05:30",
+  "git": {
+    "head": "b5bfd15b4e421a475591d2cf310e56fa2607caa1",
+    "branch": "feature/agent-control-plane"
+  },
+  "departments": 17,
+  "workers": 81,
+  "components": [
+    {
+      "component": "worker_mind",
+      "path": "ahos_core/ahos/worker_mind.py",
+      "status": "test edildi",
+      "tests": [
+        "test_worker_mind.py"
+      ],
+      "imports": 9,
+      "evidence": [
+        "tests: test_worker_mind.py"
+      ]
+    },
+    {
+      "component": "cognitive_memory",
+      "path": "ahos_core/ahos/cognitive_memory.py",
+      "status": "test edildi",
+      "tests": [
+        "test_cognitive_memory.py"
+      ],
+      "imports": 0,
+      "evidence": [
+        "tests: test_cognitive_memory.py"
+      ]
+    },
+    {
+      "component": "memory_vault",
+      "path": "ahos_core/ahos/memory_vault.py",
+      "status": "test edildi",
+      "tests": [
+        "test_memory_vault.py"
+      ],
+      "imports": 1,
+      "evidence": [
+        "tests: test_memory_vault.py"
+      ]
+    },
+    {
+      "component": "cognition",
+      "path": "ahos_core/ahos/cognition.py",
+      "status": "test edildi",
+      "tests": [
+        "test_cognition.py"
+      ],
+      "imports": 0,
+      "evidence": [
+        "tests: test_cognition.py"
+      ]
+    },
+    {
+      "component": "agent_growth",
+      "path": "ahos_core/ahos/agent_growth.py",
+      "status": "test edildi",
+      "tests": [
+        "test_agent_growth.py"
+      ],
+      "imports": 3,
+      "evidence": [
+        "tests: test_agent_growth.py"
+      ]
+    },
+    {
+      "component": "self_learning",
+      "path": "ahos_core/ahos/self_learning.py",
+      "status": "test edildi",
+      "tests": [
+        "test_self_learning_rotation.py"
+      ],
+      "imports": 2,
+      "evidence": [
+        "tests: test_self_learning_rotation.py"
+      ]
+    },
+    {
+      "component": "learning_feedback",
+      "path": "ahos_core/ahos/learning_feedback.py",
+      "status": "test edildi",
+      "tests": [
+        "test_learning_feedback.py"
+      ],
+      "imports": 1,
+      "evidence": [
+        "tests: test_learning_feedback.py"
+      ]
+    },
+    {
+      "component": "consensus",
+      "path": "ahos_core/ahos/consensus.py",
+      "status": "mevcut",
+      "tests": [],
+      "imports": 3,
+      "evidence": [
+        "3 import referansı"
+      ]
+    },
+    {
+      "component": "commune",
+      "path": "ahos_core/ahos/commune.py",
+      "status": "mevcut",
+      "tests": [],
+      "imports": 4,
+      "evidence": [
+        "4 import referansı"
+      ]
+    },
+    {
+      "component": "queue_drain",
+      "path": "ahos_core/ahos/queue_drain.py",
+      "status": "test edildi",
+      "tests": [
+        "test_queue_drain.py"
+      ],
+      "imports": 0,
+      "evidence": [
+        "tests: test_queue_drain.py"
+      ]
+    },
+    {
+      "component": "queue_budget",
+      "path": "ahos_core/ahos/queue_budget.py",
+      "status": "mevcut",
+      "tests": [],
+      "imports": 5,
+      "evidence": [
+        "5 import referansı"
+      ]
+    },
+    {
+      "component": "autonomous_company",
+      "path": "ahos_core/ahos/autonomous_company.py",
+      "status": "test edildi",
+      "tests": [
+        "test_autonomous_company.py"
+      ],
+      "imports": 27,
+      "evidence": [
+        "tests: test_autonomous_company.py"
+      ]
+    },
+    {
+      "component": "initiative",
+      "path": "ahos_core/ahos/initiative.py",
+      "status": "test edildi",
+      "tests": [
+        "test_initiative.py"
+      ],
+      "imports": 2,
+      "evidence": [
+        "tests: test_initiative.py"
+      ]
+    },
+    {
+      "component": "improvement_cycle",
+      "path": "ahos_core/ahos/improvement_cycle.py",
+      "status": "test edildi",
+      "tests": [
+        "test_improvement_cycle.py"
+      ],
+      "imports": 0,
+      "evidence": [
+        "tests: test_improvement_cycle.py"
+      ]
+    },
+    {
+      "component": "owner_auth",
+      "path": "ahos_core/ahos/owner_auth.py",
+      "status": "test edildi",
+      "tests": [
+        "test_owner_auth.py"
+      ],
+      "imports": 5,
+      "evidence": [
+        "tests: test_owner_auth.py"
+      ]
+    },
+    {
+      "component": "panel_auth",
+      "path": "ahos_core/ahos/panel_auth.py",
+      "status": "test edildi",
+      "tests": [
+        "test_panel_auth.py"
+      ],
+      "imports": 1,
+      "evidence": [
+        "tests: test_panel_auth.py"
+      ]
+    },
+    {
+      "component": "control_center",
+      "path": "ahos_core/ahos/control_center.py",
+      "status": "test edildi",
+      "tests": [
+        "test_control_center.py"
+      ],
+      "imports": 0,
+      "evidence": [
+        "tests: test_control_center.py"
+      ]
+    },
+    {
+      "component": "daemon",
+      "path": "ahos_core/ahos/daemon.py",
+      "status": "test edildi",
+      "tests": [
+        "test_daemon.py",
+        "test_daemon_live.py",
+        "test_daemon_loop.py"
+      ],
+      "imports": 1,
+      "evidence": [
+        "tests: test_daemon.py, test_daemon_live.py"
+      ]
+    },
+    {
+      "component": "knowledge",
+      "path": "ahos_core/ahos/knowledge.py",
+      "status": "mevcut",
+      "tests": [],
+      "imports": 8,
+      "evidence": [
+        "8 import referansı"
+      ]
+    },
+    {
+      "component": "research_store",
+      "path": "ahos_core/ahos/research_store.py",
+      "status": "mevcut",
+      "tests": [],
+      "imports": 1,
+      "evidence": [
+        "1 import referansı"
+      ]
+    },
+    {
+      "component": "llm_executor",
+      "path": "ahos_core/ahos/llm_executor.py",
+      "status": "test edildi",
+      "tests": [
+        "test_llm_executor.py"
+      ],
+      "imports": 10,
+      "evidence": [
+        "tests: test_llm_executor.py"
+      ]
+    },
+    {
+      "component": "premium",
+      "path": "ahos_core/ahos/premium.py",
+      "status": "test edildi",
+      "tests": [
+        "test_premium.py"
+      ],
+      "imports": 1,
+      "evidence": [
+        "tests: test_premium.py"
+      ]
+    },
+    {
+      "component": "office_3d",
+      "path": "ahos_core/ahos/office_3d.py",
+      "status": "test edildi",
+      "tests": [
+        "test_office_3d.py"
+      ],
+      "imports": 2,
+      "evidence": [
+        "tests: test_office_3d.py"
+      ]
+    },
+    {
+      "component": "office_server",
+      "path": "ahos_core/ahos/office_server.py",
+      "status": "yarim",
+      "tests": [],
+      "imports": 0,
+      "evidence": [
+        "test/import kanıtı yok"
+      ]
+    },
+    {
+      "component": "research_loop",
+      "path": "tools/research_loop.py",
+      "status": "yarim",
+      "tests": [],
+      "imports": 0,
+      "evidence": [
+        "test/import kanıtı yok"
+      ]
+    },
+    {
+      "component": "cognition_sync",
+      "path": "tools/cognition_sync.py",
+      "status": "yarim",
+      "tests": [],
+      "imports": 0,
+      "evidence": [
+        "test/import kanıtı yok"
+      ]
+    },
+    {
+      "component": "collective_loop",
+      "path": "tools/collective_loop.py",
+      "status": "yarim",
+      "tests": [],
+      "imports": 0,
+      "evidence": [
+        "test/import kanıtı yok"
+      ]
+    },
+    {
+      "component": "cognition_init",
+      "path": "tools/cognition_init.py",
+      "status": "yarim",
+      "tests": [],
+      "imports": 0,
+      "evidence": [
+        "test/import kanıtı yok"
+      ]
+    },
+    {
+      "component": "eval_learning",
+      "path": "tools/eval_learning.py",
+      "status": "yarim",
+      "tests": [],
+      "imports": 0,
+      "evidence": [
+        "test/import kanıtı yok"
+      ]
+    },
+    {
+      "component": "acceptance_advanced",
+      "path": "tools/acceptance_advanced.py",
+      "status": "yarim",
+      "tests": [],
+      "imports": 0,
+      "evidence": [
+        "test/import kanıtı yok"
+      ]
+    }
+  ],
+  "db": {
+    "missions": {
+      "blocked": 43,
+      "cancelled": 1378,
+      "completed": 4015,
+      "failed": 13
+    },
+    "triggers": [
+      "ahos_pending_insert_cap",
+      "ahos_pending_update_cap",
+      "ahos_completed_result_guard_update",
+      "ahos_completed_result_guard_insert"
+    ]
+  },
+  "runtime": {
+    "minds": 96,
+    "cognition_profiles": 81,
+    "plan_scored_workers": 42,
+    "profiles_verified": 34,
+    "profiles_no_evidence": 47,
+    "learning_records": 7153,
+    "research_records": 237,
+    "knowledge_docs": 237,
+    "owner_configured": false,
+    "owner_sessions": 0,
+    "owner_audit_lines": 2,
+    "memory_vaults": 2,
+    "latest_vault": "vault-20261106T230337Z-41da47f9"
+  },
+  "services": [
+    "ahos.daemon",
+    "cognition_sync",
+    "collective_loop",
+    "control_center",
+    "office_server",
+    "research_loop"
+  ]
+}
