@@ -151,6 +151,18 @@ def tick(runtime_dir: str | Path, *, limit: int = STUDY_PER_TICK) -> dict:
         # A generated micro-lesson is not proof of increased model capability.
         lesson["learning_mode"] = "deterministic_micro_lesson"
         lesson["verified_skill_gain"] = False
+        # Use the worker's QA-grounded strategy overlay if available.
+        # Never mistake a peer suggestion for proof of a learned capability.
+        try:
+            from .agent_growth import guidance_for_worker
+            advice = guidance_for_worker(runtime, worker_id)
+            if advice:
+                lesson["recommended_next_action"] = advice["next_action"]
+                lesson["qa_backed_guidance"] = advice["advice"]
+                lesson["peer_review_available"] = advice["peer_review_available"]
+                lesson["observed_steps"] = advice["observed_steps"]
+        except Exception:  # noqa: BLE001 - micro-study works offline
+            pass
         path = directory / f"{dep_id}.jsonl"
         with path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(lesson, ensure_ascii=False) + "\n")

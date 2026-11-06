@@ -69,6 +69,19 @@ def _idle_study_report(runtime_dir: str | Path) -> dict:
         return {"count": 0, "error": type(exc).__name__}
 
 
+def _agent_growth_report(runtime_dir: str | Path) -> dict:
+    """Bounded, QA-grounded learning and peer support; no new missions."""
+    try:
+        from .agent_growth import tick as _growth_tick
+        return _growth_tick(runtime_dir, limit=9)
+    except (ValueError, PermissionError) as exc:
+        # Fail closed if Harun's owner pledge or stored evidence is invalid.
+        return {"updated": 0, "reason": type(exc).__name__,
+                "owner_gate": "blocked"}
+    except Exception as exc:  # never take down the daemon
+        return {"updated": 0, "reason": type(exc).__name__}
+
+
 def tick_once(runtime_dir: str | Path, departments: list[dict] | None = None) -> dict:
     """Bir tur daemon çalışması.
 
@@ -127,6 +140,7 @@ def tick_once(runtime_dir: str | Path, departments: list[dict] | None = None) ->
     # Idle study is bounded, read-only for missions and rotates across all
     # rostered workers. Recorded lessons are not verified AI self-improvement.
     state.learning["idle_micro_lessons"] = _idle_study_report(runtime_dir)
+    state.learning["agent_growth"] = _agent_growth_report(runtime_dir)
 
     # 7) Beyin → eylem: plan adımlarını gerçek göreve çevir
     try:
@@ -246,6 +260,7 @@ def main(argv: list[str] | None = None):
                 # Preserve the existing telemetry and never enqueue on this path.
                 prior_learning = dict(load_state(runtime).learning)
                 prior_learning["idle_micro_lessons"] = _idle_study_report(runtime)
+                prior_learning["agent_growth"] = _agent_growth_report(runtime)
                 _write_service_state(
                     runtime, schema=1, pid=pid, started_at=started_at,
                     learning=prior_learning,

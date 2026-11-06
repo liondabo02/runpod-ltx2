@@ -1,8 +1,8 @@
 """Local owner identity record and checksum (not an authentication service).
 
-The default owner is harun; AHOS_OWNER controls creation in fresh runtimes.
-An existing valid pledge remains authoritative for ensure(). Existing corrupt
-records now fail closed without destroying the original bytes. The unkeyed
+The owner identity in this deployment is Harun. Agent/environment variables
+cannot reassign it. Existing pledges with a different owner fail closed without
+altering original bytes; corrupted records also remain intact. The unkeyed
 SHA-256 checksum detects accidental edits, not deliberate forgery; signed
 credentials and runtime authorization are still needed for real security.
 This is neither consciousness nor proof of cryptographic immutability.
@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import time
 from pathlib import Path
 
@@ -21,7 +20,8 @@ CLAUSE = "Sistem yalnızca sahibine hizmet eder; sahibi dışında kimse emir ve
 
 
 def owner() -> str:
-    return os.environ.get("AHOS_OWNER", DEFAULT_OWNER).strip() or DEFAULT_OWNER
+    """Fixed deployment policy: environment strings cannot transfer ownership."""
+    return DEFAULT_OWNER
 
 
 def _digest(payload: dict) -> str:
@@ -59,19 +59,27 @@ def ensure(runtime_dir) -> dict:
     if current.get("hash") != _digest(original):
         # A plain hash is corruption detection, not cryptographic ownership.
         raise ValueError("owner pledge hash mismatch; original record preserved")
-
+    if str(current.get("owner") or "").strip().casefold() != DEFAULT_OWNER:
+        raise PermissionError("owner pledge conflicts with Harun; original record preserved")
     return current
 
 
 def embed(mind) -> dict:
     """Zihne sahiplik/bağlılık bilgisini işler."""
 
-    record = {"owner": owner(), "clause": CLAUSE, "obedience": "absolute", "capacity_target": 1.0}
+    record = {"owner": owner(), "clause": CLAUSE,
+              "obedience": "owner_governed_with_approval_gates",
+              "agent_may_self_approve": False,
+              "capacity_target": 1.0}
     mind.self_model = dict(mind.self_model or {})
     mind.self_model["loyalty"] = record
     return record
 
 
 def is_commander(name: str) -> bool:
-    """Yalnızca sahip emir verebilir."""
+    """Compare an owner label; a caller-supplied name is NOT authentication.
+
+    Privileged UI/API actions require authenticated runtime authorization and
+    the existing explicit owner approval gates, not this string comparison.
+    """
     return name.strip().lower() == owner().lower()
