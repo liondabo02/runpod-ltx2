@@ -128,7 +128,11 @@ def tick_once(runtime_dir: str | Path, departments: list[dict] | None = None) ->
 
 
 def _mission_counts(runtime: Path) -> tuple[int, int]:
-    """(toplam tamamlanan, son bir saatte tamamlanan) — kuyruk DB'sinden."""
+    """(toplam tamamlanan, BU SAAT tamamlanan) — kuyruk DB'sinden.
+
+    Saatlik kota "son 60 dakika" değil, takvim saati olarak sayılır: aksi hâlde
+    önceki saatin işleri yeni saatin kotasını da tüketir ve daemon boşuna bekler.
+    """
 
     import sqlite3
 
@@ -141,18 +145,17 @@ def _mission_counts(runtime: Path) -> tuple[int, int]:
             total = con.execute(
                 "SELECT COUNT(*) FROM missions WHERE status='completed'"
             ).fetchone()[0]
-            last_hour = con.execute(
+            this_hour = con.execute(
                 "SELECT COUNT(*) FROM missions WHERE status='completed' "
                 # updated_at iki biçimde yazılabiliyor (ISO 'T' ve boşluklu);
-                # düz string karşılaştırması 'T' yüzünden hepsini "son saat"
-                # sayıyordu. datetime() ikisini de normalize eder.
-                "AND datetime(updated_at) > datetime('now','-1 hour')"
+                # strftime ikisini de aynı saat anahtarına indirger.
+                "AND strftime('%Y-%m-%dT%H', updated_at) = strftime('%Y-%m-%dT%H','now')"
             ).fetchone()[0]
         finally:
             con.close()
     except sqlite3.Error:
         return 0, 0
-    return int(total), int(last_hour)
+    return int(total), int(this_hour)
 
 
 def _write_service_state(runtime: Path, **fields) -> None:
