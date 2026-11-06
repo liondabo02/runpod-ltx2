@@ -40,3 +40,17 @@ include = ["ahos*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["ahos"]
+omit = ["*/tests/*", "*/__pycache__/*"]
+
+[tool.coverage.report]
+# Ölçülen taban: 2026-11-06 tarihli tam koşuda %76 (23145 ifade, 5597 kaçan).
+# Eşik, kapsamın sessizce düşmesini engellemek için tabanın biraz altında.
+fail_under = 70
+skip_covered = true
+show_missing = false
+
+[tool.coverage.html]
+directory = "coverage-html"

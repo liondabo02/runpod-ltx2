@@ -76,3 +76,21 @@ jobs:
           print("HATA: dogrudan SQL tamamlanma kabul edildi")
           raise SystemExit(1)
           PY
+
+      # Kapsam ölçümü ayrı bir adımda: normal test koşusunu yavaşlatmaz ve
+      # eşiğin altına düşerse iş akışını kırar (pyproject: fail_under=70).
+      - name: Kapsam olcumu (yalniz ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        working-directory: ahos_core
+        env:
+          PYTHONIOENCODING: utf-8
+          GIT_AUTHOR_NAME: AHOS CI
+          GIT_AUTHOR_EMAIL: ci@example.invalid
+          GIT_COMMITTER_NAME: AHOS CI
+          GIT_COMMITTER_EMAIL: ci@example.invalid
+          # Kapsam enstrümantasyonu yavaşlatır; soak testinin bütçesini genişlet.
+          AHOS_SOAK_BUDGET_SECONDS: "600"
+        run: |
+          python -m pip install coverage
+          python -m coverage run --source=ahos -m pytest -q -p no:cacheprovider
+          python -m coverage report --skip-covered
