@@ -127,18 +127,158 @@ def tick_once(runtime_dir: str | Path, departments: list[dict] | None = None) ->
     return state.infra
 
 
-def main():
-    """__main__ entrance."""
-    import sys
-    runtime = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(".")
-    departments = []
-    if len(sys.argv) > 2:
+def _mission_counts(runtime: Path) -> tuple[int, int]:
+    """(toplam tamamlanan, son bir saatte tamamlanan) — kuyruk DB'sinden."""
+
+    import sqlite3
+
+    db = runtime / "company-service.db"
+    if not db.is_file():
+        return 0, 0
+    try:
+        con = sqlite3.connect(db)
         try:
-            departments = json.loads(sys.argv[2])
-        except Exception:
-            pass
-    state = tick_once(str(runtime), departments)
-    print(json.dumps({"state": state}, ensure_ascii=False, indent=2))
+            total = con.execute(
+                "SELECT COUNT(*) FROM missions WHERE status='completed'"
+            ).fetchone()[0]
+            last_hour = con.execute(
+                "SELECT COUNT(*) FROM missions WHERE status='completed' "
+                "AND updated_at > datetime('now','-1 hour')"
+            ).fetchone()[0]
+        finally:
+            con.close()
+    except sqlite3.Error:
+        return 0, 0
+    return int(total), int(last_hour)
+
+
+def _write_service_state(runtime: Path, **fields) -> None:
+    """Servis durumunu yaz; tick_once'un yazdığı alanları koru."""
+
+    path = runtime / "daemon-state.json"
+    payload: dict = {}
+    if path.is_file():
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            payload = {}
+    payload.update(fields)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def main(argv: list[str] | None = None):
+    """__main__ entrance: sınırlı, tek örnekli döngü.
+
+    `AHOS-Daemon.ps1` bu süreci `--interval-seconds`, `--missions-per-hour`,
+    `--missions-total`, `--no-evidence-limit`, `--pause-cooldown-minutes`
+    bayraklarıyla başlatır ve `<runtime>/daemon-state.json` dosyasını okur.
+    Durdurma: `<runtime>/daemon.stop` dosyası.
+    """
+
+    import argparse
+    import os
+    import sys
+    import time
+
+    # Taze bir kabukta stdout cp1252 olabilir; Türkçe durum metni yüzünden
+    # çökmemek için akışları UTF-8'e çevir.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):  # pragma: no cover - yeniden yapılandırılamaz akış
+        pass
+
+    parser = argparse.ArgumentParser(prog="ahos-daemon", description="AHOS otonomi döngüsü")
+    parser.add_argument("runtime_positional", nargs="?", default=None)
+    parser.add_argument("--runtime-dir", default=None)
+    parser.add_argument("--interval-seconds", type=int, default=60)
+    parser.add_argument("--missions-per-hour", type=int, default=6)
+    parser.add_argument("--missions-total", type=int, default=200)
+    parser.add_argument("--no-evidence-limit", type=int, default=3)
+    parser.add_argument("--pause-cooldown-minutes", type=int, default=120)
+    parser.add_argument("--once", action="store_true", help="tek tur çalıştır (test)")
+    args = parser.parse_args(argv)
+
+    runtime = Path(args.runtime_dir or args.runtime_positional or ".")
+    runtime.mkdir(parents=True, exist_ok=True)
+    stop_file = runtime / "daemon.stop"
+    pid_file = runtime / "daemon.pid"
+    started_at = time.strftime("%Y-%m-%dT%H:%M:%S")
+    pid = os.getpid()
+    pid_file.write_text(json.dumps({"pid": pid, "started_at": started_at}), encoding="utf-8")
+
+    baseline, _ = _mission_counts(runtime)
+    ticks = 0
+    last_reason = ""
+    status = "running"
+
+    try:
+        while True:
+            if stop_file.exists():
+                status, last_reason = "stopped", "durdurma dosyası bulundu"
+                break
+
+            _, last_hour = _mission_counts(runtime)
+            if args.missions_per_hour > 0 and last_hour >= args.missions_per_hour:
+                ticks += 1
+                last_reason = "saatlik görev limiti doldu; bekleme"
+                _write_service_state(
+                    runtime, schema=1, pid=pid, started_at=started_at,
+                    last_tick_at=time.strftime("%Y-%m-%dT%H:%M:%S"), ticks=ticks,
+                    status="running", last_reason=last_reason,
+                    interval_seconds=args.interval_seconds,
+                    scheduler={
+                        "status": "idle",
+                        "hour_key": time.strftime("%Y-%m-%dT%H"),
+                        "missions_this_hour": last_hour,
+                        "missions_total": max(0, _mission_counts(runtime)[0] - baseline),
+                        "last_reason": last_reason,
+                    },
+                )
+                if args.once:
+                    break
+                time.sleep(max(1, args.interval_seconds))
+                continue
+
+            try:
+                tick_once(str(runtime), [])
+                last_reason = "tur tamamlandı"
+            except Exception as exc:  # noqa: BLE001 - tur hatası servisi durdurmaz
+                last_reason = f"tur hatası: {type(exc).__name__}"
+
+            ticks += 1
+            total_now, hour_now = _mission_counts(runtime)
+            total_delta = max(0, total_now - baseline)
+            _write_service_state(
+                runtime, schema=1, pid=pid, started_at=started_at,
+                last_tick_at=time.strftime("%Y-%m-%dT%H:%M:%S"), ticks=ticks,
+                status="running", last_reason=last_reason,
+                interval_seconds=args.interval_seconds,
+                scheduler={
+                    "status": "idle",
+                    "hour_key": time.strftime("%Y-%m-%dT%H"),
+                    "missions_this_hour": hour_now,
+                    "missions_total": total_delta,
+                    "last_reason": last_reason,
+                },
+            )
+
+            if args.missions_total > 0 and total_delta >= args.missions_total:
+                status, last_reason = "stopped", "oturum görev limiti doldu"
+                break
+            if args.once:
+                status, last_reason = "stopped", "tek tur tamamlandı"
+                break
+            time.sleep(max(1, args.interval_seconds))
+    finally:
+        _write_service_state(
+            runtime, schema=1, pid=pid, started_at=started_at,
+            last_tick_at=time.strftime("%Y-%m-%dT%H:%M:%S"), ticks=ticks,
+            status=status, last_reason=last_reason or "çıkış",
+            interval_seconds=args.interval_seconds,
+        )
+        pid_file.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":
