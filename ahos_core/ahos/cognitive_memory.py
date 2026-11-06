@@ -332,11 +332,13 @@ def mentor_pairs(runtime, departments: list[dict]) -> list[dict]:
 def summary(runtime) -> dict:
     rows = []
     for path in _dir(runtime).glob("*.json"):
-        if path.name.startswith("_"):
+        if path.name.startswith(("_", ".")):
             continue
         try:
             profile = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(profile, dict) or "memory" not in profile:
             continue
         rows.append({"worker": profile.get("worker_id"),
                      "episodic": len(profile["memory"]["episodic"]),

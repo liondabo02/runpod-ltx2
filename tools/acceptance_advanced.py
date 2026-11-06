@@ -43,7 +43,7 @@ def departments() -> list[dict]:
 def profiles() -> dict[str, dict]:
     rows = {}
     for path in (RUNTIME / "cognition").glob("*.json"):
-        if path.name.startswith("_"):
+        if path.name.startswith(("_", ".")):
             continue
         try:
             payload = json.loads(path.read_text(encoding="utf-8"))
