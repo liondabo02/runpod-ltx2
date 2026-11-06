@@ -146,8 +146,10 @@ def check_6() -> dict:
 
 
 def check_7() -> dict:
-    test = run([PY, "-m", "pytest", "-q", "--no-header", "ahos_core/tests/test_owner_auth.py"])
-    return {"id": 7, "name": "Yetkisiz kullanıcı/ajan onay veremiyor",
+    test = run([PY, "-m", "pytest", "-q", "--no-header",
+                "ahos_core/tests/test_owner_auth.py",
+                "ahos_core/tests/test_panel_auth.py"])
+    return {"id": 7, "name": "Yetkisiz kullanıcı/ajan onay veremiyor (panel kapısı dahil)",
             "status": "PASS" if test["exit"] == 0 else "FAIL",
             "evidence": {"pytest_exit": test["exit"]}}
 

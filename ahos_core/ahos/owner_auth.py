@@ -87,7 +87,8 @@ def _owner(runtime) -> dict | None:
 
 
 def authenticate(runtime, username: str, password: str, *, scope: str = "approvals",
-                 ttl_seconds: int = 1800, now: float | None = None) -> dict:
+                 scopes: list[str] | None = None, ttl_seconds: int = 1800,
+                 now: float | None = None) -> dict:
     owner = _owner(runtime)
     if owner is None:
         raise PermissionError("owner credentials are not initialized")
@@ -101,12 +102,17 @@ def authenticate(runtime, username: str, password: str, *, scope: str = "approva
     if not hmac.compare_digest(digest, expected):
         audit(runtime, "owner.login.denied", reason="bad_password")
         raise PermissionError("invalid owner credentials")
-    if scope not in SCOPES:
-        raise ValueError(f"unknown scope: {scope}")
+    requested = list(scopes) if scopes is not None else [scope]
+    if not requested:
+        raise ValueError("at least one scope is required")
+    for item in requested:
+        if item not in SCOPES:
+            raise ValueError(f"unknown scope: {item}")
     moment = time.time() if now is None else float(now)
     token = secrets.token_urlsafe(32)
     session = {"token_hash": hashlib.sha256(token.encode()).hexdigest(),
-               "scope": scope, "actor": "owner", "created_at": _now_iso(),
+               "scope": requested[0], "scopes": requested, "actor": "owner",
+               "created_at": _now_iso(),
                "expires_at": moment + max(60, int(ttl_seconds))}
     store = _read_json(_path(runtime) / "owner-sessions.json", {"schema": SCHEMA, "sessions": []})
     sessions = [row for row in store.get("sessions") or []
@@ -114,9 +120,9 @@ def authenticate(runtime, username: str, password: str, *, scope: str = "approva
     sessions.append(session)
     _write_json(_path(runtime) / "owner-sessions.json",
                 {"schema": SCHEMA, "sessions": sessions[-50:]})
-    audit(runtime, "owner.login.ok", username=owner["username"], scope=scope)
-    return {"token": token, "scope": scope, "expires_at": session["expires_at"],
-            "actor": "owner"}
+    audit(runtime, "owner.login.ok", username=owner["username"], scopes=requested)
+    return {"token": token, "scope": requested[0], "scopes": requested,
+            "expires_at": session["expires_at"], "actor": "owner"}
 
 
 def verify(runtime, token: str, *, scope: str | None = None,
@@ -131,10 +137,12 @@ def verify(runtime, token: str, *, scope: str | None = None,
                 raise PermissionError("owner session expired")
             if row.get("actor") != "owner":
                 raise PermissionError("session actor is not the owner")
-            if scope is not None and row.get("scope") != scope:
-                audit(runtime, "owner.session.denied", reason="scope",
-                      required=scope, actual=row.get("scope"))
-                raise PermissionError(f"session scope {row.get('scope')} cannot do {scope}")
+            if scope is not None:
+                granted = set(row.get("scopes") or [row.get("scope")])
+                if scope not in granted:
+                    audit(runtime, "owner.session.denied", reason="scope",
+                          required=scope, actual=sorted(granted))
+                    raise PermissionError(f"session scopes {sorted(granted)} cannot do {scope}")
             return row
     audit(runtime, "owner.session.denied", reason="unknown_token")
     raise PermissionError("invalid owner session")

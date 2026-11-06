@@ -50,4 +50,12 @@ tekilleştirir, tekrar koşuda 0 yeni kayıt üretir.
 `ahos_core/ahos/owner_auth.py`: PBKDF2 parola, süreli/kapsamlı oturum,
 sabit zamanlı karşılaştırma, ayrıcalıklı işlem denetimi ve `SecureApprovalGate`.
 Ajan aktörü onay veremez; deneme `runtime/owner/audit.jsonl` dosyasına yazılır.
-Panel/API entegrasyonu ayrı adımdır; bu modül çekirdek kapıyı sağlar.
+
+Panel entegrasyonu (`panel_auth.py` + `control_center.py`):
+- `/owner/login` → giriş; ilk kullanımda `/owner/login` **kurulum** formu gösterir
+  (Harun parolayı belirler, en az 12 karakter).
+- Oturum `HttpOnly; SameSite=Lax` çerezle taşınır; kapsamlar
+  `approvals + authority + stop` ile sınırlıdır.
+- Onay, red, acil durdurma, otonomi ve komut eylemleri geçerli oturum ister;
+  oturum yoksa `303 → /owner/login?next=...` ve denetim kaydı yazılır.
+- 5 hatalı giriş → 5 dakika kilit (`LoginThrottle`).
