@@ -1,0 +1,59 @@
+{
+  "at": "2026-11-06T18:27:04",
+  "owner": "harun",
+  "departments": 17,
+  "minds": {
+    "thoughts": 20,
+    "lessons": 0,
+    "context": {
+      "completed": 0,
+      "blocked": 0,
+      "pending": 0
+    }
+  },
+  "commune": {
+    "pairs": 34,
+    "messages": 68,
+    "departments": 17
+  },
+  "plan_queue": {
+    "created": 0
+  },
+  "training": {
+    "departments": 17,
+    "workers": 81,
+    "passed": 81,
+    "average_score": 100.0
+  },
+  "queue": {},
+  "mood": {
+    "energy": 0.4,
+    "stress": 0.0,
+    "focus": 1.0,
+    "label": "dengeli",
+    "notes": [
+      "engel oranı 0%",
+      "bekleyen 0"
+    ]
+  },
+  "consensus": {
+    "winner": "engel tasfiyesi",
+    "totals": {
+      "engel tasfiyesi": 0.65,
+      "kuyruk bosaltma": 0.6,
+      "gelisim": 0.5
+    },
+    "voters": 1
+  },
+  "development": {
+    "workers": 20,
+    "total_events": 20,
+    "avg_events": 1.0,
+    "with_plan_score": 0
+  },
+  "departments_improved": {
+    "departments": 17,
+    "items": 34
+  },
+  "report": "runtime/reports/2026-11-06.md"
+}
