@@ -76,3 +76,89 @@ def test_login_page_escapes_next_and_offers_setup():
     assert "<script>" not in page
     assert "Sahip kurulumu" in page and 'name="confirm"' in page
     assert "Sahip girişi" in panel_auth.render_login("/")
+
+
+def test_api_talk_cannot_inject_owner_memory_without_session(tmp_path):
+    from contextlib import contextmanager
+    from http.server import ThreadingHTTPServer
+    from threading import Thread
+    from urllib.error import HTTPError
+    from urllib.request import urlopen
+
+    from ahos.control_center import ControlCenterState, build_handler
+
+    state = ControlCenterState(tmp_path / "runtime")
+    server = ThreadingHTTPServer(("127.0.0.1", 0), build_handler(state))
+    worker = "software-security-auditor"
+    thread = Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        address = (f"http://127.0.0.1:{server.server_port}/api/talk"
+                   f"?worker={worker}&msg=forge-owner-instruction")
+        with pytest.raises(HTTPError) as error:
+            urlopen(address, timeout=5)
+        assert error.value.code == 403
+        assert not (state.runtime_dir / "minds" / f"{worker}.json").exists()
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_api_talk_rejects_cross_site_even_with_valid_owner_cookie(tmp_path):
+    from http.server import ThreadingHTTPServer
+    from threading import Thread
+    from urllib.error import HTTPError
+    from urllib.request import Request, urlopen
+
+    from ahos.control_center import ControlCenterState, build_handler
+    from ahos import owner_auth
+
+    state = ControlCenterState(tmp_path / "runtime")
+    owner_auth.init_owner(state.runtime_dir, "harun", "test-unique-owner-pass123")
+    ticket = owner_auth.authenticate(state.runtime_dir, "harun",
+                                     "test-unique-owner-pass123",
+                                     scopes=["authority"])
+    server = ThreadingHTTPServer(("127.0.0.1", 0), build_handler(state))
+    thread = Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        address = (f"http://127.0.0.1:{server.server_port}/api/talk"
+                   "?worker=software-security-auditor&msg=forge-owner-instruction")
+        req = Request(address, headers={
+            "Cookie": "ahos_owner=" + ticket["token"],
+            "Sec-Fetch-Site": "cross-site",
+        })
+        with pytest.raises(HTTPError) as error:
+            urlopen(req, timeout=5)
+        assert error.value.code == 403
+        assert not (state.runtime_dir / "minds" /
+                    "software-security-auditor.json").exists()
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_public_status_does_not_leak_panel_control_token(tmp_path):
+    import json
+    from http.server import ThreadingHTTPServer
+    from threading import Thread
+    from urllib.request import urlopen
+
+    from ahos.control_center import ControlCenterState, build_handler
+
+    state = ControlCenterState(tmp_path / "runtime")
+    server = ThreadingHTTPServer(("127.0.0.1", 0), build_handler(state))
+    thread = Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        with urlopen(f"http://127.0.0.1:{server.server_port}/api/status",
+                     timeout=5) as response:
+            data = json.load(response)
+        assert "panel_token" not in data
+        assert "mission_counts" in data
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)

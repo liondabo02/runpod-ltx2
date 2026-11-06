@@ -65,7 +65,14 @@ def audit(runtime, event: str, **fields) -> dict:
 
 
 def init_owner(runtime, username: str, password: str) -> dict:
+    """Provision Harun once. Never replace an existing owner credential file.
+
+    Opening in exclusive-create mode is the final gate against concurrent
+    setup attempts or agents calling the low-level function directly.
+    """
     username = username.strip().lower()
+    if username != "harun":
+        raise PermissionError("only the fixed owner Harun may be provisioned")
     if len(password) < MIN_PASSWORD:
         raise ValueError(f"owner password must be at least {MIN_PASSWORD} characters")
     if password.casefold() == username:
@@ -74,7 +81,14 @@ def init_owner(runtime, username: str, password: str) -> dict:
     digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, ITERATIONS)
     payload = {"schema": SCHEMA, "username": username, "salt": salt.hex(),
                "hash": digest.hex(), "iterations": ITERATIONS, "created_at": _now_iso()}
-    _write_json(_path(runtime) / "owner-auth.json", payload)
+    target = _path(runtime) / "owner-auth.json"
+    try:
+        with target.open("x", encoding="utf-8") as handle:
+            handle.write(json.dumps(payload, ensure_ascii=False, indent=2))
+            handle.flush()
+            os.fsync(handle.fileno())
+    except FileExistsError as exc:
+        raise PermissionError("owner already configured; original credentials preserved") from exc
     audit(runtime, "owner.initialized", username=username)
     return {"username": username, "created_at": payload["created_at"]}
 
