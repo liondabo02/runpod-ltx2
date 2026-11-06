@@ -1,0 +1,1 @@
+{"at": "2026-11-06T18:18:12", "workers": 91, "avg_success": 0.0073, "events": 1867, "workers_with_plan_score": 1, "queue": {"blocked": 40, "cancelled": 299, "completed": 3798, "failed": 13, "pending": 1014}}
