@@ -1059,27 +1059,51 @@ th{{color:var(--muted)}} .wide{{max-width:520px;color:var(--muted)}} .badge{{dis
 
 
 def build_handler(state: ControlCenterState):
+    from . import panel_auth as _panel_auth
+
+    throttle = _panel_auth.LoginThrottle()
+
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, fmt: str, *args: object) -> None:
             return
 
-        def _send(self, status: int, body: bytes, content_type: str) -> None:
+        def _send(self, status: int, body: bytes, content_type: str,
+                  headers: dict[str, str] | None = None) -> None:
             self.send_response(status)
             self.send_header("Content-Type", content_type)
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Cache-Control", "no-store")
+            for name, value in (headers or {}).items():
+                self.send_header(name, value)
             self.end_headers()
             self.wfile.write(body)
 
-        def _redirect(self, message: str) -> None:
+        def _redirect(self, message: str, location: str = "/",
+                      headers: dict[str, str] | None = None) -> None:
             # Location başlığı 64 KB'ı aşamaz; uzun hata metinlerini kısalt.
             safe = message if len(message) <= 400 else message[:380] + "..."
             self.send_response(303)
-            self.send_header("Location", "/?message=" + quote(safe))
+            if location == "/":
+                self.send_header("Location", "/?message=" + quote(safe))
+            else:
+                self.send_header("Location", location)
+            for name, value in (headers or {}).items():
+                self.send_header(name, value)
             self.end_headers()
 
         def do_GET(self) -> None:
             parsed = urlparse(self.path)
+            if parsed.path in {"/owner/login", "/owner/logout"}:
+                if parsed.path == "/owner/logout":
+                    self._send(200, b"cikis yapildi", "text/html; charset=utf-8",
+                               headers={"Set-Cookie": _panel_auth.logout_cookie()})
+                    return
+                query = parse_qs(parsed.query)
+                nxt = query.get("next", ["/"])[0] or "/"
+                setup = not _panel_auth.owner_configured(state.runtime_dir)
+                body = _panel_auth.render_login(nxt, setup=setup).encode("utf-8")
+                self._send(200, body, "text/html; charset=utf-8")
+                return
             if parsed.path == "/outputs":
                 body = render_outputs_page(
                     state.output_index(),
@@ -1220,6 +1244,56 @@ def build_handler(state: ControlCenterState):
                     self._send(413, b"invalid form size", "text/plain; charset=utf-8")
                     return
                 form = parse_qs(self.rfile.read(length).decode("utf-8"))
+
+                # --- sahip oturumu: giriş / kurulum / çıkış ---
+                if self.path in {"/owner/login", "/owner/setup"}:
+                    client = self.client_address[0]
+                    if throttle.blocked(client):
+                        self._redirect("ERROR: çok fazla deneme; 5 dk bekleyin",
+                                       "/owner/login")
+                        return
+                    username = form.get("username", ["harun"])[0]
+                    password = form.get("password", [""])[0]
+                    nxt = form.get("next", ["/"])[0] or "/"
+                    if self.path == "/owner/setup":
+                        if _panel_auth.owner_configured(state.runtime_dir):
+                            self._redirect("ERROR: sahip zaten kurulu")
+                            return
+                        if password != form.get("confirm", [""])[0]:
+                            self._redirect("ERROR: parola eşleşmiyor", "/owner/login")
+                            return
+                        from . import owner_auth as _owner_auth
+                        _owner_auth.init_owner(state.runtime_dir, username, password)
+                    try:
+                        session = _panel_auth.login(state.runtime_dir, username, password)
+                    except (PermissionError, ValueError) as exc:
+                        throttle.record_failure(client)
+                        self._redirect(f"ERROR: {exc}", "/owner/login")
+                        return
+                    throttle.reset(client)
+                    self._redirect("giriş başarılı", nxt,
+                                   headers={"Set-Cookie":
+                                            _panel_auth.session_cookie(session["token"])})
+                    return
+                if self.path == "/owner/logout":
+                    self._redirect("çıkış yapıldı", "/",
+                                   headers={"Set-Cookie": _panel_auth.logout_cookie()})
+                    return
+
+                # --- ayrıcalıklı panel eylemleri geçerli sahip oturumu ister ---
+                verdict = _panel_auth.require(state.runtime_dir,
+                                              self.headers.get("Cookie", ""), self.path)
+                if not verdict["allowed"]:
+                    try:
+                        from .owner_auth import audit as _audit
+                        _audit(state.runtime_dir, "panel.denied", path=self.path,
+                               reason=verdict["reason"], client=self.client_address[0])
+                    except Exception:  # noqa: BLE001 - denetim akışı bozmaz
+                        pass
+                    location = "/owner/login?next=" + quote(self.path)
+                    self._redirect("ERROR: sahip oturumu gerekli", location)
+                    return
+
                 rid = form.get("request_id", [""])[0]
 
                 if self.path == "/action/approve":
@@ -1242,9 +1316,10 @@ def build_handler(state: ControlCenterState):
                     msg = state.stop_growth_loop()
                 elif self.path.startswith("/action/autonomy/"):
                     action = self.path.rsplit("/", 1)[-1]
-                    token = form.get("token", [""])[0]
+                    # Oturum yukarıda doğrulandı; eski statik token yerine
+                    # sunucunun kendi panel token'ı içeride kullanılır.
                     msg = state.autonomy_control(
-                        action, token, self.client_address[0]
+                        action, state.panel_token, self.client_address[0]
                     )
                 elif self.path == "/action/command":
                     command = form.get("command", [""])[0].strip()

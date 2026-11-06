@@ -82,6 +82,23 @@ def _agent_growth_report(runtime_dir: str | Path) -> dict:
         return {"updated": 0, "reason": type(exc).__name__}
 
 
+def _memory_vault_report(runtime_dir: str | Path) -> dict:
+    """Offline verified memory backup and read-only roster integrity audit."""
+    try:
+        from .memory_vault import audit_worker_minds, snapshot_if_due
+        integrity = audit_worker_minds(runtime_dir)
+        result = snapshot_if_due(runtime_dir)
+        return {
+            "status": result.get("status"),
+            "verified": result.get("verified", result.get("status") == "fresh"),
+            "files": result.get("files"),
+            "roster_integrity": integrity,
+        }
+    except Exception as exc:  # preserve daemon even when backup storage fails
+        return {"status": "error", "reason": type(exc).__name__,
+                "verified": False}
+
+
 def tick_once(runtime_dir: str | Path, departments: list[dict] | None = None) -> dict:
     """Bir tur daemon çalışması.
 
@@ -141,6 +158,7 @@ def tick_once(runtime_dir: str | Path, departments: list[dict] | None = None) ->
     # rostered workers. Recorded lessons are not verified AI self-improvement.
     state.learning["idle_micro_lessons"] = _idle_study_report(runtime_dir)
     state.learning["agent_growth"] = _agent_growth_report(runtime_dir)
+    state.learning["memory_vault"] = _memory_vault_report(runtime_dir)
 
     # 7) Beyin → eylem: plan adımlarını gerçek göreve çevir
     try:
@@ -261,6 +279,7 @@ def main(argv: list[str] | None = None):
                 prior_learning = dict(load_state(runtime).learning)
                 prior_learning["idle_micro_lessons"] = _idle_study_report(runtime)
                 prior_learning["agent_growth"] = _agent_growth_report(runtime)
+                prior_learning["memory_vault"] = _memory_vault_report(runtime)
                 _write_service_state(
                     runtime, schema=1, pid=pid, started_at=started_at,
                     learning=prior_learning,
