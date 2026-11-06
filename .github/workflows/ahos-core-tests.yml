@@ -1,0 +1,78 @@
+name: ahos-core
+
+# AHOS cekirdegi (ahos_core) kendi test paketiyle dogrulanir.
+# Diger is akislari yalniz control_plane'i kosuyordu; bu is akisi
+# kuyruk/tamamlanma/kabul/release-gate kurallarini korur.
+
+on:
+  # Her dala push'ta kosmak e-posta yagmuru uretiyordu; artik yalniz main'e
+  # push, PR ve elle tetikleme. Feature dalini elle calistirmak icin:
+  #   Actions -> ahos-core -> Run workflow
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Ayni dal icin yeni bir push eskisini iptal eder; iptal edilen kosu
+# "exit code 143 (SIGTERM)" olarak gorunur ve gercek bir test hatasi degildir.
+concurrency:
+  group: ahos-core-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: ahos-core tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bagimliliklar (yalniz test)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "pytest>=9.1,<10"
+
+      - name: Sozdizimi kontrolu
+        run: python -m compileall -q ahos_core
+
+      - name: Testler
+        working-directory: ahos_core
+        env:
+          PYTHONIOENCODING: utf-8
+          # Bazi testler git commit atar; kosucuda kimlik tanimli olmayabilir.
+          GIT_AUTHOR_NAME: AHOS CI
+          GIT_AUTHOR_EMAIL: ci@example.invalid
+          GIT_COMMITTER_NAME: AHOS CI
+          GIT_COMMITTER_EMAIL: ci@example.invalid
+        run: python -m pytest -q -p no:cacheprovider --durations=10 --maxfail=25
+
+      - name: Tamamlanma korumasi (negatif test)
+        working-directory: ahos_core
+        shell: bash
+        run: |
+          python - <<'PY'
+          import sqlite3
+          from ahos.completion_db_guard import install_completion_guards
+          con = sqlite3.connect(":memory:")
+          con.execute("CREATE TABLE missions (mission_id TEXT PRIMARY KEY, status TEXT, result_json TEXT)")
+          install_completion_guards(con)
+          con.execute("INSERT INTO missions (mission_id, status) VALUES ('m1','pending')")
+          con.commit()
+          try:
+              con.execute("UPDATE missions SET status='completed', last_error='x' WHERE mission_id='m1'")
+              con.commit()
+          except sqlite3.IntegrityError:
+              print("OK: dogrudan SQL tamamlanma reddedildi")
+              raise SystemExit(0)
+          print("HATA: dogrudan SQL tamamlanma kabul edildi")
+          raise SystemExit(1)
+          PY

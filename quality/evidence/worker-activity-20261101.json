@@ -1,0 +1,427 @@
+{
+  "generated_at": "2026-11-01T12:44:42.864035+00:00",
+  "source": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\ahos_core\\runtime\\worker-metrics.jsonl",
+  "events": 2289,
+  "distinct_workers": 32,
+  "active_last_30m": 0,
+  "stale_workers": 32,
+  "last_event_at": "2026-11-01T10:10:37.439000+00:00",
+  "workers": [
+    {
+      "worker_id": "creative-manager",
+      "departments": [
+        "creative"
+      ],
+      "events": 350,
+      "successes": 326,
+      "failures": 24,
+      "success_rate": 0.931,
+      "last_activity": "2026-10-31T23:53:46.578000+00:00",
+      "idle_minutes": 770.9,
+      "stale": true
+    },
+    {
+      "worker_id": "oyun-manager",
+      "departments": [
+        "oyun"
+      ],
+      "events": 274,
+      "successes": 271,
+      "failures": 3,
+      "success_rate": 0.989,
+      "last_activity": "2026-10-31T23:48:11.880000+00:00",
+      "idle_minutes": 776.5,
+      "stale": true
+    },
+    {
+      "worker_id": "oyun-engineering-lead",
+      "departments": [
+        "oyun"
+      ],
+      "events": 263,
+      "successes": 94,
+      "failures": 169,
+      "success_rate": 0.357,
+      "last_activity": "2026-10-31T23:48:19.528000+00:00",
+      "idle_minutes": 776.4,
+      "stale": true
+    },
+    {
+      "worker_id": "ai-platform-manager",
+      "departments": [
+        "ai-platform"
+      ],
+      "events": 248,
+      "successes": 174,
+      "failures": 74,
+      "success_rate": 0.702,
+      "last_activity": "2026-10-31T23:16:00.285000+00:00",
+      "idle_minutes": 808.7,
+      "stale": true
+    },
+    {
+      "worker_id": "mgr-data-01",
+      "departments": [
+        "data"
+      ],
+      "events": 244,
+      "successes": 237,
+      "failures": 7,
+      "success_rate": 0.971,
+      "last_activity": "2026-10-31T23:53:47.393000+00:00",
+      "idle_minutes": 770.9,
+      "stale": true
+    },
+    {
+      "worker_id": "oyun-engineering-specialist",
+      "departments": [
+        "oyun"
+      ],
+      "events": 166,
+      "successes": 11,
+      "failures": 155,
+      "success_rate": 0.066,
+      "last_activity": "2026-10-31T23:05:02.009000+00:00",
+      "idle_minutes": 819.7,
+      "stale": true
+    },
+    {
+      "worker_id": "qa-01",
+      "departments": [
+        "quality"
+      ],
+      "events": 164,
+      "successes": 160,
+      "failures": 4,
+      "success_rate": 0.976,
+      "last_activity": "2026-11-01T10:10:37.439000+00:00",
+      "idle_minutes": 154.1,
+      "stale": true
+    },
+    {
+      "worker_id": "software-manager",
+      "departments": [
+        "software"
+      ],
+      "events": 88,
+      "successes": 88,
+      "failures": 0,
+      "success_rate": 1.0,
+      "last_activity": "2026-11-01T10:10:29.095000+00:00",
+      "idle_minutes": 154.2,
+      "stale": true
+    },
+    {
+      "worker_id": "software-engineering-lead",
+      "departments": [
+        "software"
+      ],
+      "events": 87,
+      "successes": 44,
+      "failures": 43,
+      "success_rate": 0.506,
+      "last_activity": "2026-11-01T10:10:30.836000+00:00",
+      "idle_minutes": 154.2,
+      "stale": true
+    },
+    {
+      "worker_id": "ai-platform-gateway-engineer",
+      "departments": [
+        "ai-platform"
+      ],
+      "events": 83,
+      "successes": 21,
+      "failures": 62,
+      "success_rate": 0.253,
+      "last_activity": "2026-10-31T21:44:33.145000+00:00",
+      "idle_minutes": 900.2,
+      "stale": true
+    },
+    {
+      "worker_id": "creative-animation-specialist",
+      "departments": [
+        "creative"
+      ],
+      "events": 52,
+      "successes": 5,
+      "failures": 47,
+      "success_rate": 0.096,
+      "last_activity": "2026-10-31T22:25:52.660000+00:00",
+      "idle_minutes": 858.8,
+      "stale": true
+    },
+    {
+      "worker_id": "creative-animation-lead",
+      "departments": [
+        "creative"
+      ],
+      "events": 48,
+      "successes": 1,
+      "failures": 47,
+      "success_rate": 0.021,
+      "last_activity": "2026-10-31T22:25:52.710000+00:00",
+      "idle_minutes": 858.8,
+      "stale": true
+    },
+    {
+      "worker_id": "data-01",
+      "departments": [
+        "data"
+      ],
+      "events": 48,
+      "successes": 1,
+      "failures": 47,
+      "success_rate": 0.021,
+      "last_activity": "2026-10-31T22:09:19.185000+00:00",
+      "idle_minutes": 875.4,
+      "stale": true
+    },
+    {
+      "worker_id": "software-engineering-specialist",
+      "departments": [
+        "software"
+      ],
+      "events": 42,
+      "successes": 2,
+      "failures": 40,
+      "success_rate": 0.048,
+      "last_activity": "2026-10-31T13:07:03.192000+00:00",
+      "idle_minutes": 1417.7,
+      "stale": true
+    },
+    {
+      "worker_id": "mgr-marketing-01",
+      "departments": [
+        "marketing"
+      ],
+      "events": 31,
+      "successes": 18,
+      "failures": 13,
+      "success_rate": 0.581,
+      "last_activity": "2026-10-31T23:47:27.483000+00:00",
+      "idle_minutes": 777.3,
+      "stale": true
+    },
+    {
+      "worker_id": "mgr-sales-01",
+      "departments": [
+        "sales"
+      ],
+      "events": 17,
+      "successes": 10,
+      "failures": 7,
+      "success_rate": 0.588,
+      "last_activity": "2026-10-31T23:53:38.310000+00:00",
+      "idle_minutes": 771.1,
+      "stale": true
+    },
+    {
+      "worker_id": "mgr-finance-01",
+      "departments": [
+        "finance"
+      ],
+      "events": 11,
+      "successes": 10,
+      "failures": 1,
+      "success_rate": 0.909,
+      "last_activity": "2026-10-31T23:46:57.663000+00:00",
+      "idle_minutes": 777.8,
+      "stale": true
+    },
+    {
+      "worker_id": "guvenlik-manager",
+      "departments": [
+        "guvenlik"
+      ],
+      "events": 10,
+      "successes": 10,
+      "failures": 0,
+      "success_rate": 1.0,
+      "last_activity": "2026-10-31T23:47:10.869000+00:00",
+      "idle_minutes": 777.5,
+      "stale": true
+    },
+    {
+      "worker_id": "mgr-infrastructure-01",
+      "departments": [
+        "infrastructure"
+      ],
+      "events": 8,
+      "successes": 6,
+      "failures": 2,
+      "success_rate": 0.75,
+      "last_activity": "2026-10-31T23:47:13.256000+00:00",
+      "idle_minutes": 777.5,
+      "stale": true
+    },
+    {
+      "worker_id": "mgr-operations-01",
+      "departments": [
+        "operations"
+      ],
+      "events": 8,
+      "successes": 6,
+      "failures": 2,
+      "success_rate": 0.75,
+      "last_activity": "2026-10-31T23:47:28.525000+00:00",
+      "idle_minutes": 777.2,
+      "stale": true
+    },
+    {
+      "worker_id": "mgr-research-01",
+      "departments": [
+        "research"
+      ],
+      "events": 8,
+      "successes": 7,
+      "failures": 1,
+      "success_rate": 0.875,
+      "last_activity": "2026-10-31T23:48:45.262000+00:00",
+      "idle_minutes": 776.0,
+      "stale": true
+    },
+    {
+      "worker_id": "mgr-quality-01",
+      "departments": [
+        "quality"
+      ],
+      "events": 7,
+      "successes": 6,
+      "failures": 1,
+      "success_rate": 0.857,
+      "last_activity": "2026-10-31T23:48:43.989000+00:00",
+      "idle_minutes": 776.0,
+      "stale": true
+    },
+    {
+      "worker_id": "mgr-support-01",
+      "departments": [
+        "support"
+      ],
+      "events": 7,
+      "successes": 6,
+      "failures": 1,
+      "success_rate": 0.857,
+      "last_activity": "2026-10-31T23:53:45.800000+00:00",
+      "idle_minutes": 771.0,
+      "stale": true
+    },
+    {
+      "worker_id": "ceo-01",
+      "departments": [
+        "holding"
+      ],
+      "events": 5,
+      "successes": 5,
+      "failures": 0,
+      "success_rate": 1.0,
+      "last_activity": "2026-10-31T23:47:12.020000+00:00",
+      "idle_minutes": 777.5,
+      "stale": true
+    },
+    {
+      "worker_id": "genel-manager",
+      "departments": [
+        "genel"
+      ],
+      "events": 5,
+      "successes": 5,
+      "failures": 0,
+      "success_rate": 1.0,
+      "last_activity": "2026-10-31T23:46:59.279000+00:00",
+      "idle_minutes": 777.7,
+      "stale": true
+    },
+    {
+      "worker_id": "guvenlik-release-guardian",
+      "departments": [
+        "guvenlik"
+      ],
+      "events": 5,
+      "successes": 5,
+      "failures": 0,
+      "success_rate": 1.0,
+      "last_activity": "2026-10-27T20:07:16.414000+00:00",
+      "idle_minutes": 6757.4,
+      "stale": true
+    },
+    {
+      "worker_id": "genel-2-manager",
+      "departments": [
+        "genel-2"
+      ],
+      "events": 2,
+      "successes": 2,
+      "failures": 0,
+      "success_rate": 1.0,
+      "last_activity": "2026-10-24T23:55:30.808000+00:00",
+      "idle_minutes": 10849.2,
+      "stale": true
+    },
+    {
+      "worker_id": "hukuk-manager",
+      "departments": [
+        "hukuk"
+      ],
+      "events": 2,
+      "successes": 0,
+      "failures": 2,
+      "success_rate": 0.0,
+      "last_activity": "2026-10-31T12:53:50.963000+00:00",
+      "idle_minutes": 1430.9,
+      "stale": true
+    },
+    {
+      "worker_id": "marketing-01",
+      "departments": [
+        "marketing"
+      ],
+      "events": 2,
+      "successes": 0,
+      "failures": 2,
+      "success_rate": 0.0,
+      "last_activity": "2026-10-31T22:08:50.121000+00:00",
+      "idle_minutes": 875.9,
+      "stale": true
+    },
+    {
+      "worker_id": "sales-01",
+      "departments": [
+        "sales"
+      ],
+      "events": 2,
+      "successes": 0,
+      "failures": 2,
+      "success_rate": 0.0,
+      "last_activity": "2026-10-31T22:25:50.943000+00:00",
+      "idle_minutes": 858.9,
+      "stale": true
+    },
+    {
+      "worker_id": "research-01",
+      "departments": [
+        "research"
+      ],
+      "events": 1,
+      "successes": 0,
+      "failures": 1,
+      "success_rate": 0.0,
+      "last_activity": "2026-10-26T21:24:43.234000+00:00",
+      "idle_minutes": 8120.0,
+      "stale": true
+    },
+    {
+      "worker_id": "support-01",
+      "departments": [
+        "support"
+      ],
+      "events": 1,
+      "successes": 0,
+      "failures": 1,
+      "success_rate": 0.0,
+      "last_activity": "2026-10-27T19:46:12.557000+00:00",
+      "idle_minutes": 6778.5,
+      "stale": true
+    }
+  ]
+}

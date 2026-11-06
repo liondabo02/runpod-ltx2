@@ -1,0 +1,17 @@
+{
+  "schema": "ahos.github-branch-protection-plan.v1",
+  "apply_automatically": false,
+  "target_branches": [
+    "main",
+    "feature/ahos-autopilot"
+  ],
+  "require_pull_request": true,
+  "required_approvals": 1,
+  "dismiss_stale_reviews": true,
+  "require_code_owner_review": true,
+  "require_status_checks": true,
+  "block_force_push": true,
+  "block_deletion": true,
+  "require_conversation_resolution": true,
+  "owner_approval_required_before_apply": true
+}

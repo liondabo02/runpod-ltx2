@@ -1,0 +1,569 @@
+{
+  "ai-platform-manager": {
+    "name": "Fatma Özdemir",
+    "title": "Departman Müdürü",
+    "department": "ai-platform",
+    "department_name": "Yapay Zekâ Platformu",
+    "worker_id": "ai-platform-manager"
+  },
+  "ai-platform-tool-curator": {
+    "name": "İbrahim Demir",
+    "title": "Küratör",
+    "department": "ai-platform",
+    "department_name": "Yapay Zekâ Platformu",
+    "worker_id": "ai-platform-tool-curator"
+  },
+  "ai-platform-gateway-engineer": {
+    "name": "Yasemin Kurt",
+    "title": "Mühendis",
+    "department": "ai-platform",
+    "department_name": "Yapay Zekâ Platformu",
+    "worker_id": "ai-platform-gateway-engineer"
+  },
+  "ai-platform-evaluator": {
+    "name": "Mert Kara",
+    "title": "Analist",
+    "department": "ai-platform",
+    "department_name": "Yapay Zekâ Platformu",
+    "worker_id": "ai-platform-evaluator"
+  },
+  "creative-manager": {
+    "name": "Lale Kara",
+    "title": "Departman Müdürü",
+    "department": "creative",
+    "department_name": "Çizgi Film Stüdyosu",
+    "worker_id": "creative-manager"
+  },
+  "creative-story-lead": {
+    "name": "Mustafa Yılmaz",
+    "title": "Ekip Lideri",
+    "department": "creative",
+    "department_name": "Çizgi Film Stüdyosu",
+    "worker_id": "creative-story-lead"
+  },
+  "creative-story-specialist": {
+    "name": "Mehmet Yıldız",
+    "title": "Uzman",
+    "department": "creative",
+    "department_name": "Çizgi Film Stüdyosu",
+    "worker_id": "creative-story-specialist"
+  },
+  "creative-art-lead": {
+    "name": "Selin Şimşek",
+    "title": "Ekip Lideri",
+    "department": "creative",
+    "department_name": "Çizgi Film Stüdyosu",
+    "worker_id": "creative-art-lead"
+  },
+  "creative-art-specialist": {
+    "name": "Efe Çetin",
+    "title": "Uzman",
+    "department": "creative",
+    "department_name": "Çizgi Film Stüdyosu",
+    "worker_id": "creative-art-specialist"
+  },
+  "creative-animation-lead": {
+    "name": "İbrahim Aydın",
+    "title": "Ekip Lideri",
+    "department": "creative",
+    "department_name": "Çizgi Film Stüdyosu",
+    "worker_id": "creative-animation-lead"
+  },
+  "creative-animation-specialist": {
+    "name": "Rıza Arslan",
+    "title": "Uzman",
+    "department": "creative",
+    "department_name": "Çizgi Film Stüdyosu",
+    "worker_id": "creative-animation-specialist"
+  },
+  "creative-audio-lead": {
+    "name": "Ece Kurt",
+    "title": "Ekip Lideri",
+    "department": "creative",
+    "department_name": "Çizgi Film Stüdyosu",
+    "worker_id": "creative-audio-lead"
+  },
+  "creative-audio-specialist": {
+    "name": "Zeynep Aslan",
+    "title": "Uzman",
+    "department": "creative",
+    "department_name": "Çizgi Film Stüdyosu",
+    "worker_id": "creative-audio-specialist"
+  },
+  "creative-localization-lead": {
+    "name": "Kerem Polat",
+    "title": "Ekip Lideri",
+    "department": "creative",
+    "department_name": "Çizgi Film Stüdyosu",
+    "worker_id": "creative-localization-lead"
+  },
+  "creative-localization-specialist": {
+    "name": "Ümit Doğan",
+    "title": "Uzman",
+    "department": "creative",
+    "department_name": "Çizgi Film Stüdyosu",
+    "worker_id": "creative-localization-specialist"
+  },
+  "creative-growth-lead": {
+    "name": "Derya Çelik",
+    "title": "Ekip Lideri",
+    "department": "creative",
+    "department_name": "Çizgi Film Stüdyosu",
+    "worker_id": "creative-growth-lead"
+  },
+  "creative-growth-specialist": {
+    "name": "Selin Öztürk",
+    "title": "Uzman",
+    "department": "creative",
+    "department_name": "Çizgi Film Stüdyosu",
+    "worker_id": "creative-growth-specialist"
+  },
+  "creative-quality-lead": {
+    "name": "Zeynep Özdemir",
+    "title": "Ekip Lideri",
+    "department": "creative",
+    "department_name": "Çizgi Film Stüdyosu",
+    "worker_id": "creative-quality-lead"
+  },
+  "creative-quality-specialist": {
+    "name": "Derya Çetin",
+    "title": "Uzman",
+    "department": "creative",
+    "department_name": "Çizgi Film Stüdyosu",
+    "worker_id": "creative-quality-specialist"
+  },
+  "mgr-data-01": {
+    "name": "Sibel Doğan",
+    "title": "Departman Müdürü",
+    "department": "data",
+    "department_name": "Veri Departmanı",
+    "worker_id": "mgr-data-01"
+  },
+  "data-01": {
+    "name": "Levent Kılıç",
+    "title": "Analist",
+    "department": "data",
+    "department_name": "Veri Departmanı",
+    "worker_id": "data-01"
+  },
+  "mgr-finance-01": {
+    "name": "Hale Yıldız",
+    "title": "Departman Müdürü",
+    "department": "finance",
+    "department_name": "Finans Departmanı",
+    "worker_id": "mgr-finance-01"
+  },
+  "finance-01": {
+    "name": "Melis Kılıç",
+    "title": "Uzman",
+    "department": "finance",
+    "department_name": "Finans Departmanı",
+    "worker_id": "finance-01"
+  },
+  "genel-manager": {
+    "name": "Sibel Çetin",
+    "title": "Departman Müdürü",
+    "department": "genel",
+    "department_name": "Genel İş Departmanı",
+    "worker_id": "genel-manager"
+  },
+  "genel-delivery-lead": {
+    "name": "Yasemin Polat",
+    "title": "Ekip Lideri",
+    "department": "genel",
+    "department_name": "Genel İş Departmanı",
+    "worker_id": "genel-delivery-lead"
+  },
+  "genel-delivery-specialist": {
+    "name": "Umut Polat",
+    "title": "Uzman",
+    "department": "genel",
+    "department_name": "Genel İş Departmanı",
+    "worker_id": "genel-delivery-specialist"
+  },
+  "genel-quality-lead": {
+    "name": "Irmak Polat",
+    "title": "Ekip Lideri",
+    "department": "genel",
+    "department_name": "Genel İş Departmanı",
+    "worker_id": "genel-quality-lead"
+  },
+  "genel-quality-specialist": {
+    "name": "Umut Doğan",
+    "title": "Uzman",
+    "department": "genel",
+    "department_name": "Genel İş Departmanı",
+    "worker_id": "genel-quality-specialist"
+  },
+  "genel-growth-lead": {
+    "name": "Yasemin Kurt",
+    "title": "Ekip Lideri",
+    "department": "genel",
+    "department_name": "Genel İş Departmanı",
+    "worker_id": "genel-growth-lead"
+  },
+  "genel-growth-specialist": {
+    "name": "Mert Arslan",
+    "title": "Uzman",
+    "department": "genel",
+    "department_name": "Genel İş Departmanı",
+    "worker_id": "genel-growth-specialist"
+  },
+  "guvenlik-manager": {
+    "name": "Cem Öztürk",
+    "title": "Departman Müdürü",
+    "department": "guvenlik",
+    "department_name": "Güvenlik ve Kaynak Koruma Departmanı",
+    "worker_id": "guvenlik-manager"
+  },
+  "guvenlik-repo-guardian": {
+    "name": "Elif Aslan",
+    "title": "Mühendis",
+    "department": "guvenlik",
+    "department_name": "Güvenlik ve Kaynak Koruma Departmanı",
+    "worker_id": "guvenlik-repo-guardian"
+  },
+  "guvenlik-dependency-auditor": {
+    "name": "Kerem Yıldız",
+    "title": "Analist",
+    "department": "guvenlik",
+    "department_name": "Güvenlik ve Kaynak Koruma Departmanı",
+    "worker_id": "guvenlik-dependency-auditor"
+  },
+  "guvenlik-secret-scanner": {
+    "name": "Nazlı Yıldırım",
+    "title": "Mühendis",
+    "department": "guvenlik",
+    "department_name": "Güvenlik ve Kaynak Koruma Departmanı",
+    "worker_id": "guvenlik-secret-scanner"
+  },
+  "guvenlik-release-guardian": {
+    "name": "İbrahim Aydın",
+    "title": "Uzman",
+    "department": "guvenlik",
+    "department_name": "Güvenlik ve Kaynak Koruma Departmanı",
+    "worker_id": "guvenlik-release-guardian"
+  },
+  "ceo-01": {
+    "name": "Mert Kara",
+    "title": "Departman Müdürü",
+    "department": "holding",
+    "department_name": "Holding Yönetimi (CEO)",
+    "worker_id": "ceo-01"
+  },
+  "ceo-chief-of-staff-01": {
+    "name": "Pelin Şahin",
+    "title": "Uzman",
+    "department": "holding",
+    "department_name": "Holding Yönetimi (CEO)",
+    "worker_id": "ceo-chief-of-staff-01"
+  },
+  "hukuk-manager": {
+    "name": "Tolga Kaya",
+    "title": "Departman Müdürü",
+    "department": "hukuk",
+    "department_name": "Hukuk ve Uyum Departmanı",
+    "worker_id": "hukuk-manager"
+  },
+  "hukuk-01": {
+    "name": "Emre Aslan",
+    "title": "Uzman",
+    "department": "hukuk",
+    "department_name": "Hukuk ve Uyum Departmanı",
+    "worker_id": "hukuk-01"
+  },
+  "mgr-infrastructure-01": {
+    "name": "Zeynep Yıldırım",
+    "title": "Departman Müdürü",
+    "department": "infrastructure",
+    "department_name": "Altyapı Departmanı",
+    "worker_id": "mgr-infrastructure-01"
+  },
+  "devops-01": {
+    "name": "Lale Demir",
+    "title": "Mühendis",
+    "department": "infrastructure",
+    "department_name": "Altyapı Departmanı",
+    "worker_id": "devops-01"
+  },
+  "mgr-marketing-01": {
+    "name": "Levent Aydın",
+    "title": "Departman Müdürü",
+    "department": "marketing",
+    "department_name": "Pazarlama Departmanı",
+    "worker_id": "mgr-marketing-01"
+  },
+  "marketing-01": {
+    "name": "Cem Aslan",
+    "title": "Uzman",
+    "department": "marketing",
+    "department_name": "Pazarlama Departmanı",
+    "worker_id": "marketing-01"
+  },
+  "mgr-operations-01": {
+    "name": "Tuğçe Çelik",
+    "title": "Departman Müdürü",
+    "department": "operations",
+    "department_name": "Operasyon Departmanı",
+    "worker_id": "mgr-operations-01"
+  },
+  "ops-01": {
+    "name": "Nazlı Yılmaz",
+    "title": "Uzman",
+    "department": "operations",
+    "department_name": "Operasyon Departmanı",
+    "worker_id": "ops-01"
+  },
+  "oyun-manager": {
+    "name": "Mehmet Kılıç",
+    "title": "Departman Müdürü",
+    "department": "oyun",
+    "department_name": "Oyun Geliştirme Departmanı",
+    "worker_id": "oyun-manager"
+  },
+  "oyun-design-lead": {
+    "name": "Özge Aslan",
+    "title": "Ekip Lideri",
+    "department": "oyun",
+    "department_name": "Oyun Geliştirme Departmanı",
+    "worker_id": "oyun-design-lead"
+  },
+  "oyun-design-specialist": {
+    "name": "Özge Yılmaz",
+    "title": "Uzman",
+    "department": "oyun",
+    "department_name": "Oyun Geliştirme Departmanı",
+    "worker_id": "oyun-design-specialist"
+  },
+  "oyun-engineering-lead": {
+    "name": "Yasemin Aydın",
+    "title": "Ekip Lideri",
+    "department": "oyun",
+    "department_name": "Oyun Geliştirme Departmanı",
+    "worker_id": "oyun-engineering-lead"
+  },
+  "oyun-engineering-specialist": {
+    "name": "Nazlı Aslan",
+    "title": "Uzman",
+    "department": "oyun",
+    "department_name": "Oyun Geliştirme Departmanı",
+    "worker_id": "oyun-engineering-specialist"
+  },
+  "oyun-platform-lead": {
+    "name": "Okan Yıldırım",
+    "title": "Ekip Lideri",
+    "department": "oyun",
+    "department_name": "Oyun Geliştirme Departmanı",
+    "worker_id": "oyun-platform-lead"
+  },
+  "oyun-platform-specialist": {
+    "name": "Lale Yıldız",
+    "title": "Uzman",
+    "department": "oyun",
+    "department_name": "Oyun Geliştirme Departmanı",
+    "worker_id": "oyun-platform-specialist"
+  },
+  "oyun-art-lead": {
+    "name": "Irmak Kurt",
+    "title": "Ekip Lideri",
+    "department": "oyun",
+    "department_name": "Oyun Geliştirme Departmanı",
+    "worker_id": "oyun-art-lead"
+  },
+  "oyun-art-specialist": {
+    "name": "Serkan Aslan",
+    "title": "Uzman",
+    "department": "oyun",
+    "department_name": "Oyun Geliştirme Departmanı",
+    "worker_id": "oyun-art-specialist"
+  },
+  "oyun-audio-lead": {
+    "name": "Tolga Doğan",
+    "title": "Ekip Lideri",
+    "department": "oyun",
+    "department_name": "Oyun Geliştirme Departmanı",
+    "worker_id": "oyun-audio-lead"
+  },
+  "oyun-audio-specialist": {
+    "name": "Zeynep Arslan",
+    "title": "Uzman",
+    "department": "oyun",
+    "department_name": "Oyun Geliştirme Departmanı",
+    "worker_id": "oyun-audio-specialist"
+  },
+  "oyun-quality-lead": {
+    "name": "Mert Yıldırım",
+    "title": "Ekip Lideri",
+    "department": "oyun",
+    "department_name": "Oyun Geliştirme Departmanı",
+    "worker_id": "oyun-quality-lead"
+  },
+  "oyun-quality-specialist": {
+    "name": "Zeynep Yılmaz",
+    "title": "Uzman",
+    "department": "oyun",
+    "department_name": "Oyun Geliştirme Departmanı",
+    "worker_id": "oyun-quality-specialist"
+  },
+  "oyun-growth-lead": {
+    "name": "Deniz Öztürk",
+    "title": "Ekip Lideri",
+    "department": "oyun",
+    "department_name": "Oyun Geliştirme Departmanı",
+    "worker_id": "oyun-growth-lead"
+  },
+  "oyun-growth-specialist": {
+    "name": "Burak Aslan",
+    "title": "Uzman",
+    "department": "oyun",
+    "department_name": "Oyun Geliştirme Departmanı",
+    "worker_id": "oyun-growth-specialist"
+  },
+  "mgr-quality-01": {
+    "name": "Tuğçe Polat",
+    "title": "Departman Müdürü",
+    "department": "quality",
+    "department_name": "Kalite Departmanı",
+    "worker_id": "mgr-quality-01"
+  },
+  "qa-01": {
+    "name": "Hale Polat",
+    "title": "Mühendis",
+    "department": "quality",
+    "department_name": "Kalite Departmanı",
+    "worker_id": "qa-01"
+  },
+  "mgr-research-01": {
+    "name": "Ece Kaya",
+    "title": "Departman Müdürü",
+    "department": "research",
+    "department_name": "Araştırma Departmanı",
+    "worker_id": "mgr-research-01"
+  },
+  "research-01": {
+    "name": "Irmak Çetin",
+    "title": "Uzman",
+    "department": "research",
+    "department_name": "Araştırma Departmanı",
+    "worker_id": "research-01"
+  },
+  "mgr-sales-01": {
+    "name": "Derya Öztürk",
+    "title": "Departman Müdürü",
+    "department": "sales",
+    "department_name": "Satış Departmanı",
+    "worker_id": "mgr-sales-01"
+  },
+  "sales-01": {
+    "name": "Ümit Demir",
+    "title": "Uzman",
+    "department": "sales",
+    "department_name": "Satış Departmanı",
+    "worker_id": "sales-01"
+  },
+  "software-manager": {
+    "name": "Umut Doğan",
+    "title": "Departman Müdürü",
+    "department": "software",
+    "department_name": "Yazılım Şirketi",
+    "worker_id": "software-manager"
+  },
+  "software-product-lead": {
+    "name": "Mustafa Yılmaz",
+    "title": "Ekip Lideri",
+    "department": "software",
+    "department_name": "Yazılım Şirketi",
+    "worker_id": "software-product-lead"
+  },
+  "software-product-specialist": {
+    "name": "Zeynep Koç",
+    "title": "Uzman",
+    "department": "software",
+    "department_name": "Yazılım Şirketi",
+    "worker_id": "software-product-specialist"
+  },
+  "software-engineering-lead": {
+    "name": "Okan Arslan",
+    "title": "Ekip Lideri",
+    "department": "software",
+    "department_name": "Yazılım Şirketi",
+    "worker_id": "software-engineering-lead"
+  },
+  "software-engineering-specialist": {
+    "name": "Burak Koç",
+    "title": "Uzman",
+    "department": "software",
+    "department_name": "Yazılım Şirketi",
+    "worker_id": "software-engineering-specialist"
+  },
+  "software-platform-lead": {
+    "name": "Efe Öztürk",
+    "title": "Ekip Lideri",
+    "department": "software",
+    "department_name": "Yazılım Şirketi",
+    "worker_id": "software-platform-lead"
+  },
+  "software-platform-specialist": {
+    "name": "Pelin Şahin",
+    "title": "Uzman",
+    "department": "software",
+    "department_name": "Yazılım Şirketi",
+    "worker_id": "software-platform-specialist"
+  },
+  "software-quality-lead": {
+    "name": "Yiğit Demir",
+    "title": "Ekip Lideri",
+    "department": "software",
+    "department_name": "Yazılım Şirketi",
+    "worker_id": "software-quality-lead"
+  },
+  "software-quality-specialist": {
+    "name": "Yiğit Polat",
+    "title": "Uzman",
+    "department": "software",
+    "department_name": "Yazılım Şirketi",
+    "worker_id": "software-quality-specialist"
+  },
+  "software-growth-lead": {
+    "name": "Ayşe Kara",
+    "title": "Ekip Lideri",
+    "department": "software",
+    "department_name": "Yazılım Şirketi",
+    "worker_id": "software-growth-lead"
+  },
+  "software-growth-specialist": {
+    "name": "Emre Yıldırım",
+    "title": "Uzman",
+    "department": "software",
+    "department_name": "Yazılım Şirketi",
+    "worker_id": "software-growth-specialist"
+  },
+  "software-operations-lead": {
+    "name": "Zehra Özdemir",
+    "title": "Ekip Lideri",
+    "department": "software",
+    "department_name": "Yazılım Şirketi",
+    "worker_id": "software-operations-lead"
+  },
+  "software-operations-specialist": {
+    "name": "Efe Polat",
+    "title": "Uzman",
+    "department": "software",
+    "department_name": "Yazılım Şirketi",
+    "worker_id": "software-operations-specialist"
+  },
+  "mgr-support-01": {
+    "name": "Sibel Çetin",
+    "title": "Departman Müdürü",
+    "department": "support",
+    "department_name": "Müşteri Destek Departmanı",
+    "worker_id": "mgr-support-01"
+  },
+  "support-01": {
+    "name": "Hale Demir",
+    "title": "Destek Uzmanı",
+    "department": "support",
+    "department_name": "Müşteri Destek Departmanı",
+    "worker_id": "support-01"
+  }
+}

@@ -1,0 +1,113 @@
+$ErrorActionPreference = "Stop"
+
+$root = (Get-Location).Path
+$ws = Join-Path $root "runtime\workspaces\ahos-autopilot"
+$pkg = Join-Path $ws "ahos_core"
+$modulePath = Join-Path $pkg "ahos\candidate_triage.py"
+$testPath = Join-Path $pkg "tests\test_candidate_triage.py"
+$backlogPath = Join-Path $pkg "AHOS_BACKLOG.json"
+$python = Join-Path $root ".venv\Scripts\python.exe"
+$liveStore = Join-Path $root "runtime\live_intake\public_candidates.jsonl"
+
+if (-not (Test-Path $liveStore)) { throw "Live candidate store not found: $liveStore" }
+if (-not (Test-Path $python)) { throw "Python venv not found: $python" }
+
+$b = Get-Content $backlogPath -Raw | ConvertFrom-Json
+if (-not ($b.tasks | Where-Object { $_.id -eq "AHOS-018" })) {
+    $b.tasks += [pscustomobject]@{
+        id = "AHOS-018"
+        title = "Add free local candidate triage and filtering"
+        status = "pending"
+        risk = "low"
+        authority = "B"
+        requires_owner_approval = $false
+        task = "Inside ahos_core only, add deterministic local triage for collected opportunity candidates. Distinguish project/contract-like opportunities from human employment roles, score technical/automation relevance, and persist ranked results locally. No OpenAI calls, no applications, no outreach, no payments, no external writes."
+    }
+    [IO.File]::WriteAllText(
+        $backlogPath,
+        ($b | ConvertTo-Json -Depth 12),
+        (New-Object System.Text.UTF8Encoding($false))
+    )
+}
+
+[IO.File]::WriteAllBytes($modulePath, [Convert]::FromBase64String("ZnJvbSBfX2Z1dHVyZV9fIGltcG9ydCBhbm5vdGF0aW9ucwoKaW1wb3J0IGpzb24KaW1wb3J0IHJlCmZyb20gZGF0YWNsYXNzZXMgaW1wb3J0IGFzZGljdCwgZGF0YWNsYXNzCmZyb20gZW51bSBpbXBvcnQgRW51bQpmcm9tIHBhdGhsaWIgaW1wb3J0IFBhdGgKZnJvbSB0eXBpbmcgaW1wb3J0IEl0ZXJhYmxlCgpmcm9tIC5vcHBvcnR1bml0eV9pbnRha2UgaW1wb3J0IE9wcG9ydHVuaXR5Q2FuZGlkYXRlLCBPcHBvcnR1bml0eUNhbmRpZGF0ZVN0b3JlCgoKY2xhc3MgQ2FuZGlkYXRlRGlzcG9zaXRpb24oc3RyLCBFbnVtKToKICAgIFBSSU9SSVRZID0gInByaW9yaXR5IgogICAgUkVWSUVXID0gInJldmlldyIKICAgIExPV19GSVQgPSAibG93X2ZpdCIKICAgIEhVTUFOX0pPQiA9ICJodW1hbl9qb2IiCgoKQGRhdGFjbGFzcyhmcm96ZW49VHJ1ZSwgc2xvdHM9VHJ1ZSkKY2xhc3MgQ2FuZGlkYXRlVHJpYWdlOgogICAgY2FuZGlkYXRlX2lkOiBzdHIKICAgIHRpdGxlOiBzdHIKICAgIHNvdXJjZV9pZDogc3RyCiAgICBpdGVtX3VybDogc3RyCiAgICBjYXRlZ29yeTogc3RyCiAgICBzY29yZTogaW50CiAgICBkaXNwb3NpdGlvbjogQ2FuZGlkYXRlRGlzcG9zaXRpb24KICAgIHJlYXNvbnM6IHR1cGxlW3N0ciwgLi4uXQogICAgbWF0Y2hlZF9wb3NpdGl2ZV90ZXJtczogdHVwbGVbc3RyLCAuLi5dCiAgICBtYXRjaGVkX25lZ2F0aXZlX3Rlcm1zOiB0dXBsZVtzdHIsIC4uLl0KCgpfUE9TSVRJVkVfVEVSTVM6IGRpY3Rbc3RyLCBpbnRdID0gewogICAgImF1dG9tYXRpb24iOiAxOCwKICAgICJweXRob24iOiAxNiwKICAgICJhcGkiOiAxNCwKICAgICJpbnRlZ3JhdGlvbiI6IDE0LAogICAgInNvZnR3YXJlIGVuZ2luZWVyIjogMTIsCiAgICAiYmFja2VuZCI6IDEyLAogICAgImRldmVsb3BlciI6IDEwLAogICAgImRldm9wcyI6IDEwLAogICAgImRhdGEiOiA4LAogICAgImFpIjogOCwKICAgICJtYWNoaW5lIGxlYXJuaW5nIjogOCwKICAgICJ3b3JrZmxvdyI6IDgsCiAgICAiY2xvdWQiOiA2LAogICAgInNhYXMiOiA2LAogICAgInNlY3VyaXR5IjogNSwKICAgICJhbmFseXRpY3MiOiA1LAogICAgImNvbnRyYWN0IjogMTIsCiAgICAiY29udHJhY3RvciI6IDE0LAogICAgImZyZWVsYW5jZSI6IDE2LAp9CgpfTkVHQVRJVkVfVEVSTVM6IGRpY3Rbc3RyLCBpbnRdID0gewogICAgIm51cnNlIjogMzUsCiAgICAicGh5c2ljaWFuIjogNDAsCiAgICAiZHJpdmVyIjogMzAsCiAgICAid2FyZWhvdXNlIjogMjgsCiAgICAibGFib3VyZXIiOiAzMiwKICAgICJsYWJvcmVyIjogMzIsCiAgICAicmVjZXB0aW9uaXN0IjogMjIsCiAgICAidm9pY2Ugb3ZlciI6IDE4LAogICAgImN1c3RvbWVyIHNlcnZpY2UiOiAxNSwKICAgICJzYWxlcyBkZXZlbG9wbWVudCByZXByZXNlbnRhdGl2ZSI6IDE2LAogICAgImFjY291bnQgbWFuYWdlciI6IDEyLAogICAgImFpcmNyYWZ0IjogMTgsCiAgICAiY2FyZSBuYXZpZ2F0b3IiOiAyMCwKICAgICJoZWFsdGhjYXJlIGFzc2lzdGFudCI6IDIwLAp9CgpfRU1QTE9ZTUVOVF9URVJNUyA9ICgKICAgICJmdWxsLXRpbWUiLAogICAgImZ1bGwgdGltZSIsCiAgICAiZW1wbG95ZWUiLAogICAgImVtcGxveW1lbnQiLAogICAgImJlbmVmaXRzIiwKICAgICJzYWxhcnkiLAogICAgInllYXJzIG9mIGV4cGVyaWVuY2UiLAogICAgImJhY2hlbG9yIiwKICAgICJkZWdyZWUiLAogICAgInNoaWZ0IiwKKQoKX1BST0pFQ1RfVEVSTVMgPSAoCiAgICAiY29udHJhY3QiLAogICAgImNvbnRyYWN0b3IiLAogICAgImZyZWVsYW5jZSIsCiAgICAicHJvamVjdCIsCiAgICAiY29uc3VsdGluZyIsCiAgICAiY29uc3VsdGFudCIsCiAgICAidGVtcG9yYXJ5IiwKICAgICJwYXJ0LXRpbWUiLAogICAgInBhcnQgdGltZSIsCikKCgpkZWYgX25vcm1hbGl6ZWRfdGV4dChjYW5kaWRhdGU6IE9wcG9ydHVuaXR5Q2FuZGlkYXRlKSAtPiBzdHI6CiAgICBtZXRhZGF0YV9iaXRzID0gW10KICAgIGZvciBrZXkgaW4gKCJjb21wYW55IiwgImxvY2F0aW9uIiwgInRhZ3MiLCAicG9zaXRpb24iKToKICAgICAgICB2YWx1ZSA9IGNhbmRpZGF0ZS5yYXdfbWV0YWRhdGEuZ2V0KGtleSkKICAgICAgICBpZiB2YWx1ZToKICAgICAgICAgICAgbWV0YWRhdGFfYml0cy5hcHBlbmQoc3RyKHZhbHVlKSkKICAgIHRleHQgPSAiICIuam9pbigKICAgICAgICBbCiAgICAgICAgICAgIGNhbmRpZGF0ZS50aXRsZSwKICAgICAgICAgICAgY2FuZGlkYXRlLmRlc2NyaXB0aW9uLAogICAgICAgICAgICBjYW5kaWRhdGUuY2F0ZWdvcnksCiAgICAgICAgICAgICptZXRhZGF0YV9iaXRzLAogICAgICAgIF0KICAgICkKICAgIHJldHVybiByZS5zdWIociJccysiLCAiICIsIHRleHQpLnN0cmlwKCkubG93ZXIoKQoKCmRlZiB0cmlhZ2VfY2FuZGlkYXRlKGNhbmRpZGF0ZTogT3Bwb3J0dW5pdHlDYW5kaWRhdGUpIC0+IENhbmRpZGF0ZVRyaWFnZToKICAgIHRleHQgPSBfbm9ybWFsaXplZF90ZXh0KGNhbmRpZGF0ZSkKCiAgICBzY29yZSA9IDMwCiAgICBwb3NpdGl2ZTogbGlzdFtzdHJdID0gW10KICAgIG5lZ2F0aXZlOiBsaXN0W3N0cl0gPSBbXQogICAgcmVhc29uczogbGlzdFtzdHJdID0gW10KCiAgICBmb3IgdGVybSwgd2VpZ2h0IGluIF9QT1NJVElWRV9URVJNUy5pdGVtcygpOgogICAgICAgIGlmIHRlcm0gaW4gdGV4dDoKICAgICAgICAgICAgc2NvcmUgKz0gd2VpZ2h0CiAgICAgICAgICAgIHBvc2l0aXZlLmFwcGVuZCh0ZXJtKQoKICAgIGZvciB0ZXJtLCB3ZWlnaHQgaW4gX05FR0FUSVZFX1RFUk1TLml0ZW1zKCk6CiAgICAgICAgaWYgdGVybSBpbiB0ZXh0OgogICAgICAgICAgICBzY29yZSAtPSB3ZWlnaHQKICAgICAgICAgICAgbmVnYXRpdmUuYXBwZW5kKHRlcm0pCgogICAgcHJvamVjdF9saWtlID0gW3Rlcm0gZm9yIHRlcm0gaW4gX1BST0pFQ1RfVEVSTVMgaWYgdGVybSBpbiB0ZXh0XQogICAgZW1wbG95bWVudF9saWtlID0gW3Rlcm0gZm9yIHRlcm0gaW4gX0VNUExPWU1FTlRfVEVSTVMgaWYgdGVybSBpbiB0ZXh0XQoKICAgIGlmIHByb2plY3RfbGlrZToKICAgICAgICBzY29yZSArPSBtaW4oMjAsIDYgKiBsZW4ocHJvamVjdF9saWtlKSkKICAgICAgICByZWFzb25zLmFwcGVuZCgicHJvamVjdC9jb250cmFjdCBsYW5ndWFnZSBkZXRlY3RlZCIpCgogICAgaWYgZW1wbG95bWVudF9saWtlIGFuZCBub3QgcHJvamVjdF9saWtlOgogICAgICAgIHNjb3JlIC09IG1pbigyNSwgNSAqIGxlbihlbXBsb3ltZW50X2xpa2UpKQogICAgICAgIHJlYXNvbnMuYXBwZW5kKCJsb29rcyBsaWtlIGEgaHVtYW4gZW1wbG95bWVudCByb2xlIikKCiAgICBpZiBjYW5kaWRhdGUuY2F0ZWdvcnkgaW4geyJzb2Z0d2FyZSIsICJkZXZvcHMiLCAicmVtb3RlLXdvcmsifToKICAgICAgICBzY29yZSArPSA1CiAgICAgICAgcmVhc29ucy5hcHBlbmQoZiJzb3VyY2UgY2F0ZWdvcnk6IHtjYW5kaWRhdGUuY2F0ZWdvcnl9IikKCiAgICBzY29yZSA9IG1heCgwLCBtaW4oMTAwLCBzY29yZSkpCgogICAgaWYgZW1wbG95bWVudF9saWtlIGFuZCBub3QgcHJvamVjdF9saWtlIGFuZCBzY29yZSA8IDU1OgogICAgICAgIGRpc3Bvc2l0aW9uID0gQ2FuZGlkYXRlRGlzcG9zaXRpb24uSFVNQU5fSk9CCiAgICBlbGlmIHNjb3JlID49IDcwOgogICAgICAgIGRpc3Bvc2l0aW9uID0gQ2FuZGlkYXRlRGlzcG9zaXRpb24uUFJJT1JJVFkKICAgIGVsaWYgc2NvcmUgPj0gNTA6CiAgICAgICAgZGlzcG9zaXRpb24gPSBDYW5kaWRhdGVEaXNwb3NpdGlvbi5SRVZJRVcKICAgIGVsc2U6CiAgICAgICAgZGlzcG9zaXRpb24gPSBDYW5kaWRhdGVEaXNwb3NpdGlvbi5MT1dfRklUCgogICAgaWYgcG9zaXRpdmU6CiAgICAgICAgcmVhc29ucy5hcHBlbmQoIm1hdGNoZWQgdXNlZnVsIHRlY2huaWNhbC9idXNpbmVzcyB0ZXJtcyIpCiAgICBpZiBuZWdhdGl2ZToKICAgICAgICByZWFzb25zLmFwcGVuZCgibWF0Y2hlZCBsb3ctZml0IHRlcm1zIikKCiAgICByZXR1cm4gQ2FuZGlkYXRlVHJpYWdlKAogICAgICAgIGNhbmRpZGF0ZV9pZD1jYW5kaWRhdGUuY2FuZGlkYXRlX2lkLAogICAgICAgIHRpdGxlPWNhbmRpZGF0ZS50aXRsZSwKICAgICAgICBzb3VyY2VfaWQ9Y2FuZGlkYXRlLnNvdXJjZV9pZCwKICAgICAgICBpdGVtX3VybD1jYW5kaWRhdGUuaXRlbV91cmwsCiAgICAgICAgY2F0ZWdvcnk9Y2FuZGlkYXRlLmNhdGVnb3J5LAogICAgICAgIHNjb3JlPXNjb3JlLAogICAgICAgIGRpc3Bvc2l0aW9uPWRpc3Bvc2l0aW9uLAogICAgICAgIHJlYXNvbnM9dHVwbGUocmVhc29ucyksCiAgICAgICAgbWF0Y2hlZF9wb3NpdGl2ZV90ZXJtcz10dXBsZShzb3J0ZWQoc2V0KHBvc2l0aXZlKSkpLAogICAgICAgIG1hdGNoZWRfbmVnYXRpdmVfdGVybXM9dHVwbGUoc29ydGVkKHNldChuZWdhdGl2ZSkpKSwKICAgICkKCgpkZWYgdHJpYWdlX2NhbmRpZGF0ZXMoCiAgICBjYW5kaWRhdGVzOiBJdGVyYWJsZVtPcHBvcnR1bml0eUNhbmRpZGF0ZV0sCikgLT4gdHVwbGVbQ2FuZGlkYXRlVHJpYWdlLCAuLi5dOgogICAgcmVzdWx0cyA9IFt0cmlhZ2VfY2FuZGlkYXRlKGNhbmRpZGF0ZSkgZm9yIGNhbmRpZGF0ZSBpbiBjYW5kaWRhdGVzXQogICAgcmVzdWx0cy5zb3J0KGtleT1sYW1iZGEgaXRlbTogKC1pdGVtLnNjb3JlLCBpdGVtLnRpdGxlLmxvd2VyKCksIGl0ZW0uY2FuZGlkYXRlX2lkKSkKICAgIHJldHVybiB0dXBsZShyZXN1bHRzKQoKCmRlZiB0cmlhZ2Vfc3RvcmUoCiAgICBjYW5kaWRhdGVfc3RvcmVfcGF0aDogc3RyIHwgUGF0aCwKICAgIG91dHB1dF9wYXRoOiBzdHIgfCBQYXRoLAopIC0+IHR1cGxlW0NhbmRpZGF0ZVRyaWFnZSwgLi4uXToKICAgIGNhbmRpZGF0ZXMgPSBPcHBvcnR1bml0eUNhbmRpZGF0ZVN0b3JlKGNhbmRpZGF0ZV9zdG9yZV9wYXRoKS5hbGwoKQogICAgcmVzdWx0cyA9IHRyaWFnZV9jYW5kaWRhdGVzKGNhbmRpZGF0ZXMpCgogICAgb3V0cHV0ID0gUGF0aChvdXRwdXRfcGF0aCkKICAgIG91dHB1dC5wYXJlbnQubWtkaXIocGFyZW50cz1UcnVlLCBleGlzdF9vaz1UcnVlKQogICAgd2l0aCBvdXRwdXQub3BlbigidyIsIGVuY29kaW5nPSJ1dGYtOCIsIG5ld2xpbmU9IlxuIikgYXMgaGFuZGxlOgogICAgICAgIGZvciByZXN1bHQgaW4gcmVzdWx0czoKICAgICAgICAgICAgcmVjb3JkID0gYXNkaWN0KHJlc3VsdCkKICAgICAgICAgICAgcmVjb3JkWyJkaXNwb3NpdGlvbiJdID0gcmVzdWx0LmRpc3Bvc2l0aW9uLnZhbHVlCiAgICAgICAgICAgIGhhbmRsZS53cml0ZSgKICAgICAgICAgICAgICAgIGpzb24uZHVtcHMoCiAgICAgICAgICAgICAgICAgICAgcmVjb3JkLAogICAgICAgICAgICAgICAgICAgIGVuc3VyZV9hc2NpaT1GYWxzZSwKICAgICAgICAgICAgICAgICAgICBzb3J0X2tleXM9VHJ1ZSwKICAgICAgICAgICAgICAgICAgICBzZXBhcmF0b3JzPSgiLCIsICI6IiksCiAgICAgICAgICAgICAgICApCiAgICAgICAgICAgICAgICArICJcbiIKICAgICAgICAgICAgKQoKICAgIHJldHVybiByZXN1bHRzCg=="))
+[IO.File]::WriteAllBytes($testPath, [Convert]::FromBase64String("ZnJvbSBfX2Z1dHVyZV9fIGltcG9ydCBhbm5vdGF0aW9ucwoKZnJvbSBhaG9zLmNhbmRpZGF0ZV90cmlhZ2UgaW1wb3J0IENhbmRpZGF0ZURpc3Bvc2l0aW9uLCB0cmlhZ2VfY2FuZGlkYXRlLCB0cmlhZ2VfY2FuZGlkYXRlcwpmcm9tIGFob3Mub3Bwb3J0dW5pdHlfaW50YWtlIGltcG9ydCBPcHBvcnR1bml0eUNhbmRpZGF0ZQoKCmRlZiBfY2FuZGlkYXRlKHRpdGxlOiBzdHIsIGRlc2NyaXB0aW9uOiBzdHIsIGNhdGVnb3J5OiBzdHIgPSAic29mdHdhcmUiKSAtPiBPcHBvcnR1bml0eUNhbmRpZGF0ZToKICAgIHJldHVybiBPcHBvcnR1bml0eUNhbmRpZGF0ZSgKICAgICAgICBjYW5kaWRhdGVfaWQ9dGl0bGUubG93ZXIoKS5yZXBsYWNlKCIgIiwgIi0iKSwKICAgICAgICBzb3VyY2VfaWQ9InRlc3QiLAogICAgICAgIHNvdXJjZV91cmw9Imh0dHBzOi8vZXhhbXBsZS50ZXN0L2ZlZWQiLAogICAgICAgIGl0ZW1fdXJsPSJodHRwczovL2V4YW1wbGUudGVzdC9qb2IiLAogICAgICAgIHRpdGxlPXRpdGxlLAogICAgICAgIGRlc2NyaXB0aW9uPWRlc2NyaXB0aW9uLAogICAgICAgIGNhdGVnb3J5PWNhdGVnb3J5LAogICAgICAgIGRpc2NvdmVyZWRfYXQ9IjIwMjYtMDktMTZUMTI6MDA6MDArMDA6MDAiLAogICAgICAgIHJhd19tZXRhZGF0YT17fSwKICAgICkKCgpkZWYgdGVzdF9wcm9qZWN0X2F1dG9tYXRpb25fd29ya19zY29yZXNfaGlnaCgpIC0+IE5vbmU6CiAgICByZXN1bHQgPSB0cmlhZ2VfY2FuZGlkYXRlKAogICAgICAgIF9jYW5kaWRhdGUoCiAgICAgICAgICAgICJQeXRob24gQXV0b21hdGlvbiBDb250cmFjdG9yIiwKICAgICAgICAgICAgIkZyZWVsYW5jZSBwcm9qZWN0IHRvIGJ1aWxkIEFQSSBpbnRlZ3JhdGlvbnMgYW5kIHdvcmtmbG93IGF1dG9tYXRpb24uIiwKICAgICAgICApCiAgICApCgogICAgYXNzZXJ0IHJlc3VsdC5zY29yZSA+PSA3MAogICAgYXNzZXJ0IHJlc3VsdC5kaXNwb3NpdGlvbiBpcyBDYW5kaWRhdGVEaXNwb3NpdGlvbi5QUklPUklUWQoKCmRlZiB0ZXN0X2h1bWFuX25vbl9zb2Z0d2FyZV9yb2xlX3Njb3Jlc19sb3coKSAtPiBOb25lOgogICAgcmVzdWx0ID0gdHJpYWdlX2NhbmRpZGF0ZSgKICAgICAgICBfY2FuZGlkYXRlKAogICAgICAgICAgICAiUmVnaXN0ZXJlZCBOdXJzZSIsCiAgICAgICAgICAgICJGdWxsLXRpbWUgZW1wbG95ZWUgcm9sZSB3aXRoIGJlbmVmaXRzIGFuZCBzaGlmdHMuIiwKICAgICAgICAgICAgY2F0ZWdvcnk9InJlbW90ZS13b3JrIiwKICAgICAgICApCiAgICApCgogICAgYXNzZXJ0IHJlc3VsdC5zY29yZSA8IDUwCiAgICBhc3NlcnQgcmVzdWx0LmRpc3Bvc2l0aW9uIGluIHsKICAgICAgICBDYW5kaWRhdGVEaXNwb3NpdGlvbi5IVU1BTl9KT0IsCiAgICAgICAgQ2FuZGlkYXRlRGlzcG9zaXRpb24uTE9XX0ZJVCwKICAgIH0KCgpkZWYgdGVzdF9yYW5raW5nX2lzX2RldGVybWluaXN0aWMoKSAtPiBOb25lOgogICAgcmVzdWx0cyA9IHRyaWFnZV9jYW5kaWRhdGVzKAogICAgICAgICgKICAgICAgICAgICAgX2NhbmRpZGF0ZSgiR2VuZXJhbCBBc3Npc3RhbnQiLCAiRnVsbC10aW1lIGVtcGxveWVlIHJvbGUuIiksCiAgICAgICAgICAgIF9jYW5kaWRhdGUoIkFQSSBJbnRlZ3JhdGlvbiBDb250cmFjdG9yIiwgIkNvbnRyYWN0IFB5dGhvbiBhdXRvbWF0aW9uIHByb2plY3QuIiksCiAgICAgICAgKQogICAgKQoKICAgIGFzc2VydCByZXN1bHRzWzBdLnRpdGxlID09ICJBUEkgSW50ZWdyYXRpb24gQ29udHJhY3RvciIK"))
+
+Write-Host "=== AHOS-018 LOCAL CANDIDATE TRIAGE ==="
+Write-Host "Running full AHOS tests (NO network, NO OpenAI API calls)..."
+
+$oldPythonPath = $env:PYTHONPATH
+Push-Location $pkg
+try {
+    $env:PYTHONPATH = $pkg
+    & $python -m pytest -q
+    $testExit = $LASTEXITCODE
+} finally {
+    Pop-Location
+    $env:PYTHONPATH = $oldPythonPath
+}
+if ($testExit -ne 0) { throw "AHOS-018 tests failed." }
+
+$code = @'
+from pathlib import Path
+from collections import Counter
+from ahos.candidate_triage import triage_store
+
+root = Path(r"__ROOT__")
+results = triage_store(
+    root / "runtime" / "live_intake" / "public_candidates.jsonl",
+    root / "runtime" / "live_intake" / "candidate_triage.jsonl",
+)
+
+counts = Counter(item.disposition.value for item in results)
+print("")
+print("=== LIVE TRIAGE RESULT ===")
+print("TOTAL:", len(results))
+for key in ("priority", "review", "low_fit", "human_job"):
+    print(key.upper() + ":", counts.get(key, 0))
+
+print("")
+print("=== TOP 20 ===")
+for item in results[:20]:
+    print("%3d [%s] %s" % (item.score, item.disposition.value, item.title))
+    print("    " + item.item_url)
+'@
+$code = $code.Replace("__ROOT__", $root.Replace("\", "\\"))
+
+$oldPythonPath = $env:PYTHONPATH
+try {
+    $env:PYTHONPATH = $pkg
+    $code | & $python -
+    if ($LASTEXITCODE -ne 0) { throw "Live candidate triage failed." }
+} finally {
+    $env:PYTHONPATH = $oldPythonPath
+}
+
+$b = Get-Content $backlogPath -Raw | ConvertFrom-Json
+$t = $b.tasks | Where-Object { $_.id -eq "AHOS-018" } | Select-Object -First 1
+$t.status = "completed"
+if ($t.PSObject.Properties.Name -contains "completed_at") {
+    $t.completed_at = [DateTime]::UtcNow.ToString("o")
+} else {
+    $t | Add-Member -NotePropertyName completed_at -NotePropertyValue ([DateTime]::UtcNow.ToString("o"))
+}
+[IO.File]::WriteAllText(
+    $backlogPath,
+    ($b | ConvertTo-Json -Depth 12),
+    (New-Object System.Text.UTF8Encoding($false))
+)
+
+git -C $ws add ahos_core/ahos/candidate_triage.py ahos_core/tests/test_candidate_triage.py ahos_core/AHOS_BACKLOG.json
+git -C $ws -c user.name="Miniverse Autopilot" -c user.email="miniverse@local.invalid" commit -m "feat(ahos): add free local opportunity triage"
+if ($LASTEXITCODE -ne 0) { throw "git commit failed." }
+
+git -C $ws push origin HEAD
+if ($LASTEXITCODE -ne 0) { throw "git push failed." }
+
+Write-Host ""
+Write-Host "=== AHOS-018 COMPLETE ==="
+Write-Host "Full AHOS tests: PASS"
+Write-Host "Backlog: AHOS-018 -> completed"
+Write-Host "Git push: PASS"
+Write-Host "OpenAI API calls: 0"
+Write-Host "Applications/outreach/payments: 0"

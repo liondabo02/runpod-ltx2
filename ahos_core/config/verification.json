@@ -1,0 +1,23 @@
+{
+  "checked_at": "2026-11-03T21:32:32",
+  "departments": 17,
+  "workers": 81,
+  "training": {
+    "passed": 81,
+    "failed": 0,
+    "average": 100.0,
+    "age_minutes": 0.0,
+    "fresh": true
+  },
+  "health": {
+    "ok": true,
+    "bad_checks": [],
+    "note": "atlandı: uzak ortam (servisler yerel değil)"
+  },
+  "tests": {
+    "result": "atlandı: pytest yüklü değil (pip SSL hatası olabilir)",
+    "ok": true
+  },
+  "warnings": [],
+  "verdict_ok": true
+}

@@ -1,0 +1,158 @@
+{
+  "at": "2026-11-05T17:42:17",
+  "departments": {
+    "ai-platform": {
+      "workers": 4,
+      "completed": 215,
+      "blocked": 18,
+      "pending": 12,
+      "stress": 0.147,
+      "focus": 0.897,
+      "label": "dengeli"
+    },
+    "creative": {
+      "workers": 15,
+      "completed": 745,
+      "blocked": 129,
+      "pending": 208,
+      "stress": 0.238,
+      "focus": 0.833,
+      "label": "yük altında"
+    },
+    "data": {
+      "workers": 2,
+      "completed": 691,
+      "blocked": 113,
+      "pending": 170,
+      "stress": 0.232,
+      "focus": 0.838,
+      "label": "yük altında"
+    },
+    "finance": {
+      "workers": 2,
+      "completed": 134,
+      "blocked": 2,
+      "pending": 6,
+      "stress": 0.028,
+      "focus": 0.98,
+      "label": "dengeli"
+    },
+    "genel": {
+      "workers": 7,
+      "completed": 135,
+      "blocked": 2,
+      "pending": 21,
+      "stress": 0.025,
+      "focus": 0.983,
+      "label": "dengeli"
+    },
+    "guvenlik": {
+      "workers": 5,
+      "completed": 149,
+      "blocked": 2,
+      "pending": 15,
+      "stress": 0.024,
+      "focus": 0.983,
+      "label": "dengeli"
+    },
+    "holding": {
+      "workers": 2,
+      "completed": 136,
+      "blocked": 2,
+      "pending": 5,
+      "stress": 0.028,
+      "focus": 0.98,
+      "label": "dengeli"
+    },
+    "hukuk": {
+      "workers": 2,
+      "completed": 13,
+      "blocked": 13,
+      "pending": 0,
+      "stress": 1.0,
+      "focus": 0.3,
+      "label": "baskı altında"
+    },
+    "infrastructure": {
+      "workers": 2,
+      "completed": 134,
+      "blocked": 2,
+      "pending": 0,
+      "stress": 0.029,
+      "focus": 0.98,
+      "label": "dengeli"
+    },
+    "marketing": {
+      "workers": 2,
+      "completed": 141,
+      "blocked": 2,
+      "pending": 0,
+      "stress": 0.028,
+      "focus": 0.98,
+      "label": "dengeli"
+    },
+    "operations": {
+      "workers": 2,
+      "completed": 134,
+      "blocked": 2,
+      "pending": 0,
+      "stress": 0.029,
+      "focus": 0.98,
+      "label": "dengeli"
+    },
+    "oyun": {
+      "workers": 15,
+      "completed": 255,
+      "blocked": 3,
+      "pending": 0,
+      "stress": 0.023,
+      "focus": 0.984,
+      "label": "dengeli"
+    },
+    "quality": {
+      "workers": 2,
+      "completed": 132,
+      "blocked": 2,
+      "pending": 0,
+      "stress": 0.03,
+      "focus": 0.979,
+      "label": "dengeli"
+    },
+    "research": {
+      "workers": 2,
+      "completed": 133,
+      "blocked": 0,
+      "pending": 0,
+      "stress": 0.0,
+      "focus": 1.0,
+      "label": "dengeli"
+    },
+    "sales": {
+      "workers": 2,
+      "completed": 142,
+      "blocked": 10,
+      "pending": 0,
+      "stress": 0.132,
+      "focus": 0.908,
+      "label": "dengeli"
+    },
+    "software": {
+      "workers": 13,
+      "completed": 196,
+      "blocked": 8,
+      "pending": 1,
+      "stress": 0.078,
+      "focus": 0.945,
+      "label": "dengeli"
+    },
+    "support": {
+      "workers": 2,
+      "completed": 132,
+      "blocked": 0,
+      "pending": 0,
+      "stress": 0.0,
+      "focus": 1.0,
+      "label": "dengeli"
+    }
+  }
+}

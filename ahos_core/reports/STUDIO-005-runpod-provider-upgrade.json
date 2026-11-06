@@ -1,0 +1,18 @@
+﻿{
+    "render_jobs_submitted":  0,
+    "paid_provider_gate":  "PASS",
+    "local_comfyui_provider":  "AVAILABLE_AS_OPTION",
+    "provider_registry":  "PASS",
+    "paid_execution_default":  "BLOCKED",
+    "runpod_ltx2_provider":  "READY",
+    "endpoint_name":  "miniverse-ltx2-video",
+    "status":  "PASS",
+    "runpod_api_key_present":  true,
+    "owner_approval_gate":  "PASS",
+    "preview_resolution":  "1024x576",
+    "execution_enable_gate":  "PASS",
+    "endpoint_id":  "dnwqoolyprqr69",
+    "api_spend_usd":  0,
+    "live_runpod_calls":  0,
+    "studio_step":  "STUDIO-005 provider upgrade"
+}

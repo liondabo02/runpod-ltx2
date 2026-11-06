@@ -1,0 +1,81 @@
+{
+  "mission_id": "E2E-VERIFIED-4",
+  "acceptance_enrolled": true,
+  "acceptance_reason": "kabul testi sabitlendi",
+  "result_status": "completed",
+  "steps": [
+    {
+      "stage": "completed",
+      "worker": "mgr-infrastructure-01",
+      "qa": "qa-01",
+      "reason": "QA passed"
+    },
+    {
+      "stage": "completed",
+      "worker": "devops-01",
+      "qa": "qa-01",
+      "reason": "QA passed"
+    },
+    {
+      "stage": "completed",
+      "worker": "qa-01",
+      "qa": "qa-verify-01",
+      "reason": "QA passed"
+    }
+  ],
+  "completed_via_api": true,
+  "stored_status": "completed",
+  "stored_result": {
+    "mission_id": "E2E-VERIFIED-4",
+    "objective": "src/app.py dosyasina kucuk bir iyilestirme ekle",
+    "manager_id": "mgr-infrastructure-01",
+    "status": "completed",
+    "reason": "all mission steps completed and passed QA",
+    "delivery": {
+      "verified": true,
+      "producer_ids": [
+        "mgr-infrastructure-01",
+        "devops-01",
+        "qa-01"
+      ],
+      "qa_worker_ids": [
+        "qa-01",
+        "qa-01",
+        "qa-verify-01"
+      ]
+    },
+    "steps": [
+      {
+        "step_id": "brief",
+        "department": "infrastructure",
+        "worker_id": "mgr-infrastructure-01",
+        "stage": "completed",
+        "worker_summary": "varlık denetimi: 0 referans, 0 eksik; önbellek dışı 0",
+        "qa_summary": "Bağımsız statik web denetimi geçti; kanıt: C:\\ahos-e2e-runtime\\artifacts\\qa-E2E-VERIFIED-4_brief-d7f769c6970748dba38d2c54d50a4b36.json",
+        "qa_worker_id": "qa-01",
+        "reason": "QA passed"
+      },
+      {
+        "step_id": "produce",
+        "department": "infrastructure",
+        "worker_id": "devops-01",
+        "stage": "completed",
+        "worker_summary": "0 dosya değişti; 1 düzeltme uygulandı",
+        "qa_summary": "Bağımsız statik web denetimi geçti; kanıt: C:\\ahos-e2e-runtime\\artifacts\\qa-E2E-VERIFIED-4_produce-1710d34a218849549e7bc22d32aa33cc.json",
+        "qa_worker_id": "qa-01",
+        "reason": "QA passed"
+      },
+      {
+        "step_id": "review",
+        "department": "quality",
+        "worker_id": "qa-01",
+        "stage": "completed",
+        "worker_summary": "doğrulama: 0 eksik varlık",
+        "qa_summary": "Bağımsız statik web denetimi geçti; kanıt: C:\\ahos-e2e-runtime\\artifacts\\qa-E2E-VERIFIED-4_review-3b9f7c40cdc24a28a07b717a7c74c24b.json",
+        "qa_worker_id": "qa-verify-01",
+        "reason": "QA passed"
+      }
+    ]
+  },
+  "ok": true
+}

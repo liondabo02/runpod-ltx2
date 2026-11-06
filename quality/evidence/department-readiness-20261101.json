@@ -1,0 +1,152 @@
+{
+  "generated_at": "2026-11-01",
+  "criterion": "proje + tools/check_offline.py + önceden sabitlenmiş kapı",
+  "departments": [
+    {
+      "department": "ai-platform",
+      "name": "Yapay Zekâ Platformu",
+      "project": "harun-ai-foundry",
+      "gate": true,
+      "pinned": false,
+      "status": "kapı yetkisiz → engellenir",
+      "project_exists": true
+    },
+    {
+      "department": "creative",
+      "name": "Çizgi Film Stüdyosu",
+      "project": "creative-workspace",
+      "gate": true,
+      "pinned": true,
+      "status": "teslim edebilir",
+      "project_exists": true
+    },
+    {
+      "department": "data",
+      "name": "Veri Departmanı",
+      "project": "data-workspace",
+      "gate": true,
+      "pinned": true,
+      "status": "teslim edebilir",
+      "project_exists": true
+    },
+    {
+      "department": "finance",
+      "name": "Finans Departmanı",
+      "project": "finance-workspace",
+      "gate": true,
+      "pinned": true,
+      "status": "teslim edebilir",
+      "project_exists": true
+    },
+    {
+      "department": "genel",
+      "name": "Genel İş Departmanı",
+      "project": "genel-workspace",
+      "gate": true,
+      "pinned": true,
+      "status": "teslim edebilir",
+      "project_exists": true
+    },
+    {
+      "department": "guvenlik",
+      "name": "Güvenlik ve Kaynak Koruma Departmanı",
+      "project": "guvenlik-workspace",
+      "gate": true,
+      "pinned": true,
+      "status": "teslim edebilir",
+      "project_exists": true
+    },
+    {
+      "department": "holding",
+      "name": "Holding Yönetimi (CEO)",
+      "project": "holding-workspace",
+      "gate": true,
+      "pinned": true,
+      "status": "teslim edebilir",
+      "project_exists": true
+    },
+    {
+      "department": "infrastructure",
+      "name": "Altyapı Departmanı",
+      "project": "infrastructure-workspace",
+      "gate": true,
+      "pinned": true,
+      "status": "teslim edebilir",
+      "project_exists": true
+    },
+    {
+      "department": "marketing",
+      "name": "Pazarlama Departmanı",
+      "project": "marketing-workspace",
+      "gate": true,
+      "pinned": true,
+      "status": "teslim edebilir",
+      "project_exists": true
+    },
+    {
+      "department": "operations",
+      "name": "Operasyon Departmanı",
+      "project": "operations-workspace",
+      "gate": true,
+      "pinned": true,
+      "status": "teslim edebilir",
+      "project_exists": true
+    },
+    {
+      "department": "oyun",
+      "name": "Oyun Geliştirme Departmanı",
+      "project": "mipiluna",
+      "gate": true,
+      "pinned": true,
+      "status": "teslim edebilir",
+      "project_exists": true
+    },
+    {
+      "department": "quality",
+      "name": "Kalite Departmanı",
+      "project": "quality-workspace",
+      "gate": true,
+      "pinned": true,
+      "status": "teslim edebilir",
+      "project_exists": true
+    },
+    {
+      "department": "research",
+      "name": "Araştırma Departmanı",
+      "project": "research-workspace",
+      "gate": true,
+      "pinned": true,
+      "status": "teslim edebilir",
+      "project_exists": true
+    },
+    {
+      "department": "sales",
+      "name": "Satış Departmanı",
+      "project": "sales-workspace",
+      "gate": true,
+      "pinned": true,
+      "status": "teslim edebilir",
+      "project_exists": true
+    },
+    {
+      "department": "software",
+      "name": "Yazılım Şirketi",
+      "project": "pilot-software",
+      "gate": true,
+      "pinned": true,
+      "status": "teslim edebilir",
+      "project_exists": true
+    },
+    {
+      "department": "support",
+      "name": "Müşteri Destek Departmanı",
+      "project": "support-workspace",
+      "gate": true,
+      "pinned": true,
+      "status": "teslim edebilir",
+      "project_exists": true
+    }
+  ],
+  "ready": 15,
+  "total": 16
+}

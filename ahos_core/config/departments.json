@@ -1,0 +1,2702 @@
+{
+  "version": 1,
+  "updated_at": "2026-11-03T19:21:09.528820+00:00",
+  "departments": [
+    {
+      "department_id": "ai-platform",
+      "name": "Yapay Zekâ Platformu",
+      "mission": "Holdingin yapay zekâ altyapısını yönetir: araç kataloğu, model geçidi, maliyet kontrolü ve dış platform entegrasyonları.",
+      "capabilities": [
+        {
+          "name": "ai-platform.tool_curation",
+          "description": "Araç kataloğu ve lisans denetimi. Owner keywords: harun foundry ai platform yapay zeka model katalog tool catalog litellm.",
+          "authority": "B"
+        },
+        {
+          "name": "ai-platform.model_gateway",
+          "description": "Model geçidi ve maliyet kontrolü. Owner keywords: harun foundry ai platform yapay zeka model katalog tool catalog litellm.",
+          "authority": "B"
+        },
+        {
+          "name": "ai-platform.evaluation",
+          "description": "Model ve araç değerlendirmesi. Owner keywords: harun foundry ai platform yapay zeka model katalog tool catalog litellm.",
+          "authority": "B"
+        },
+        {
+          "name": "ai-platform.integration",
+          "description": "Harici AI platformlarının entegrasyonu. Owner keywords: harun foundry ai platform yapay zeka model katalog tool catalog litellm.",
+          "authority": "B"
+        }
+      ],
+      "workers": [
+        {
+          "worker_id": "ai-platform-manager",
+          "name": "AI Platform Müdürü",
+          "role": "department_manager",
+          "team_id": "ai-platform-leadership",
+          "capabilities": [
+            "evaluation",
+            "integration",
+            "model_gateway",
+            "planning",
+            "routing",
+            "task_decomposition",
+            "tool_curation"
+          ],
+          "reports_to": null,
+          "authority_level": "A",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "ai-platform-tool-curator",
+          "name": "Araç Küratörü",
+          "role": "researcher",
+          "team_id": "ai-platform-tools",
+          "capabilities": [
+            "integration",
+            "tool_curation"
+          ],
+          "reports_to": "ai-platform-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "ai-platform-gateway-engineer",
+          "name": "Model Geçidi Mühendisi",
+          "role": "software_engineer",
+          "team_id": "ai-platform-tools",
+          "capabilities": [
+            "integration",
+            "model_gateway"
+          ],
+          "reports_to": "ai-platform-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "ai-platform-evaluator",
+          "name": "Değerlendirme Uzmanı",
+          "role": "data_analyst",
+          "team_id": "ai-platform-eval",
+          "capabilities": [
+            "evaluation"
+          ],
+          "reports_to": "ai-platform-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        }
+      ],
+      "keywords": [
+        "harun",
+        "foundry",
+        "ai platform",
+        "yapay zeka",
+        "model",
+        "katalog",
+        "tool catalog",
+        "litellm"
+      ],
+      "created_at": "2026-11-03T19:21:09.528820+00:00",
+      "source": "holding",
+      "status": "active"
+    },
+    {
+      "department_id": "creative",
+      "name": "Çizgi Film Stüdyosu",
+      "mission": "Çizgi Film Stüdyosu: Özgün çizgi film bölümleri üretmek: senaryo, karakter, animasyon, ses, yerelleştirme ve yayın hazırlığı.",
+      "capabilities": [
+        {
+          "name": "cizgi-film.cizgi-film_oversight",
+          "description": "cizgi-film cizgi-film_oversight capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.planning",
+          "description": "cizgi-film planning capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme.",
+          "authority": "A"
+        },
+        {
+          "name": "cizgi-film.quality_oversight",
+          "description": "cizgi-film quality_oversight capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.routing",
+          "description": "cizgi-film routing capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme.",
+          "authority": "A"
+        },
+        {
+          "name": "cizgi-film.task_decomposition",
+          "description": "cizgi-film task_decomposition capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme.",
+          "authority": "A"
+        },
+        {
+          "name": "cizgi-film.story",
+          "description": "cizgi-film story capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Bölüm fikri, senaryo ve diyalog üretimi.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.screenplay",
+          "description": "cizgi-film screenplay capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Bölüm fikri, senaryo ve diyalog üretimi.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.dialogue",
+          "description": "cizgi-film dialogue capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Bölüm fikri, senaryo ve diyalog üretimi.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.storyboard",
+          "description": "cizgi-film storyboard capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Bölüm fikri, senaryo ve diyalog üretimi.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.character_design",
+          "description": "cizgi-film character_design capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Karakter tasarımı, mekân ve görsel dil.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.concept_art",
+          "description": "cizgi-film concept_art capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Karakter tasarımı, mekân ve görsel dil.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.background_art",
+          "description": "cizgi-film background_art capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Karakter tasarımı, mekân ve görsel dil.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.animation",
+          "description": "cizgi-film animation capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Rigging, animasyon ve sahne render üretimi.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.rigging",
+          "description": "cizgi-film rigging capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Rigging, animasyon ve sahne render üretimi.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.rendering",
+          "description": "cizgi-film rendering capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Rigging, animasyon ve sahne render üretimi.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.compositing",
+          "description": "cizgi-film compositing capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Rigging, animasyon ve sahne render üretimi.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.voice_over",
+          "description": "cizgi-film voice_over capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Seslendirme, müzik ve miksaj.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.music",
+          "description": "cizgi-film music capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Seslendirme, müzik ve miksaj.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.sound_design",
+          "description": "cizgi-film sound_design capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Seslendirme, müzik ve miksaj.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.mixing",
+          "description": "cizgi-film mixing capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Seslendirme, müzik ve miksaj.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.translation",
+          "description": "cizgi-film translation capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Çok dilli altyazı ve dublaj hazırlığı.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.subtitling",
+          "description": "cizgi-film subtitling capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Çok dilli altyazı ve dublaj hazırlığı.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.dubbing",
+          "description": "cizgi-film dubbing capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Çok dilli altyazı ve dublaj hazırlığı.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.marketing",
+          "description": "cizgi-film marketing capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Satış, pazarlama ve yayın ortaklıkları.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.sales",
+          "description": "cizgi-film sales capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Satış, pazarlama ve yayın ortaklıkları.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.distribution",
+          "description": "cizgi-film distribution capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Satış, pazarlama ve yayın ortaklıkları.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.audience_growth",
+          "description": "cizgi-film audience_growth capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Satış, pazarlama ve yayın ortaklıkları.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.qa",
+          "description": "cizgi-film qa capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Bölüm kontrolü, süreklilik ve yayın onayı öncesi denetim.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.continuity",
+          "description": "cizgi-film continuity capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Bölüm kontrolü, süreklilik ve yayın onayı öncesi denetim.",
+          "authority": "B"
+        },
+        {
+          "name": "cizgi-film.verification",
+          "description": "cizgi-film verification capability. Keywords: cizgi film animasyon cartoon animation anime bolum karakter tasarimi seslendirme Team mission: Bölüm kontrolü, süreklilik ve yayın onayı öncesi denetim.",
+          "authority": "B"
+        }
+      ],
+      "workers": [
+        {
+          "worker_id": "creative-manager",
+          "name": "Çizgi Film Stüdyosu Müdürü",
+          "role": "department_manager",
+          "team_id": "creative-leadership",
+          "capabilities": [
+            "cizgi-film_oversight",
+            "planning",
+            "quality_oversight",
+            "routing",
+            "task_decomposition"
+          ],
+          "reports_to": null,
+          "authority_level": "A",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "creative-story-lead",
+          "name": "Senaryo Ekibi Lideri",
+          "role": "researcher",
+          "team_id": "creative-story",
+          "capabilities": [
+            "dialogue",
+            "screenplay",
+            "story",
+            "storyboard"
+          ],
+          "reports_to": "creative-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "creative-story-specialist",
+          "name": "Senaryo Ekibi Uzmanı",
+          "role": "operations_specialist",
+          "team_id": "creative-story",
+          "capabilities": [
+            "dialogue",
+            "screenplay",
+            "story",
+            "storyboard"
+          ],
+          "reports_to": "creative-story-lead",
+          "authority_level": "C",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "creative-art-lead",
+          "name": "Sanat Ekibi Lideri",
+          "role": "designer",
+          "team_id": "creative-art",
+          "capabilities": [
+            "background_art",
+            "character_design",
+            "concept_art"
+          ],
+          "reports_to": "creative-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "creative-art-specialist",
+          "name": "Sanat Ekibi Uzmanı",
+          "role": "designer",
+          "team_id": "creative-art",
+          "capabilities": [
+            "background_art",
+            "character_design",
+            "concept_art"
+          ],
+          "reports_to": "creative-art-lead",
+          "authority_level": "C",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "creative-animation-lead",
+          "name": "Animasyon Ekibi Lideri",
+          "role": "designer",
+          "team_id": "creative-animation",
+          "capabilities": [
+            "animation",
+            "compositing",
+            "rendering",
+            "rigging"
+          ],
+          "reports_to": "creative-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "creative-animation-specialist",
+          "name": "Animasyon Ekibi Uzmanı",
+          "role": "operations_specialist",
+          "team_id": "creative-animation",
+          "capabilities": [
+            "animation",
+            "compositing",
+            "rendering",
+            "rigging"
+          ],
+          "reports_to": "creative-animation-lead",
+          "authority_level": "C",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "creative-audio-lead",
+          "name": "Ses Ekibi Lideri",
+          "role": "operations_specialist",
+          "team_id": "creative-audio",
+          "capabilities": [
+            "mixing",
+            "music",
+            "sound_design",
+            "voice_over"
+          ],
+          "reports_to": "creative-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "creative-audio-specialist",
+          "name": "Ses Ekibi Uzmanı",
+          "role": "operations_specialist",
+          "team_id": "creative-audio",
+          "capabilities": [
+            "mixing",
+            "music",
+            "sound_design",
+            "voice_over"
+          ],
+          "reports_to": "creative-audio-lead",
+          "authority_level": "C",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "creative-localization-lead",
+          "name": "Yerelleştirme Ekibi Lideri",
+          "role": "researcher",
+          "team_id": "creative-localization",
+          "capabilities": [
+            "dubbing",
+            "subtitling",
+            "translation"
+          ],
+          "reports_to": "creative-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "creative-localization-specialist",
+          "name": "Yerelleştirme Ekibi Uzmanı",
+          "role": "operations_specialist",
+          "team_id": "creative-localization",
+          "capabilities": [
+            "dubbing",
+            "subtitling",
+            "translation"
+          ],
+          "reports_to": "creative-localization-lead",
+          "authority_level": "C",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "creative-growth-lead",
+          "name": "Büyüme Ekibi Lideri",
+          "role": "marketing_specialist",
+          "team_id": "creative-growth",
+          "capabilities": [
+            "audience_growth",
+            "distribution",
+            "marketing",
+            "sales"
+          ],
+          "reports_to": "creative-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "creative-growth-specialist",
+          "name": "Büyüme Ekibi Uzmanı",
+          "role": "sales_specialist",
+          "team_id": "creative-growth",
+          "capabilities": [
+            "audience_growth",
+            "distribution",
+            "marketing",
+            "sales"
+          ],
+          "reports_to": "creative-growth-lead",
+          "authority_level": "C",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "creative-quality-lead",
+          "name": "Kalite Ekibi Lideri",
+          "role": "qa_engineer",
+          "team_id": "creative-quality",
+          "capabilities": [
+            "continuity",
+            "qa",
+            "verification"
+          ],
+          "reports_to": "creative-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "creative-quality-specialist",
+          "name": "Kalite Ekibi Uzmanı",
+          "role": "qa_engineer",
+          "team_id": "creative-quality",
+          "capabilities": [
+            "continuity",
+            "qa",
+            "verification"
+          ],
+          "reports_to": "creative-quality-lead",
+          "authority_level": "C",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        }
+      ],
+      "keywords": [
+        "cizgi film",
+        "animasyon",
+        "cartoon",
+        "animation",
+        "anime",
+        "bolum",
+        "karakter tasarimi",
+        "seslendirme"
+      ],
+      "created_at": "2026-10-17T19:32:17.011563+00:00",
+      "source": "owner-command",
+      "status": "active"
+    },
+    {
+      "department_id": "data",
+      "name": "Veri Departmanı",
+      "mission": "Deliver data work for the holding within owner policy. Keywords: veri data raporlama analytics metrik.",
+      "capabilities": [
+        {
+          "name": "data.data_oversight",
+          "description": "data data_oversight capability. Owner keywords: veri data raporlama analytics metrik. data_oversight gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "data.planning",
+          "description": "data planning capability. Owner keywords: veri data raporlama analytics metrik. planning gorevi.",
+          "authority": "A"
+        },
+        {
+          "name": "data.routing",
+          "description": "data routing capability. Owner keywords: veri data raporlama analytics metrik. routing gorevi.",
+          "authority": "A"
+        },
+        {
+          "name": "data.task_decomposition",
+          "description": "data task_decomposition capability. Owner keywords: veri data raporlama analytics metrik. task_decomposition gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "data.analytics",
+          "description": "data analytics capability. Owner keywords: veri data raporlama analytics metrik. analytics gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "data.data",
+          "description": "data data capability. Owner keywords: veri data raporlama analytics metrik. data gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "data.python",
+          "description": "data python capability. Owner keywords: veri data raporlama analytics metrik. python gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "data.reporting",
+          "description": "data reporting capability. Owner keywords: veri data raporlama analytics metrik. reporting gorevi.",
+          "authority": "B"
+        }
+      ],
+      "workers": [
+        {
+          "worker_id": "mgr-data-01",
+          "name": "Data Department Manager",
+          "role": "department_manager",
+          "team_id": "data-leadership",
+          "capabilities": [
+            "data_oversight",
+            "planning",
+            "routing",
+            "task_decomposition"
+          ],
+          "reports_to": null,
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "data-01",
+          "name": "Data Analyst 01",
+          "role": "data_analyst",
+          "team_id": "data-delivery",
+          "capabilities": [
+            "analytics",
+            "data",
+            "python",
+            "reporting"
+          ],
+          "reports_to": "mgr-data-01",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        }
+      ],
+      "keywords": [
+        "veri",
+        "data",
+        "raporlama",
+        "analytics",
+        "metrik"
+      ],
+      "created_at": "2026-10-17T19:29:32.286095+00:00",
+      "source": "seed",
+      "status": "active"
+    },
+    {
+      "department_id": "finance",
+      "name": "Finans Departmanı",
+      "mission": "Deliver finance work for the holding within owner policy. Keywords: finans butce maliyet finance budget.",
+      "capabilities": [
+        {
+          "name": "finance.finance_oversight",
+          "description": "finance finance_oversight capability. Owner keywords: finans butce maliyet finance budget. finance_oversight gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "finance.planning",
+          "description": "finance planning capability. Owner keywords: finans butce maliyet finance budget. planning gorevi.",
+          "authority": "A"
+        },
+        {
+          "name": "finance.routing",
+          "description": "finance routing capability. Owner keywords: finans butce maliyet finance budget. routing gorevi.",
+          "authority": "A"
+        },
+        {
+          "name": "finance.task_decomposition",
+          "description": "finance task_decomposition capability. Owner keywords: finans butce maliyet finance budget. task_decomposition gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "finance.budgeting",
+          "description": "finance budgeting capability. Owner keywords: finans butce maliyet finance budget. budgeting gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "finance.cost_tracking",
+          "description": "finance cost_tracking capability. Owner keywords: finans butce maliyet finance budget. cost_tracking gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "finance.finance",
+          "description": "finance finance capability. Owner keywords: finans butce maliyet finance budget. finance gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "finance.reporting",
+          "description": "finance reporting capability. Owner keywords: finans butce maliyet finance budget. reporting gorevi.",
+          "authority": "B"
+        }
+      ],
+      "workers": [
+        {
+          "worker_id": "mgr-finance-01",
+          "name": "Finance Department Manager",
+          "role": "department_manager",
+          "team_id": "finance-leadership",
+          "capabilities": [
+            "finance_oversight",
+            "planning",
+            "routing",
+            "task_decomposition"
+          ],
+          "reports_to": null,
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "finance-01",
+          "name": "Finance Specialist 01",
+          "role": "finance_specialist",
+          "team_id": "finance-delivery",
+          "capabilities": [
+            "budgeting",
+            "cost_tracking",
+            "finance",
+            "reporting"
+          ],
+          "reports_to": "mgr-finance-01",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        }
+      ],
+      "keywords": [
+        "finans",
+        "butce",
+        "maliyet",
+        "finance",
+        "budget"
+      ],
+      "created_at": "2026-10-17T19:29:32.286095+00:00",
+      "source": "seed",
+      "status": "active"
+    },
+    {
+      "department_id": "genel",
+      "name": "Genel İş Departmanı",
+      "mission": "Genel İş Departmanı: Sahibin verdiği görevleri planlayıp üretmek.",
+      "capabilities": [
+        {
+          "name": "genel.genel_oversight",
+          "description": "genel genel_oversight capability. Keywords: .",
+          "authority": "B"
+        },
+        {
+          "name": "genel.planning",
+          "description": "genel planning capability. Keywords: .",
+          "authority": "A"
+        },
+        {
+          "name": "genel.quality_oversight",
+          "description": "genel quality_oversight capability. Keywords: .",
+          "authority": "B"
+        },
+        {
+          "name": "genel.routing",
+          "description": "genel routing capability. Keywords: .",
+          "authority": "A"
+        },
+        {
+          "name": "genel.task_decomposition",
+          "description": "genel task_decomposition capability. Keywords: .",
+          "authority": "A"
+        },
+        {
+          "name": "genel.analysis",
+          "description": "genel analysis capability. Keywords:  Team mission: Görevi analiz edip çıktıyı üretmek.",
+          "authority": "B"
+        },
+        {
+          "name": "genel.production",
+          "description": "genel production capability. Keywords:  Team mission: Görevi analiz edip çıktıyı üretmek.",
+          "authority": "B"
+        },
+        {
+          "name": "genel.documentation",
+          "description": "genel documentation capability. Keywords:  Team mission: Görevi analiz edip çıktıyı üretmek.",
+          "authority": "B"
+        },
+        {
+          "name": "genel.qa",
+          "description": "genel qa capability. Keywords:  Team mission: Çıktıyı kontrol etmek.",
+          "authority": "B"
+        },
+        {
+          "name": "genel.verification",
+          "description": "genel verification capability. Keywords:  Team mission: Çıktıyı kontrol etmek.",
+          "authority": "B"
+        },
+        {
+          "name": "genel.marketing",
+          "description": "genel marketing capability. Keywords:  Team mission: Müşteri ve pazar tarafı.",
+          "authority": "B"
+        },
+        {
+          "name": "genel.sales",
+          "description": "genel sales capability. Keywords:  Team mission: Müşteri ve pazar tarafı.",
+          "authority": "B"
+        }
+      ],
+      "workers": [
+        {
+          "worker_id": "genel-manager",
+          "name": "Genel İş Departmanı Müdürü",
+          "role": "department_manager",
+          "team_id": "genel-leadership",
+          "capabilities": [
+            "genel_oversight",
+            "planning",
+            "quality_oversight",
+            "routing",
+            "task_decomposition"
+          ],
+          "reports_to": null,
+          "authority_level": "A",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "genel-delivery-lead",
+          "name": "Üretim Ekibi Lideri",
+          "role": "operations_specialist",
+          "team_id": "genel-delivery",
+          "capabilities": [
+            "analysis",
+            "documentation",
+            "production"
+          ],
+          "reports_to": "genel-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "genel-delivery-specialist",
+          "name": "Üretim Ekibi Uzmanı",
+          "role": "operations_specialist",
+          "team_id": "genel-delivery",
+          "capabilities": [
+            "analysis",
+            "documentation",
+            "production"
+          ],
+          "reports_to": "genel-delivery-lead",
+          "authority_level": "C",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "genel-quality-lead",
+          "name": "Kalite Ekibi Lideri",
+          "role": "qa_engineer",
+          "team_id": "genel-quality",
+          "capabilities": [
+            "qa",
+            "verification"
+          ],
+          "reports_to": "genel-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "genel-quality-specialist",
+          "name": "Kalite Ekibi Uzmanı",
+          "role": "qa_engineer",
+          "team_id": "genel-quality",
+          "capabilities": [
+            "qa",
+            "verification"
+          ],
+          "reports_to": "genel-quality-lead",
+          "authority_level": "C",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "genel-growth-lead",
+          "name": "Büyüme Ekibi Lideri",
+          "role": "marketing_specialist",
+          "team_id": "genel-growth",
+          "capabilities": [
+            "marketing",
+            "sales"
+          ],
+          "reports_to": "genel-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "genel-growth-specialist",
+          "name": "Büyüme Ekibi Uzmanı",
+          "role": "sales_specialist",
+          "team_id": "genel-growth",
+          "capabilities": [
+            "marketing",
+            "sales"
+          ],
+          "reports_to": "genel-growth-lead",
+          "authority_level": "C",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        }
+      ],
+      "keywords": [],
+      "created_at": "2026-10-17T20:19:00.052614+00:00",
+      "source": "owner-command",
+      "status": "active"
+    },
+    {
+      "department_id": "guvenlik",
+      "name": "Güvenlik ve Kaynak Koruma Departmanı",
+      "mission": "Sistemin kaynak kodunu, bağımlılıklarını ve sırlarını sürekli izler; GitHub tarafındaki riskleri ve iyileştirme fırsatlarını raporlar.",
+      "capabilities": [
+        {
+          "name": "guvenlik.repo_audit",
+          "description": "Depo durumu, dal, kirli çalışma ağacı ve büyük dosya denetimi. Owner keywords: guvenlik github bagimlilik secret sizinti audit koruma dependency.",
+          "authority": "B"
+        },
+        {
+          "name": "guvenlik.dependency_audit",
+          "description": "Bağımlılık sabitleme ve güncellik denetimi. Owner keywords: guvenlik github bagimlilik secret sizinti audit koruma dependency.",
+          "authority": "B"
+        },
+        {
+          "name": "guvenlik.secret_scan",
+          "description": "Depoya sızabilecek anahtar ve gizli dosya taraması. Owner keywords: guvenlik github bagimlilik secret sizinti audit koruma dependency.",
+          "authority": "B"
+        },
+        {
+          "name": "guvenlik.release_audit",
+          "description": "Sürüm, CI ve yedek dosya denetimi. Owner keywords: guvenlik github bagimlilik secret sizinti audit koruma dependency.",
+          "authority": "B"
+        }
+      ],
+      "workers": [
+        {
+          "worker_id": "guvenlik-manager",
+          "name": "Koruma Müdürü",
+          "role": "department_manager",
+          "team_id": "guvenlik-leadership",
+          "capabilities": [
+            "dependency_audit",
+            "planning",
+            "release_audit",
+            "repo_audit",
+            "routing",
+            "secret_scan",
+            "task_decomposition"
+          ],
+          "reports_to": null,
+          "authority_level": "A",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "guvenlik-repo-guardian",
+          "name": "Depo Bekçisi",
+          "role": "devops_engineer",
+          "team_id": "guvenlik-audit",
+          "capabilities": [
+            "release_audit",
+            "repo_audit"
+          ],
+          "reports_to": "guvenlik-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "guvenlik-dependency-auditor",
+          "name": "Bağımlılık Denetçisi",
+          "role": "data_analyst",
+          "team_id": "guvenlik-audit",
+          "capabilities": [
+            "dependency_audit"
+          ],
+          "reports_to": "guvenlik-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "guvenlik-secret-scanner",
+          "name": "Gizli Anahtar Tarayıcısı",
+          "role": "qa_engineer",
+          "team_id": "guvenlik-audit",
+          "capabilities": [
+            "secret_scan"
+          ],
+          "reports_to": "guvenlik-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "guvenlik-release-guardian",
+          "name": "Sürüm Bekçisi",
+          "role": "operations_specialist",
+          "team_id": "guvenlik-release",
+          "capabilities": [
+            "release_audit",
+            "reporting"
+          ],
+          "reports_to": "guvenlik-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        }
+      ],
+      "keywords": [
+        "guvenlik",
+        "github",
+        "bagimlilik",
+        "secret",
+        "sizinti",
+        "audit",
+        "koruma",
+        "dependency"
+      ],
+      "created_at": "2026-11-03T19:21:09.515030+00:00",
+      "source": "holding",
+      "status": "active"
+    },
+    {
+      "department_id": "holding",
+      "name": "Holding Yönetimi (CEO)",
+      "mission": "Departman müdürlerini yönetir, öncelikleri belirler, tıkanıklıkları açar ve holdingin bütününü sahibine karşı temsil eder.",
+      "capabilities": [
+        {
+          "name": "holding.portfolio_management",
+          "description": "Departman portföyünü yönetir.",
+          "authority": "B"
+        },
+        {
+          "name": "holding.escalation",
+          "description": "Tıkanan işleri çözer.",
+          "authority": "B"
+        },
+        {
+          "name": "holding.budget_approval",
+          "description": "Bütçe ve maliyet kararlarını verir.",
+          "authority": "B"
+        },
+        {
+          "name": "holding.roadmap",
+          "description": "Holding yol haritasını belirler.",
+          "authority": "B"
+        }
+      ],
+      "workers": [
+        {
+          "worker_id": "ceo-01",
+          "name": "CEO",
+          "role": "department_manager",
+          "team_id": "holding-executive",
+          "capabilities": [
+            "budget_approval",
+            "escalation",
+            "planning",
+            "portfolio_management",
+            "roadmap",
+            "routing",
+            "task_decomposition"
+          ],
+          "reports_to": null,
+          "authority_level": "A",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "ceo-chief-of-staff-01",
+          "name": "Genel Koordinatör",
+          "role": "operations_specialist",
+          "team_id": "holding-executive",
+          "capabilities": [
+            "coordination",
+            "reporting",
+            "roadmap",
+            "scheduling"
+          ],
+          "reports_to": "ceo-01",
+          "authority_level": "A",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        }
+      ],
+      "keywords": [
+        "holding",
+        "ceo",
+        "yonetim",
+        "portfoy",
+        "holding yonetimi"
+      ],
+      "created_at": "2026-11-03T19:21:09.502845+00:00",
+      "source": "holding",
+      "status": "active"
+    },
+    {
+      "department_id": "hukuk",
+      "name": "Hukuk ve Uyum Departmanı",
+      "mission": "Türkiye, Almanya, AB ve Dubai (BAE/DIFC) kapsamında hukuki uyum işlerini yürüt. Anahtar kelimeler: hukuk legal kvkk gdpr dsgvo uyum compliance sözleşme telif lisans marka.",
+      "capabilities": [
+        {
+          "name": "legal.turkiye_kvkk",
+          "description": "Türkiye KVKK kapsamında veri işleme ve aydınlatma yükümlülükleri",
+          "authority": "B"
+        },
+        {
+          "name": "legal.almanya_dsgvo",
+          "description": "Almanya DSGVO/BDSG yükümlülükleri ve veri işleyen sözleşmeleri",
+          "authority": "B"
+        },
+        {
+          "name": "legal.ab_ai_act",
+          "description": "AB Yapay Zeka Tüzüğü (AI Act) risk sınıflaması ve şeffaflık",
+          "authority": "B"
+        },
+        {
+          "name": "legal.dubai_difc",
+          "description": "Dubai/DIFC ve BAE veri koruma rejimi (DP Law 2020, DIFC DP Law 2020)",
+          "authority": "B"
+        },
+        {
+          "name": "legal.contracts",
+          "description": "Sözleşme, lisans ve telif değerlendirmesi",
+          "authority": "B"
+        },
+        {
+          "name": "legal.compliance_report",
+          "description": "Yetki matrisi ve uyum kontrol listesi üretimi",
+          "authority": "A"
+        }
+      ],
+      "workers": [
+        {
+          "worker_id": "hukuk-manager",
+          "name": "Hukuk Departmanı Yöneticisi",
+          "role": "department_manager",
+          "team_id": "hukuk-leadership",
+          "capabilities": [
+            "legal.compliance_report",
+            "legal.contracts"
+          ],
+          "reports_to": null,
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "hukuk-01",
+          "name": "Uyum Uzmanı",
+          "role": "researcher",
+          "team_id": "hukuk-legal",
+          "capabilities": [
+            "legal.ab_ai_act",
+            "legal.almanya_dsgvo",
+            "legal.contracts",
+            "legal.dubai_difc",
+            "legal.turkiye_kvkk"
+          ],
+          "reports_to": "hukuk-manager",
+          "authority_level": "A",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        }
+      ],
+      "keywords": [
+        "hukuk",
+        "legal",
+        "kvkk",
+        "gdpr",
+        "dsgvo",
+        "uyum",
+        "compliance",
+        "sözleşme",
+        "sozlesme",
+        "telif",
+        "lisans",
+        "marka",
+        "difc",
+        "bae",
+        "dubai"
+      ],
+      "created_at": "2026-11-01T23:30:00",
+      "source": "owner-request",
+      "status": "active"
+    },
+    {
+      "department_id": "infrastructure",
+      "name": "Altyapı Departmanı",
+      "mission": "Deliver infrastructure work for the holding within owner policy. Keywords: sunucu deployment devops altyapi monitoring infrastructure.",
+      "capabilities": [
+        {
+          "name": "infrastructure.infrastructure_oversight",
+          "description": "infrastructure infrastructure_oversight capability. Owner keywords: sunucu deployment devops altyapi monitoring infrastructure. infrastructure_oversight gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "infrastructure.planning",
+          "description": "infrastructure planning capability. Owner keywords: sunucu deployment devops altyapi monitoring infrastructure. planning gorevi.",
+          "authority": "A"
+        },
+        {
+          "name": "infrastructure.routing",
+          "description": "infrastructure routing capability. Owner keywords: sunucu deployment devops altyapi monitoring infrastructure. routing gorevi.",
+          "authority": "A"
+        },
+        {
+          "name": "infrastructure.task_decomposition",
+          "description": "infrastructure task_decomposition capability. Owner keywords: sunucu deployment devops altyapi monitoring infrastructure. task_decomposition gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "infrastructure.ci",
+          "description": "infrastructure ci capability. Owner keywords: sunucu deployment devops altyapi monitoring infrastructure. ci gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "infrastructure.deployment",
+          "description": "infrastructure deployment capability. Owner keywords: sunucu deployment devops altyapi monitoring infrastructure. deployment gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "infrastructure.devops",
+          "description": "infrastructure devops capability. Owner keywords: sunucu deployment devops altyapi monitoring infrastructure. devops gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "infrastructure.git",
+          "description": "infrastructure git capability. Owner keywords: sunucu deployment devops altyapi monitoring infrastructure. git gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "infrastructure.monitoring",
+          "description": "infrastructure monitoring capability. Owner keywords: sunucu deployment devops altyapi monitoring infrastructure. monitoring gorevi.",
+          "authority": "B"
+        }
+      ],
+      "workers": [
+        {
+          "worker_id": "mgr-infrastructure-01",
+          "name": "Infrastructure Department Manager",
+          "role": "department_manager",
+          "team_id": "infrastructure-leadership",
+          "capabilities": [
+            "infrastructure_oversight",
+            "planning",
+            "routing",
+            "task_decomposition"
+          ],
+          "reports_to": null,
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "devops-01",
+          "name": "DevOps Engineer 01",
+          "role": "devops_engineer",
+          "team_id": "infrastructure-delivery",
+          "capabilities": [
+            "ci",
+            "deployment",
+            "devops",
+            "git",
+            "monitoring"
+          ],
+          "reports_to": "mgr-infrastructure-01",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        }
+      ],
+      "keywords": [
+        "sunucu",
+        "deployment",
+        "devops",
+        "altyapi",
+        "monitoring",
+        "infrastructure"
+      ],
+      "created_at": "2026-10-17T19:29:32.286095+00:00",
+      "source": "seed",
+      "status": "active"
+    },
+    {
+      "department_id": "marketing",
+      "name": "Pazarlama Departmanı",
+      "mission": "Deliver marketing work for the holding within owner policy. Keywords: pazarlama reklam sosyal medya seo marketing.",
+      "capabilities": [
+        {
+          "name": "marketing.marketing_oversight",
+          "description": "marketing marketing_oversight capability. Owner keywords: pazarlama reklam sosyal medya seo marketing. marketing_oversight gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "marketing.planning",
+          "description": "marketing planning capability. Owner keywords: pazarlama reklam sosyal medya seo marketing. planning gorevi.",
+          "authority": "A"
+        },
+        {
+          "name": "marketing.routing",
+          "description": "marketing routing capability. Owner keywords: pazarlama reklam sosyal medya seo marketing. routing gorevi.",
+          "authority": "A"
+        },
+        {
+          "name": "marketing.task_decomposition",
+          "description": "marketing task_decomposition capability. Owner keywords: pazarlama reklam sosyal medya seo marketing. task_decomposition gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "marketing.campaign_planning",
+          "description": "marketing campaign_planning capability. Owner keywords: pazarlama reklam sosyal medya seo marketing. campaign_planning gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "marketing.content",
+          "description": "marketing content capability. Owner keywords: pazarlama reklam sosyal medya seo marketing. content gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "marketing.marketing",
+          "description": "marketing marketing capability. Owner keywords: pazarlama reklam sosyal medya seo marketing. marketing gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "marketing.seo",
+          "description": "marketing seo capability. Owner keywords: pazarlama reklam sosyal medya seo marketing. seo gorevi.",
+          "authority": "B"
+        }
+      ],
+      "workers": [
+        {
+          "worker_id": "mgr-marketing-01",
+          "name": "Marketing Department Manager",
+          "role": "department_manager",
+          "team_id": "marketing-leadership",
+          "capabilities": [
+            "marketing_oversight",
+            "planning",
+            "routing",
+            "task_decomposition"
+          ],
+          "reports_to": null,
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "marketing-01",
+          "name": "Marketing Specialist 01",
+          "role": "marketing_specialist",
+          "team_id": "marketing-delivery",
+          "capabilities": [
+            "campaign_planning",
+            "content",
+            "marketing",
+            "seo"
+          ],
+          "reports_to": "mgr-marketing-01",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        }
+      ],
+      "keywords": [
+        "pazarlama",
+        "reklam",
+        "sosyal medya",
+        "seo",
+        "marketing"
+      ],
+      "created_at": "2026-10-17T19:29:32.286095+00:00",
+      "source": "seed",
+      "status": "active"
+    },
+    {
+      "department_id": "operations",
+      "name": "Operasyon Departmanı",
+      "mission": "Deliver operations work for the holding within owner policy. Keywords: operasyon planlama koordinasyon operations.",
+      "capabilities": [
+        {
+          "name": "operations.operations_oversight",
+          "description": "operations operations_oversight capability. Owner keywords: operasyon planlama koordinasyon operations. operations_oversight gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "operations.planning",
+          "description": "operations planning capability. Owner keywords: operasyon planlama koordinasyon operations. planning gorevi.",
+          "authority": "A"
+        },
+        {
+          "name": "operations.routing",
+          "description": "operations routing capability. Owner keywords: operasyon planlama koordinasyon operations. routing gorevi.",
+          "authority": "A"
+        },
+        {
+          "name": "operations.task_decomposition",
+          "description": "operations task_decomposition capability. Owner keywords: operasyon planlama koordinasyon operations. task_decomposition gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "operations.coordination",
+          "description": "operations coordination capability. Owner keywords: operasyon planlama koordinasyon operations. coordination gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "operations.operations",
+          "description": "operations operations capability. Owner keywords: operasyon planlama koordinasyon operations. operations gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "operations.scheduling",
+          "description": "operations scheduling capability. Owner keywords: operasyon planlama koordinasyon operations. scheduling gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "operations.workflow",
+          "description": "operations workflow capability. Owner keywords: operasyon planlama koordinasyon operations. workflow gorevi.",
+          "authority": "B"
+        }
+      ],
+      "workers": [
+        {
+          "worker_id": "mgr-operations-01",
+          "name": "Operations Department Manager",
+          "role": "department_manager",
+          "team_id": "operations-leadership",
+          "capabilities": [
+            "operations_oversight",
+            "planning",
+            "routing",
+            "task_decomposition"
+          ],
+          "reports_to": null,
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "ops-01",
+          "name": "Operations Specialist 01",
+          "role": "operations_specialist",
+          "team_id": "operations-delivery",
+          "capabilities": [
+            "coordination",
+            "operations",
+            "scheduling",
+            "workflow"
+          ],
+          "reports_to": "mgr-operations-01",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        }
+      ],
+      "keywords": [
+        "operasyon",
+        "planlama",
+        "koordinasyon",
+        "operations"
+      ],
+      "created_at": "2026-10-17T19:29:32.286095+00:00",
+      "source": "seed",
+      "status": "active"
+    },
+    {
+      "department_id": "oyun",
+      "name": "Oyun Geliştirme Departmanı",
+      "mission": "Oyun Geliştirme Departmanı: Oyunları tasarlamak, geliştirmek, paketlemek ve canlı servis olarak büyütmek: oynanış, mühendislik, sanat, ses, kalite ve gelir.",
+      "capabilities": [
+        {
+          "name": "oyun.oyun_oversight",
+          "description": "oyun oyun_oversight capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.planning",
+          "description": "oyun planning capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam.",
+          "authority": "A"
+        },
+        {
+          "name": "oyun.quality_oversight",
+          "description": "oyun quality_oversight capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.routing",
+          "description": "oyun routing capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam.",
+          "authority": "A"
+        },
+        {
+          "name": "oyun.task_decomposition",
+          "description": "oyun task_decomposition capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam.",
+          "authority": "A"
+        },
+        {
+          "name": "oyun.game_design",
+          "description": "oyun game_design capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Mekanik, seviye, denge ve oyun ekonomisi tasarımı.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.level_design",
+          "description": "oyun level_design capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Mekanik, seviye, denge ve oyun ekonomisi tasarımı.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.balancing",
+          "description": "oyun balancing capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Mekanik, seviye, denge ve oyun ekonomisi tasarımı.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.economy",
+          "description": "oyun economy capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Mekanik, seviye, denge ve oyun ekonomisi tasarımı.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.javascript",
+          "description": "oyun javascript capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Oynanış kodu, fizik, kayıt sistemi ve araç geliştirme.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.html5",
+          "description": "oyun html5 capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Oynanış kodu, fizik, kayıt sistemi ve araç geliştirme.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.gameplay",
+          "description": "oyun gameplay capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Oynanış kodu, fizik, kayıt sistemi ve araç geliştirme.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.physics",
+          "description": "oyun physics capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Oynanış kodu, fizik, kayıt sistemi ve araç geliştirme.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.save_system",
+          "description": "oyun save_system capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Oynanış kodu, fizik, kayıt sistemi ve araç geliştirme.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.capacitor",
+          "description": "oyun capacitor capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Web, masaüstü ve Android paketlerinin build ve dağıtımı.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.android",
+          "description": "oyun android capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Web, masaüstü ve Android paketlerinin build ve dağıtımı.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.build_pipeline",
+          "description": "oyun build_pipeline capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Web, masaüstü ve Android paketlerinin build ve dağıtımı.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.release",
+          "description": "oyun release capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Web, masaüstü ve Android paketlerinin build ve dağıtımı.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.character_design",
+          "description": "oyun character_design capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Karakter, çevre, arayüz ve animasyon üretimi.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.animation",
+          "description": "oyun animation capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Karakter, çevre, arayüz ve animasyon üretimi.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.ui",
+          "description": "oyun ui capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Karakter, çevre, arayüz ve animasyon üretimi.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.asset_pipeline",
+          "description": "oyun asset_pipeline capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Karakter, çevre, arayüz ve animasyon üretimi.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.voice_over",
+          "description": "oyun voice_over capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Seslendirme, müzik, efekt ve miksaj.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.music",
+          "description": "oyun music capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Seslendirme, müzik, efekt ve miksaj.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.sound_design",
+          "description": "oyun sound_design capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Seslendirme, müzik, efekt ve miksaj.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.mixing",
+          "description": "oyun mixing capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Seslendirme, müzik, efekt ve miksaj.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.testing",
+          "description": "oyun testing capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Regresyon, performans ve çocuk güvenliği denetimi.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.regression",
+          "description": "oyun regression capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Regresyon, performans ve çocuk güvenliği denetimi.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.performance",
+          "description": "oyun performance capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Regresyon, performans ve çocuk güvenliği denetimi.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.child_safety",
+          "description": "oyun child_safety capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Regresyon, performans ve çocuk güvenliği denetimi.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.live_ops",
+          "description": "oyun live_ops capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Yayın takvimi, mağaza listesi, topluluk ve gelir modeli.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.monetization",
+          "description": "oyun monetization capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Yayın takvimi, mağaza listesi, topluluk ve gelir modeli.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.store_listing",
+          "description": "oyun store_listing capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Yayın takvimi, mağaza listesi, topluluk ve gelir modeli.",
+          "authority": "B"
+        },
+        {
+          "name": "oyun.community",
+          "description": "oyun community capability. Keywords: oyun game unity unreal mobil oyun level oynanis mipiluna pixel steam Team mission: Yayın takvimi, mağaza listesi, topluluk ve gelir modeli.",
+          "authority": "B"
+        }
+      ],
+      "workers": [
+        {
+          "worker_id": "oyun-manager",
+          "name": "Oyun Geliştirme Departmanı Müdürü",
+          "role": "department_manager",
+          "team_id": "oyun-leadership",
+          "capabilities": [
+            "oyun_oversight",
+            "planning",
+            "quality_oversight",
+            "routing",
+            "task_decomposition"
+          ],
+          "reports_to": null,
+          "authority_level": "A",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "oyun-design-lead",
+          "name": "Oynanış Tasarımı Lideri",
+          "role": "researcher",
+          "team_id": "oyun-design",
+          "capabilities": [
+            "balancing",
+            "economy",
+            "game_design",
+            "level_design"
+          ],
+          "reports_to": "oyun-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "oyun-design-specialist",
+          "name": "Oynanış Tasarımı Uzmanı",
+          "role": "operations_specialist",
+          "team_id": "oyun-design",
+          "capabilities": [
+            "balancing",
+            "economy",
+            "game_design",
+            "level_design"
+          ],
+          "reports_to": "oyun-design-lead",
+          "authority_level": "C",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "oyun-engineering-lead",
+          "name": "Oyun Mühendisliği Lideri",
+          "role": "software_engineer",
+          "team_id": "oyun-engineering",
+          "capabilities": [
+            "gameplay",
+            "html5",
+            "javascript",
+            "physics",
+            "save_system"
+          ],
+          "reports_to": "oyun-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "oyun-engineering-specialist",
+          "name": "Oyun Mühendisliği Uzmanı",
+          "role": "software_engineer",
+          "team_id": "oyun-engineering",
+          "capabilities": [
+            "gameplay",
+            "html5",
+            "javascript",
+            "physics",
+            "save_system"
+          ],
+          "reports_to": "oyun-engineering-lead",
+          "authority_level": "C",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "oyun-platform-lead",
+          "name": "Platform ve Paketleme Lideri",
+          "role": "devops_engineer",
+          "team_id": "oyun-platform",
+          "capabilities": [
+            "android",
+            "build_pipeline",
+            "capacitor",
+            "release"
+          ],
+          "reports_to": "oyun-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "oyun-platform-specialist",
+          "name": "Platform ve Paketleme Uzmanı",
+          "role": "devops_engineer",
+          "team_id": "oyun-platform",
+          "capabilities": [
+            "android",
+            "build_pipeline",
+            "capacitor",
+            "release"
+          ],
+          "reports_to": "oyun-platform-lead",
+          "authority_level": "C",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "oyun-art-lead",
+          "name": "Sanat ve Animasyon Lideri",
+          "role": "designer",
+          "team_id": "oyun-art",
+          "capabilities": [
+            "animation",
+            "asset_pipeline",
+            "character_design",
+            "ui"
+          ],
+          "reports_to": "oyun-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "oyun-art-specialist",
+          "name": "Sanat ve Animasyon Uzmanı",
+          "role": "designer",
+          "team_id": "oyun-art",
+          "capabilities": [
+            "animation",
+            "asset_pipeline",
+            "character_design",
+            "ui"
+          ],
+          "reports_to": "oyun-art-lead",
+          "authority_level": "C",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "oyun-audio-lead",
+          "name": "Ses ve Müzik Lideri",
+          "role": "operations_specialist",
+          "team_id": "oyun-audio",
+          "capabilities": [
+            "mixing",
+            "music",
+            "sound_design",
+            "voice_over"
+          ],
+          "reports_to": "oyun-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "oyun-audio-specialist",
+          "name": "Ses ve Müzik Uzmanı",
+          "role": "operations_specialist",
+          "team_id": "oyun-audio",
+          "capabilities": [
+            "mixing",
+            "music",
+            "sound_design",
+            "voice_over"
+          ],
+          "reports_to": "oyun-audio-lead",
+          "authority_level": "C",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "oyun-quality-lead",
+          "name": "Kalite ve Güvenlik Lideri",
+          "role": "qa_engineer",
+          "team_id": "oyun-quality",
+          "capabilities": [
+            "child_safety",
+            "performance",
+            "regression",
+            "testing"
+          ],
+          "reports_to": "oyun-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "oyun-quality-specialist",
+          "name": "Kalite ve Güvenlik Uzmanı",
+          "role": "qa_engineer",
+          "team_id": "oyun-quality",
+          "capabilities": [
+            "child_safety",
+            "performance",
+            "regression",
+            "testing"
+          ],
+          "reports_to": "oyun-quality-lead",
+          "authority_level": "C",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "oyun-growth-lead",
+          "name": "Canlı Servis ve Büyüme Lideri",
+          "role": "marketing_specialist",
+          "team_id": "oyun-growth",
+          "capabilities": [
+            "community",
+            "live_ops",
+            "monetization",
+            "store_listing"
+          ],
+          "reports_to": "oyun-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "oyun-growth-specialist",
+          "name": "Canlı Servis ve Büyüme Uzmanı",
+          "role": "sales_specialist",
+          "team_id": "oyun-growth",
+          "capabilities": [
+            "community",
+            "live_ops",
+            "monetization",
+            "store_listing"
+          ],
+          "reports_to": "oyun-growth-lead",
+          "authority_level": "C",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        }
+      ],
+      "keywords": [
+        "oyun",
+        "game",
+        "unity",
+        "unreal",
+        "mobil oyun",
+        "level",
+        "oynanis",
+        "mipiluna",
+        "pixel",
+        "steam"
+      ],
+      "created_at": "2026-10-17T20:02:48.966714+00:00",
+      "source": "owner-command",
+      "status": "active"
+    },
+    {
+      "department_id": "quality",
+      "name": "Kalite Departmanı",
+      "mission": "Deliver quality work for the holding within owner policy. Keywords: kalite test qa regresyon verification.",
+      "capabilities": [
+        {
+          "name": "quality.planning",
+          "description": "quality planning capability. Owner keywords: kalite test qa regresyon verification. planning gorevi.",
+          "authority": "A"
+        },
+        {
+          "name": "quality.quality_oversight",
+          "description": "quality quality_oversight capability. Owner keywords: kalite test qa regresyon verification. quality_oversight gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "quality.routing",
+          "description": "quality routing capability. Owner keywords: kalite test qa regresyon verification. routing gorevi.",
+          "authority": "A"
+        },
+        {
+          "name": "quality.task_decomposition",
+          "description": "quality task_decomposition capability. Owner keywords: kalite test qa regresyon verification. task_decomposition gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "quality.code_review",
+          "description": "quality code_review capability. Owner keywords: kalite test qa regresyon verification. code_review gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "quality.qa",
+          "description": "quality qa capability. Owner keywords: kalite test qa regresyon verification. qa gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "quality.regression",
+          "description": "quality regression capability. Owner keywords: kalite test qa regresyon verification. regression gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "quality.testing",
+          "description": "quality testing capability. Owner keywords: kalite test qa regresyon verification. testing gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "quality.verification",
+          "description": "quality verification capability. Owner keywords: kalite test qa regresyon verification. verification gorevi.",
+          "authority": "B"
+        }
+      ],
+      "workers": [
+        {
+          "worker_id": "mgr-quality-01",
+          "name": "Quality Department Manager",
+          "role": "department_manager",
+          "team_id": "quality-leadership",
+          "capabilities": [
+            "planning",
+            "quality_oversight",
+            "routing",
+            "task_decomposition"
+          ],
+          "reports_to": null,
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "qa-01",
+          "name": "QA Engineer 01",
+          "role": "qa_engineer",
+          "team_id": "quality-delivery",
+          "capabilities": [
+            "code_review",
+            "qa",
+            "regression",
+            "testing",
+            "verification"
+          ],
+          "reports_to": "mgr-quality-01",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        }
+      ],
+      "keywords": [
+        "kalite",
+        "test",
+        "qa",
+        "regresyon",
+        "verification"
+      ],
+      "created_at": "2026-10-17T19:29:32.286095+00:00",
+      "source": "seed",
+      "status": "active"
+    },
+    {
+      "department_id": "research",
+      "name": "Araştırma Departmanı",
+      "mission": "Deliver research work for the holding within owner policy. Keywords: arastirma analiz rapor research analysis.",
+      "capabilities": [
+        {
+          "name": "research.planning",
+          "description": "research planning capability. Owner keywords: arastirma analiz rapor research analysis. planning gorevi.",
+          "authority": "A"
+        },
+        {
+          "name": "research.research_oversight",
+          "description": "research research_oversight capability. Owner keywords: arastirma analiz rapor research analysis. research_oversight gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "research.routing",
+          "description": "research routing capability. Owner keywords: arastirma analiz rapor research analysis. routing gorevi.",
+          "authority": "A"
+        },
+        {
+          "name": "research.task_decomposition",
+          "description": "research task_decomposition capability. Owner keywords: arastirma analiz rapor research analysis. task_decomposition gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "research.analysis",
+          "description": "research analysis capability. Owner keywords: arastirma analiz rapor research analysis. analysis gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "research.research",
+          "description": "research research capability. Owner keywords: arastirma analiz rapor research analysis. research gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "research.source_review",
+          "description": "research source_review capability. Owner keywords: arastirma analiz rapor research analysis. source_review gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "research.summarization",
+          "description": "research summarization capability. Owner keywords: arastirma analiz rapor research analysis. summarization gorevi.",
+          "authority": "B"
+        }
+      ],
+      "workers": [
+        {
+          "worker_id": "mgr-research-01",
+          "name": "Research Department Manager",
+          "role": "department_manager",
+          "team_id": "research-leadership",
+          "capabilities": [
+            "planning",
+            "research_oversight",
+            "routing",
+            "task_decomposition"
+          ],
+          "reports_to": null,
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "research-01",
+          "name": "Researcher 01",
+          "role": "researcher",
+          "team_id": "research-delivery",
+          "capabilities": [
+            "analysis",
+            "research",
+            "source_review",
+            "summarization"
+          ],
+          "reports_to": "mgr-research-01",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        }
+      ],
+      "keywords": [
+        "arastirma",
+        "analiz",
+        "rapor",
+        "research",
+        "analysis"
+      ],
+      "created_at": "2026-10-17T19:29:32.286095+00:00",
+      "source": "seed",
+      "status": "active"
+    },
+    {
+      "department_id": "sales",
+      "name": "Satış Departmanı",
+      "mission": "Deliver sales work for the holding within owner policy. Keywords: satis musteri teklif sales crm.",
+      "capabilities": [
+        {
+          "name": "sales.planning",
+          "description": "sales planning capability. Owner keywords: satis musteri teklif sales crm. planning gorevi.",
+          "authority": "A"
+        },
+        {
+          "name": "sales.routing",
+          "description": "sales routing capability. Owner keywords: satis musteri teklif sales crm. routing gorevi.",
+          "authority": "A"
+        },
+        {
+          "name": "sales.sales_oversight",
+          "description": "sales sales_oversight capability. Owner keywords: satis musteri teklif sales crm. sales_oversight gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "sales.task_decomposition",
+          "description": "sales task_decomposition capability. Owner keywords: satis musteri teklif sales crm. task_decomposition gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "sales.crm",
+          "description": "sales crm capability. Owner keywords: satis musteri teklif sales crm. crm gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "sales.lead_research",
+          "description": "sales lead_research capability. Owner keywords: satis musteri teklif sales crm. lead_research gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "sales.proposal_drafting",
+          "description": "sales proposal_drafting capability. Owner keywords: satis musteri teklif sales crm. proposal_drafting gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "sales.sales",
+          "description": "sales sales capability. Owner keywords: satis musteri teklif sales crm. sales gorevi.",
+          "authority": "B"
+        }
+      ],
+      "workers": [
+        {
+          "worker_id": "mgr-sales-01",
+          "name": "Sales Department Manager",
+          "role": "department_manager",
+          "team_id": "sales-leadership",
+          "capabilities": [
+            "planning",
+            "routing",
+            "sales_oversight",
+            "task_decomposition"
+          ],
+          "reports_to": null,
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "sales-01",
+          "name": "Sales Specialist 01",
+          "role": "sales_specialist",
+          "team_id": "sales-delivery",
+          "capabilities": [
+            "crm",
+            "lead_research",
+            "proposal_drafting",
+            "sales"
+          ],
+          "reports_to": "mgr-sales-01",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        }
+      ],
+      "keywords": [
+        "satis",
+        "musteri",
+        "teklif",
+        "sales",
+        "crm"
+      ],
+      "created_at": "2026-10-17T19:29:32.286095+00:00",
+      "source": "seed",
+      "status": "active"
+    },
+    {
+      "department_id": "software",
+      "name": "Yazılım Şirketi",
+      "mission": "Yazılım Şirketi: Sahibin istediği yazılım ürünlerini tasarlamak, geliştirmek, test etmek ve yayına hazır hale getirmek.",
+      "capabilities": [
+        {
+          "name": "yazilim.planning",
+          "description": "yazilim planning capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil.",
+          "authority": "A"
+        },
+        {
+          "name": "yazilim.quality_oversight",
+          "description": "yazilim quality_oversight capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.routing",
+          "description": "yazilim routing capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil.",
+          "authority": "A"
+        },
+        {
+          "name": "yazilim.task_decomposition",
+          "description": "yazilim task_decomposition capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil.",
+          "authority": "A"
+        },
+        {
+          "name": "yazilim.yazilim_oversight",
+          "description": "yazilim yazilim_oversight capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.product_discovery",
+          "description": "yazilim product_discovery capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil Team mission: Gereksinim analizi, ürün kapsamı ve yol haritası.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.requirements",
+          "description": "yazilim requirements capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil Team mission: Gereksinim analizi, ürün kapsamı ve yol haritası.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.roadmap",
+          "description": "yazilim roadmap capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil Team mission: Gereksinim analizi, ürün kapsamı ve yol haritası.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.python",
+          "description": "yazilim python capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil Team mission: Kod yazımı, entegrasyon ve teknik borç yönetimi.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.backend",
+          "description": "yazilim backend capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil Team mission: Kod yazımı, entegrasyon ve teknik borç yönetimi.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.frontend",
+          "description": "yazilim frontend capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil Team mission: Kod yazımı, entegrasyon ve teknik borç yönetimi.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.api",
+          "description": "yazilim api capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil Team mission: Kod yazımı, entegrasyon ve teknik borç yönetimi.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.automation",
+          "description": "yazilim automation capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil Team mission: Kod yazımı, entegrasyon ve teknik borç yönetimi.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.ci",
+          "description": "yazilim ci capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil Team mission: CI/CD, dağıtım ve izleme.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.deployment",
+          "description": "yazilim deployment capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil Team mission: CI/CD, dağıtım ve izleme.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.monitoring",
+          "description": "yazilim monitoring capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil Team mission: CI/CD, dağıtım ve izleme.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.devops",
+          "description": "yazilim devops capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil Team mission: CI/CD, dağıtım ve izleme.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.testing",
+          "description": "yazilim testing capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil Team mission: Otomatik testler, regresyon ve sürüm kontrolü.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.regression",
+          "description": "yazilim regression capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil Team mission: Otomatik testler, regresyon ve sürüm kontrolü.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.verification",
+          "description": "yazilim verification capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil Team mission: Otomatik testler, regresyon ve sürüm kontrolü.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.qa",
+          "description": "yazilim qa capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil Team mission: Otomatik testler, regresyon ve sürüm kontrolü.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.marketing",
+          "description": "yazilim marketing capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil Team mission: Konumlandırma, satış ve müşteri kazanımı.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.sales",
+          "description": "yazilim sales capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil Team mission: Konumlandırma, satış ve müşteri kazanımı.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.seo",
+          "description": "yazilim seo capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil Team mission: Konumlandırma, satış ve müşteri kazanımı.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.crm",
+          "description": "yazilim crm capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil Team mission: Konumlandırma, satış ve müşteri kazanımı.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.finance",
+          "description": "yazilim finance capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil Team mission: Bütçe, planlama ve teslim koordinasyonu.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.budgeting",
+          "description": "yazilim budgeting capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil Team mission: Bütçe, planlama ve teslim koordinasyonu.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.scheduling",
+          "description": "yazilim scheduling capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil Team mission: Bütçe, planlama ve teslim koordinasyonu.",
+          "authority": "B"
+        },
+        {
+          "name": "yazilim.coordination",
+          "description": "yazilim coordination capability. Keywords: yazilim software uygulama app web sitesi website landing page landing site sayfa web backend frontend api saas mobil Team mission: Bütçe, planlama ve teslim koordinasyonu.",
+          "authority": "B"
+        }
+      ],
+      "workers": [
+        {
+          "worker_id": "software-manager",
+          "name": "Yazılım Şirketi Müdürü",
+          "role": "department_manager",
+          "team_id": "software-leadership",
+          "capabilities": [
+            "planning",
+            "quality_oversight",
+            "routing",
+            "task_decomposition",
+            "yazilim_oversight"
+          ],
+          "reports_to": null,
+          "authority_level": "A",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "software-product-lead",
+          "name": "Ürün Ekibi Lideri",
+          "role": "researcher",
+          "team_id": "software-product",
+          "capabilities": [
+            "product_discovery",
+            "requirements",
+            "roadmap"
+          ],
+          "reports_to": "software-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "software-product-specialist",
+          "name": "Ürün Ekibi Uzmanı",
+          "role": "operations_specialist",
+          "team_id": "software-product",
+          "capabilities": [
+            "product_discovery",
+            "requirements",
+            "roadmap"
+          ],
+          "reports_to": "software-product-lead",
+          "authority_level": "C",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "software-engineering-lead",
+          "name": "Mühendislik Ekibi Lideri",
+          "role": "software_engineer",
+          "team_id": "software-engineering",
+          "capabilities": [
+            "api",
+            "automation",
+            "backend",
+            "frontend",
+            "python"
+          ],
+          "reports_to": "software-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "software-engineering-specialist",
+          "name": "Mühendislik Ekibi Uzmanı",
+          "role": "software_engineer",
+          "team_id": "software-engineering",
+          "capabilities": [
+            "api",
+            "automation",
+            "backend",
+            "frontend",
+            "python"
+          ],
+          "reports_to": "software-engineering-lead",
+          "authority_level": "C",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "software-platform-lead",
+          "name": "Platform Ekibi Lideri",
+          "role": "devops_engineer",
+          "team_id": "software-platform",
+          "capabilities": [
+            "ci",
+            "deployment",
+            "devops",
+            "monitoring"
+          ],
+          "reports_to": "software-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "software-platform-specialist",
+          "name": "Platform Ekibi Uzmanı",
+          "role": "devops_engineer",
+          "team_id": "software-platform",
+          "capabilities": [
+            "ci",
+            "deployment",
+            "devops",
+            "monitoring"
+          ],
+          "reports_to": "software-platform-lead",
+          "authority_level": "C",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "software-quality-lead",
+          "name": "Kalite Ekibi Lideri",
+          "role": "qa_engineer",
+          "team_id": "software-quality",
+          "capabilities": [
+            "qa",
+            "regression",
+            "testing",
+            "verification"
+          ],
+          "reports_to": "software-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "software-quality-specialist",
+          "name": "Kalite Ekibi Uzmanı",
+          "role": "qa_engineer",
+          "team_id": "software-quality",
+          "capabilities": [
+            "qa",
+            "regression",
+            "testing",
+            "verification"
+          ],
+          "reports_to": "software-quality-lead",
+          "authority_level": "C",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "software-growth-lead",
+          "name": "Büyüme Ekibi Lideri",
+          "role": "marketing_specialist",
+          "team_id": "software-growth",
+          "capabilities": [
+            "crm",
+            "marketing",
+            "sales",
+            "seo"
+          ],
+          "reports_to": "software-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "software-growth-specialist",
+          "name": "Büyüme Ekibi Uzmanı",
+          "role": "sales_specialist",
+          "team_id": "software-growth",
+          "capabilities": [
+            "crm",
+            "marketing",
+            "sales",
+            "seo"
+          ],
+          "reports_to": "software-growth-lead",
+          "authority_level": "C",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "software-operations-lead",
+          "name": "Operasyon Ekibi Lideri",
+          "role": "finance_specialist",
+          "team_id": "software-operations",
+          "capabilities": [
+            "budgeting",
+            "coordination",
+            "finance",
+            "scheduling"
+          ],
+          "reports_to": "software-manager",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "software-operations-specialist",
+          "name": "Operasyon Ekibi Uzmanı",
+          "role": "operations_specialist",
+          "team_id": "software-operations",
+          "capabilities": [
+            "budgeting",
+            "coordination",
+            "finance",
+            "scheduling"
+          ],
+          "reports_to": "software-operations-lead",
+          "authority_level": "C",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        }
+      ],
+      "keywords": [
+        "yazilim",
+        "software",
+        "uygulama",
+        "app",
+        "web sitesi",
+        "website",
+        "landing page",
+        "landing",
+        "site",
+        "sayfa",
+        "web",
+        "backend",
+        "frontend",
+        "api",
+        "saas",
+        "mobil"
+      ],
+      "created_at": "2026-10-17T19:38:34.376924+00:00",
+      "source": "owner-command",
+      "status": "active"
+    },
+    {
+      "department_id": "support",
+      "name": "Müşteri Destek Departmanı",
+      "mission": "Deliver support work for the holding within owner policy. Keywords: destek musteri hizmetleri support ticket.",
+      "capabilities": [
+        {
+          "name": "support.planning",
+          "description": "support planning capability. Owner keywords: destek musteri hizmetleri support ticket. planning gorevi.",
+          "authority": "A"
+        },
+        {
+          "name": "support.routing",
+          "description": "support routing capability. Owner keywords: destek musteri hizmetleri support ticket. routing gorevi.",
+          "authority": "A"
+        },
+        {
+          "name": "support.support_oversight",
+          "description": "support support_oversight capability. Owner keywords: destek musteri hizmetleri support ticket. support_oversight gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "support.task_decomposition",
+          "description": "support task_decomposition capability. Owner keywords: destek musteri hizmetleri support ticket. task_decomposition gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "support.drafting",
+          "description": "support drafting capability. Owner keywords: destek musteri hizmetleri support ticket. drafting gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "support.knowledge_base",
+          "description": "support knowledge_base capability. Owner keywords: destek musteri hizmetleri support ticket. knowledge_base gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "support.support",
+          "description": "support support capability. Owner keywords: destek musteri hizmetleri support ticket. support gorevi.",
+          "authority": "B"
+        },
+        {
+          "name": "support.ticket_triage",
+          "description": "support ticket_triage capability. Owner keywords: destek musteri hizmetleri support ticket. ticket_triage gorevi.",
+          "authority": "B"
+        }
+      ],
+      "workers": [
+        {
+          "worker_id": "mgr-support-01",
+          "name": "Support Department Manager",
+          "role": "department_manager",
+          "team_id": "support-leadership",
+          "capabilities": [
+            "planning",
+            "routing",
+            "support_oversight",
+            "task_decomposition"
+          ],
+          "reports_to": null,
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        },
+        {
+          "worker_id": "support-01",
+          "name": "Customer Support 01",
+          "role": "customer_support",
+          "team_id": "support-delivery",
+          "capabilities": [
+            "drafting",
+            "knowledge_base",
+            "support",
+            "ticket_triage"
+          ],
+          "reports_to": "mgr-support-01",
+          "authority_level": "B",
+          "paid_ai_enabled": false,
+          "max_parallel_tasks": 1,
+          "daily_budget_usd": 0.0
+        }
+      ],
+      "keywords": [
+        "destek",
+        "musteri hizmetleri",
+        "support",
+        "ticket"
+      ],
+      "created_at": "2026-10-17T19:29:32.286095+00:00",
+      "source": "seed",
+      "status": "active"
+    }
+  ]
+}

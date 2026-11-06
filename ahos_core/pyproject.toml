@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ahos-core"
+version = "0.1.0"
+description = "Safety-first autonomous holding operating system core"
+requires-python = ">=3.12,<3.15"
+
+[project.optional-dependencies]
+test = ["pytest>=9.1,<10"]
+# Nöral seslendirme (Türkçe dahil, anahtarsız, ücretsiz). Yerel/Çevrimdışı
+# çalışma için gerekli değildir: motor yoksa SAPI'ye düşer.
+voice = ["edge-tts>=7,<8"]
+
+[project.scripts]
+ahos-owner = "ahos.owner_cli:main"
+ahos-studio = "ahos.studio_pipeline:main"
+ahos-cadence = "ahos.ops_cadence:main"
+ahos-panel = "ahos.dashboard:main"
+ahos-series = "ahos.series_cli:main"
+ahos-growth = "ahos.growth_loop:main"
+ahos-ceo = "ahos.holding_office:main"
+ahos-guardian = "ahos.github_guardian:main"
+ahos-daemon = "ahos.daemon:main"
+ahos-taskboard = "ahos.taskboard:main"
+ahos-errors = "ahos.errors:main"
+ahos-status = "ahos.report:main"
+ahos-roster = "ahos.roster:main"
+ahos-offline = "ahos.offline_audit:main"
+ahos-company = "ahos.company_foundry:main"
+ahos-idea = "ahos.ideas:main"
+ahos-metrics = "ahos.failure_analytics:main"
+ahos-office = "ahos.office_server:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ahos*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

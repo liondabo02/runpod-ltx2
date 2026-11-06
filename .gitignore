@@ -1,4 +1,36 @@
 .env
+.env.runtime
+.env.runtime.*
+**/.env.runtime
+**/.env.runtime.*
+*.bak
 data/
 __pycache__/
 *.pyc
+.pytest_cache/
+.venv/
+**/.venv/
+build/
+**/build/
+*.egg-info/
+**/*.egg-info/
+runtime/
+**/runtime/
+*.patch
+!quality/patches/*.patch
+.dsh-write-probe.txt
+# generated studio run outputs (regenerate with the pipeline, not source)
+control_plane_v2/episode.json
+control_plane_v2/rehearsal-report.json
+control_plane_v2/S01E002-story.json
+# quality program artifacts
+ahos_core/.coverage
+*.lock
+
+# quality program scratch
+quality/work/
+
+# generated learning-library artefacts (regenerate with build_learning_library.py)
+control_plane_v2/ajan_egitim_kutuphanesi_v1.zip
+control_plane_v2/ajan_egitim_kutuphanesi_v1/
+control_plane_v2/control_plane_v2/

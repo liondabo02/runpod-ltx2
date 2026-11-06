@@ -1,0 +1,245 @@
+"""Prove AHOS release preflight fails closed and never deploys anything."""
+
+from __future__ import annotations
+
+import json
+import sqlite3
+import subprocess
+from datetime import datetime, timezone
+from pathlib import Path
+
+from ahos.backup import backup
+from ahos.release_gate import check_readiness, main
+
+
+def _make_queue(runtime: Path, *, blocked: int, completed: int) -> None:
+    with sqlite3.connect(runtime / "company-service.db") as con:
+        con.execute("CREATE TABLE missions (status TEXT, updated_at TEXT, result_json TEXT)")
+        from ahos.completion_db_guard import install_completion_guards
+
+        install_completion_guards(con)
+        valid_result = json.dumps({
+            "status": "completed", "steps": [
+                {"stage": "completed", "worker_id": "w-1", "qa_worker_id": "qa-1",
+                 "qa_summary": "independent pass"}
+            ],
+            "delivery": {"verified": 1, "qa_worker_ids": ["qa-1"]},
+        })
+        con.executemany("INSERT INTO missions VALUES (?,?,?)", [
+            ("completed", "2026-10-31T12:00:00+00:00", valid_result)
+            for _ in range(completed)
+        ] + [
+            ("blocked", "2026-10-31T12:00:00+00:00", None)
+            for _ in range(blocked)
+        ])
+
+
+def _ready_runtime(tmp_path: Path) -> tuple[Path, Path]:
+    runtime = tmp_path / "runtime"
+    runtime.mkdir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+
+    subprocess.run(["git", "init", "-q", str(repo)], check=True)
+    subprocess.run(["git", "-C", str(repo), "config", "user.email", "test@example.invalid"], check=True)
+    subprocess.run(["git", "-C", str(repo), "config", "user.name", "Test"], check=True)
+    (repo / "README.md").write_text("verified workspace\n", encoding="utf-8")
+    package = repo / "ahos_core" / "ahos"
+    package.mkdir(parents=True)
+    (package / "__init__.py").write_text("", encoding="utf-8")
+    subprocess.run(["git", "-C", str(repo), "add", "README.md", "ahos_core/ahos/__init__.py"], check=True)
+    subprocess.run(["git", "-C", str(repo), "commit", "-qm", "test baseline"], check=True)
+    rev = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"], check=True,
+                         capture_output=True, text=True).stdout.strip()
+
+    now = datetime.now(timezone.utc).isoformat()
+    (runtime / "daemon-state.json").write_text(json.dumps({
+        "status": "running", "last_tick_at": now, "quality": {
+            "delivery_rate": 0.96, "missions": 100,
+        }, "last_evidence": {
+            "evidence_ok": True, "changed_files": 2,
+            "source": "filesystem", "proof_method": "sha256",
+            "filesystem_verified": True, "productive_files": 2,
+            "removed_files": 0,
+        },
+    }), encoding="utf-8")
+
+    _make_queue(runtime, blocked=1, completed=99)
+    with sqlite3.connect(runtime / "owner-approvals.db") as con:
+        con.execute("CREATE TABLE approvals (id INTEGER PRIMARY KEY)")
+
+    for name in ("worker-metrics.jsonl", "audit.jsonl", "taskboard.json"):
+        (runtime / name).write_text("{}\n", encoding="utf-8")
+    (runtime / "release-test-receipt.json").write_text(json.dumps({
+        "commit_sha": rev, "exit_code": 0, "passed": 100,
+        "failed": 0, "trusted_ci": True,
+    }), encoding="utf-8")
+    backup(runtime)
+    return runtime, repo
+
+
+def test_missing_runtime_fails_closed(tmp_path: Path) -> None:
+    checks = check_readiness(tmp_path / "missing", tmp_path / "unknown")
+    assert checks and all(not item.ok for item in checks)
+    assert main(["--runtime-dir", str(tmp_path / "missing"),
+                 "--repository", str(tmp_path / "unknown")]) == 2
+
+
+def test_completed_gates_allow_owner_review_not_deploy(tmp_path: Path) -> None:
+    runtime, repo = _ready_runtime(tmp_path)
+    checks = check_readiness(runtime, repo)
+    assert all(item.ok for item in checks), checks
+    assert main(["--runtime-dir", str(runtime), "--repository", str(repo)]) == 0
+
+
+def test_low_delivery_rate_blocks_release(tmp_path: Path) -> None:
+    runtime, repo = _ready_runtime(tmp_path)
+    state = runtime / "daemon-state.json"
+    data = json.loads(state.read_text(encoding="utf-8"))
+    data["quality"]["delivery_rate"] = 0.065
+    state.write_text(json.dumps(data), encoding="utf-8")
+    checks = check_readiness(runtime, repo)
+    assert next(x for x in checks if x.name == "delivery_quality").ok is False
+
+
+def test_uncommitted_code_blocks_release(tmp_path: Path) -> None:
+    runtime, repo = _ready_runtime(tmp_path)
+    (repo / "unreviewed.py").write_text("print('not reviewed')\n", encoding="utf-8")
+    assert next(x for x in check_readiness(runtime, repo)
+                if x.name == "clean_source_tree").ok is False
+
+
+def test_missing_trusted_receipt_blocks_release(tmp_path: Path) -> None:
+    runtime, repo = _ready_runtime(tmp_path)
+    (runtime / "release-test-receipt.json").unlink()
+    assert next(x for x in check_readiness(runtime, repo)
+                if x.name == "trusted_test_receipt").ok is False
+
+
+def test_unverified_old_backup_blocks_release(tmp_path: Path) -> None:
+    runtime, repo = _ready_runtime(tmp_path)
+    archive = next((runtime / "backups").glob("runtime-*.zip"))
+    archive.write_bytes(b"old corrupt archive")
+    assert next(x for x in check_readiness(runtime, repo)
+                if x.name == "verified_backup").ok is False
+
+
+def test_mass_cancellation_cannot_fake_queue_recovery(tmp_path: Path) -> None:
+    runtime, repo = _ready_runtime(tmp_path)
+    with sqlite3.connect(runtime / "company-service.db") as con:
+        con.executemany(
+            "INSERT INTO missions VALUES (?,?,?)",
+            [("cancelled", "2026-10-31 16:11:00", None)] * 65,
+        )
+    queue = next(x for x in check_readiness(runtime, repo) if x.name == "mission_queue")
+    assert not queue.ok
+    assert "cancelled=65" in queue.detail
+
+
+def test_recent_valid_completion_window_can_pass(tmp_path: Path) -> None:
+    runtime, repo = _ready_runtime(tmp_path)
+    queue = next(x for x in check_readiness(runtime, repo) if x.name == "mission_queue")
+    assert queue.ok, queue.detail
+
+
+def test_worker_prose_is_not_release_evidence(tmp_path: Path) -> None:
+    runtime, repo = _ready_runtime(tmp_path)
+    state_file = runtime / "daemon-state.json"
+    state = json.loads(state_file.read_text(encoding="utf-8"))
+    state["last_evidence"] = {
+        "source": "worker-summary",
+        "changed_files": 10,
+        "evidence_ok": True,
+    }
+    state_file.write_text(json.dumps(state), encoding="utf-8")
+
+    report = check_readiness(runtime, repo)
+    proof = next(item for item in report if item.name == "real_delivery_evidence")
+    assert not proof.ok
+
+
+def test_partial_filesystem_scan_is_not_release_evidence(tmp_path: Path) -> None:
+    runtime, repo = _ready_runtime(tmp_path)
+    state_file = runtime / "daemon-state.json"
+    state = json.loads(state_file.read_text(encoding="utf-8"))
+    state["last_evidence"]["filesystem_verified"] = False
+    state_file.write_text(json.dumps(state), encoding="utf-8")
+    proof = next(
+        item for item in check_readiness(runtime, repo)
+        if item.name == "real_delivery_evidence"
+    )
+    assert not proof.ok
+
+
+def test_deletion_cannot_count_as_verified_release_delivery(tmp_path: Path) -> None:
+    runtime, repo = _ready_runtime(tmp_path)
+    state_file = runtime / "daemon-state.json"
+    state = json.loads(state_file.read_text(encoding="utf-8"))
+    state["last_evidence"]["removed_files"] = 1
+    state_file.write_text(json.dumps(state), encoding="utf-8")
+    gate = next(x for x in check_readiness(runtime, repo)
+                if x.name == "real_delivery_evidence")
+    assert not gate.ok
+
+
+def test_fresh_idle_daemon_is_healthy_but_not_proof_of_work(tmp_path: Path) -> None:
+    runtime, repo = _ready_runtime(tmp_path)
+    state_path = runtime / "daemon-state.json"
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    state["status"] = "idle"
+    state_path.write_text(json.dumps(state), encoding="utf-8")
+
+    checks = check_readiness(runtime, repo)
+    assert next(check for check in checks if check.name == "daemon_heartbeat").ok
+
+    state["status"] = "stopped"
+    state_path.write_text(json.dumps(state), encoding="utf-8")
+    checks = check_readiness(runtime, repo)
+    assert not next(check for check in checks if check.name == "daemon_heartbeat").ok
+
+
+def test_completed_column_with_blocked_result_blocks_release(tmp_path: Path) -> None:
+    runtime, repo = _ready_runtime(tmp_path)
+    with sqlite3.connect(runtime / "company-service.db") as con:
+        # Recreate a legacy invalid record from before the guard existed.
+        con.execute("DROP TRIGGER ahos_completed_result_guard_update")
+        con.execute(
+            "UPDATE missions SET result_json=? WHERE status='completed'",
+            (json.dumps({"status": "blocked", "steps": []}),),
+        )
+        from ahos.completion_db_guard import install_completion_guards
+
+        install_completion_guards(con)
+    report = check_readiness(runtime, repo)
+    check = next(x for x in report if x.name == "completed_result_consistency")
+    assert not check.ok
+    assert "inconsistent=99" in check.detail
+
+
+def test_direct_sql_status_update_blocks_release(tmp_path: Path) -> None:
+    runtime, repo = _ready_runtime(tmp_path)
+    source = repo / "ahos_core" / "ahos" / "daemon.py"
+    source.write_text(
+        'def bypass(conn):\n'
+        '    conn.execute("update missions set status=\'completed\' where mission_id=?", ("m",))\n',
+        encoding="utf-8",
+    )
+    gate = next(
+        check for check in check_readiness(runtime, repo)
+        if check.name == "no_direct_completion_sql"
+    )
+    assert not gate.ok
+    assert "daemon.py" in gate.detail
+
+
+def test_missing_db_completion_triggers_prevent_release(tmp_path: Path) -> None:
+    runtime, repo = _ready_runtime(tmp_path)
+    checks = check_readiness(runtime, repo)
+    assert next(x for x in checks if x.name == "database_completion_guard").ok
+
+    with sqlite3.connect(runtime / "company-service.db") as conn:
+        conn.execute("DROP TRIGGER ahos_completed_result_guard_insert")
+    checks = check_readiness(runtime, repo)
+    guard = next(x for x in checks if x.name == "database_completion_guard")
+    assert not guard.ok
+    assert "installed=1" in guard.detail

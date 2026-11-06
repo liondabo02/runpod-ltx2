@@ -1,0 +1,4 @@
+$ErrorActionPreference='Stop'
+Set-Location 'C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\control_plane_v2'
+$env:PYTHONPATH='C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\control_plane_v2\runtime\workspaces\ahos-autopilot\ahos_core;C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\control_plane_v2'
+& 'C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\control_plane_v2\.venv\Scripts\python.exe' -m ahos.control_center --runtime-dir 'C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\control_plane_v2\runtime\workspaces\ahos-autopilot\ahos_core\runtime' --service-launcher 'C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\control_plane_v2\Start-AHOS-Company-Service.ps1' --host 127.0.0.1 --port 8765

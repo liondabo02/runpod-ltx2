@@ -1,0 +1,29 @@
+{
+  "at": "2026-11-01T22:32:13",
+  "backup": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\ahos_core\\runtime\\backups\\company-service-20261101-223213.db",
+  "backup_bytes": 3260416,
+  "integrity_check": "ok",
+  "foreign_key_violations": 0,
+  "live": {
+    "total": 3391,
+    "by_status": {
+      "blocked": 301,
+      "cancelled": 298,
+      "completed": 2754,
+      "failed": 11,
+      "pending": 27
+    }
+  },
+  "restored": {
+    "total": 3391,
+    "by_status": {
+      "blocked": 301,
+      "cancelled": 298,
+      "completed": 2754,
+      "failed": 11,
+      "pending": 27
+    }
+  },
+  "restore_matches": true,
+  "ok": true
+}

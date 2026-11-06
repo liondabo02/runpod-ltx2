@@ -1,0 +1,24 @@
+#cloud-config
+# AHOS uzak model düğümü — Oracle Cloud Free Tier (Ubuntu 24.04 ARM)
+# Ollama'yı kurar, 7B kod modelini indirir ve yalnız localhost'a bağlar.
+# Genel internete 11434 AÇILMAZ; erişim SSH tüneli ile yapılır.
+
+package_update: true
+packages:
+  - curl
+  - ca-certificates
+
+runcmd:
+  - curl -fsSL https://ollama.com/install.sh | sh
+  - mkdir -p /etc/systemd/system/ollama.service.d
+  - |
+    printf '%s\n' '[Service]' 'Environment="OLLAMA_HOST=127.0.0.1:11434"' 'Environment="OLLAMA_KEEP_ALIVE=5m"' \
+      > /etc/systemd/system/ollama.service.d/override.conf
+  - systemctl daemon-reload
+  - systemctl enable --now ollama
+  - sleep 10
+  - sudo -u ollama ollama pull qwen2.5-coder:7b || ollama pull qwen2.5-coder:7b
+  - ollama list > /var/log/ahos-ollama-models.txt
+  - systemctl restart ollama
+
+final_message: "AHOS model düğümü hazır. SSH tüneli ile bağlanın."

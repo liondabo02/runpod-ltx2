@@ -6,9 +6,19 @@ on:
       - main
     tags:
       - "v*"
+    paths-ignore:
+      - 'control_plane/**'
+      - 'control_plane_v2/**'
+      - '.github/workflows/control-plane-ci.yml'
+      - '.github/workflows/control-plane-v2.yml'
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - 'control_plane/**'
+      - 'control_plane_v2/**'
+      - '.github/workflows/control-plane-ci.yml'
+      - '.github/workflows/control-plane-v2.yml'
   workflow_dispatch:
 
 env:
@@ -17,6 +27,7 @@ env:
 
 jobs:
   docker:
+    if: github.event_name != 'pull_request' || github.head_ref != 'feature/agent-control-plane'
     runs-on: ubuntu-latest
     permissions:
       contents: read

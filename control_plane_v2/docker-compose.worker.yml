@@ -1,0 +1,17 @@
+services:
+  miniverse-worker:
+    build:
+      context: ..
+      dockerfile: control_plane_v2/Dockerfile.worker
+    restart: unless-stopped
+    env_file:
+      - .env.runtime
+    environment:
+      MINIVERSE_QUEUE_DB: /var/lib/miniverse/tasks.db
+      MINIVERSE_WORKER_HEALTH_FILE: /var/lib/miniverse/worker-heartbeat.json
+      MINIVERSE_WORKSPACE_ROOT: /workspace
+    volumes:
+      - ./runtime/state:/var/lib/miniverse
+      - ./runtime/workspaces:/workspace
+    stop_grace_period: 30s
+

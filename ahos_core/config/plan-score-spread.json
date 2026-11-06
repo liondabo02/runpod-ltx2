@@ -1,0 +1,537 @@
+{
+  "at": "2026-11-06T19:36:12",
+  "applied": true,
+  "scanned_missions": 2022,
+  "workers_participating": 40,
+  "workers_before": 42,
+  "workers_after": 40,
+  "new_events": 0,
+  "rows": [
+    {
+      "worker": "qa-01",
+      "department": "quality",
+      "missions": 1484,
+      "ok": 1476,
+      "fail": 8,
+      "plan_keys": [
+        "mission",
+        "qa"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "qa-verify-01",
+      "department": "quality",
+      "missions": 1267,
+      "ok": 1267,
+      "fail": 0,
+      "plan_keys": [
+        "qa"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "creative-manager",
+      "department": "creative",
+      "missions": 754,
+      "ok": 738,
+      "fail": 16,
+      "plan_keys": [
+        "document",
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "mgr-data-01",
+      "department": "data",
+      "missions": 683,
+      "ok": 676,
+      "fail": 7,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "creative-animation-specialist",
+      "department": "creative",
+      "missions": 621,
+      "ok": 621,
+      "fail": 0,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "data-01",
+      "department": "data",
+      "missions": 611,
+      "ok": 611,
+      "fail": 0,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "oyun-manager",
+      "department": "oyun",
+      "missions": 217,
+      "ok": 135,
+      "fail": 82,
+      "plan_keys": [
+        "engel-tasfiye",
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "oyun-engineering-lead",
+      "department": "oyun",
+      "missions": 205,
+      "ok": 125,
+      "fail": 80,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "ai-platform-manager",
+      "department": "ai-platform",
+      "missions": 96,
+      "ok": 85,
+      "fail": 11,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "software-manager",
+      "department": "software",
+      "missions": 69,
+      "ok": 45,
+      "fail": 24,
+      "plan_keys": [
+        "executor",
+        "mission",
+        "simple_edit"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "software-engineering-lead",
+      "department": "software",
+      "missions": 64,
+      "ok": 42,
+      "fail": 22,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "mgr-sales-01",
+      "department": "sales",
+      "missions": 32,
+      "ok": 25,
+      "fail": 7,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "mgr-marketing-01",
+      "department": "marketing",
+      "missions": 30,
+      "ok": 16,
+      "fail": 14,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "ai-platform-gateway-engineer",
+      "department": "ai-platform",
+      "missions": 27,
+      "ok": 23,
+      "fail": 4,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "guvenlik-manager",
+      "department": "guvenlik",
+      "missions": 26,
+      "ok": 25,
+      "fail": 1,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "guvenlik-release-guardian",
+      "department": "guvenlik",
+      "missions": 21,
+      "ok": 21,
+      "fail": 0,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "sales-01",
+      "department": "sales",
+      "missions": 21,
+      "ok": 21,
+      "fail": 0,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "hukuk-manager",
+      "department": "hukuk",
+      "missions": 20,
+      "ok": 18,
+      "fail": 2,
+      "plan_keys": [
+        "document",
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "hukuk-01",
+      "department": "hukuk",
+      "missions": 18,
+      "ok": 18,
+      "fail": 0,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "mgr-finance-01",
+      "department": "finance",
+      "missions": 14,
+      "ok": 10,
+      "fail": 4,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "ceo-01",
+      "department": "holding",
+      "missions": 13,
+      "ok": 12,
+      "fail": 1,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "genel-manager",
+      "department": "genel",
+      "missions": 12,
+      "ok": 11,
+      "fail": 1,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "mgr-infrastructure-01",
+      "department": "infrastructure",
+      "missions": 12,
+      "ok": 10,
+      "fail": 2,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "mgr-operations-01",
+      "department": "operations",
+      "missions": 12,
+      "ok": 10,
+      "fail": 2,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "mgr-quality-01",
+      "department": "quality",
+      "missions": 12,
+      "ok": 10,
+      "fail": 2,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "mgr-research-01",
+      "department": "research",
+      "missions": 10,
+      "ok": 8,
+      "fail": 2,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "oyun-engineering-specialist",
+      "department": "oyun",
+      "missions": 10,
+      "ok": 10,
+      "fail": 0,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "mgr-support-01",
+      "department": "support",
+      "missions": 9,
+      "ok": 7,
+      "fail": 2,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "ceo-chief-of-staff-01",
+      "department": "holding",
+      "missions": 8,
+      "ok": 8,
+      "fail": 0,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "genel-delivery-lead",
+      "department": "genel",
+      "missions": 7,
+      "ok": 7,
+      "fail": 0,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "marketing-01",
+      "department": "marketing",
+      "missions": 7,
+      "ok": 7,
+      "fail": 0,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "devops-01",
+      "department": "infrastructure",
+      "missions": 6,
+      "ok": 6,
+      "fail": 0,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "finance-01",
+      "department": "finance",
+      "missions": 6,
+      "ok": 6,
+      "fail": 0,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "ops-01",
+      "department": "operations",
+      "missions": 6,
+      "ok": 6,
+      "fail": 0,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "software-engineering-specialist",
+      "department": "software",
+      "missions": 5,
+      "ok": 3,
+      "fail": 2,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "research-01",
+      "department": "research",
+      "missions": 4,
+      "ok": 4,
+      "fail": 0,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "support-01",
+      "department": "support",
+      "missions": 3,
+      "ok": 3,
+      "fail": 0,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "creative-animation-lead",
+      "department": "creative",
+      "missions": 2,
+      "ok": 2,
+      "fail": 0,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "dev-01",
+      "department": "software",
+      "missions": 1,
+      "ok": 1,
+      "fail": 0,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    },
+    {
+      "worker": "mgr-software-01",
+      "department": "software",
+      "missions": 1,
+      "ok": 1,
+      "fail": 0,
+      "plan_keys": [
+        "mission"
+      ],
+      "new_events": 0,
+      "had_plan_score": true,
+      "now_plan_score": true
+    }
+  ]
+}
