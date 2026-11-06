@@ -87,6 +87,8 @@ def test_due_snapshots_are_bounded_and_never_delete_older_backups(tmp_path):
     assert first["status"] == "saved"
     second = snapshot_if_due(rt, root, every_seconds=600, now=1200)
     assert second["status"] == "fresh"
+    assert second["verified"] is True
+    assert second["files"] == first["files"]
     third = snapshot_if_due(rt, root, every_seconds=600, now=1700)
     assert third["status"] == "saved"
     assert Path(first["snapshot"]).exists()
