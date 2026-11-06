@@ -1,1 +1,6 @@
 {"at": "2026-11-06T18:18:12", "workers": 91, "avg_success": 0.0073, "events": 1867, "workers_with_plan_score": 1, "queue": {"blocked": 40, "cancelled": 299, "completed": 3798, "failed": 13, "pending": 1014}}
+{"at": "2026-11-06T19:18:13", "workers": 91, "avg_success": 0.0308, "events": 1942, "workers_with_plan_score": 6, "queue": {"blocked": 43, "cancelled": 299, "completed": 3916, "failed": 13, "pending": 978}}
+{"at": "2026-11-06T19:26:17", "workers": 91, "avg_success": 0.0308, "events": 1942, "workers_with_plan_score": 6, "queue": {"blocked": 43, "cancelled": 299, "completed": 3922, "failed": 13, "pending": 984}}
+{"at": "2026-11-06T19:30:04", "workers": 91, "avg_success": 0.0324, "events": 1967, "workers_with_plan_score": 6, "queue": {"blocked": 43, "cancelled": 299, "completed": 3950, "failed": 13, "pending": 962}}
+{"at": "2026-11-06T19:34:51", "workers": 94, "avg_success": 0.3767, "events": 3716, "workers_with_plan_score": 42, "queue": {"blocked": 43, "cancelled": 299, "completed": 3954, "failed": 13, "pending": 965}}
+{"at": "2026-11-06T19:36:16", "workers": 94, "avg_success": 0.3767, "events": 3716, "workers_with_plan_score": 42, "queue": {"blocked": 43, "cancelled": 299, "completed": 3960, "failed": 13, "pending": 966}}
