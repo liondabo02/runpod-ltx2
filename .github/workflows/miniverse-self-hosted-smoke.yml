@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout control-plane branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: feature/agent-control-plane
           clean: false
