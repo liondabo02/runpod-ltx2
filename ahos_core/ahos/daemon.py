@@ -60,6 +60,15 @@ def save_state(state: DaemonState) -> None:
     }, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def _idle_study_report(runtime_dir: str | Path) -> dict:
+    """Study only genuinely idle workers; never enqueue work or spend on LLMs."""
+    try:
+        from .self_learning import tick as _idle_study
+        return _idle_study(runtime_dir, limit=6)
+    except Exception as exc:  # do not take down the mission service
+        return {"count": 0, "error": type(exc).__name__}
+
+
 def tick_once(runtime_dir: str | Path, departments: list[dict] | None = None) -> dict:
     """Bir tur daemon çalışması.
 
@@ -114,6 +123,10 @@ def tick_once(runtime_dir: str | Path, departments: list[dict] | None = None) ->
         state.infra["commune"] = _converse(runtime_dir, departments or [], rounds=2)
     except Exception:  # noqa: BLE001
         pass
+
+    # Idle study is bounded, read-only for missions and rotates across all
+    # rostered workers. Recorded lessons are not verified AI self-improvement.
+    state.learning["idle_micro_lessons"] = _idle_study_report(runtime_dir)
 
     # 7) Beyin → eylem: plan adımlarını gerçek göreve çevir
     try:
@@ -229,8 +242,13 @@ def main(argv: list[str] | None = None):
             if args.missions_per_hour > 0 and last_hour >= args.missions_per_hour:
                 ticks += 1
                 last_reason = "saatlik görev limiti doldu; bekleme"
+                # A mission rate limit must not suspend bounded idle learning.
+                # Preserve the existing telemetry and never enqueue on this path.
+                prior_learning = dict(load_state(runtime).learning)
+                prior_learning["idle_micro_lessons"] = _idle_study_report(runtime)
                 _write_service_state(
                     runtime, schema=1, pid=pid, started_at=started_at,
+                    learning=prior_learning,
                     last_tick_at=time.strftime("%Y-%m-%dT%H:%M:%S"), ticks=ticks,
                     status="running", last_reason=last_reason,
                     interval_seconds=args.interval_seconds,
@@ -243,6 +261,7 @@ def main(argv: list[str] | None = None):
                     },
                 )
                 if args.once:
+                    status, last_reason = "stopped", "tek tur (saatlik kota dolu)"
                     break
                 time.sleep(max(1, args.interval_seconds))
                 continue

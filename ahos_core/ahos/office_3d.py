@@ -264,11 +264,14 @@ function person(x, y, z, color, working, name, depId, workerId){
 let built=false;
 function build(snap){
   if (built) return;
-  const deps = (snap.departments||[]).slice(0,20);
-  if (!deps.length) return;
+  // CEO/holding ayrı altın odada gösterilir; grid'de ikinci kez çizilmez.
+  const allDeps = (snap.departments||[]);
+  const holding = allDeps.find(d => d.department_id === 'holding') || null;
+  const deps = allDeps.filter(d => d.department_id !== 'holding').slice(0,19);
+  if (!deps.length && !holding) return;
   built = true;
-  const cols = Math.ceil(Math.sqrt(deps.length));
-  const rows = Math.ceil(deps.length/cols);
+  const cols = Math.ceil(Math.sqrt(Math.max(1, deps.length)));
+  const rows = Math.ceil(Math.max(1, deps.length)/cols);
   const gw = 300, gd = 320;
 
   deps.forEach((dep,i)=>{
@@ -292,8 +295,23 @@ function build(snap){
     }
   });
 
-  // CEO odasi: departmanlarin onunde, altin vurgulu
-  makeRoom(0, (rows/2) * gd + 60, 320, 230, 0xffd166, true, 'CEO Ofisi', 'Holding Yönetimi');
+  // CEO odası: grid'in önünde, altın vurgulu; CEO ve kabinesi İÇİNDE görünür.
+  const ceoZ = (rows/2) * gd + 60;
+  const ceoWorkers = holding ? (holding.workers||[]) : [];
+  makeRoom(0, ceoZ, 320, 230, 0xffd166, true, 'CEO Ofisi',
+           `${ceoWorkers.length} kişi · Holding Yönetimi`, 'holding');
+  const across = Math.max(1, Math.ceil(Math.sqrt(Math.max(1, ceoWorkers.length))));
+  const lines = Math.max(1, Math.ceil(ceoWorkers.length/across));
+  for (let k=0;k<ceoWorkers.length;k++){
+    const w = ceoWorkers[k] || {};
+    const working = w.activity_verified === true;
+    const px = (k%across-(across-1)/2)*72;
+    const pz = ceoZ + (Math.floor(k/across)-(lines-1)/2)*72;
+    const raw = String(w.worker_id || k);
+    const rec = ROSTER[raw];
+    const nm = w.name || (rec ? rec.name : raw);
+    person(px, 10, pz, 0xffd166, working, nm, 'holding', raw);
+  }
 }
 
 function hud(s){
@@ -449,7 +467,7 @@ async function sync(){
   }
 }
 
-let yaw=Math.PI*0.22, pitch=0.82, dist=1450, drag=false, lx=0, ly=0, downX=0, downY=0, moved=false;
+let yaw=Math.PI*0.22, pitch=0.95, dist=1700, drag=false, lx=0, ly=0, downX=0, downY=0, moved=false;
 let focus=null;
 function place(){
   const point=focus||new THREE.Vector3(0,30,0);
@@ -502,7 +520,7 @@ function onClick(e){
 }
 
 function resetView(){
-  focus=null; yaw=Math.PI*.22; pitch=.82; dist=1450; place();
+  focus=null; yaw=Math.PI*.22; pitch=.95; dist=1700; place();
   document.getElementById('deptNav').value='';
   document.getElementById('inspector').hidden=true;
   const renders=document.getElementById('renders');

@@ -319,3 +319,29 @@ ALL_TESTS_EXIT=0
 Kullanıcı kabulü: conversations.jsonl dosyasının son 20 satırında en az 10 gerçek mission_id ve kısaltılmış objective.
 Sonuç: 20/20 (canlı runtime); izole tmp_path testi de 20/20.
 Güvenlik: Terminal mission olmadan kişi adına geçmiş görev uydurulmaz; eksik eşleşmede departman kaynağı olarak ayrıca işaretlenir. Önceki kayıtlar silinmedi.
+
+## 2026-11-06 — AHOS idle study fairness, mission cap and live audit
+
+- Verified live: 17 departments, 81 rostered workers, all 81 worker mind files present.
+- Queue snapshot varied under concurrent jobs: 245 pending earlier, 2 pending during live idle-study check. Both <=300; no manual deletion for the metric.
+- Existing operational plan_scores: 42 distinct worker JSON files populated (96 JSON files including non-roster/metadata).
+- Learning round robin: cursor persisted to runtime/learning/.cursor.json; 81 distinct simulated workers in 14 bounded 6-worker iterations. Real worker-metrics ISO times used to skip activity within 30 minutes; active agents are not mislabeled idle.
+- Live test: 50 eligible idle agents studied; 31 active agents skipped; mission queue 2 -> 2, no new mission enqueued; 17-department roster.
+- Daemon rate-cap path now independently runs bounded idle study, without bypassing mission quotas. This is deterministic micro-lesson generation, **not** model consciousness or empirically verified skill gain.
+
+Focused test:
+```text
+23 passed in 3.48s
+FOCUSED_EXIT=0
+COMPILE_EXIT=0
+14 passed in 4.95s
+GUARD_TESTS_EXIT=0
+```
+
+Full AHOS test:
+```text
+1221 passed, 36 skipped in 174.67s (0:02:54)
+ALL_TESTS_EXIT=0
+```
+
+Only tracked intended changes to daemon.py, self_learning.py, test_self_learning_rotation.py and this evidence in the present commit. Concurrent unrelated uncommitted agent files are left intact.
