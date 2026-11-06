@@ -239,3 +239,43 @@ INTEGRATION_EXIT=0
 ```
 
 kaynak: ahos/owner_console.py → bound_project.work_path, ahos/project_qa.py → make_project_qa(work_path), tests/test_project_qa.py → test_work_path_is_the_project_root_for_acceptance.
+
+## 2026-11-06 — Queue drain plan-score feedback integration
+
+komut : cd ahos_core; ..\control_plane_v2\.venv\Scripts\python.exe -m pytest -q --no-header --timeout=120 tests/test_observed_learning.py tests/test_queue_drain.py tests/test_scope_model_routing_acceptance.py
+exit  : 0
+çıktı :
+```text
+................                                                         [100%]
+16 passed in 2.14s
+PYTEST_EXIT=0
+```
+
+komut : cd ahos_core; ..\control_plane_v2\.venv\Scripts\python.exe -c "import runpy,tempfile,json,gc;from pathlib import Path;t=runpy.run_path('tests/test_observed_learning.py')['test_twenty_observed_tasks_score_more_than_ten_actual_workers'];tmp=tempfile.TemporaryDirectory();root=Path(tmp.name);t(root);scored=sum(bool(json.loads(p.read_text(encoding='utf-8'))['self_model'].get('plan_scores')) for p in (root/'minds').glob('software-worker-*.json'));print('MISSIONS=20 PLAN_SCORES_WORKERS='+str(scored));gc.collect();tmp.cleanup()"
+exit  : 0
+çıktı :
+```text
+MISSIONS=20 PLAN_SCORES_WORKERS=20
+WORKER_ACCEPTANCE_EXIT=0
+```
+
+komut : cd ahos_core; ..\control_plane_v2\.venv\Scripts\python.exe -m pytest -q --no-header --timeout=120 tests
+exit  : 0
+çıktı (final) :
+```text
+........................................................................ [ 92%]
+........................................................................ [ 98%]
+...............                                                          [100%]
+1203 passed, 36 skipped in 248.77s (0:04:08)
+ALL_TESTS_EXIT=0
+```
+
+komut : ..\control_plane_v2\.venv\Scripts\python.exe -m py_compile ahos_core\ahos\queue_drain.py ahos_core\ahos\mind_feedback.py ahos_core\tests\test_observed_learning.py
+exit  : 0
+çıktı :
+```text
+PYCOMPILE_EXIT=0
+```
+
+kaynak: ahos/queue_drain.py → _scoring_worker ve score_plan çağrısı; ahos/mind_feedback.py → record_plan_score bayrağı; tests/test_observed_learning.py → 20 gerçek-işçi-ataması simülasyonu ve çift puanlama testi.
+Not: 20 işçili kabul testi izole tmp_path ortamında sahte konsol ve gerçek SQLite + mind JSON dosyalarıyla koşar. Canlı runtime 20 ayrı çalışanı puanladı iddiası değildir.

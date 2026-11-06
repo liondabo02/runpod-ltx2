@@ -66,7 +66,7 @@ def flush_plan_queue(runtime_dir, limit: int = 10) -> dict:
 
 def feedback(runtime_dir, worker_id: str, department: str, ok: bool,
              duration_s: float = 0.0, *, plan_type: str = "standard",
-             mission_id: str = "") -> dict:
+             mission_id: str = "", record_plan_score: bool = True) -> dict:
     """Score *observed* mission results; never score a claim or imagined task."""
 
     runtime = Path(runtime_dir)
@@ -91,6 +91,9 @@ def feedback(runtime_dir, worker_id: str, department: str, ok: bool,
     mind.self_model["success_rate"] = mind.success_rate
     save(runtime, mind)
 
-    from .consensus import score_plan
-    score_plan(runtime, worker_id, department, plan_type, bool(ok), duration_s)
+    # Queue drain records its plan score explicitly, avoiding double counting.
+    # Other direct callers keep the original combined feedback behaviour.
+    if record_plan_score:
+        from .consensus import score_plan
+        score_plan(runtime, worker_id, department, plan_type, bool(ok), duration_s)
     return result

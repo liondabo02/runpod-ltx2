@@ -15,6 +15,19 @@ from .autonomous_company import PersistentMissionQueue, QueueStatus
 from .mission_orchestrator import MissionResult, MissionStatus
 
 
+def _scoring_worker(result: MissionResult, department: str) -> str:
+    """Credit a worker with an observed execution, not just an assignment.
+
+    Fast-path edits have no step record, so the department manager remains
+    their accountable worker. Never count the independent QA verifier.
+    """
+    for step in result.steps:
+        worker_id = getattr(step, "worker_id", None)
+        if worker_id and getattr(step, "worker_summary", None) is not None:
+            return str(worker_id)
+    return str(result.manager_id or f"{department}-manager")
+
+
 def drain(
     console,
     *,
@@ -176,6 +189,7 @@ def drain(
         # Evidence-based feedback: score the actual *recorded* route and
         # outcome only once per mission. A queued task is not work evidence.
         try:
+            from .consensus import score_plan
             from .mind_feedback import feedback as _feedback
             from .scope import should_document
 
@@ -185,12 +199,20 @@ def drain(
                 "render" if claimed.objective.startswith("render:") else
                 "document" if should_document(claimed.objective) else "executor"
             )
-            _feedback(
-                console.runtime_dir, spec.department_id + "-manager",
-                spec.department_id, _ok,
-                duration_s=max(0.0, time.monotonic() - started_at),
-                plan_type=_route, mission_id=claimed.mission_id,
+            _worker = _scoring_worker(result, spec.department_id)
+            _duration = max(0.0, time.monotonic() - started_at)
+            recorded = _feedback(
+                console.runtime_dir, _worker, spec.department_id, _ok,
+                duration_s=_duration, plan_type=_route,
+                mission_id=claimed.mission_id, record_plan_score=False,
             )
+            # Score the same observed outcome once, after feedback's
+            # per-worker mission-id deduplication gate has accepted it.
+            if not (isinstance(recorded, dict) and recorded.get("duplicate")):
+                score_plan(
+                    console.runtime_dir, _worker, spec.department_id,
+                    _route, _ok, _duration,
+                )
         except Exception:  # noqa: BLE001 - scoring must not forge completion
             pass
         # Agent Atrium günlüğü: kim, hangi departmanda, ne yaptı.
