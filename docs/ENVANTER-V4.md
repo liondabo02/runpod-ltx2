@@ -1,7 +1,7 @@
 # AHOS V4 — Faz 0 Envanteri
 
-- Üretim: 2026-11-07T00:05:30
-- Branch/HEAD: `feature/agent-control-plane` · `b5bfd15b4e42`
+- Üretim: 2026-11-07T00:27:39
+- Branch/HEAD: `feature/agent-control-plane` · `9eb4748cdc41`
 - Departman: **17** · İşçi: **81**
 - Çalışan servisler: ahos.daemon, cognition_sync, collective_loop, control_center, office_server, research_loop
 
@@ -10,7 +10,7 @@
 | Bileşen | Durum | Test | Kanıt |
 |---|---|---|---|
 | `worker_mind` | test edildi | test_worker_mind.py | tests: test_worker_mind.py |
-| `cognitive_memory` | test edildi | test_cognitive_memory.py | tests: test_cognitive_memory.py |
+| `cognitive_memory` | test edildi | test_cognitive_memory.py, test_cognitive_memory_v4.py | tests: test_cognitive_memory.py, test_cognitive_memory_v4.py |
 | `memory_vault` | test edildi | test_memory_vault.py | tests: test_memory_vault.py |
 | `cognition` | test edildi | test_cognition.py | tests: test_cognition.py |
 | `agent_growth` | test edildi | test_agent_growth.py | tests: test_agent_growth.py |
@@ -45,7 +45,7 @@
 - Zihin dosyası: **96** · bilişsel profil: **81**
 - `plan_scores` dolu işçi: **42**
 - Kanıtlı profil: **34** · kanıtsız: **47**
-- Öğrenme kaydı: **7153** · araştırma: **237** · bilgi belgesi: **237**
+- Öğrenme kaydı: **7274** · araştırma: **238** · bilgi belgesi: **238**
 - Sahip kurulumu: **False** · oturum: **0** · denetim satırı: **2**
 - Memory vault: **2** · son: `vault-20261106T230337Z-41da47f9`
 

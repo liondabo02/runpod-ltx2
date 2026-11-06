@@ -1,7 +1,7 @@
 {
-  "at": "2026-11-07T00:05:30",
+  "at": "2026-11-07T00:27:39",
   "git": {
-    "head": "b5bfd15b4e421a475591d2cf310e56fa2607caa1",
+    "head": "9eb4748cdc411956feeafed7292d68a0ac4aa087",
     "branch": "feature/agent-control-plane"
   },
   "departments": 17,
@@ -24,11 +24,12 @@
       "path": "ahos_core/ahos/cognitive_memory.py",
       "status": "test edildi",
       "tests": [
-        "test_cognitive_memory.py"
+        "test_cognitive_memory.py",
+        "test_cognitive_memory_v4.py"
       ],
       "imports": 0,
       "evidence": [
-        "tests: test_cognitive_memory.py"
+        "tests: test_cognitive_memory.py, test_cognitive_memory_v4.py"
       ]
     },
     {
@@ -366,9 +367,9 @@
     "plan_scored_workers": 42,
     "profiles_verified": 34,
     "profiles_no_evidence": 47,
-    "learning_records": 7153,
-    "research_records": 237,
-    "knowledge_docs": 237,
+    "learning_records": 7274,
+    "research_records": 238,
+    "knowledge_docs": 238,
     "owner_configured": false,
     "owner_sessions": 0,
     "owner_audit_lines": 2,
