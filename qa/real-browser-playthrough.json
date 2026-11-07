@@ -1,0 +1,116 @@
+{
+  "origin": "http://127.0.0.1:8791/",
+  "used_game_cheats": false,
+  "started_by": "Input.dispatchMouseEvent",
+  "steps": [
+    {
+      "square": 1,
+      "arrived": "hop",
+      "after": "aim",
+      "score": 0
+    },
+    {
+      "square": 2,
+      "arrived": "hop",
+      "after": "aim",
+      "score": 0
+    },
+    {
+      "square": 3,
+      "arrived": "hop",
+      "after": "aim",
+      "score": 0
+    },
+    {
+      "square": 4,
+      "arrived": "hop",
+      "after": "aim",
+      "score": 0
+    },
+    {
+      "square": 5,
+      "arrived": "hop",
+      "after": "aim",
+      "score": 0
+    },
+    {
+      "square": 6,
+      "arrived": "hop",
+      "after": "aim",
+      "score": 0
+    },
+    {
+      "square": 7,
+      "arrived": "hop",
+      "after": "aim",
+      "score": 0
+    },
+    {
+      "square": 8,
+      "arrived": "hop",
+      "after": "completed",
+      "score": 30
+    }
+  ],
+  "start": {
+    "score": 0,
+    "lives": 3,
+    "clock": 0,
+    "running": true,
+    "hasGame": true,
+    "game": {
+      "phase": "aim",
+      "target": 1,
+      "marker": 0,
+      "balance": 1,
+      "flight": false
+    }
+  },
+  "screenshots": [
+    "C:\\actions-runner\\_work\\AHOS-GAME-SEKSEK-QA-FIX\\games\\seksek\\screenshots\\07-playthrough-after-1.png",
+    "C:\\actions-runner\\_work\\AHOS-GAME-SEKSEK-QA-FIX\\games\\seksek\\screenshots\\08-playthrough-won.png",
+    "C:\\actions-runner\\_work\\AHOS-GAME-SEKSEK-QA-FIX\\games\\seksek\\screenshots\\09-playthrough-restarted.png",
+    "C:\\actions-runner\\_work\\AHOS-GAME-SEKSEK-QA-FIX\\games\\seksek\\screenshots\\10-playthrough-mobile-touch.png"
+  ],
+  "won": {
+    "score": 30,
+    "lives": 3,
+    "clock": 6.278799999952335,
+    "running": false,
+    "hasGame": true,
+    "game": {
+      "phase": "completed",
+      "target": 9,
+      "marker": 0.4600000000000001,
+      "balance": 1,
+      "flight": false
+    }
+  },
+  "restarted": {
+    "score": 0,
+    "lives": 3,
+    "clock": -0.0037999999761577784,
+    "running": true,
+    "hasGame": true,
+    "game": {
+      "phase": "aim",
+      "target": 1,
+      "marker": 0,
+      "balance": 1,
+      "flight": false
+    }
+  },
+  "wrong_throw": {
+    "lives": 2,
+    "score": 0
+  },
+  "mobile": {
+    "viewport": {
+      "innerW": 390,
+      "docW": 390
+    },
+    "touch_arrived": "hop"
+  },
+  "errors": [],
+  "ok": true
+}

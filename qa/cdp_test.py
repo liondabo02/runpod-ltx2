@@ -1,120 +1,179 @@
-"""Gerçek tarayıcı testi: Edge CDP ile Seksek menü → oyun → bitiş → yeniden başlatma."""
-from __future__ import annotations
+"""True UI end-to-end: actual pointer/touch events, eight legal rounds.
 
+Uses only read-only __qa.snap() for assertions. Never invokes __qa.start,
+__qa.finish or any synthetic game completion function.
+"""
+from __future__ import annotations
 import base64
 import json
+import os
 import sys
 import time
 from pathlib import Path
-
 import requests
 import websocket
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-BASE = "http://127.0.0.1:8790/"
-OUT = Path(r"C:\actions-runner\_work\AHOS-GAME-SEKSEK\qa")
-OUT.mkdir(parents=True, exist_ok=True)
-SHOTS = Path(r"C:\actions-runner\_work\AHOS-GAME-SEKSEK\games\seksek\screenshots")
-SHOTS.mkdir(parents=True, exist_ok=True)
+ROOT = Path(__file__).resolve().parents[1]
+OUT = ROOT / "qa"
+SHOTS = ROOT / "games" / "seksek" / "screenshots"
+BASE = os.environ.get("SEKSEK_BASE_URL", "http://127.0.0.1:8790/")
 
 
 class CDP:
-    def __init__(self, url: str) -> None:
+    def __init__(self, url: str):
         self.ws = websocket.create_connection(url, timeout=15)
-        self.next_id = 0
-        self.events: list[dict] = []
+        self.mid = 0
+        self.events = []
 
-    def send(self, method: str, params: dict | None = None) -> dict:
-        self.next_id += 1
-        message_id = self.next_id
-        self.ws.send(json.dumps({"id": message_id, "method": method,
-                                 "params": params or {}}))
+    def send(self, method: str, params=None):
+        self.mid += 1
+        ident = self.mid
+        self.ws.send(json.dumps({"id": ident, "method": method, "params": params or {}}))
         while True:
-            raw = json.loads(self.ws.recv())
-            if raw.get("id") == message_id:
-                if "error" in raw:
-                    raise RuntimeError(f"{method}: {raw['error']}")
-                return raw.get("result") or {}
-            if "method" in raw:
-                self.events.append(raw)
+            row = json.loads(self.ws.recv())
+            if row.get("id") == ident:
+                if row.get("error"):
+                    raise RuntimeError(str(row["error"]))
+                return row.get("result") or {}
+            if row.get("method"):
+                self.events.append(row)
 
-    def evaluate(self, expression: str):
-        result = self.send("Runtime.evaluate", {
-            "expression": expression, "returnByValue": True, "awaitPromise": True})
-        return result.get("result", {}).get("value")
+    def eval(self, source: str):
+        row = self.send("Runtime.evaluate", {"expression": source,
+                                              "returnByValue": True, "awaitPromise": True})
+        if row.get("exceptionDetails"):
+            raise RuntimeError(str(row["exceptionDetails"]))
+        return row.get("result", {}).get("value")
 
-    def shot(self, path: Path) -> None:
-        data = self.send("Page.captureScreenshot", {"format": "png"})["data"]
-        path.write_bytes(base64.b64decode(data))
+    def shot(self, filename: str):
+        path = SHOTS / filename
+        path.write_bytes(base64.b64decode(self.send("Page.captureScreenshot",
+                                                    {"format": "png"})["data"]))
+        return str(path)
+
+    def click(self, x: float, y: float):
+        for kind in ("mousePressed", "mouseReleased"):
+            self.send("Input.dispatchMouseEvent", {"type": kind, "x": x, "y": y,
+                                                   "button": "left", "clickCount": 1})
+
+    def touch(self, x: float, y: float):
+        self.send("Input.dispatchTouchEvent", {"type": "touchStart",
+                                              "touchPoints": [{"x": x, "y": y}]})
+        self.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []})
+
+    def rect(self, selector: str):
+        return self.eval("(()=>{const e=document.querySelector("+json.dumps(selector)+");"
+                         "e.scrollIntoView({block:'center'});const r=e.getBoundingClientRect();"
+                         "return {x:r.x,y:r.y,w:r.width,h:r.height};})()")
+
+    def button(self, selector: str, *, touch=False):
+        r = self.rect(selector)
+        x, y = r["x"] + r["w"]/2, r["y"] + r["h"]/2
+        if touch:
+            self.touch(x, y)
+        else:
+            self.click(x, y)
+
+    def game_point(self, px: float, py: float, *, touch=False):
+        rect = self.rect("#cv")
+        x = rect["x"] + rect["w"] * px / 880
+        y = rect["y"] + rect["h"] * py / 500
+        if touch:
+            self.touch(x, y)
+        else:
+            self.click(x, y)
+
+    def snap(self):
+        return self.eval("window.__qa.snap()")
+
+    def until(self, predicate, timeout: float = 3.0):
+        start = time.monotonic()
+        while time.monotonic()-start < timeout:
+            state = self.snap()
+            if state and predicate(state):
+                return state
+            time.sleep(0.025)
+        raise AssertionError(f"Timeout waiting for game state: {self.snap()}; events={self.events[-5:]}")
 
 
 def main() -> int:
-    targets = requests.get("http://127.0.0.1:9222/json/list", timeout=5).json()
-    page = next(item for item in targets if item.get("type") == "page")
-    cdp = CDP(page["webSocketDebuggerUrl"])
-    cdp.send("Page.enable")
-    cdp.send("Runtime.enable")
-    cdp.send("Log.enable")
-    cdp.send("Page.navigate", {"url": BASE})
-    time.sleep(2.0)
-
-    report: dict = {"url": BASE, "browser": "Edge headless CDP", "steps": []}
-
-    def step(name: str, expression: str, wait: float = 0.6) -> None:
-        value = cdp.evaluate(expression)
-        time.sleep(wait)
-        snap = cdp.evaluate("window.__qa ? __qa.snap() : null")
-        report["steps"].append({"step": name, "value": value, "snap": snap})
-        print(name, "->", value, "|", snap)
-
-    report["title"] = cdp.evaluate("document.title")
-    report["has_qa"] = cdp.evaluate("typeof window.__qa === 'object'")
-    report["canvas"] = cdp.evaluate(
-        "(()=>{const c=document.getElementById('cv');const r=c.getBoundingClientRect();"
-        "return {w:c.width,h:c.height,cssW:Math.round(r.width),cssH:Math.round(r.height)};})()")
-    cdp.shot(SHOTS / "01-menu.png")
-
-    step("start", "__qa.start()", 1.2)
-    cdp.shot(SHOTS / "02-gameplay.png")
-
-    rect = cdp.evaluate(
-        "(()=>{const r=document.getElementById('cv').getBoundingClientRect();"
-        "return {x:r.x,y:r.y,w:r.width,h:r.height};})()")
-    x = rect["x"] + rect["w"] * 0.5
-    y = rect["y"] + rect["h"] * 0.72
-    for event in ("mousePressed", "mouseReleased"):
-        cdp.send("Input.dispatchMouseEvent", {"type": event, "x": x, "y": y,
-                                              "button": "left", "clickCount": 1})
-    time.sleep(0.5)
-    report["after_click"] = cdp.evaluate("__qa.snap()")
-
-    step("finish", "__qa.finish()", 0.8)
-    cdp.shot(SHOTS / "03-finished.png")
-    step("restart", "__qa.restart()", 0.8)
-    cdp.shot(SHOTS / "04-restarted.png")
-
+    targets = requests.get(os.environ.get("SEKSEK_CDP_URL", "http://127.0.0.1:9224/json/list"), timeout=4).json()
+    pages = [x for x in targets if x.get("type") == "page"]
+    assert pages
+    c = CDP(pages[0]["webSocketDebuggerUrl"])
+    for mode in ("Page.enable", "Runtime.enable", "Log.enable"):
+        c.send(mode)
+    c.send("Page.navigate", {"url": BASE})
+    time.sleep(1)
+    assert c.eval("document.title") == "Mipiluna · Seksek"
+    assert c.eval("typeof __qa.finish") == "undefined", "Synthetic finish must be absent"
+    c.button("#startBtn")
+    started = c.until(lambda s: s["running"])
+    assert started["score"] == 0 and started["lives"] == 3
+    report = {"origin": BASE, "used_game_cheats": False, "started_by": "Input.dispatchMouseEvent",
+              "steps": [], "start": started, "screenshots": []}
+    for number in range(1,9):
+        x = 140 + ((number-1)%4)*150
+        y = 180 + ((number-1)//4)*150
+        c.game_point(x,y)
+        arrived = c.until(lambda s: s["game"]["phase"] == "hop"
+                          and s["game"]["target"] == number)
+        # The marker physically moves over the green range; input is a mouse event.
+        c.until(lambda s: 0.43 <= s["game"]["marker"] <= 0.55, timeout=2.8)
+        c.game_point(440,420)
+        state = c.until(lambda s: s["game"]["target"] == number+1,
+                        timeout=1.5)
+        assert state["lives"] == 3 and state["score"] == (30 if number == 8 else 0), state
+        report["steps"].append({"square": number, "arrived": arrived["game"]["phase"],
+                                "after": state["game"]["phase"], "score": state["score"]})
+        if number == 1:
+            report["screenshots"].append(c.shot("07-playthrough-after-1.png"))
+    won = c.snap()
+    assert won["running"] is False and won["score"] == 30
+    report["won"] = won
+    report["screenshots"].append(c.shot("08-playthrough-won.png"))
+    c.button("#startBtn")
+    restarted = c.until(lambda s: s["running"] and s["score"] == 0)
+    report["restarted"] = restarted
+    report["screenshots"].append(c.shot("09-playthrough-restarted.png"))
+    # A real incorrect throw must deduct one life, not silently grant success.
+    c.game_point(590, 330)
+    after_miss = c.until(lambda s: s["lives"] == 2 and s["game"]["phase"] == "aim")
+    assert after_miss["score"] == 0 and after_miss["running"]
+    report["wrong_throw"] = {"lives": after_miss["lives"], "score": after_miss["score"]}
+    # Mobile real touch smoke: starts the game and enters the hop phase.
+    c.send("Emulation.setDeviceMetricsOverride",
+           {"width": 390, "height": 844, "deviceScaleFactor": 1, "mobile": True})
+    c.send("Emulation.setTouchEmulationEnabled", {"enabled": True})
+    c.send("Page.navigate", {"url": BASE})
+    time.sleep(1)
+    mobile_dims = c.eval("({innerW:innerWidth,docW:document.documentElement.scrollWidth})")
+    assert mobile_dims["docW"] <= mobile_dims["innerW"]+2, mobile_dims
+    c.button("#startBtn", touch=True)
+    c.until(lambda s: s["running"])
+    c.game_point(140,180,touch=True)
+    mobile = c.until(lambda s: s["game"]["phase"] == "hop"
+                     and s["game"]["target"] == 1, timeout=3)
+    report["mobile"] = {"viewport": mobile_dims, "touch_arrived": mobile["game"]["phase"]}
+    report["screenshots"].append(c.shot("10-playthrough-mobile-touch.png"))
     errors = []
-    for event in cdp.events:
-        if event.get("method") == "Runtime.exceptionThrown":
-            errors.append(event)
-        elif event.get("method") == "Log.entryAdded":
-            entry = event.get("params", {}).get("entry", {})
-            url = str(entry.get("url") or "")
-            if entry.get("level") == "error" and not url.startswith("chrome-extension://"):
-                errors.append(event)
-    report["runtime_errors"] = errors
-    report["ok"] = bool(
-        report["has_qa"] and report["steps"][0]["snap"] and report["steps"][0]["snap"]["running"]
-        and report["steps"][1]["snap"] and not report["steps"][1]["snap"]["running"]
-        and report["steps"][1]["snap"]["score"] == 30
-        and report["steps"][2]["snap"] and report["steps"][2]["snap"]["running"]
-        and report["steps"][2]["snap"]["score"] == 0
-        and not errors)
-    (OUT / "browser-test.json").write_text(
+    for e in c.events:
+        if e.get("method") == "Runtime.exceptionThrown":
+            errors.append("runtime_exception")
+        if e.get("method") == "Log.entryAdded":
+            entry = e.get("params", {}).get("entry", {})
+            if entry.get("level") == "error" and not str(entry.get("url") or "").startswith("chrome-extension://"):
+                errors.append(str(entry)[:140])
+    report["errors"] = errors
+    report["ok"] = len(report["steps"]) == 8 and not errors
+    (OUT/"real-browser-playthrough.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(json.dumps({"ok": report["ok"], "title": report["title"],
-                      "screenshots": [str(p) for p in sorted(SHOTS.glob("*.png"))],
-                      "errors": len(errors)}, ensure_ascii=False))
+    print(json.dumps({"ok": report["ok"], "rounds": len(report["steps"]),
+                      "score": won["score"], "lives": won["lives"],
+                      "restarted": restarted["score"] == 0,
+                      "mobile": report["mobile"], "errors": errors},
+                     ensure_ascii=False))
     return 0 if report["ok"] else 1
 
 

@@ -1,39 +1,45 @@
-# Mipiluna · Seksek (tek oyun)
+# Mipiluna · Seksek — oynanabilir tek oyun
 
-Mevcut `mipiluna/www/sokak-oyunlari.html` motorundan **Seksek** oyunu ayrıştırıldı;
-tek oyunluk, kendi kendine yeten, mobil dokunmatik oynanabilir sürüm.
+**Tür:** 2D Canvas / mobil dokunmatik mini oyun. Orijinal 8 oyunluk
+`mipiluna/www/sokak-oyunlari.html` aynen korunur; bu dosyada yalnız Seksek kodu vardır.
 
-## Nasıl çalıştırılır?
+## Başlatma
 
 ```powershell
-cd C:\actions-runner\_work\AHOS-GAME-SEKSEK
+cd C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
 python -m http.server 8790 --bind 127.0.0.1 --directory games\seksek
 ```
 
-Tarayıcı: **http://127.0.0.1:8790/**
+**Yerel adres:** http://127.0.0.1:8790/
 
-Tek dosya olarak da açılabilir: `games/seksek/index.html` (ses dosyaları için HTTP önerilir).
+Bu adres yalnız sunucuyu çalıştıran aynı bilgisayarda veya o bilgisayara erişebilen
+tarayıcıda açılır; internete yayımlanmış bir mağaza oyunu değildir.
 
-## Oynanış
+## Nasıl oynanır?
 
-1. **Amaç:** taşı sırayla 1→8 karelere at, sonra ritim çubuğunda yeşil alanda dokunarak 8 kez zıpla.
-2. Kareye tıklayınca taş fırlar; hedef kareye düşerse zıplama fazı başlar.
-3. Yeşil alanda dokunmak `+denge`, ıskalamak dengeyi azaltır; denge 0 olursa oyun biter.
-4. 8 zıplama tamamlanınca **+30 puan** ve 3 yıldız; **Başla** ile yeniden başlar.
+1. **Başla** düğmesine bas.
+2. Önce **1 numaralı kareye** dokun/tıkla. Sarı taş yaklaşık 0,35 saniyede kareye uçar.
+3. Alt ritim çubuğundaki beyaz gösterge **yeşil bölgedeyken** ekrana dokun.
+4. Sonraki turda **2 numaralı kareyi** hedefle. Bu sırayı **8. kareye kadar** tamamla.
+5. Başarılı 8 turun sonunda **30 puan, 3 yıldız** kazanılır. **Başla** ile sıfırdan oyna.
 
-## Özellikler
+Yanlış kare seçildiğinde veya yeşil alan kaçırıldığında can azalır; üç can biterse
+başarısız olursun. Puan, süre, can, denge ve seviye arayüzde gösterilir.
+Oyun; ses, öğretmen açıklaması, ipucu, mobil dokunma ve yerel ilerleme kaydını kullanır.
 
-- Başlangıç ekranı (menü) + **Başla** düğmesi
-- Puan, can, süre, denge çubuğu
-- Oyun sonu ve **yeniden başlatma**
-- Mobil dokunmatik (`pointerdown/move/up`), responsive tuval
-- Öğretmen sesi/ipucu (mevcut mp3 dosyaları), ses kapatma
-- `?auto=1` ile doğrudan oynanış (QA/test)
-- `window.__qa` test kancası (start/finish/restart/snap)
+## Gerçek doğrulama
 
-## Kanıt
+- Tarayıcı: Microsoft Edge, **CDP gerçek fare/touch olayları**.
+- Başlat düğmesiyle giriş, sırayla 1–8 kareye tıklama, sekiz zamanlı atlayış,
+  **gerçek 30 puan**, yeniden başlatma, yanlış atışta can azalması doğrulandı.
+- Mobil 390×844: fiziksel dokunma olayıyla başlangıç ve 1. kareye geçiş doğrulandı.
+- `__qa.finish()` gibi doğrudan kazandıran test kısayolu kaldırıldı.
+- Kanıt: `qa/real-browser-playthrough.json`, `qa/cdp_test.py`,
+  `games/seksek/screenshots/07-*.png`–`10-*.png`.
+- Statik test: `python -m pytest -q games/seksek/tests/test_seksek_static.py`.
+- JavaScript: HTML içindeki betik ayıklanıp `node --check` ile kontrol edildi.
 
-- Tarayıcı testi: `qa/browser-test.json` (Edge headless CDP, 0 hata)
-- Ekran görüntüleri: `games/seksek/screenshots/` (menü, oynanış, bitiş, yeniden başlatma, mobil)
-- Statik testler: `games/seksek/tests/test_seksek_static.py` (4 passed)
-- Test betiği: `qa/cdp_test.py`
+**Kapsam sınırı:** Bu, üç boyutlu oyun değildir; 10 dakikalık insan
+kullanılabilirlik testi, farklı fiziksel Android/iOS cihazları ve mağaza yayını
+henüz doğrulanmadı. QA ekran görüntüleri algoritmik olayların kanıtıdır, çocuk
+kullanıcı deneyimi onayı değildir.

@@ -1,46 +1,51 @@
-# QA kanıtları — Mipiluna Seksek
+# Seksek QA — gerçek tarayıcı oynanışı
 
-Ortam: Windows · Edge headless **Edg/156.0.4314.42** · CDP (port 9222)
-Sunucu: `python -m http.server 8790 --directory games/seksek` → **http://127.0.0.1:8790/**
+## Eski raporun sınırı
 
-## Tarayıcı testi (gerçek oynanış)
+`qa/browser-test.json` ve `01-menu`–`06-mobile-gameplay` eski ilk denemeye
+aittir. Eski testte **`__qa.finish()` ile puan verildiği için** gerçek kazanma
+kanıtı değildir. Bunları tarihsel kayıt olarak koruyoruz; PASS dayanağı yapmıyoruz.
 
-```powershell
-python qa/cdp_test.py
-```
+## Bağımsız oynanış testi (doğru yöntem)
 
-Adımlar ve ham sonuçlar (`qa/browser-test.json`):
+- Test: `qa/cdp_test.py`.
+- Kanıt: `qa/real-browser-playthrough.json`.
+- Görseller: `games/seksek/screenshots/07-playthrough-after-1.png`,
+  `08-playthrough-won.png`, `09-playthrough-restarted.png`,
+  `10-playthrough-mobile-touch.png`.
+- Test, `Input.dispatchMouseEvent` ile başlangıç ve **8 gerçek kare/ritim
+  girdisi** gönderir. `__qa.snap()` yalnız **durum okumak** içindir.
+  `__qa.finish()` koddan kaldırılmıştır.
+- Negatif test: yanlış kareye atılınca can 3'ten 2'ye düşer.
+- Mobil: `Emulation.setDeviceMetricsOverride` 390×844 ve
+  `Input.dispatchTouchEvent` ile taş atma akışı doğrulanır.
+- Tarayıcı konsol/runtime hatası kontrol edilir.
 
-| Adım | Sonuç |
-|---|---|
-| Menü yükleme | `document.title = "Mipiluna · Seksek"`, `__qa` mevcut |
-| `__qa.start()` | `running=true`, score 0, can 3 |
-| Tuval tıklaması (taş atışı) | hata yok, oyun çalışıyor |
-| `__qa.finish()` | `running=false`, **score 30** |
-| `__qa.restart()` | `running=true`, **score 0** |
-| Konsol hataları | **0** |
+## Yerel yeniden üretim
 
-```text
-{"ok": true, "errors": 0}
-```
-
-Ekran görüntüleri: `games/seksek/screenshots/`
-`01-menu.png` · `02-gameplay.png` · `03-finished.png` · `04-restarted.png` ·
-`05-mobile-menu.png` · `06-mobile-gameplay.png` (390×844)
-
-## Statik testler
+Önce oyunun HTTP sunucusunu başlat:
 
 ```powershell
-python -m pytest -q games/seksek/tests/test_seksek_static.py
-4 passed
+python -m http.server 8790 --bind 127.0.0.1 --directory games\seksek
 ```
 
-Kapsam: tek oyun (Seksek), başlangıç/puan/can/tuval, pointer olayları,
-yeniden başlatma ve `?auto=1`, ses dosyalarının varlığı.
+Ayrı bir Edge headless örneğinde CDP 9224 portunu aç
+(`--remote-debugging-port=9224 --remote-allow-origins=*`, yalnız yerel
+test profilinde, ağdan erişimi açmadan). Sonra:
 
-## Dürüst sınırlar
+```powershell
+python qa\cdp_test.py
+python -m pytest -q games\seksek\tests\test_seksek_static.py
+```
 
-- Bu bir **2D tarayıcı mini oyunu**; 3D model/rig değil.
-- Skor/oyun döngüsü tarayıcıda doğrulandı; insan eliyle uzun oturum testi
-  (ör. 10 dakika) yapılmadı.
-- Görsel stil Mipiluna'nın mevcut koyu tema paletini kullanır; yeni asset üretilmedi.
+Başka portlarda test etmek için ortam değişkenleri:
+`SEKSEK_BASE_URL=http://127.0.0.1:8791/`,
+`SEKSEK_CDP_URL=http://127.0.0.1:9224/json/list`.
+
+Üretim sunucusunu CDP portuyla internete açmayın.
+
+## Sınırlar
+
+Bu test gerçek tarayıcı olaylarıyla oyunun işleyişini doğrular fakat
+insan katılımlı uzun süreli deneyim testi veya dışarıdan cihaz testi değildir.
+Eski skor ekran görüntüsü değil, yeni `08-playthrough-won.png` kanıttır.
