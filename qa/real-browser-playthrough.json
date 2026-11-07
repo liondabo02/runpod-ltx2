@@ -1,5 +1,5 @@
 {
-  "origin": "http://127.0.0.1:8791/",
+  "origin": "http://127.0.0.1:8790/",
   "used_game_cheats": false,
   "started_by": "Input.dispatchMouseEvent",
   "steps": [
@@ -55,7 +55,7 @@
   "start": {
     "score": 0,
     "lives": 3,
-    "clock": 0,
+    "clock": 0.0013000000715255738,
     "running": true,
     "hasGame": true,
     "game": {
@@ -67,21 +67,21 @@
     }
   },
   "screenshots": [
-    "C:\\actions-runner\\_work\\AHOS-GAME-SEKSEK-QA-FIX\\games\\seksek\\screenshots\\07-playthrough-after-1.png",
-    "C:\\actions-runner\\_work\\AHOS-GAME-SEKSEK-QA-FIX\\games\\seksek\\screenshots\\08-playthrough-won.png",
-    "C:\\actions-runner\\_work\\AHOS-GAME-SEKSEK-QA-FIX\\games\\seksek\\screenshots\\09-playthrough-restarted.png",
-    "C:\\actions-runner\\_work\\AHOS-GAME-SEKSEK-QA-FIX\\games\\seksek\\screenshots\\10-playthrough-mobile-touch.png"
+    "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\games\\seksek\\screenshots\\07-playthrough-after-1.png",
+    "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\games\\seksek\\screenshots\\08-playthrough-won.png",
+    "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\games\\seksek\\screenshots\\09-playthrough-restarted.png",
+    "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\games\\seksek\\screenshots\\10-playthrough-mobile-touch.png"
   ],
   "won": {
     "score": 30,
     "lives": 3,
-    "clock": 6.278799999952335,
+    "clock": 6.2176000000715375,
     "running": false,
     "hasGame": true,
     "game": {
       "phase": "completed",
       "target": 9,
-      "marker": 0.4600000000000001,
+      "marker": 0.46,
       "balance": 1,
       "flight": false
     }
@@ -89,7 +89,7 @@
   "restarted": {
     "score": 0,
     "lives": 3,
-    "clock": -0.0037999999761577784,
+    "clock": 0,
     "running": true,
     "hasGame": true,
     "game": {

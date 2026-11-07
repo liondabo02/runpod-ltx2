@@ -104,6 +104,9 @@ def main() -> int:
     c = CDP(pages[0]["webSocketDebuggerUrl"])
     for mode in ("Page.enable", "Runtime.enable", "Log.enable"):
         c.send(mode)
+    # A prior mobile run must not leak viewport or touch settings into desktop QA.
+    c.send("Emulation.setTouchEmulationEnabled", {"enabled": False})
+    c.send("Emulation.clearDeviceMetricsOverride")
     c.send("Page.navigate", {"url": BASE})
     time.sleep(1)
     assert c.eval("document.title") == "Mipiluna · Seksek"
