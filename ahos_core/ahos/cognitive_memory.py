@@ -66,6 +66,14 @@ def load(runtime, worker_id: str, department: str = "") -> dict:
         raise ValueError(f"cognition profile unreadable; original preserved: {path.name}") from exc
     if not isinstance(payload, dict) or payload.get("schema") != SCHEMA:
         raise ValueError(f"cognition profile schema mismatch: {path.name}")
+    # Eski profilleri bozmadan yeni katmanları ekle (geriye dönük migrasyon).
+    defaults = new_profile(str(payload.get("worker_id") or worker_id),
+                           str(payload.get("department") or department))
+    memory = payload.setdefault("memory", {})
+    for key, value in defaults["memory"].items():
+        memory.setdefault(key, value)
+    payload.setdefault("meta_memory", {})
+    payload.setdefault("conflicts", [])
     return payload
 
 

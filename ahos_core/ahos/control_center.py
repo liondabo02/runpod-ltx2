@@ -1104,6 +1104,12 @@ def build_handler(state: ControlCenterState):
                 body = _panel_auth.render_login(nxt, setup=setup).encode("utf-8")
                 self._send(200, body, "text/html; charset=utf-8")
                 return
+            if parsed.path == "/intelligence":
+                from .intelligence import render_html, snapshot
+
+                body = render_html(snapshot(state.runtime_dir)).encode("utf-8")
+                self._send(200, body, "text/html; charset=utf-8")
+                return
             if parsed.path == "/outputs":
                 body = render_outputs_page(
                     state.output_index(),
