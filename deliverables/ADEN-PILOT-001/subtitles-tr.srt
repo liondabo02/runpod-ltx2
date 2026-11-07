@@ -1,0 +1,11 @@
+1
+00:00:00,250 --> 00:00:11,417
+Bir bahar sabahı Aden ve Kaan uçurtma uçurmaya çıktı.
+
+2
+00:00:11,417 --> 00:00:22,583
+Sert rüzgâr kuyruğu kopardı; Kaan 'birlikte yaparız' dedi.
+
+3
+00:00:22,583 --> 00:00:33,750
+Renkli kumaşlarla yeni kuyruk dikildi; uçurtma yeniden yükseldi.

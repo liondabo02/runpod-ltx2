@@ -1,0 +1,197 @@
+{
+  "schema": "ahos.delivery.manifest.v1",
+  "delivery_id": "ADEN-PILOT-001",
+  "generated_at": "2026-11-07T09:55:51",
+  "project": {
+    "manager": "creative-manager",
+    "state": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\ahos_core\\runtime\\projects\\ADEN-PILOT-001\\state.json"
+  },
+  "spec": {
+    "seconds": 34.0,
+    "fps": 24,
+    "width": 1920,
+    "height": 1080,
+    "script": "Bir bahar sabahı Aden ve Kaan uçurtma uçurmaya çıktı. Rüzgâr tatlı tatlı esiyordu. Uçurtma gökyüzünde dans ediyordu. Derken sert bir rüzgâr geldi ve uçurtmanın kuyruğu koptu. Aden üzüldü. Kaan, birlikte yeni bir kuyruk yaparız, dedi. İki kardeş renkli kumaşlar buldu. Sabırla düğümlediler. Yeni kuyruk rengârenk oldu. Uçurtma yeniden yükseldi. Birlikte başardılar."
+  },
+  "files": {
+    "video": {
+      "path": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\deliverables\\ADEN-PILOT-001\\aden-pilot.mp4",
+      "exists": true,
+      "bytes": 1746064,
+      "sha256": "7e89b17e7a27f749c17a4e93b0a0553793e099ec25ac436d2d3744eed2bd2fde"
+    },
+    "poster": {
+      "path": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\deliverables\\ADEN-PILOT-001\\poster.png",
+      "sha256": "8af3380290533d9f0bb7cb5e1a7bebd9fb7bb51ea33f74ad302124f31aac4aeb"
+    },
+    "subtitles_tr": {
+      "path": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\deliverables\\ADEN-PILOT-001\\subtitles-tr.srt",
+      "sha256": "60dc901fb60fb977f18434ca5ff071daf2df4c960cad17d9cad16700530ded33"
+    },
+    "subtitles_de": {
+      "path": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\deliverables\\ADEN-PILOT-001\\subtitles-de.srt",
+      "sha256": "33a729d512b9c5d979a7c354b68aafad475f1373f48f080b5d2394458cd93925"
+    },
+    "audio": {
+      "path": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\deliverables\\ADEN-PILOT-001\\audio-tr.wav",
+      "sha256": "a57483d93f4ed126c8f9d38a302d2f477f2a68784c7b8555ae0ebb0f7a9e343e"
+    }
+  },
+  "ffprobe": {
+    "format": {
+      "filename": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\deliverables\\ADEN-PILOT-001\\aden-pilot.mp4",
+      "nb_streams": 2,
+      "nb_programs": 0,
+      "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+      "format_long_name": "QuickTime / MOV",
+      "start_time": "-0.021333",
+      "duration": "34.022000",
+      "size": "1746064",
+      "bit_rate": "410572",
+      "tags": {
+        "major_brand": "isom",
+        "minor_version": "512",
+        "compatible_brands": "isomiso2avc1mp41",
+        "encoder": "Lavf55.14.101"
+      }
+    },
+    "streams": [
+      {
+        "codec_type": "video",
+        "codec_name": "h264",
+        "width": 1920,
+        "height": 1080,
+        "avg_frame_rate": "24/1",
+        "sample_rate": null,
+        "channels": null
+      },
+      {
+        "codec_type": "audio",
+        "codec_name": "aac",
+        "width": null,
+        "height": null,
+        "avg_frame_rate": "0/0",
+        "sample_rate": "48000",
+        "channels": 2
+      }
+    ]
+  },
+  "qa": {
+    "verifier": "qa-01",
+    "independent": true,
+    "ok": true,
+    "checks": {
+      "exists": true,
+      "video_stream": true,
+      "audio_stream": true,
+      "duration_ok": true,
+      "resolution_ok": true,
+      "fps_ok": true,
+      "frames_ok": true,
+      "not_blank": true,
+      "audio_not_silent": true,
+      "sha256": "7e89b17e7a27f749c17a4e93b0a0553793e099ec25ac436d2d3744eed2bd2fde",
+      "bytes": 1746064,
+      "duration": 34.022,
+      "fps": 24.0,
+      "frame_stats": {
+        "frames": 816,
+        "min_std": 35.67,
+        "mean_std": 36.45,
+        "sampled": 6
+      },
+      "rms_db": -22.93
+    }
+  },
+  "preflight": {
+    "routing": {
+      "script": {
+        "selected": "creative-story-specialist",
+        "department": "creative",
+        "reason": "yetenek 2/3; başarı kanıt yok; kanıt no_verified_evidence; uygun; çapraz departman"
+      },
+      "frames": {
+        "selected": "creative-animation-specialist",
+        "department": "creative",
+        "reason": "yetenek 1/3; başarı 1.0; kanıt verified; uygun; çapraz departman"
+      },
+      "audio": {
+        "selected": null,
+        "department": null,
+        "reason": "gerekli yeteneklere sahip işçi bulunamadı"
+      },
+      "mux": {
+        "selected": "data-01",
+        "department": "data",
+        "reason": "yetenek 1/3; başarı 1.0; kanıt verified; uygun; çapraz departman"
+      }
+    },
+    "assessment": {
+      "task": "pilot video üretimi",
+      "can_do": true,
+      "samples": 60,
+      "confidence": 0.984,
+      "error_rate": 0.0,
+      "similar_tasks": 0,
+      "similar_success": null,
+      "missing_information": [],
+      "qa_required": false,
+      "decision": "proceed",
+      "reason": "benzer görevlerde kanıtlı başarı var",
+      "required_skills": []
+    },
+    "plan": {
+      "chosen": "deterministik_yerel",
+      "rationale": "deterministik_yerel seçildi: skor 0.8685 (başarı 0.95, risk 0.1)"
+    }
+  },
+  "files_de": {
+    "video": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\deliverables\\ADEN-PILOT-001\\aden-pilot-de.mp4",
+    "sha256": "10cafb441f7d48a6f48d932fe42746e81d21644bd6ce192fe04ae113e00596c0",
+    "qa_ok": true
+  },
+  "contributors": [
+    {
+      "worker": "creative-story-specialist",
+      "department": "creative",
+      "task": "script",
+      "output": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\deliverables\\ADEN-PILOT-001\\script-tr.txt",
+      "verified_by": "qa-01",
+      "status": "completed"
+    },
+    {
+      "worker": "creative-animation-specialist",
+      "department": "creative",
+      "task": "audio",
+      "output": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\deliverables\\ADEN-PILOT-001\\audio-tr.wav",
+      "verified_by": "qa-01",
+      "status": "completed"
+    },
+    {
+      "worker": "creative-audio-lead",
+      "department": "creative",
+      "task": "frames",
+      "output": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\deliverables\\ADEN-PILOT-001\\frames",
+      "verified_by": "qa-01",
+      "status": "completed"
+    },
+    {
+      "worker": "data-01",
+      "department": "software",
+      "task": "mux",
+      "output": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\deliverables\\ADEN-PILOT-001\\aden-pilot.mp4",
+      "verified_by": "qa-01",
+      "status": "completed"
+    }
+  ],
+  "cost_usd": 0.0,
+  "reproduce": "python tools/delivery_pilot.py --seconds 34.0 --out C:/actions-runner/_work/runpod-ltx2/runpod-ltx2/deliverables/ADEN-PILOT-001",
+  "delivery": {
+    "processed": true,
+    "file_created": true,
+    "file_verified": true,
+    "qa_passed": true,
+    "delivered": true
+  },
+  "note": "Deterministik vektörel hat; LTX-2/ComfyUI modeli kullanılmadı. Kareler PIL ile çizildi, ses edge-tts ile üretildi, mux ffmpeg."
+}
