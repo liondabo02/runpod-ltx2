@@ -36,6 +36,7 @@ GENDER_WORDS = {
     "male": ("boy", "man ", "brother", "he ", " his "),
 }
 EXPECTED = {"characters": 16, "relationships": 28, "canon_facts": 3}
+BABIES = {"medine", "ramin"}
 
 
 class CanonError(RuntimeError):
@@ -163,23 +164,53 @@ class CharacterCanon:
 
     # ------------------------------------------------------------- validation
     def conflicts(self) -> list[dict]:
+        """Bulguları ayrı kategorilerde döndürür; teknik kimlik çelişkisi ile
+        eksik varlık aynı kovaya konmaz."""
+
         ids = set(self.store.character_ids())
         problems: list[dict] = []
         for entry in self.entries():
             for issue in entry.issues:
-                problems.append({"character_id": entry.character_id, "issue": issue,
-                                 "severity": "error" if issue == "gender_conflict" else "warn"})
+                if issue == "gender_conflict":
+                    problems.append({"character_id": entry.character_id, "issue": issue,
+                                     "category": "technical_identity_conflict",
+                                     "severity": "error"})
+                elif issue in {"voice_spec_missing", "gender_missing"}:
+                    problems.append({"character_id": entry.character_id, "issue": issue,
+                                     "category": "identity_data_missing",
+                                     "severity": "error"})
+                elif issue in {"missing_visual_canon", "visual_canon_missing"}:
+                    problems.append({"character_id": entry.character_id, "issue": issue,
+                                     "category": "missing_visual_canon",
+                                     "severity": "info"})
+                elif issue == "audio_asset_missing":
+                    baby = entry.character_id in BABIES
+                    problems.append({"character_id": entry.character_id, "issue": issue,
+                                     "category": "baby_audio_absent" if baby else "missing_audio_asset",
+                                     "severity": "info" if baby else "warning"})
+                else:
+                    problems.append({"character_id": entry.character_id, "issue": issue,
+                                     "category": "other", "severity": "warning"})
         for rel in self.relationships():
             for side in (rel["from"], rel["to"]):
                 if side not in ids:
                     problems.append({"character_id": side, "issue": "orphan_relationship",
+                                     "category": "technical_identity_conflict",
                                      "severity": "error"})
         return problems
+
+    @staticmethod
+    def _by_category(problems: list[dict]) -> dict:
+        counts: dict[str, int] = {}
+        for item in problems:
+            counts[item["category"]] = counts.get(item["category"], 0) + 1
+        return dict(sorted(counts.items()))
 
     def summary(self) -> dict:
         entries = self.entries()
         audio_ok = sum(1 for entry in entries
                        if all(item["exists"] for item in entry.audio.values()))
+        problems = self.conflicts()
         return {
             "characters": len(entries),
             "relationships": len(self.relationships()),
@@ -187,8 +218,11 @@ class CharacterCanon:
             "with_visual_canon": sum(1 for entry in entries if entry.visual_path),
             "with_audio_en_tr": audio_ok,
             "gender_known": sum(1 for entry in entries if entry.gender),
-            "conflicts": len(self.conflicts()),
-            "errors": sum(1 for item in self.conflicts() if item["severity"] == "error"),
+            "findings": len(problems),
+            "conflicts_by_category": self._by_category(problems),
+            "errors": sum(1 for item in problems if item["severity"] == "error"),
+            "warnings": sum(1 for item in problems if item["severity"] == "warning"),
+            "info": sum(1 for item in problems if item["severity"] == "info"),
             "bible": str(self.bible_path),
             "private": True,
         }

@@ -885,3 +885,42 @@ freeze_ratio 0,008 -> PASS · flicker 0,13 -> PASS · sharpness 8,2 (2,5x upscal
 creative = NOT_EVALUATED (onay Harun)
 ```
 
+## Ortam düzeltmesi + model sheet v1 (2026-11-07 19:55)
+generated_at: 2026-11-07T19:55:00
+
+komut : control_plane_v2/.venv/Scripts/python.exe -m pip install opencv-python-headless gradio_client
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 0
+```text
+Python 3.12.7 venv · cv2 5.0.0 · gradio_client 2.7.2 · huggingface_hub 1.31.0
+```
+
+komut : .venv pytest (4 dosya) ve genel Python pytest (aynı 4 dosya)
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\ahos_core
+exit : 0 / 0
+```text
+14 passed in 7.33s   (venv)
+14 passed in 7.57s   (global)
+```
+
+komut : python -m ahos.character_canon --summary (venv)
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\ahos_core
+exit : 0
+```json
+{"characters":16,"relationships":28,"canon_facts":3,"with_visual_canon":2,
+ "conflicts_by_category":{"baby_audio_absent":2,"missing_visual_canon":14},
+ "errors":0,"warnings":0,"info":16}
+```
+
+komut : model sheet üretimi (HF token; değer loglanmadı)
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 0 (Kaan ifade hariç)
+```text
+Aden reference FLUX seed 78 · Aden turnaround Kontext seed 101 (42,0 sn)
+Aden expressions Kontext seed 202 (42,7 sn) · Kaan reference FLUX seed 80 (12,9 sn)
+Kaan turnaround Kontext seed 303 (43,7 sn)
+Kaan expressions: BLOKLU — "You have exceeded your ZeroGPU runs limit."
+Etiketli sayfalar + manifest: control_plane_v2/runtime/private/animation-studio/model-sheets/
+Görsel referans; 3D mesh/rig üretilmedi.
+```
+

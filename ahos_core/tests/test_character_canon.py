@@ -33,6 +33,10 @@ def test_real_bible_has_16_characters_28_relations_3_facts():
     assert summary["gender_known"] == 16
     assert summary["with_audio_en_tr"] == 14
     assert [item for item in canon.conflicts() if item["severity"] == "error"] == []
+    categories = summary["conflicts_by_category"]
+    assert categories.get("missing_visual_canon") == 14
+    assert categories.get("baby_audio_absent") == 2
+    assert "missing_audio_asset" not in categories
 
 
 def test_aden_is_female_in_unified_canon():

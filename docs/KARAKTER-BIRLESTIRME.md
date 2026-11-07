@@ -84,13 +84,21 @@ python -m pytest -q tests/test_character_canon.py tests/test_audio_audit.py
 
 python -m ahos.character_canon --summary
 {"characters":16,"relationships":28,"canon_facts":3,"with_visual_canon":2,
- "with_audio_en_tr":14,"gender_known":16,"conflicts":16,"errors":0}
+ "with_audio_en_tr":14,"gender_known":16,"findings":16,
+ "conflicts_by_category":{"missing_visual_canon":14,"baby_audio_absent":2},
+ "errors":0,"warnings":0}
 
 python tools/audio_asset_audit.py
 {"folders":14,"files":28,"issues":1,"characters_with_issues":1}
 ```
 
-`conflicts:16` = 14 görsel kanon eksik (NOT_CREATED) + 2 bebek sesi yok; **kritik 0**.
+`findings:16` artık **kategorilidir**:
+- `missing_visual_canon = 14` → bilgi (JSON var, görsel yok)
+- `baby_audio_absent = 2` → bilgi (Medine/Ramin bebek; ses klasörü beklenmez)
+- `technical_identity_conflict = 0` → hata yok
+- `missing_audio_asset = 0`, `warnings = 0`
+
+Eksik görsel ile teknik kimlik çelişkisi aynı kategoride raporlanmaz.
 
 ## 7. Görsel karakter tasarımı durumu
 
