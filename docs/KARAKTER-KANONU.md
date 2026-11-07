@@ -88,8 +88,28 @@ tutulur; **git'e girmez** (manifest girer).
 
 Eşikler **deneysel**: ilk gerçek üretimde kalibre edilecek; şimdiden "geçer" denemez.
 
+## 6b. Hollywood kilidi ve merch hazırlığı
+
+Kalite çıtası: **Pixar/DreamWorks sınıfı sinema** (`docs/HOLLYWOOD-BENCHMARK.md`).
+Skor: `characters/qc-rubric.json` (6 boyut, 1–5); kabul ortalaması ≥4,0 ve hiçbir boyut <3.
+
+Bir karakter "kilitli" sayılmadan sahne üretilmez:
+
+1. Model sheet: ön / 3-4 / yan / arka, aynı ışık ve ölçekte.
+2. İfade sheet: nötr, mutlu, şaşkın, üzgün, korku, merak.
+3. Ölçek çizelgesi: Aden 98 cm, Kaan 76 cm, oran 0,776.
+4. Renk kilidi: hex palet + ΔE ≤ 8.
+5. Prop sheet: uçurtma panelleri + kuyruk; park paleti.
+
+**Oyuncak/lisans için:** model sheet + ölçek + renk kilidi olmadan merch üretimi
+başlatılmaz. Karakter kimliği her bölümde bu dosyalarla doğrulanır.
+
+Üretim zinciri (tutarlılık için): kanon → referans görseli → sahne keyframe'i
+(referans koşullu) → I2V → renk eşleme → skorlu QA. Aynı keyframe + sabit seed
+kullanılmadan çok sahneli tutarlılık beklenmez.
+
 ## 7. Sınırlar (iddia edilmeyen)
 
-- Referans görselleri henüz **yok**; ücretsiz sağlayıcı kapandı.
+- Referans görselleri henüz **tam set değil** (take1 keyframe'i var; turnaround/ifade yok).
 - Kanon, modelin sanat yönetmeni değildir; yalnız tutarlılık sözleşmesidir.
 - Yüz benzerliği otomatik ölçümü insan onayının yerine geçmez.

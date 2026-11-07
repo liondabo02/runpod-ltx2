@@ -1,0 +1,62 @@
+{
+  "schema": "ahos.qc-rubric.v1",
+  "target": "Hollywood / theatrical 3D children's animation (Pixar-class)",
+  "scale": {"min": 1, "max": 5, "accept_average": 4.0, "accept_min_dimension": 3},
+  "note": "Teknik PASS puanı etkilemez; her boyut ayrı puanlanır, onay Harun'a aittir.",
+  "dimensions": [
+    {
+      "id": "identity",
+      "label": "Karakter kimliği ve süreklilik",
+      "anchors": {
+        "5": "Her karede aynı yüz, saç, oran ve kıyafet; kardeşler ayırt edilebilir",
+        "3": "1-2 karede kayma; kıyafet rengi tutarlı",
+        "1": "Yüz/oran bozuluyor, kıyafet değişiyor, karakterler karışıyor"
+      }
+    },
+    {
+      "id": "motion",
+      "label": "Hareket kalitesi",
+      "anchors": {
+        "5": "Ağırlık aktarımı, anticipation, overlap; rüzgâr ve ip tepkisi doğal",
+        "3": "Mekanik ama okunur; karakterler kaymıyor",
+        "1": "Süzülme, erime, zıplama; fizik yok"
+      }
+    },
+    {
+      "id": "lighting",
+      "label": "Işık ve atmosfer",
+      "anchors": {
+        "5": "Yönlü key, rim, hacimsel ışık; gölgeler tutarlı",
+        "3": "Düz ama tutarlı",
+        "1": "Işık yönü kare kare değişiyor"
+      }
+    },
+    {
+      "id": "composition",
+      "label": "Kompozisyon ve kamera",
+      "anchors": {
+        "5": "Sinematik çerçeveleme, nefes alanı, kameranın motivasyonu var",
+        "3": "Merkezde, sıkıcı ama okunur",
+        "1": "Kadraj kaybı, karakter çerçeve dışı, dikey/yatay hata"
+      }
+    },
+    {
+      "id": "artifacts",
+      "label": "Görsel bozulmalar",
+      "anchors": {
+        "5": "Artefakt yok",
+        "3": "Küçük, göz ardı edilebilir artefakt",
+        "1": "El/yüz erimesi, çift uzuv, titreme"
+      }
+    },
+    {
+      "id": "aesthetic",
+      "label": "Estetik seviye",
+      "anchors": {
+        "5": "Stüdyo kalitesi; doku, malzeme, renk uyumu",
+        "3": "Kabul edilebilir çocuk animasyonu",
+        "1": "Vektör/oyuncak görünüm, düz renkler"
+      }
+    }
+  ]
+}

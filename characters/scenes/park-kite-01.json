@@ -94,6 +94,9 @@
       "görsel bozukluk yok: el/yüz erimesi, titreme, zıplama, çift uzuv",
       "estetik: sinematik 3D çocuk animasyonu hissi; düz vektör/geometrik görünüm değil"
     ],
-    "approval": "nihai görsel onay Harun'a aittir; teknik PASS yaratıcı PASS değildir"
+    "approval": "nihai görsel onay Harun'a aittir; teknik PASS yaratıcı PASS değildir",
+    "benchmark": "Hollywood / theatrical 3D children's animation (Pixar-class)",
+    "rubric": "characters/qc-rubric.json",
+    "accept_rule": "rubric ortalaması >= 4.0 ve hiçbir boyut < 3; ayrıca Harun onayı"
   }
 }
