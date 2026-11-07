@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Mipiluna · Seksek</title>
+<style>
+  :root{--bg:#0b1220;--card:#151f33;--line:#27324a;--ink:#eef3ff;--dim:#9db0d0;
+        --accent:#5b86ff;--accent2:#8f6bff;--ok:#3ecf8e;--bad:#ff6b6b;--gold:#ffd05e}
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(900px 480px at 12% -8%,#1d2f55,transparent 60%),
+       radial-gradient(900px 480px at 88% 0%,#2a2150,transparent 55%),var(--bg);
+       color:var(--ink);font-family:system-ui,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+  header{padding:16px clamp(12px,3vw,36px);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  h1{margin:0;font-size:clamp(18px,2.4vw,26px)}
+  .sub{color:var(--dim);font-size:12.5px}
+  .toolbar{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+  .pill{background:#16213780;border:1px solid var(--line);border-radius:999px;padding:7px 13px;
+        font:inherit;font-size:13px;color:var(--ink);cursor:pointer}
+  .pill.on{background:#22345c;border-color:var(--accent)}
+  main{padding:0 clamp(12px,3vw,36px) 40px}
+  .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));margin-bottom:14px}
+  .game{background:linear-gradient(180deg,#182238,#131c2e);border:1px solid var(--line);
+        border-radius:18px;padding:14px;cursor:pointer;transition:.16s}
+  .game:hover{transform:translateY(-3px);border-color:var(--accent)}
+  .game .emoji{font-size:28px}
+  .game h2{margin:6px 0 3px;font-size:16px}
+  .game p{margin:0;color:var(--dim);font-size:12.5px;line-height:1.4}
+  .stars{margin-top:8px;color:var(--gold);letter-spacing:2px;font-size:13px}
+  .stage{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px}
+  .hud{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+  .hud b{font-variant-numeric:tabular-nums}
+  .bar{height:10px;background:#1b2740;border-radius:999px;overflow:hidden;flex:1;min-width:90px}
+  .bar i{display:block;height:100%;width:60%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+  canvas{width:100%;height:auto;display:block;border-radius:14px;background:#0f1727;
+         border:1px solid var(--line);touch-action:none}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+  button{font:inherit;border-radius:999px;border:1px solid var(--line);padding:9px 18px;
+         background:#1e2b45;color:var(--ink);cursor:pointer}
+  button.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent;font-weight:600}
+  .msg{color:var(--dim);font-size:14px;margin:8px 0 0}
+  .pass{color:var(--ok);font-weight:700}
+  .fail{color:var(--bad);font-weight:700}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,16px);background:#1b2740f2;
+         border:1px solid var(--line);border-radius:999px;padding:10px 20px;font-weight:600;
+         opacity:0;transition:.25s;pointer-events:none;z-index:50}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  @keyframes floaty { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+  @keyframes pop { 0%{transform:scale(1)} 40%{transform:scale(1.08)} 100%{transform:scale(1)} }
+  @keyframes glow { 0%,100%{box-shadow:0 0 0 #0000} 50%{box-shadow:0 0 24px #5b86ff88} }
+  .game{animation:floaty 6s ease-in-out infinite}
+  .game:nth-child(2n){animation-delay:.6s}
+  .game:active{transform:scale(.98)}
+  button.primary{animation:glow 3.4s ease-in-out infinite}
+  .toast.show{animation:pop .3s ease}
+  .cell.done{animation:pop .28s ease}
+</style>
+<style>
+@media (max-width: 640px){
+  body{overflow-x:hidden}
+  .toolbar{width:100%;justify-content:flex-start;gap:6px}
+  .hud{flex-wrap:wrap;gap:6px}
+  .pill{font-size:12.5px;padding:5px 9px}
+  .row{flex-wrap:wrap;gap:8px}
+  .row button{flex:1 1 45%;min-width:0;min-height:52px;padding:10px 12px;font-size:14px}
+  canvas{max-height:52vh}
+}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>🟦 Mipiluna · Seksek</h1>
+    <div class="sub">Fizik simülasyonlu · öğretmen sesli rehber · ilerleme kaydedilir</div>
+  </div>
+  <div class="toolbar">
+    <button class="pill" id="speedBtn">🐢 Normal</button>
+    <button class="pill" id="diffBtn">🎚️ Normal</button>
+    <button class="pill" id="muteBtn">🔊 Ses</button>
+    <a class="pill" id="parentLink" href="veli.html" target="_blank" rel="noopener">👨‍👩‍👧 Veli</a>
+    <span class="pill" id="profilePill">👦 profil</span>
+    <span class="pill" id="totalPill">⭐ 0</span>
+  </div>
+</header>
+<main>
+  <div class="grid" id="menu"></div>
+  <section class="stage">
+    <div class="hud" id="hud" hidden>
+      <span class="pill" id="gameName">—</span>
+      <span class="pill">Puan <b id="score">0</b></span>
+      <span class="pill">Can <b id="lives">3</b></span>
+      <span class="pill">Süre <b id="time">0</b></span>
+      <div class="bar"><i id="energy"></i></div>
+      <span class="pill" id="levelBar">Seviye <button class="lv" data-lv="1">1</button><button class="lv" data-lv="2">2</button><button class="lv" data-lv="3">3</button></span>
+    </div>
+    <canvas id="cv" width="880" height="500" aria-label="oyun alanı"></canvas>
+    <p class="msg" id="msg">Yukarıdan bir oyun seç; öğretmen kuralları anlatır.</p>
+    <div class="row">
+      <button class="primary" id="startBtn">▶ Başla</button>
+      <button id="hintBtn">💡 İpucu</button>
+      <button id="teachBtn">🔁 Öğretmen anlatsın</button>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+  var DIR = 'voices/';
+  var PROFILE_KEY = 'mipiluna.profile';
+  var profile = 'cocuk1';
+  try { profile = localStorage.getItem(PROFILE_KEY) || 'cocuk1'; } catch(e){}
+  var KEY = 'mipiluna.sokak.v2.' + profile;
+  var state = { stars:{}, total:0, muted:false, slow:false, level:1, unlocked:{}, adaptive:{}, minutes:0, day:'' };
+  try { state = Object.assign(state, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch(e){}
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} }
+  function trackTime(dt){
+    var today = new Date().toISOString().slice(0,10);
+    if (state.day !== today){ state.day = today; state.minutes = 0; }
+    state.minutes = (state.minutes || 0) + dt / 60;
+    if (Math.floor(state.minutes * 10) % 6 === 0) save();
+  }
+
+  var audio = null;
+  function play(name){
+    if (state.muted) return;
+    try{
+      if (audio) audio.pause();
+      audio = new Audio(DIR + name + '.mp3');
+      audio.volume = .96;
+      audio.playbackRate = state.slow ? .87 : 1;
+      var p = audio.play(); if (p && p.catch) p.catch(function(){});
+    }catch(e){}
+  }
+  function toast(t){
+    var el = document.getElementById('toast');
+    el.textContent = t; el.classList.add('show');
+    clearTimeout(el._t); el._t = setTimeout(function(){ el.classList.remove('show'); }, 2000);
+  }
+  function starText(n){ var s='★'.repeat(Math.max(0,Math.min(3,n))); return s + '☆'.repeat(3 - s.length); }
+
+  var GAMES = [
+    { id:'seksek', emoji:'🟦', title:'Seksek', desc:'Taşı at, tek ayak zıpla, dengede kal.',
+      teacher:'t-02-seksek', hint:'t-09-ipucu-seksek' }
+  ];
+
+  var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  var W = cv.width, H = cv.height;
+  var current = null, running = false, raf = 0, last = 0;
+  var score = 0, lives = 3, clock = 0, energy = 1;
+  var hud = document.getElementById('hud');
+
+  function setMsg(html){ document.getElementById('msg').innerHTML = html; }
+  function hudUpdate(){
+    document.getElementById('score').textContent = score;
+    document.getElementById('lives').textContent = Math.max(0, lives);
+    document.getElementById('time').textContent = clock.toFixed(1);
+    document.getElementById('energy').style.width = Math.max(0, Math.min(1, energy)) * 100 + '%';
+  }
+  function finish(points, stars, text){
+    running = false;
+    score += points;
+    state.total += points;
+    var id = current.meta.id, lv = state.level;
+    var arr = state.stars[id] || [0,0,0];
+    if ((arr[lv-1] || 0) < stars) arr[lv-1] = stars;
+    state.stars[id] = arr;
+    state.unlocked[id] = Math.max(state.unlocked[id] || 1, Math.min(3, lv + 1));
+    state.adaptive = state.adaptive || {};
+    state.adaptive[id] = Math.min(1.15, (state.adaptive[id] || 1) + 0.04);
+    save(); renderMenu(); hudUpdate();
+    play('k-02-dogru');
+    setMsg('<span class="pass">' + text + '</span> · +' + points + ' puan ' + starText(stars));
+    toast('+' + points + ' puan · ' + starText(stars));
+  }
+  function fail(text){
+    running = false; play('k-03-yanlis');
+    var fid = current && current.meta ? current.meta.id : '';
+    state.adaptive = state.adaptive || {};
+    state.adaptive[fid] = Math.max(0.88, (state.adaptive[fid] || 1) - 0.06);
+    save();
+    setMsg('<span class="fail">' + text + '</span> · tekrar dene');
+  }
+
+  /* ---------- girdi ---------- */
+  var pointer = { x: W/2, y: H/2, down: false, sx: 0, sy: 0, dx: 0, dy: 0 };
+  function pos(ev){
+    var r = cv.getBoundingClientRect();
+    var t = ev.touches ? ev.touches[0] : ev;
+    return { x: (t.clientX - r.left) * (W / r.width), y: (t.clientY - r.top) * (H / r.height) };
+  }
+  cv.addEventListener('pointerdown', function(e){ var p = pos(e); pointer.x=p.x; pointer.y=p.y; pointer.down=true; pointer.sx=p.x; pointer.sy=p.y; if (current && current.down) current.down(p); });
+  cv.addEventListener('pointermove', function(e){ var p = pos(e); pointer.x=p.x; pointer.y=p.y; if (current && current.move) current.move(p); });
+  window.addEventListener('pointerup', function(e){ pointer.down=false; if (current && current.up) current.up(pos(e)); });
+  window.addEventListener('keydown', function(e){
+    if (!current || !current.key) return;
+    if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' '].indexOf(e.key) >= 0){ e.preventDefault(); current.key(e.key); }
+  });
+
+  /* ---------- oyun çerçevesi ---------- */
+  window.__level = 1;
+  function levelScale(){
+    var id = current && current.meta ? current.meta.id : '';
+    var adaptive = (state.adaptive && state.adaptive[id]) || 1;
+    return (0.85 + 0.15 * (window.__level - 1)) * adaptive;
+  }
+  function startGame(meta){
+    var Klass = CLASSES[meta.id];
+    if (!Klass) { toast('Bu oyun henüz hazır değil'); return; }
+    current = new Klass();
+    current.meta = meta;
+    score = 0; lives = 3; clock = 0; energy = 1; running = true;
+    hud.hidden = false;
+    document.getElementById('gameName').textContent = meta.emoji + ' ' + meta.title;
+    setMsg('Hazır ol! Öğretmen kuralları anlatıyor…');
+    play(meta.teacher);
+    if (window.__gameCleanup) { try { window.__gameCleanup(); } catch(e){} }
+    current.setup();
+    last = performance.now();
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(loop);
+  }
+
+  function loop(now){
+    var dt = Math.min(0.05, (now - last) / 1000) || 0.016;
+    last = now;
+    if (running){ clock += dt; trackTime(dt); current.update(dt, now / 1000); }
+    ctx.clearRect(0, 0, W, H);
+    current.draw(ctx, now / 1000);
+    hudUpdate();
+    raf = requestAnimationFrame(loop);
+  }
+
+  /* ---------- SEKSEK: actual eight-square pointer-driven playthrough ---------- */
+  function Seksek(){
+    var stones = [], target = 1, phase = 'aim', marker = 0, markerDir = 1, balance = 1, flight = null;
+    var squares = [];
+    for (var i = 0; i < 8; i++){
+      var col = i % 4;
+      squares.push({ n: i + 1, x: 80 + col * 150, y: 120 + Math.floor(i / 4) * 150, w: 120, h: 120 });
+    }
+    this.setup = function(){
+      stones = [{ x: 90, y: H - 70 }];
+      target = 1; phase = 'aim'; marker = 0; markerDir = 1; balance = 1; flight = null;
+      setMsg('Taşı 1 numaralı karenin üzerine at!');
+    };
+    this.down = function(p){
+      if (!running) return;
+      if (phase === 'hop'){
+        if (Math.abs(marker - 0.5) < 0.16){
+          balance = Math.min(1, balance + 0.06);
+          target++;
+          play('k-02-dogru');
+          if (target > 8){
+            phase = 'completed';
+            finish(30, 3, 'Sekseği dengede tamamladın!');
+          } else {
+            phase = 'aim';
+            stones[0].x = 90;
+            stones[0].y = H - 70;
+            marker = 0; markerDir = 1;
+            setMsg('Harika! Şimdi ' + target + ' numaralı kareye at.');
+          }
+        } else {
+          balance = Math.max(0, balance - 0.25);
+          lives = Math.max(0, lives - 1);
+          play('k-03-yanlis');
+          if (lives === 0 || balance <= 0) fail('Dengen bozuldu!');
+        }
+        energy = balance;
+        return;
+      }
+      if (phase !== 'aim') return;
+      var hit = squares.find(function(sq){
+        return p.x >= sq.x && p.x <= sq.x + sq.w &&
+               p.y >= sq.y && p.y <= sq.y + sq.h;
+      });
+      if (!hit || hit.n !== target){
+        balance = Math.max(0, balance - 0.20);
+        lives = Math.max(0, lives - 1);
+        energy = balance;
+        play('k-03-yanlis');
+        if (lives === 0 || balance <= 0) fail('Taş hedefi kaçırdı!');
+        else setMsg('Hedef ' + target + ' numaralı kare. Tekrar dene.');
+        return;
+      }
+      var stone = stones[0];
+      flight = { fromX: stone.x, fromY: stone.y,
+                 toX: hit.x + hit.w / 2, toY: hit.y + hit.h / 2,
+                 elapsed: 0, duration: 0.35 };
+      phase = 'flight';
+    };
+    this.update = function(dt){
+      energy = balance;
+      if (phase === 'flight' && flight){
+        flight.elapsed += dt;
+        var t = Math.min(1, flight.elapsed / flight.duration);
+        stones[0].x = flight.fromX + (flight.toX - flight.fromX) * t;
+        stones[0].y = flight.fromY + (flight.toY - flight.fromY) * t -
+                      65 * 4 * t * (1 - t);
+        if (t >= 1){
+          phase = 'hop';
+          marker = 0; markerDir = 1;
+          flight = null;
+          setMsg('Yeşil alanda dokun ve zıpla! Kare ' + target + '/8');
+          play('k-02-dogru');
+        }
+      } else if (phase === 'hop'){
+        marker += markerDir * dt * 1.15;
+        if (marker > 1){ marker = 1; markerDir = -1; }
+        if (marker < 0){ marker = 0; markerDir = 1; }
+      }
+    };
+    this.snapshot = function(){
+      return {phase: phase, target: target, marker: marker,
+              balance: balance, flight: !!flight};
+    };
+    this.draw = function(g){
+      squares.forEach(function(sq){
+        g.fillStyle = sq.n < target ? '#1e4a39' : (sq.n === target ? '#22345c' : '#1b2740');
+        g.strokeStyle = '#2b3a5a'; g.lineWidth = 2;
+        g.beginPath(); g.roundRect(sq.x, sq.y, sq.w, sq.h, 14); g.fill(); g.stroke();
+        g.fillStyle = '#dbe6ff'; g.font = 'bold 34px system-ui'; g.textAlign = 'center';
+        g.fillText(sq.n, sq.x + sq.w / 2, sq.y + sq.h / 2 + 12);
+      });
+      var stone = stones[0];
+      g.fillStyle = '#ffd05e'; g.beginPath();
+      g.arc(stone.x, stone.y, 10, 0, Math.PI * 2); g.fill();
+      if (phase === 'hop'){
+        g.fillStyle = '#0b1220cc'; g.fillRect(90, H - 130, W - 180, 70);
+        g.fillStyle = '#22345c'; g.fillRect(110, H - 115, W - 220, 26);
+        g.fillStyle = '#3ecf8e'; g.fillRect(110 + (W - 220) * 0.34, H - 115, (W - 220) * 0.32, 26);
+        g.fillStyle = '#fff'; g.fillRect(110 + (W - 220) * marker, H - 120, 5, 36);
+        g.fillStyle = '#cfe0ff'; g.font = '16px system-ui'; g.textAlign = 'center';
+        g.fillText('Yeşil alanda dokun: ' + target + '/8', W / 2, H - 84);
+      } else if (phase === 'completed'){
+        g.fillStyle = '#072d2ccc'; g.fillRect(160, H - 136, W - 320, 76);
+        g.fillStyle = '#b6ffda'; g.font = 'bold 26px system-ui'; g.textAlign = 'center';
+        g.fillText('Tebrikler! 8/8', W / 2, H - 90);
+      }
+    };
+  }
+
+  var CLASSES = { seksek: Seksek };
+
+  function renderMenu(){
+    var menu = document.getElementById('menu');
+    menu.innerHTML = '';
+    GAMES.forEach(function(game){
+      var card = document.createElement('article');
+      card.className = 'game'; card.tabIndex = 0;
+      card.innerHTML = '<div class="emoji">' + game.emoji + '</div><h2>' + game.title + '</h2><p>' + game.desc + '</p>' +
+        '<div class="stars">' + (state.stars[game.id] || [0,0,0]).map(function(v){ return starText(v); }).join(' ') + '</div>';
+      card.addEventListener('click', function(){ startGame(game); });
+      card.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' '){ startGame(game); } });
+      menu.appendChild(card);
+    });
+  }
+
+  document.getElementById('startBtn').addEventListener('click', function(){ startGame(GAMES[0]); });
+  document.getElementById('hintBtn').addEventListener('click', function(){ if (current && current.meta) play(current.meta.hint); });
+  document.getElementById('teachBtn').addEventListener('click', function(){ if (current && current.meta) play(current.meta.teacher); });
+  document.getElementById('speedBtn').addEventListener('click', function(){
+    state.slow = !state.slow; save();
+    this.textContent = state.slow ? '🐢 Yavaş' : '🐢 Normal';
+    this.classList.toggle('on', state.slow);
+  });
+  document.getElementById('muteBtn').addEventListener('click', function(){
+    state.muted = !state.muted; save();
+    this.textContent = state.muted ? '🔇 Sessiz' : '🔊 Ses';
+    this.classList.toggle('on', state.muted);
+  });
+  var DIFFS = [{label:'🎚️ Kolay', v:0.85}, {label:'🎚️ Normal', v:1.0}, {label:'🎚️ Zor', v:1.25}];
+  var diffIndex = (typeof state.diff === 'number') ? state.diff : 1;
+  window.__diff = DIFFS[diffIndex].v;
+  document.getElementById('diffBtn').textContent = DIFFS[diffIndex].label;
+  document.getElementById('diffBtn').addEventListener('click', function(){
+    diffIndex = (diffIndex + 1) % DIFFS.length;
+    window.__diff = DIFFS[diffIndex].v;
+    this.textContent = DIFFS[diffIndex].label;
+    state.diff = diffIndex; save();
+    toast('Zorluk: ' + DIFFS[diffIndex].label.replace('🎚️ ',''));
+    if (current && current.meta) startGame(current.meta);
+  });
+  document.getElementById('totalPill').textContent = '⭐ ' + (state.total || 0);
+  var pp = document.getElementById('profilePill');
+  if (pp) pp.textContent = '👦 ' + profile;
+  document.getElementById('speedBtn').textContent = state.slow ? '🐢 Yavaş' : '🐢 Normal';
+  document.getElementById('muteBtn').textContent = state.muted ? '🔇 Sessiz' : '🔊 Ses';
+
+  function setLevel(lv){
+    state.level = lv; window.__level = lv; save();
+    var bar = document.getElementById('levelBar');
+    if (bar){ bar.querySelectorAll('.lv').forEach(function(b){
+      b.classList.toggle('on', Number(b.dataset.lv) === lv);
+    }); }
+    if (current && current.meta) startGame(current.meta);
+  }
+  document.querySelectorAll('.lv').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var lv = Number(this.dataset.lv);
+      var unlocked = (state.unlocked[current && current.meta ? current.meta.id : ''] || 1);
+      if (lv > unlocked){ toast('Önce ' + (lv-1) + '. seviyeyi bitir'); return; }
+      setLevel(lv);
+    });
+  });
+  window.__level = state.level || 1;
+  renderMenu();
+  current = new Seksek(); current.meta = GAMES[0]; current.setup(); current.draw(ctx, 0);
+
+
+  // --- QA / doğrudan oynanış kancası (yalnız test ve ?auto=1 için) ---
+  window.__qa = {
+    start: function(){ startGame(GAMES[0]); return true; },
+    restart: function(){ startGame(GAMES[0]); return true; },
+        // No synthetic finish: the browser test must click all eight squares and hops.
+    snap: function(){ return { score: score, lives: lives, clock: clock, running: running,
+                               hasGame: !!current,
+                               game: current && current.snapshot ? current.snapshot() : null }; }
+  };
+  try {
+    var qp = new URLSearchParams(location.search);
+    if (qp.get('auto') === '1') { startGame(GAMES[0]); }
+  } catch (e) {}
+
+  document.addEventListener('pointerdown', function once(){ play('t-01-merhaba'); document.removeEventListener('pointerdown', once); }, { once:true });
+})();
+</script>
+</body>
+</html>

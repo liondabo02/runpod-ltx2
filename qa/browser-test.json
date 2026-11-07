@@ -1,0 +1,56 @@
+{
+  "url": "http://127.0.0.1:8790/",
+  "browser": "Edge headless CDP",
+  "steps": [
+    {
+      "step": "start",
+      "value": true,
+      "snap": {
+        "score": 0,
+        "lives": 3,
+        "clock": 1.1938000000000006,
+        "running": true,
+        "hasGame": true
+      }
+    },
+    {
+      "step": "finish",
+      "value": true,
+      "snap": {
+        "score": 30,
+        "lives": 3,
+        "clock": 1.877000000000001,
+        "running": false,
+        "hasGame": true
+      }
+    },
+    {
+      "step": "restart",
+      "value": true,
+      "snap": {
+        "score": 0,
+        "lives": 3,
+        "clock": 0.7984000000715265,
+        "running": true,
+        "hasGame": true
+      }
+    }
+  ],
+  "title": "Mipiluna · Seksek",
+  "has_qa": true,
+  "canvas": {
+    "w": 880,
+    "h": 500,
+    "cssW": 872,
+    "cssH": 497
+  },
+  "after_click": {
+    "score": 0,
+    "lives": 3,
+    "clock": 1.877000000000001,
+    "running": true,
+    "hasGame": true
+  },
+  "runtime_errors": [],
+  "ok": true
+}
