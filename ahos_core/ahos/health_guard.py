@@ -1,7 +1,7 @@
 """Sistem sağlık bekçisi — hata oluşmadan önce yakala, otomatik onar.
 
 Kontroller:
-1. Servisler: panel (8766), ofis (8799), model tüneli (11500)
+1. Servisler: panel (8766) ve ofis (8801) **zorunlu**; model tüneli (11500) **isteğe bağlı**
 2. Süreçler: daemon durumu ve tick ilerlemesi
 3. Veri: bayat kiralar, takılı görevler, engelli birikimi
 4. Kalite: test paketi (isteğe bağlı, hızlı mod)
@@ -21,11 +21,14 @@ import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
 
+# Gerçek servis portları (2026-11-07 doğrulandı: panel 8766, ofis 8801).
 SERVICES = {
     "panel": "http://127.0.0.1:8766/",
-    "office": "http://127.0.0.1:8799/",
+    "office": "http://127.0.0.1:8801/",
     "tunnel": "http://127.0.0.1:11500/v1/models",
 }
+# Tünel kapalıysa sağlık "bozuk" sayılmaz; yalnız uyarı olur.
+REQUIRED_SERVICES = frozenset({"panel", "office"})
 STUCK_MINUTES = 30
 
 
@@ -36,13 +39,19 @@ class HealthReport:
 
     @property
     def ok(self) -> bool:
-        return all(check["ok"] for check in self.checks)
+        return all(check["ok"] for check in self.checks if check.get("required", True))
+
+    @property
+    def warnings(self) -> list[dict]:
+        return [check for check in self.checks
+                if check.get("required") is False and not check["ok"]]
 
     def to_dict(self) -> dict:
         return {
             "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
             "ok": self.ok,
             "checks": self.checks,
+            "warnings": self.warnings,
             "repairs": self.repairs,
         }
 
@@ -111,7 +120,9 @@ def check(runtime_dir: str | Path, *, fix: bool = True) -> HealthReport:
 
     for name, url in SERVICES.items():
         ok, detail = _probe(url)
-        report.checks.append({"name": f"servis:{name}", "ok": ok, "detail": detail})
+        report.checks.append({"name": f"servis:{name}", "ok": ok,
+                              "required": name in REQUIRED_SERVICES,
+                              "detail": detail})
 
     state_path = runtime / "daemon-state.json"
     daemon_ok = False
