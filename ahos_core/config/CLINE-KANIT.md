@@ -813,3 +813,40 @@ manifest.json + qa-technical.json + KALITE-RAPORU.md yazıldı
 creative = NOT_EVALUATED (onay Harun)
 ```
 
+## 16 karakter birleştirme + Aden kimlik düzeltmesi (2026-11-07)
+generated_at: 2026-11-07T19:40:00
+
+komut : python -m ahos.character_canon --summary
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\ahos_core
+exit : 0
+```json
+{"characters":16,"relationships":28,"canon_facts":3,"with_visual_canon":2,"with_audio_en_tr":14,"gender_known":16,"conflicts":16,"errors":0,"private":true}
+```
+
+komut : python tools/audio_asset_audit.py
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 2 (1 süre aykırısı: fatos/tr.wav ~39,96 sn)
+```json
+{"folders":14,"files":28,"issues":1,"characters_with_issues":1}
+```
+
+komut : python -B -m pytest -q --no-header -p no:cacheprovider tests/test_character_canon.py tests/test_audio_audit.py tests/test_scene_tools.py tests/test_creative_qa.py
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\ahos_core
+exit : 0
+```text
+14 passed in 6.37s
+```
+
+komut : huggingface_hub.get_token() / curl 8766 / cv2
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 0
+```text
+HF token: absent (token path yok)
+8766 /api/status: HTTP 200
+cv2 4.12.0
+```
+
+Aden kimliği: eski kanon = kız (`core_cast_voice_catalog` "girl", production plan "girl").
+Düzeltildi: `characters/aden.json` (gender female, girl prompt), sahne promptları,
+KARAKTER-KANONU; regresyon testi eklendi. Take1 (erkek prompt) geçersiz referans.
+

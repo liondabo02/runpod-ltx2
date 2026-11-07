@@ -17,12 +17,13 @@ Video modelleri her çekimde yüzü, saçı ve kıyafeti kaydırır. Süreklilik
 4. Sabit seed ve aynı prompt fragmanı.
 5. Teslimde otomatik süreklilik ölçümü (renk, oran) + insan gözü.
 
-## 2. Aden (3 yaş, 98 cm)
+## 2. Aden (3 yaş, kız, 98 cm)
 
 | Alan | Değer |
 |---|---|
+| Cinsiyet | **kız** (eski ses kataloğu ve production plan ile aynı) |
 | Ten | `#F5CDAA` (gölge `#E3AE86`), yanak `#EFA98E` |
-| Saç | `#462D1E`, kısa dalgalı, yandan ayrık, yumuşak perçem |
+| Saç | `#462D1E`, omuz hizasında dalgalı, yandan ayrık, yumuşak perçem, **sarı yıldız toka** |
 | Göz | `#3A2A1E`, büyük, koyu ela, catchlight |
 | Üst | Kobalt mavi tişört `#286EC8`, küçük sarı uçurtma baskısı |
 | Alt | Lacivert şort `#283246` |

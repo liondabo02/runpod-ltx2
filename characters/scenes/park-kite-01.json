@@ -5,10 +5,16 @@
   "status": "PLANNED",
   "duration_seconds": 6,
   "fps": 24,
-  "resolution": [1920, 1080],
+  "resolution": [
+    1920,
+    1080
+  ],
   "aspect_ratio": "16:9",
   "look": "cinematic 3D children's animation, Pixar/Illumination-adjacent but original: soft subsurface skin, felt-like fabrics, gentle bloom, physically plausible sunlight, shallow depth of field, no photoreal faces",
-  "characters": ["aden", "kaan"],
+  "characters": [
+    "aden",
+    "kaan"
+  ],
   "setting": {
     "name": "yemyeşil park, bahar sabahı",
     "time_of_day": "sabah 09:00, altın saat başlangıcı",
@@ -28,16 +34,33 @@
   "prop": {
     "kite": {
       "shape": "elmas (diamond) uçurtma, beyaz iskelet",
-      "panels": ["#FFD65A", "#E64860", "#4084DC", "#6EBE78"],
+      "panels": [
+        "#FFD65A",
+        "#E64860",
+        "#4084DC",
+        "#6EBE78"
+      ],
       "tail": "uzun, rengârenk kumaş şeritler, 6 parça",
       "line": "ince beyaz ip, doğal gerilim"
     }
   },
   "beats": [
-    {"t": "0.0-1.2", "action": "Kaan iki eliyle uçurtma ipini tutar, Aden arkasında elleriyle onu dengeler; ikisi de yukarı bakar"},
-    {"t": "1.2-3.0", "action": "Rüzgâr uçurtmayı yükseltir; Kaan sevinçle zıplar, Aden güler ve ipi birlikte çeker"},
-    {"t": "3.0-4.8", "action": "Uçurtma kadrajın sağ üstüne süzülür; kamera hafifçe yükselir, çocuklar arkada küçülür"},
-    {"t": "4.8-6.0", "action": "Kaan kollarını açar, Aden ona bakar; sıcak güneş parlaması, sahne yumuşak kapanır"}
+    {
+      "t": "0.0-1.2",
+      "action": "Kaan iki eliyle uçurtma ipini tutar, Aden arkasında elleriyle onu dengeler; ikisi de yukarı bakar"
+    },
+    {
+      "t": "1.2-3.0",
+      "action": "Rüzgâr uçurtmayı yükseltir; Kaan sevinçle zıplar, Aden güler ve ipi birlikte çeker"
+    },
+    {
+      "t": "3.0-4.8",
+      "action": "Uçurtma kadrajın sağ üstüne süzülür; kamera hafifçe yükselir, çocuklar arkada küçülür"
+    },
+    {
+      "t": "4.8-6.0",
+      "action": "Kaan kollarını açar, Aden ona bakar; sıcak güneş parlaması, sahne yumuşak kapanır"
+    }
   ],
   "camera": {
     "type": "low-angle medium-wide, 35mm eşdeğeri",
@@ -60,9 +83,9 @@
     "focus": "Aden'in yüzü merkezde net, Kaan hafif önde net, arka plan bokeh"
   },
   "prompts": {
-    "keyframe": "Cinematic 3D children's animation still, golden spring morning in a lush green park, a cheerful 3-year-old boy Aden (98 cm, round face, three freckles on left cheek, big dark-hazel eyes, short wavy dark-brown side-parted hair, cobalt blue t-shirt with small yellow kite print, navy shorts, cream sneakers with blue soles) stands behind his adorable 1-year-old brother Kaan (76 cm, chubby cheeks, huge dark-brown eyes, two-tooth smile, short soft curly black hair, coral-red t-shirt, navy shorts, cream baby shoes); together they hold a thin white string to a colorful diamond kite with yellow, red, blue and green panels and a long rainbow tail, soaring toward the upper right; low-angle 35mm shot, child eye level, soft backlit rim light, gentle bloom, shallow depth of field, blurred daisies in foreground, rolling hills and big trees in warm bokeh, Pixar-quality stylized 3D render, subsurface skin, felt-like fabric, no text, no watermark",
-    "image_to_video": "The two brothers gently fly the colorful diamond kite on a breezy spring morning. Slow dolly-in and slight tilt up. Kaan bounces with joy, Aden laughs and helps him hold the string. The kite climbs smoothly to the upper right, its long rainbow tail rippling in the wind. Soft warm backlight, natural secondary motion, stable faces, consistent clothing, cinematic 3D children's animation, 24 fps, no cuts, no text.",
-    "keyframe_baby_focus": "Cinematic 3D children's animation still in a lush green park, spring morning. LEFT: Aden, a 3-year-old boy, 98 cm tall, clearly the bigger brother, round face with three freckles on the left cheek, big dark-hazel eyes, short wavy dark-brown side-parted hair, cobalt blue t-shirt with a small yellow kite print, navy shorts, cream sneakers with blue soles. RIGHT, next to him: Kaan, a 1-year-old TODDLER, visibly much smaller — only about three quarters of Aden's height, 76 cm, short and chubby with baby proportions, very round cheeks, huge dark-brown eyes, two small teeth, soft curly black baby hair, coral-red t-shirt, navy shorts, cream baby shoes, one hand holding the string with the other reaching up. The height difference must be obvious: Kaan's head reaches Aden's chest. Both hold a thin white string to a colorful diamond kite (yellow, red, blue, green panels) with a long rainbow tail, flying toward the upper right. Low-angle 35mm shot, child eye level, soft backlit rim light, gentle bloom, shallow depth of field, blurred daisies in the foreground, rolling hills and big trees in warm bokeh, Pixar-quality stylized 3D render, subsurface skin, felt-like fabric, no text, no watermark",
+    "keyframe": "Cinematic 3D children's animation still, golden spring morning in a lush green park, a cheerful 3-year-old girl Aden (98 cm, round face, three freckles on left cheek, big dark-hazel eyes, shoulder-length wavy dark-brown side-parted hair, cobalt blue t-shirt with small yellow kite print, navy shorts, cream sneakers with blue soles) stands behind her adorable 1-year-old brother Kaan (76 cm, chubby cheeks, huge dark-brown eyes, two-tooth smile, short soft curly black hair, coral-red t-shirt, navy shorts, cream baby shoes); together they hold a thin white string to a colorful diamond kite with yellow, red, blue and green panels and a long rainbow tail, soaring toward the upper right; low-angle 35mm shot, child eye level, soft backlit rim light, gentle bloom, shallow depth of field, blurred daisies in foreground, rolling hills and big trees in warm bokeh, Pixar-quality stylized 3D render, subsurface skin, felt-like fabric, no text, no watermark",
+    "image_to_video": "Aden, the big sister, and her little brother gently fly the colorful diamond kite on a breezy spring morning. Slow dolly-in and slight tilt up. Kaan bounces with joy, Aden laughs and helps her little brother hold the string. The kite climbs smoothly to the upper right, its long rainbow tail rippling in the wind. Soft warm backlight, natural secondary motion, stable faces, consistent clothing, cinematic 3D children's animation, 24 fps, no cuts, no text.",
+    "keyframe_baby_focus": "Cinematic 3D children's animation still in a lush green park, spring morning. LEFT: Aden, a 3-year-old girl, 98 cm tall, clearly the big sister, round face with three freckles on the left cheek, big dark-hazel eyes, shoulder-length wavy dark-brown side-parted hair, cobalt blue t-shirt with a small yellow kite print, navy shorts, cream sneakers with blue soles. RIGHT, next to her: Kaan, a 1-year-old TODDLER, visibly much smaller — only about three quarters of Aden's height, 76 cm, short and chubby with baby proportions, very round cheeks, huge dark-brown eyes, two small teeth, soft curly black baby hair, coral-red t-shirt, navy shorts, cream baby shoes, one hand holding the string with the other reaching up. The height difference must be obvious: Kaan's head reaches Aden's chest. Both hold a thin white string to a colorful diamond kite (yellow, red, blue, green panels) with a long rainbow tail, flying toward the upper right. Low-angle 35mm shot, child eye level, soft backlit rim light, gentle bloom, shallow depth of field, blurred daisies in the foreground, rolling hills and big trees in warm bokeh, Pixar-quality stylized 3D render, subsurface skin, felt-like fabric, no text, no watermark",
     "negative": "photorealistic human faces, uncanny valley, adult proportions, extra limbs, extra fingers, melted faces, face morphing, flickering, jitter, text, watermark, logo, rapid cuts, camera shake, oversaturation, plastic skin, inconsistent clothing colors, changing hair, multiple kites, background people"
   },
   "continuity": {

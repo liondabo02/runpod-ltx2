@@ -2,6 +2,7 @@
   "schema": "ahos.character.v1",
   "character_id": "aden",
   "name": "Aden",
+  "gender": "female",
   "age_years": 3,
   "age_note": "Kardeşi Kaan'dan 2 yaş büyük; sahne boyunca 3 yaşında.",
   "height_cm": 98,
@@ -36,8 +37,8 @@
     "signature": "sol yanağın üstünde 3 küçük çil"
   },
   "hair": {
-    "style": "kısa dalgalı, yandan ayrık, alında yumuşak perçem",
-    "length": "kulak üstüne kadar",
+    "style": "omuz hizasında dalgalı, yandan ayrık, alında yumuşak perçem, küçük sarı yıldız toka",
+    "length": "omuz hizasına kadar",
     "texture": "ipek gibi, hacimli ama dağınık değil"
   },
   "clothing": {
@@ -58,6 +59,6 @@
     "voice": "tr-TR-EmelNeural",
     "register": "sıcak, sakin, 3 yaş çocuk tonu"
   },
-  "prompt_fragment": "Aden, a cheerful 3-year-old boy, 98 cm tall, round face with full cheeks and three tiny freckles on his left cheek, big dark-hazel eyes with catchlights, small button nose, short wavy dark-brown hair parted on the side with a soft fringe, cobalt blue (#286EC8) short-sleeve t-shirt with a small yellow kite print, navy (#283246) shorts, cream sneakers with blue soles, soft rounded toddler proportions (3.6 heads tall)",
+  "prompt_fragment": "Aden, a cheerful 3-year-old girl, 98 cm tall, round face with full cheeks and three tiny freckles on her left cheek, big dark-hazel eyes with catchlights, small button nose, shoulder-length wavy dark-brown hair parted on the side with a soft fringe and a small yellow star hair clip, cobalt blue (#286EC8) short-sleeve t-shirt with a small yellow kite print, navy (#283246) shorts, cream sneakers with blue soles, soft rounded toddler proportions (3.6 heads tall)",
   "negative_fragment": "adult proportions, muscular body, realistic skin pores, extra fingers, six fingers, missing fingers, asymmetric eyes, different hair color, different shirt color, logos, text, watermark"
 }

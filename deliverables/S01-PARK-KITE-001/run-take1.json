@@ -1,9 +1,9 @@
 {
   "schema": "ahos.ltx-space-run.v1",
-  "generated_at": "2026-11-07T13:04:37",
+  "generated_at": "2026-11-07T17:49:58",
   "scene_id": "S01-PARK-KITE-001",
   "tag": "take1",
   "free_tier": true,
-  "blocked": "zerogpu_quota",
+  "blocked": "provider_error",
   "note": "ZeroGPU ücretsiz kotası doldu. HF_TOKEN (ücretsiz hesap) veya RunPod anahtarı gerekir; onaysız harcama yapılmadı."
 }

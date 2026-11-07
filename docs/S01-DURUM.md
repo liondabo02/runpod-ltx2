@@ -5,6 +5,10 @@ Tarih: 2026-11-07 · Sahne: Aden (3) + Kaan (1), parkta uçurtma · Hedef: 5–8
 > **Durum: ilk gerçek çekim alındı (take1).** LTX-2.5 ile 5,04 sn video üretildi.
 > Teknik QA **PASS**; yaratıcı kalite **kabul edilemez** (kamera çocuklardan uzaklaşıyor).
 > Ücret: **0,00 USD**. Yeni çekim için ZeroGPU kotası gerekiyor.
+>
+> **Kanon uyarısı:** take1, Aden **erkek** promptuyla üretildi. Doğru kanon Aden'in
+> **kız** olduğudur (`core_cast_voice_catalog`: girl). Bu yüzden take1 geçerli
+> referans değildir; yeni çekimler kız Aden kanonuyla yapılır.
 
 ## 1. Üretilen gerçek çıktı
 

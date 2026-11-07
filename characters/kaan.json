@@ -2,6 +2,7 @@
   "schema": "ahos.character.v1",
   "character_id": "kaan",
   "name": "Kaan",
+  "gender": "male",
   "age_years": 1,
   "age_note": "Aden'in küçük kardeşi; 1 yaşında, yeni yürümeye başlamış.",
   "height_cm": 76,
