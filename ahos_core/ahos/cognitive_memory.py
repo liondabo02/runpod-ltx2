@@ -8,6 +8,7 @@ yoktur ve yetki, harcama, güvenlik kurallarını değiştiremez.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -16,9 +17,12 @@ import uuid
 from pathlib import Path
 
 SCHEMA = 1
-CAPS = {"episodic": 60, "semantic": 80, "procedural": 40, "reflection": 40}
-EMOTION_KEYS = ("curiosity", "learning_drive", "confidence", "caution", "workload",
-                "collaboration", "recovery", "patience", "quality_drive")
+CAPS = {"episodic": 60, "semantic": 80, "procedural": 40, "reflection": 40,
+        "error": 40, "collaboration": 60}
+EMOTION_KEYS = ("curiosity", "research_drive", "learning_drive", "confidence",
+                "caution", "workload", "collaboration", "recovery", "patience",
+                "quality_drive", "task_motivation", "uncertainty_awareness",
+                "openness")
 
 
 def _now() -> str:
@@ -46,7 +50,8 @@ def new_profile(worker_id: str, department: str = "") -> dict:
         "created_at": _now(), "updated_at": _now(),
         "memory": {"episodic": [], "semantic": [], "procedural": [], "working": {},
                    "long_term": {"by_plan": {}, "months": {}, "milestones": []},
-                   "shared": []},
+                   "shared": [], "task_context": {}, "error_memory": [],
+                   "collaboration_memory": []},
         "metacognition": {"samples": 0, "observed_rate": 0.0, "confidence": 0.5,
                           "calibration_gap": 0.0, "error_rate": 0.0},
         "meta_memory": {}, "conflicts": [],
@@ -92,11 +97,29 @@ def save(runtime, profile: dict) -> Path:
     return path
 
 
+def _record_meta(profile, *, mission_id="", source="", confidence=0.5,
+                 verification_status="unverified", content="") -> dict:
+    """V5 kayıt zarfı: her önemli hafıza kaydı izlenebilir olmalı."""
+
+    digest = hashlib.sha256(str(content).encode("utf-8")).hexdigest()
+    return {"memory_id": f"mem-{uuid.uuid4().hex[:12]}",
+            "worker_id": str(profile.get("worker_id") or ""),
+            "mission_id": str(mission_id), "source": str(source),
+            "timestamp": _now(), "confidence": _clamp(confidence),
+            "verification_status": str(verification_status),
+            "content_hash": digest, "version": 1}
+
+
 def record_episode(profile, *, mission_id, outcome, summary="", evidence_ok=False,
                    plan_type="") -> dict:
     entry = {"at": _now(), "mission_id": str(mission_id), "outcome": str(outcome),
              "summary": str(summary)[:300], "plan_type": str(plan_type),
              "evidence_ok": bool(evidence_ok)}
+    entry.update(_record_meta(
+        profile, mission_id=mission_id, source=f"mission:{mission_id}",
+        confidence=0.9 if evidence_ok else 0.3,
+        verification_status="verified" if evidence_ok else "unverified",
+        content={"outcome": outcome, "summary": summary}))
     bucket = profile["memory"]["episodic"]
     bucket.append(entry)
     del bucket[:-CAPS["episodic"]]
@@ -114,6 +137,9 @@ def learn_semantic(profile, *, statement, source, mission_id="", verified=False)
         raise ValueError("semantic memory requires verified evidence")
     entry = {"at": _now(), "statement": str(statement)[:400], "source": str(source),
              "mission_id": str(mission_id), "verified": True}
+    entry.update(_record_meta(
+        profile, mission_id=mission_id, source=source, confidence=1.0,
+        verification_status="verified", content=statement))
     bucket = profile["memory"]["semantic"]
     if any(row.get("statement") == entry["statement"] for row in bucket):
         return entry
@@ -133,7 +159,105 @@ def learn_procedural(profile, *, plan_type, ok, steps=None) -> dict:
         row["steps"] = [str(step)[:160] for step in steps][:8]
     row["updated_at"] = _now()
     row["rate"] = round(row["ok"] / max(1, row["ok"] + row["fail"]), 3)
+    row["meta"] = _record_meta(
+        profile, source="procedural", confidence=row["rate"],
+        verification_status="verified" if row["ok"] else "unverified",
+        content={"plan_type": plan_type, "ok": row["ok"], "fail": row["fail"]})
     return row
+
+
+def remember_error(profile, *, mission_id, cause, fix="", evidence_ok=False) -> dict:
+    entry = {"at": _now(), "mission_id": str(mission_id), "cause": str(cause)[:200],
+             "fix": str(fix)[:300], "evidence_ok": bool(evidence_ok)}
+    entry.update(_record_meta(
+        profile, mission_id=mission_id, source=f"error:{mission_id}",
+        confidence=0.8 if evidence_ok else 0.4,
+        verification_status="verified" if evidence_ok else "unverified",
+        content={"cause": cause, "fix": fix}))
+    bucket = profile["memory"].setdefault("error_memory", [])
+    bucket.append(entry)
+    del bucket[:-CAPS["error"]]
+    return entry
+
+
+def remember_collaboration(profile, *, mission_id, helper, skill, outcome,
+                           evidence_ok=False) -> dict:
+    entry = {"at": _now(), "mission_id": str(mission_id), "helper": str(helper),
+             "skill": str(skill)[:120], "outcome": str(outcome)[:120],
+             "evidence_ok": bool(evidence_ok)}
+    entry.update(_record_meta(
+        profile, mission_id=mission_id, source=f"collab:{helper}",
+        confidence=0.9 if evidence_ok else 0.4,
+        verification_status="verified" if evidence_ok else "unverified",
+        content={"helper": helper, "skill": skill, "outcome": outcome}))
+    bucket = profile["memory"].setdefault("collaboration_memory", [])
+    bucket.append(entry)
+    del bucket[:-CAPS["collaboration"]]
+    return entry
+
+
+def set_task_context(profile, *, mission_id, dependencies=None, status="open",
+                     notes="") -> dict:
+    context = {"mission_id": str(mission_id),
+               "dependencies": [str(dep) for dep in (dependencies or [])][:20],
+               "status": str(status), "notes": str(notes)[:300],
+               "updated_at": _now()}
+    context.update(_record_meta(profile, mission_id=mission_id,
+                                source="task_context", confidence=0.9,
+                                verification_status="observed",
+                                content=context))
+    profile["memory"]["task_context"] = context
+    return context
+
+
+def _parse_moment(raw: str) -> float:
+    try:
+        return time.mktime(time.strptime(str(raw)[:19], "%Y-%m-%dT%H:%M:%S"))
+    except (ValueError, OverflowError):
+        return 0.0
+
+
+def recall_memory(profile, query: str, *, mission_id: str = "", limit: int = 5) -> list[dict]:
+    """İlgi + güven + doğrulama + güncellik + kaynak güvenilirliği ile sıralar."""
+
+    wanted = _terms(query)
+    source_rows = {
+        "semantic": profile["memory"].get("semantic") or [],
+        "episodic": profile["memory"].get("episodic") or [],
+        "procedural": profile["memory"].get("procedural") or [],
+        "shared": profile["memory"].get("shared") or [],
+        "error": profile["memory"].get("error_memory") or [],
+        "collaboration": profile["memory"].get("collaboration_memory") or [],
+    }
+    now = time.time()
+    hits = []
+    for kind, rows in source_rows.items():
+        for item in rows:
+            text = (item.get("statement") or item.get("summary") or item.get("cause")
+                    or item.get("skill") or item.get("plan_type") or "")
+            overlap = len(wanted & _terms(text))
+            if wanted and not overlap:
+                continue
+            relevance = overlap / max(1, len(wanted))
+            confidence = float(item.get("confidence")
+                               or (1.0 if item.get("verified") else 0.4))
+            verification = 1.0 if item.get("verification_status") == "verified" else 0.4
+            days = max(0.0, (now - _parse_moment(item.get("at") or item.get("timestamp")))
+                       / 86400) if (item.get("at") or item.get("timestamp")) else 30.0
+            recency = 1.0 / (1.0 + days / 30.0)
+            source = str(item.get("source") or kind)
+            reliability = float((profile.get("meta_memory", {}).get(source) or {})
+                                .get("reliability", 0.5))
+            same_mission = 0.15 if mission_id and item.get("mission_id") == str(mission_id) else 0.0
+            score = round(relevance * 0.4 + confidence * 0.2 + verification * 0.15
+                          + recency * 0.15 + reliability * 0.1 + same_mission, 4)
+            hits.append((score, {"kind": kind, "text": str(text)[:300],
+                                 "source": source, "at": item.get("at") or item.get("timestamp"),
+                                 "confidence": confidence, "score": score,
+                                 "memory_id": item.get("memory_id"),
+                                 "verification_status": item.get("verification_status")}))
+    hits.sort(key=lambda pair: pair[0], reverse=True)
+    return [row for _, row in hits[:max(1, int(limit))]]
 
 
 def set_working(profile, *, mission_id, objective, steps=None) -> dict:
@@ -234,6 +358,14 @@ def emotion(profile, *, pending: int = 0, idle: bool = True, last_outcome: str =
                            else (0.15 if last_outcome else float(previous.get("recovery", 0.5)))),
         "patience": _clamp(0.4 + (1 - error_rate) * 0.3 + (1 - workload) * 0.2),
         "quality_drive": _clamp(0.55 + error_rate * 0.35),
+        "research_drive": _clamp(0.30 + (0.35 if idle else 0.05)
+                                 + (1 - confidence) * 0.3 - workload * 0.1),
+        "task_motivation": _clamp(0.50 + (1 - error_rate) * 0.30
+                                  + (0.15 if idle else 0.0) - workload * 0.2),
+        "uncertainty_awareness": _clamp(0.20 + (1 - confidence) * 0.4
+                                        + error_rate * 0.3),
+        "openness": _clamp(0.45 + (1 - confidence) * 0.15
+                           + (0.2 if idle else 0.0) - error_rate * 0.15),
     }
     # Geriye dönük uyum: eski profillerde help_seeking alanı korunur.
     state["help_seeking"] = _clamp((1 - confidence) * 0.6 + workload * 0.4)

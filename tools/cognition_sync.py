@@ -130,6 +130,10 @@ def sync_once(*, limit: int = 300, update_index: bool = False) -> dict:
                        plan_type=plan_type, evidence_ok=True)
             cm.remember_long_term(profile, mission_id=str(mission_id),
                                   plan_type=plan_type, ok=ok, department=department)
+            if not ok:
+                cm.remember_error(profile, mission_id=str(mission_id),
+                                  cause=cm.classify_cause(str(error or "")),
+                                  fix=str(error or "")[:200], evidence_ok=True)
             cm.meta_note(profile, "mission_qa", ok)
             if ok:
                 cm.learn_semantic(
