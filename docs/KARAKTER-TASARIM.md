@@ -10,13 +10,43 @@ Durum: **v2 kararları kilitlendi; v2 görselleri kota nedeniyle BEKLİYOR.**
 
 | Karakter | Karar | Kanon dosyası |
 |---|---|---|
-| Aden | 3 yaş **kız**; omuz hizası saç; **TEK** sarı yıldız toka; **3 çil** tüm panellerde | `characters/aden.json` |
+| Aden | 3 yaş **kız**; omuz hizası saç; **TEK** sarı yıldız toka; **3 çil** yalnız yanağın göründüğü açılarda | `characters/aden.json` |
 | Kaan | 1 yaş **erkek**; daha büyük kafa, kısa bacak, dolgun yanak, bebeksi gövde (**3,0 kafa**) | `characters/kaan.json` |
 
 **v2 görsel durumu:** Aden turnaround/ifade retouch + Kaan bebeksi retouch + Kaan
 ifade sheet → **ZeroGPU kotası 0** (`You have exceeded your free ZeroGPU quota`).
-Ücret harcanmadı; onaylı ücretli yol veya kota sıfırlanması bekleniyor.
-JSON kanonu değil, **gerçek görsel** teslim edilecek.
+Ücret harcanmadı; ücretsiz kota bekleniyor. JSON kanonu değil, **gerçek görsel**
+teslim edilecek.
+
+### v2 üretim güvenliği
+
+- **Sıra:** önce `aden-turnaround` → **kalite kapısı** (araç durur, `awaiting_qc`);
+  onay/QC sonrası `--all` ile aden-expressions → kaan-turnaround → kaan-expressions.
+- **Bağımlılık:** `kaan-expressions` girdisi **v2 Kaan turnaround**'dır
+  (`kaan-turnaround-v2-kontext-seed-503.png`). v2 turnaround yok/başarısızsa ifade
+  üretimi **başlamaz** (`skipped_dependency`).
+- **Devam:** daha önce üretilmiş ve SHA'sı manifestle eşleşen dosya yeniden
+  üretilmez/üzerine yazılmaz (`already_done`); SHA uyuşmazsa `checksum_mismatch`
+  ve otomatik yeniden yazma yok (`--force` gerekir).
+- **Başarısızlık:** `blocked`/`error` durumları PASS sayılmaz; her adım diske
+  anında yazılır (`model-sheets-v2-manifest.local.json`), kesintiden sonra devam eder.
+- **Çil kuralı:** üç çil yalnız sol yanağın kameraya döndüğü açılarda (ön, 3/4, yan);
+  arka görünüşte çil zorlanmaz.
+
+### Otomatik kontrol kaydı (doğrulandı)
+
+| Alan | Değer |
+|---|---|
+| Görev kimliği | `schedule-5640e779-a206-4e2a-a685-170983b64cdd` |
+| Tür | `after` (tek seferlik), 14.400 sn |
+| Planlanan an | `2026-11-07T23:15:46.866Z` = **2026-11-08 00:15:46 Europe/Berlin** |
+| Durum | `scheduled` |
+| Teslim modu | `host` |
+
+**Gerçek mekanizma:** DSH oturum zamanlayıcısı; süre gelince yukarıdaki prompt'u
+**bu oturuma** teslim eder. Bağımsız bir worker, daemon veya GPU süreci değildir;
+oturum kapalıysa görsel üretimi kendiliğinden çalışmaz. Yani bu bir **hatırlatma/
+tetikleyicidir**, "otomatik görsel üretimi" değildir. Ücretli API kullanmaz.
 
 ## 1. Üretilen görseller
 

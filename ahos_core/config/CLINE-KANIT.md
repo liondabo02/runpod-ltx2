@@ -973,3 +973,30 @@ exit : 0 / 0
 3 passed in 0.15s (venv)
 ```
 
+## v2 güvenlik düzeltmeleri (2026-11-07 20:50)
+generated_at: 2026-11-07T20:50:00
+
+komut : python tools/model_sheet_v2.py --status
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 0
+```json
+{"steps":[
+ {"id":"aden-turnaround","action":"run","reason":"ready"},
+ {"id":"aden-expressions","action":"skip_dependency","reason":"dependency_not_ready:aden-turnaround:not_ok"},
+ {"id":"kaan-turnaround","action":"run","reason":"ready"},
+ {"id":"kaan-expressions","action":"skip_dependency","reason":"dependency_not_ready:kaan-turnaround:not_ok"}]}
+```
+
+Değişiklikler: Kaan ifade girdisi = v2 Kaan turnaround; QA kapısı (aden-turnaround
+sonrası awaiting_qc); doğrulanmış SHA atlanır, üzerine yazılmaz; hata PASS değil;
+çil yalnız görünen açılarda. Bildirim: schedule-5640e779-a206-4e2a-a685-170983b64cdd,
+2026-11-07T23:15:46.866Z (00:15:46 Berlin), deliveryMode host — hatırlatma, otonom üretim değil.
+
+komut : pytest (5 dosya, global ve venv)
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\ahos_core
+exit : 0 / 0
+```text
+23 passed in 14.17s (global)
+23 passed in 8.69s (venv)
+```
+
