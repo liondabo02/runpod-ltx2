@@ -17,8 +17,8 @@ from pathlib import Path
 
 SCHEMA = 1
 CAPS = {"episodic": 60, "semantic": 80, "procedural": 40, "reflection": 40}
-EMOTION_KEYS = ("curiosity", "caution", "confidence", "workload",
-                "recovery", "help_seeking", "quality_drive")
+EMOTION_KEYS = ("curiosity", "learning_drive", "confidence", "caution", "workload",
+                "collaboration", "recovery", "patience", "quality_drive")
 
 
 def _now() -> str:
@@ -213,15 +213,22 @@ def emotion(profile, *, pending: int = 0, idle: bool = True, last_outcome: str =
     workload = _clamp(pending / 240 if pending else 0.0)
     previous = dict(profile.get("emotion") or {})
     state = {
-        "curiosity": _clamp(0.35 + (0.35 if idle else 0.0) + (1 - workload) * 0.2),
-        "caution": _clamp(0.2 + error_rate * 0.7),
+        "curiosity": _clamp(0.35 + (0.35 if idle else 0.0) + (1 - workload) * 0.2
+                            - error_rate * 0.25),
+        "learning_drive": _clamp(0.30 + (0.35 if idle else 0.05)
+                                 + (1 - confidence) * 0.3),
         "confidence": confidence,
+        "caution": _clamp(0.2 + error_rate * 0.7),
         "workload": workload,
+        "collaboration": _clamp(0.35 + (1 - workload) * 0.25
+                                + ((1 - confidence) * 0.6 + workload * 0.4) * 0.2),
         "recovery": _clamp(1.0 if last_outcome == "completed"
                            else (0.15 if last_outcome else float(previous.get("recovery", 0.5)))),
-        "help_seeking": _clamp((1 - confidence) * 0.6 + workload * 0.4),
+        "patience": _clamp(0.4 + (1 - error_rate) * 0.3 + (1 - workload) * 0.2),
         "quality_drive": _clamp(0.55 + error_rate * 0.35),
     }
+    # Geriye dönük uyum: eski profillerde help_seeking alanı korunur.
+    state["help_seeking"] = _clamp((1 - confidence) * 0.6 + workload * 0.4)
     profile["emotion"] = state
     history = profile.setdefault("emotion_history", [])
     history.append({"at": _now(), **state})
