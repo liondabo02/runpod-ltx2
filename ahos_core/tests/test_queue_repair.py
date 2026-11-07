@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from ahos.autonomous_company import PersistentMissionQueue, QueueStatus
 from ahos.mission_orchestrator import MissionResult, MissionStatus
 from ahos.queue_repair import reopen_blocked
@@ -102,3 +104,75 @@ def test_second_reopen_uses_next_suffix(tmp_path) -> None:
     )
     second = reopen_blocked(tmp_path)
     assert second["planned"][0]["new"] == "CMD-oyun-e-5-r3"
+
+
+def _board(path: Path, payload: dict) -> None:
+    (path / "taskboard.json").write_text(json.dumps(payload), encoding="utf-8")
+
+
+def test_board_blocked_mission_is_untouched_by_default(tmp_path) -> None:
+    queue = PersistentMissionQueue(tmp_path / "company-service.db")
+    _block(queue, "CMD-oyun-f-6", "görev panosu biçimi geçersiz; mevcut veriler korunuyor")
+    _board(tmp_path, {"version": 1, "updated_at": "2026-11-07T00:00:00", "tasks": []})
+
+    report = reopen_blocked(tmp_path)
+
+    assert report["candidates"] == 0
+    assert queue.get("CMD-oyun-f-6-r2") is None
+
+
+def test_board_blocked_mission_reopens_only_with_a_valid_board(tmp_path) -> None:
+    queue = PersistentMissionQueue(tmp_path / "company-service.db")
+    _block(queue, "CMD-oyun-g-7", "görev panosu biçimi geçersiz; mevcut veriler korunuyor")
+    _board(tmp_path, {"version": 1, "updated_at": "2026-11-07T00:00:00", "tasks": []})
+
+    report = reopen_blocked(tmp_path, include_board_schema=True)
+
+    assert report["candidates"] == 1
+    row = report["planned"][0]
+    assert row["class"] == "board_schema"
+    assert queue.get(row["new"]).status is QueueStatus.PENDING
+    assert queue.get("CMD-oyun-g-7").status is QueueStatus.BLOCKED
+
+
+def test_corrupt_board_blocks_replay_entirely(tmp_path) -> None:
+    queue = PersistentMissionQueue(tmp_path / "company-service.db")
+    _block(queue, "CMD-oyun-h-8", "görev panosu biçimi geçersiz; mevcut veriler korunuyor")
+    _board(tmp_path, {"tasks": "bozuk"})
+
+    with pytest.raises(ValueError):
+        reopen_blocked(tmp_path, include_board_schema=True)
+    assert queue.get("CMD-oyun-h-8-r2") is None
+
+
+def test_match_filter_limits_the_batch(tmp_path) -> None:
+    queue = PersistentMissionQueue(tmp_path / "company-service.db")
+    _block(queue, "CMD-oyun-i-9", "görev panosu biçimi geçersiz")
+    _block(queue, "CMD-oyun-j-10", "görev panosu biçimi geçersiz")
+    _board(tmp_path, {"version": 1, "updated_at": "2026-11-07T00:00:00", "tasks": []})
+
+    report = reopen_blocked(tmp_path, include_board_schema=True, match="i-9")
+
+    assert report["candidates"] == 1
+    assert report["planned"][0]["old"] == "CMD-oyun-i-9"
+
+
+def test_replay_is_idempotent_once_a_child_is_verified(tmp_path) -> None:
+    queue = PersistentMissionQueue(tmp_path / "company-service.db")
+    _block(queue, "CMD-oyun-k-11", "görev panosu biçimi geçersiz")
+    _board(tmp_path, {"version": 1, "updated_at": "2026-11-07T00:00:00", "tasks": []})
+
+    first = reopen_blocked(tmp_path, include_board_schema=True)
+    child = first["planned"][0]["new"]
+    queue.claim_next(owner="w", lease_seconds=30)
+    queue.complete(child, owner="w", result=MissionResult(
+        mission_id=child, objective="engelli iş", manager_id="manager",
+        status=MissionStatus.COMPLETED, steps=(), reason="gerçek teslim",
+        qa_worker_id="qa-01",
+    ))
+
+    second = reopen_blocked(tmp_path, include_board_schema=True)
+
+    assert second["candidates"] == 0
+    assert second["skipped_recovered"][0]["reason"].startswith("already recovered")
+    assert queue.get("CMD-oyun-k-11").status is QueueStatus.BLOCKED

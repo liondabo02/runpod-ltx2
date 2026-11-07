@@ -560,3 +560,29 @@ warning: in the working copy of 'ahos_core/ahos/worker_card.py', LF will be repl
 warning: in the working copy of 'ahos_core/ahos/worker_state.py', LF will be replaced by CRLF the next time Git touches it
 warning: in the working copy of 'ahos_core/config/CLINE-KANIT.md', LF will be replaced by CRLF the next time Git touches it
 ```
+
+## V5 kuyruk kurtarma (G014)
+generated_at: 2026-11-07T10:55:14
+
+komut : -B -m pytest -q --no-header -p no:cacheprovider tests/test_queue_repair.py
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\ahos_core
+exit : 0
+```text
+..........                                                               [100%]
+10 passed in 1.27s
+```
+
+komut : tools/unlock_blocked.py 20 --include-board --match sandbox-1793538772
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 0
+```text
+{"dry_run": true, "candidates": 0, "by_class": {}, "planned": [], "skipped_recovered": [{"old": "CMD-ai-platform-sandbox-1793538772", "class": "board_schema", "reason": "already recovered as CMD-ai-platform-sandbox-1793538772-r2"}, {"old": "CMD-creative-sandbox-1793538772", "class": "board_schema", "reason": "already recovered as CMD-creative-sandbox-1793538772-r2"}, {"old": "CMD-data-sandbox-1793538772", "class": "board_schema", "reason": "already recovered as CMD-data-sandbox-1793538772-r2"}, {"old": "CMD-finance-sandbox-1793538772", "class": "board_schema", "reason": "already recovered as CMD-finance-sandbox-1793538772-r2"}, {"old": "CMD-genel-sandbox-1793538772", "class": "board_schema", "reason": "already recovered as CMD-genel-sandbox-1793538772-r2"}, {"old": "CMD-guvenlik-sandbox-1793538772", "class": "board_schema", "reason": "already recovered as CMD-guvenlik-sandbox-1793538772-r2"}, {"old": "CMD-holding-sandbox-1793538772", "class": "board_schema", "reason": "already recovered as CMD-holding-sandbox-1793538772-r2"}, {"old": "CMD-infrastructure-sandbox-1793538772", "class": "board_schema", "reason": "already recovered as CMD-infrastructure-sandbox-1793538772-r2"}, {"old": "CMD-marketing-sandbox-1793538772", "class": "board_schema", "reason": "already recovered as CMD-marketing-sandbox-1793538772-r2"}, {"old": "CMD-operations-sandbox-1793538772", "class": "board_schema", "reason": "already recovered as CMD-operations-sandbox-1793538772-r2"}, {"old": "CMD-oyun-sandbox-1793538772", "class": "board_schema", "reason": "already recovered as CMD-oyun-sandbox-1793538772-r2"}, {"old": "CMD-quality-sandbox-1793538772", "class": "board_schema", "reason": "already recovered as CMD-quality-sandbox-1793538772-r2"}], "moved_items": []}
+No missions were marked complete; unrecoverable blocks remain blocked.
+```
+
+komut : sqlite3 doğrulama (sandbox-1793538772-r*)
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 0
+```json
+{"replayed": 13, "completed": 13, "delivery_verified": 13, "originals_still_blocked": 12, "documents_created_today": 39}
+```

@@ -12,10 +12,10 @@
 | 008 Kolektif problem çözme | PARTIAL | `project_run` 3 departmanlı gerçek pilot (creative/software/quality) + QA; işçi bilişi deterministik araç |
 | 009 Departmanlar arası bilgi | PARTIAL | `share_knowledge` doğrulanmış kayıt + dedupe; gerçek görevde çapraz kullanım izleme yok |
 | 010 Departman beyinleri | PARTIAL | `department_brain.py`: müdür, işçiler, yetenek, kuyruk, engel, teslimat, paylaşılan bilgi, bağımlılık, haftalık oran; 2 departman testi geçti |
-| 011 17 departman gerçek çıktı | PARTIAL | Pilotla creative/software/quality çıktı+QA var; diğer 14 departman yok |
+| 011 17 departman gerçek çıktı | PARTIAL | 17/17 departmanın en az bir **doğrulanmış** teslimi var; bugün 12 departman pano engelinden kurtarılıp **39 gerçek belge** üretti (brief + doküman + QA review, `docs/KUYRUK-KURTARMA.md`). Derin alan çıktısı (hukuk analizi, finans modeli, kod) hâlâ yok |
 | 012 Otonom hedef→görev | PARTIAL | `goal_intake.py`: yalnız **Harun onaylı** hedef → 3 plan → görev grafiği → kuyruk; idempotent (4 test). Forensik: initiative 1 kayıt/2,5 gün eski; yürütme+QA kapanışı henüz bağlı değil |
 | 013 Sürekli kontrollü çalışma | PASS | `worker_state.derive()`: 10 durum; gözlem > taze olay (30 dk) > son koşu (24 sa) > "kayıt yok". Canlıda 81 işçi = **34 boşta · 47 çevrimdışı/kayıtsız · 0 çalışan** (bugün görev koşmadı); `/api/agent-office` `state_code` taşıyor; 12 test |
-| 014 Kuyruk güvenliği | PARTIAL | pending≤300, lease recovery, tamamlanmış koruma testli; **57 blocked/failed sınıflandırıldı**: 37 geçersiz girdi, 11 kod doğrulama, 7 QA, 1 lease; 8 tekrar denenebilir, otomatik toplu tekrar yok |
+| 014 Kuyruk güvenliği | PASS | pending≤300, lease recovery, tamamlanmış koruma; **12 pano kaynaklı engel** yeni kimlikle tekrarlandı → **13/13 completed, delivery.verified=1**, orijinaller blocked kaldı; tekrar **idempotent** (tamamlanmış çocuk varsa 0 aday) ve pano bozuksa **fail-closed**; 10 test. Kalan 25 (20 kriz kopyası + 3 bağlamı değişmiş düzenleme + 2 Ar-Ge) elle incelemeye bırakıldı |
 | 015 47 kanıtsız işçi | PARTIAL | `worker_tasks.py` gerçek görev önerisi üretiyor; toplu yürütme yok |
 | 016 Öğrenme etkisi | PARTIAL | Öncesi/sonrası ölçüm aracı var; yeterli örnek yok (0 ölçülmüş) |
 | 017 Kendi hatasını düzeltme | PARTIAL | 20 sentetik senaryo geçti; geçmiş gerçek hatalardan zincir yok |
