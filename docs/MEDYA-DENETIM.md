@@ -52,21 +52,22 @@ Yani ücretli model çağrısı bugün **teknik olarak da mümkün değil**: ana
 Onay verilse bile önce bir sağlayıcı anahtarının (ör. `FAL_KEY`, `LTX_API_KEY`,
 `RUNPOD_API_KEY`) sağlanması gerekir.
 
-## 4. Ücretsiz görsel üretim denemesi (referans için)
+## 4. Ücretsiz üretim denemeleri
 
-Tek anahtarsız seçenek Pollinations (Flux) idi:
+**Pollinations (Flux):** ilk 512×512 istek HTTP 200; `model=flux`, `enhance=true`,
+1024×1024 ve kota sonrası tüm istekler **HTTP 402 (Payment Required)**. Ücretsiz
+görsel kademesi kapandı.
 
-```text
-GET image.pollinations.ai/prompt/...  512x512           -> HTTP 200 (ilk istek, 3,8 sn)
-GET ...?model=flux                                     -> HTTP 402
-GET ...?enhance=true                                   -> HTTP 402
-GET ...?width=1024&height=1024                         -> HTTP 402
-GET ... 512x512 (birkaç istek sonra)                   -> HTTP 402
-```
+**Hugging Face Spaces (anahtarsız):** resmî **`Lightricks/LTX-2.5`** (ZeroGPU,
+RUNNING) ve **`black-forest-labs/FLUX.1-schnell`** (ZeroGPU, RUNNING) Gradio
+API'leri anahtarsız çağrılabiliyor. Bugün:
+- FLUX ile **2 keyframe** üretildi (1280×720, seed 11 ve 22),
+- LTX-2.5 ile **2,04 sn'lik smoke video** üretildi (18,4 sn, seed 42),
+- ardından **anonim ZeroGPU kotası doldu**: “You have exceeded your ZeroGPU runs
+  limit”. 5 sn'lik gerçek çekim bu yüzden tamamlanamadı.
 
-**Sonuç:** ücretsiz kademe kota sonrası kapandı (402 Payment Required). Bu yüzden
-karakter referans görselleri de ücretsiz üretilemedi; ücretli/anahtarlı görsel
-modeli gerekiyor. (Bu bir hata değil, bugünkü erişim durumudur.)
+Kota, ücretsiz bir Hugging Face hesabı tokeni (`HF_TOKEN`) ile açılır; ücret
+gerekmez. Anahtar yoksa çözüm: bekleme veya RunPod.
 
 ## 5. Mevcut 34 sn pilotun teknik ölçümü
 

@@ -46,11 +46,27 @@ Fiyatlar API listesinden; sağlayıcı faturası son sözü söyler. Tavan aşı
 ## 4. Gerekli olan (Harun)
 
 1. **Bir API anahtarı** — biri yeterli:
+   - **Hugging Face tokeni (ücretsiz, önerilen):** `HF_TOKEN` — ZeroGPU kotasını açar,
+     ücret yok, hesap yalnız ücretsiz kademe. Bugünkü engel tam olarak bu.
    - Lightricks/Venice LTX (`LTX_API_KEY` / `VENICE_API_KEY`), veya
    - fal.ai (`FAL_KEY`, LTX-2/2.5 barındırıyorsa), veya
    - RunPod (`RUNPOD_API_KEY` + LTX endpoint kimliği; repodaki Docker imajı).
-2. **Harcama onayı:** "LTX-2.5 Pro I2V, 4 çekime kadar, en fazla 5 USD" cümlesi.
+2. **Harcama onayı:** yalnız ücretli sağlayıcı seçilirse; "LTX-2.5 Pro I2V, 4 çekime
+   kadar, en fazla 5 USD" cümlesi. HF Space yolu **0 USD**.
 3. Anahtar bu makinede **ortam değişkeni** olarak verilmeli; repoya yazılmaz.
+
+## 4b. Ücretsiz yol (doğrulandı, kota bekliyor)
+
+Resmî Hugging Face Spaces anahtarsız çalışıyor:
+
+```powershell
+python tools/ltx_space_render.py --keyframe deliverables/S01-PARK-KITE-001/keyframes/keyframe-seed-11-rgb.png --duration 5 --seed 101 --decoder diffusion --tag take1
+python tools/finalize_scene.py --video deliverables/S01-PARK-KITE-001/park-kite-take1.mp4 --tag take1 --model "LTX-2.5 (HF Space)" --cost-usd 0
+```
+
+Bugün 2 keyframe + 2,04 sn smoke üretildi; 5 sn'lik çekim anonim ZeroGPU kotası
+dolduğu için alınamadı (`docs/S01-DURUM.md`). `HF_TOKEN` verilirse aynı komut
+tek çağrıda 5 sn'lik çekimi üretir.
 
 ## 5. Ön kabul kapıları
 

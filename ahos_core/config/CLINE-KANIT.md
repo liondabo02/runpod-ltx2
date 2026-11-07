@@ -698,3 +698,45 @@ exit : 0
 7 passed in 7.05s
 ```
 
+## Ücretsiz LTX-2.5 hattı denemesi (2026-11-07)
+generated_at: 2026-11-07T13:00:00
+
+komut : HF Space keşfi (huggingface.co/api/spaces)
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 0
+```text
+Lightricks/LTX-2.5                 stage=RUNNING hardware=zero-a10g sdk=gradio
+black-forest-labs/FLUX.1-schnell   stage=RUNNING hardware=zero-a10g
+```
+
+komut : FLUX.1-schnell /infer (2 keyframe, 1280x720)
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 0
+```text
+seed 11: 66.000 bayt · 12,6 sn
+seed 22: 72.434 bayt · 6,0 sn
+seed 33: ERROR "You have exceeded your ZeroGPU quota (90s requested vs. 0s left)"
+```
+
+komut : Lightricks/LTX-2.5 /run (smoke, 512x512, 2,0 sn, seed 42)
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 0
+```text
+OK 18,4 sn · 49 frames (2.04s)
+```
+
+komut : python tools/ltx_space_render.py --keyframe ... --duration 5 --seed 101 --decoder diffusion --tag take1
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 3 (blocked)
+```text
+{"status": "blocked", "blocked": "zerogpu_quota",
+ "manifest": "deliverables/S01-PARK-KITE-001/run-take1.json"}
+```
+
+komut : python -B -m pytest -q --no-header -p no:cacheprovider tests/test_scene_tools.py
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\ahos_core
+exit : 0
+```text
+5 passed in 16.11s
+```
+
