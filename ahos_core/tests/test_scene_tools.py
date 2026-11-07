@@ -47,10 +47,13 @@ def test_prompts_come_from_scene_canon():
     import ltx_space_render
 
     keyframe = ltx_space_render.build_keyframe_prompt()
+    baby = ltx_space_render.build_keyframe_prompt(variant="baby")
     video = ltx_space_render.build_video_prompt()
-    for text in (keyframe, video):
+    for text in (keyframe, baby, video):
         assert "Aden" in text and "Kaan" in text
         assert "kite" in text.lower()
+    assert "TODDLER" in baby and "three quarters" in baby
+    assert baby != keyframe
 
 
 def test_space_duration_cap_is_enforced_before_network(tmp_path):

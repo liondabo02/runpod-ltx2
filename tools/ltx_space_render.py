@@ -65,8 +65,10 @@ def classify_error(message: str) -> str:
     return "provider_error"
 
 
-def build_keyframe_prompt(scene: dict | None = None) -> str:
+def build_keyframe_prompt(scene: dict | None = None, variant: str = "default") -> str:
     scene = scene or json.loads(SCENE.read_text(encoding="utf-8"))
+    if variant == "baby" and scene["prompts"].get("keyframe_baby_focus"):
+        return scene["prompts"]["keyframe_baby_focus"]
     return scene["prompts"]["keyframe"]
 
 
@@ -92,8 +94,9 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def generate_keyframe(*, seed: int, width: int, height: int, out_dir: Path) -> dict:
-    prompt = build_keyframe_prompt()
+def generate_keyframe(*, seed: int, width: int, height: int, out_dir: Path,
+                      variant: str = "default") -> dict:
+    prompt = build_keyframe_prompt(variant=variant)
     client = _client(FLUX_SPACE)
     started = time.time()
     try:
@@ -162,6 +165,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--generate-keyframe", action="store_true")
     parser.add_argument("--seed", type=int, default=101)
     parser.add_argument("--duration", type=float, default=5.0)
+    parser.add_argument("--prompt-variant", choices=["default", "baby"], default="baby")
     parser.add_argument("--width", type=int, default=1280)
     parser.add_argument("--height", type=int, default=720)
     parser.add_argument("--decoder", choices=["diffusion", "conv"], default="diffusion")
@@ -181,7 +185,8 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.generate_keyframe or not args.keyframe:
             manifest["keyframe"] = generate_keyframe(
-                seed=args.seed, width=args.width, height=args.height, out_dir=keyframe_dir)
+                seed=args.seed, width=args.width, height=args.height,
+                out_dir=keyframe_dir, variant=args.prompt_variant)
             keyframe = Path(manifest["keyframe"]["path"])
         else:
             keyframe = Path(args.keyframe)
