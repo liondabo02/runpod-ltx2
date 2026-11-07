@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Mipiluna · Seksek</title>
+<style>
+  :root{--bg:#0b1220;--card:#151f33;--line:#27324a;--ink:#eef3ff;--dim:#9db0d0;
+        --accent:#5b86ff;--accent2:#8f6bff;--ok:#3ecf8e;--bad:#ff6b6b;--gold:#ffd05e}
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(900px 480px at 12% -8%,#1d2f55,transparent 60%),
+       radial-gradient(900px 480px at 88% 0%,#2a2150,transparent 55%),var(--bg);
+       color:var(--ink);font-family:system-ui,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+  header{padding:16px clamp(12px,3vw,36px);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  h1{margin:0;font-size:clamp(18px,2.4vw,26px)}
+  .sub{color:var(--dim);font-size:12.5px}
+  .toolbar{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+  .pill{background:#16213780;border:1px solid var(--line);border-radius:999px;padding:7px 13px;
+        font:inherit;font-size:13px;color:var(--ink);cursor:pointer}
+  .pill.on{background:#22345c;border-color:var(--accent)}
+  main{padding:0 clamp(12px,3vw,36px) 40px}
+  .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));margin-bottom:14px}
+  .game{background:linear-gradient(180deg,#182238,#131c2e);border:1px solid var(--line);
+        border-radius:18px;padding:14px;cursor:pointer;transition:.16s}
+  .game:hover{transform:translateY(-3px);border-color:var(--accent)}
+  .game .emoji{font-size:28px}
+  .game h2{margin:6px 0 3px;font-size:16px}
+  .game p{margin:0;color:var(--dim);font-size:12.5px;line-height:1.4}
+  .stars{margin-top:8px;color:var(--gold);letter-spacing:2px;font-size:13px}
+  .stage{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px}
+  .hud{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+  .hud b{font-variant-numeric:tabular-nums}
+  .bar{height:10px;background:#1b2740;border-radius:999px;overflow:hidden;flex:1;min-width:90px}
+  .bar i{display:block;height:100%;width:60%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+  canvas{width:100%;height:auto;display:block;border-radius:14px;background:#0f1727;
+         border:1px solid var(--line);touch-action:none}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+  button{font:inherit;border-radius:999px;border:1px solid var(--line);padding:9px 18px;
+         background:#1e2b45;color:var(--ink);cursor:pointer}
+  button.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent;font-weight:600}
+  .msg{color:var(--dim);font-size:14px;margin:8px 0 0}
+  .pass{color:var(--ok);font-weight:700}
+  .fail{color:var(--bad);font-weight:700}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,16px);background:#1b2740f2;
+         border:1px solid var(--line);border-radius:999px;padding:10px 20px;font-weight:600;
+         opacity:0;transition:.25s;pointer-events:none;z-index:50}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  @keyframes floaty { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+  @keyframes pop { 0%{transform:scale(1)} 40%{transform:scale(1.08)} 100%{transform:scale(1)} }
+  @keyframes glow { 0%,100%{box-shadow:0 0 0 #0000} 50%{box-shadow:0 0 24px #5b86ff88} }
+  .game{animation:floaty 6s ease-in-out infinite}
+  .game:nth-child(2n){animation-delay:.6s}
+  .game:active{transform:scale(.98)}
+  button.primary{animation:glow 3.4s ease-in-out infinite}
+  .toast.show{animation:pop .3s ease}
+  .cell.done{animation:pop .28s ease}
+</style>
+<style>
+@media (max-width: 640px){
+  body{overflow-x:hidden}
+  .toolbar{width:100%;justify-content:flex-start;gap:6px}
+  .hud{flex-wrap:wrap;gap:6px}
+  .pill{font-size:12.5px;padding:5px 9px}
+  .row{flex-wrap:wrap;gap:8px}
+  .row button{flex:1 1 45%;min-width:0;min-height:52px;padding:10px 12px;font-size:14px}
+  canvas{max-height:52vh}
+}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>🟦 Mipiluna · Seksek</h1>
+    <div class="sub">Fizik simülasyonlu · öğretmen sesli rehber · ilerleme kaydedilir</div>
+  </div>
+  <div class="toolbar">
+    <button class="pill" id="speedBtn">🐢 Normal</button>
+    <button class="pill" id="diffBtn">🎚️ Normal</button>
+    <button class="pill" id="muteBtn">🔊 Ses</button>
+    <a class="pill" id="parentLink" href="veli.html" target="_blank" rel="noopener">👨‍👩‍👧 Veli</a>
+    <span class="pill" id="profilePill">👦 profil</span>
+    <span class="pill" id="totalPill">⭐ 0</span>
+  </div>
+</header>
+<main>
+  <div class="grid" id="menu"></div>
+  <section class="stage">
+    <div class="hud" id="hud" hidden>
+      <span class="pill" id="gameName">—</span>
+      <span class="pill">Puan <b id="score">0</b></span>
+      <span class="pill">Can <b id="lives">3</b></span>
+      <span class="pill">Süre <b id="time">0</b></span>
+      <div class="bar"><i id="energy"></i></div>
+      <span class="pill" id="levelBar">Seviye <button class="lv" data-lv="1">1</button><button class="lv" data-lv="2">2</button><button class="lv" data-lv="3">3</button></span>
+    </div>
+    <canvas id="cv" width="880" height="500" aria-label="oyun alanı"></canvas>
+    <p class="msg" id="msg">Yukarıdan bir oyun seç; öğretmen kuralları anlatır.</p>
+    <div class="row">
+      <button class="primary" id="startBtn">▶ Başla</button>
+      <button id="hintBtn">💡 İpucu</button>
+      <button id="teachBtn">🔁 Öğretmen anlatsın</button>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+  var DIR = 'voices/';
+  var PROFILE_KEY = 'mipiluna.profile';
+  var profile = 'cocuk1';
+  try { profile = localStorage.getItem(PROFILE_KEY) || 'cocuk1'; } catch(e){}
+  var KEY = 'mipiluna.sokak.v2.' + profile;
+  var state = { stars:{}, total:0, muted:false, slow:false, level:1, unlocked:{}, adaptive:{}, minutes:0, day:'' };
+  try { state = Object.assign(state, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch(e){}
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} }
+  function trackTime(dt){
+    var today = new Date().toISOString().slice(0,10);
+    if (state.day !== today){ state.day = today; state.minutes = 0; }
+    state.minutes = (state.minutes || 0) + dt / 60;
+    if (Math.floor(state.minutes * 10) % 6 === 0) save();
+  }
+
+  var audio = null;
+  function play(name){
+    if (state.muted) return;
+    try{
+      if (audio) audio.pause();
+      audio = new Audio(DIR + name + '.mp3');
+      audio.volume = .96;
+      audio.playbackRate = state.slow ? .87 : 1;
+      var p = audio.play(); if (p && p.catch) p.catch(function(){});
+    }catch(e){}
+  }
+  function toast(t){
+    var el = document.getElementById('toast');
+    el.textContent = t; el.classList.add('show');
+    clearTimeout(el._t); el._t = setTimeout(function(){ el.classList.remove('show'); }, 2000);
+  }
+  function starText(n){ var s='★'.repeat(Math.max(0,Math.min(3,n))); return s + '☆'.repeat(3 - s.length); }
+
+  var GAMES = [
+    { id:'seksek', emoji:'🟦', title:'Seksek', desc:'Taşı at, tek ayak zıpla, dengede kal.',
+      teacher:'t-02-seksek', hint:'t-09-ipucu-seksek' }
+  ];
+
+  var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  var W = cv.width, H = cv.height;
+  var current = null, running = false, raf = 0, last = 0;
+  var score = 0, lives = 3, clock = 0, energy = 1;
+  var hud = document.getElementById('hud');
+
+  function setMsg(html){ document.getElementById('msg').innerHTML = html; }
+  function hudUpdate(){
+    document.getElementById('score').textContent = score;
+    document.getElementById('lives').textContent = Math.max(0, lives);
+    document.getElementById('time').textContent = clock.toFixed(1);
+    document.getElementById('energy').style.width = Math.max(0, Math.min(1, energy)) * 100 + '%';
+  }
+  function finish(points, stars, text){
+    running = false;
+    score += points;
+    state.total += points;
+    var id = current.meta.id, lv = state.level;
+    var arr = state.stars[id] || [0,0,0];
+    if ((arr[lv-1] || 0) < stars) arr[lv-1] = stars;
+    state.stars[id] = arr;
+    state.unlocked[id] = Math.max(state.unlocked[id] || 1, Math.min(3, lv + 1));
+    state.adaptive = state.adaptive || {};
+    state.adaptive[id] = Math.min(1.15, (state.adaptive[id] || 1) + 0.04);
+    save(); renderMenu(); hudUpdate();
+    play('k-02-dogru');
+    setMsg('<span class="pass">' + text + '</span> · +' + points + ' puan ' + starText(stars));
+    toast('+' + points + ' puan · ' + starText(stars));
+  }
+  function fail(text){
+    running = false; play('k-03-yanlis');
+    var fid = current && current.meta ? current.meta.id : '';
+    state.adaptive = state.adaptive || {};
+    state.adaptive[fid] = Math.max(0.88, (state.adaptive[fid] || 1) - 0.06);
+    save();
+    setMsg('<span class="fail">' + text + '</span> · tekrar dene');
+  }
+
+  /* ---------- girdi ---------- */
+  var pointer = { x: W/2, y: H/2, down: false, sx: 0, sy: 0, dx: 0, dy: 0 };
+  function pos(ev){
+    var r = cv.getBoundingClientRect();
+    var t = ev.touches ? ev.touches[0] : ev;
+    return { x: (t.clientX - r.left) * (W / r.width), y: (t.clientY - r.top) * (H / r.height) };
+  }
+  cv.addEventListener('pointerdown', function(e){ var p = pos(e); pointer.x=p.x; pointer.y=p.y; pointer.down=true; pointer.sx=p.x; pointer.sy=p.y; if (current && current.down) current.down(p); });
+  cv.addEventListener('pointermove', function(e){ var p = pos(e); pointer.x=p.x; pointer.y=p.y; if (current && current.move) current.move(p); });
+  window.addEventListener('pointerup', function(e){ pointer.down=false; if (current && current.up) current.up(pos(e)); });
+  window.addEventListener('keydown', function(e){
+    if (!current || !current.key) return;
+    if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' '].indexOf(e.key) >= 0){ e.preventDefault(); current.key(e.key); }
+  });
+
+  /* ---------- oyun çerçevesi ---------- */
+  window.__level = 1;
+  function levelScale(){
+    var id = current && current.meta ? current.meta.id : '';
+    var adaptive = (state.adaptive && state.adaptive[id]) || 1;
+    return (0.85 + 0.15 * (window.__level - 1)) * adaptive;
+  }
+  function startGame(meta){
+    var Klass = CLASSES[meta.id];
+    if (!Klass) { toast('Bu oyun henüz hazır değil'); return; }
+    current = new Klass();
+    current.meta = meta;
+    score = 0; lives = 3; clock = 0; energy = 1; running = true;
+    hud.hidden = false;
+    document.getElementById('gameName').textContent = meta.emoji + ' ' + meta.title;
+    setMsg('Hazır ol! Öğretmen kuralları anlatıyor…');
+    play(meta.teacher);
+    if (window.__gameCleanup) { try { window.__gameCleanup(); } catch(e){} }
+    current.setup();
+    last = performance.now();
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(loop);
+  }
+
+  function loop(now){
+    var dt = Math.min(0.05, (now - last) / 1000) || 0.016;
+    last = now;
+    if (running){ clock += dt; trackTime(dt); current.update(dt, now / 1000); }
+    ctx.clearRect(0, 0, W, H);
+    current.draw(ctx, now / 1000);
+    hudUpdate();
+    raf = requestAnimationFrame(loop);
+  }
+
+  /* ---------- 1) SEKSEK: atış + zıplama ritmi ---------- */
+  function Seksek(){
+    var stones = [], target = 1, phase = 'aim', hop = 0, marker = 0, markerDir = 1, balance = 1;
+    var squares = [];
+    for (var i = 0; i < 8; i++){
+      var col = i % 4, row = Math.floor(i / 2);
+      squares.push({ n: i + 1, x: 80 + col * 150, y: 120 + Math.floor(i / 4) * 150, w: 120, h: 120 });
+    }
+    this.setup = function(){
+      stones = [{ x: 90, y: H - 70, vx: 0, vy: 0, flying: false }];
+      target = 1; phase = 'aim'; hop = 0; balance = 1;
+    };
+    this.down = function(p){
+      if (phase === 'hop'){
+        if (Math.abs(marker - 0.5) < 0.16) { hop++; balance = Math.min(1, balance + 0.06); play('k-02-dogru'); }
+        else { balance -= 0.18; play('k-03-yanlis'); }
+        if (hop >= 8){ finish(30, 3, 'Sekseği dengede tamamladın!'); }
+        return;
+      }
+      stones[0].flying = true;
+      var dx = p.x - stones[0].x, dy = p.y - stones[0].y;
+      var power = Math.min(1, Math.hypot(dx, dy) / 420);
+      stones[0].vx = dx * 1.5 * power;
+      stones[0].vy = -Math.abs(dy) * 1.2 * power - 260 * power;
+    };
+    this.update = function(dt){
+      energy = balance;
+      if (phase === 'aim'){
+        var s = stones[0];
+        if (s.flying){
+          s.vy += 900 * dt; s.x += s.vx * dt; s.y += s.vy * dt;
+          if (s.y > H - 70){ s.y = H - 70; s.vy = 0; s.vx = 0; s.flying = false;
+            var hit = squares.find(function(sq){ return s.x > sq.x && s.x < sq.x + sq.w && s.y > sq.y - 20 && s.y < sq.y + sq.h; });
+            if (hit && hit.n === target){ phase = 'hop'; hop = 0; marker = 0; play('k-02-dogru'); }
+            else { balance -= 0.2; play('k-03-yanlis'); }
+          }
+        }
+      } else {
+        marker += markerDir * dt * 1.15;
+        if (marker > 1){ marker = 1; markerDir = -1; }
+        if (marker < 0){ marker = 0; markerDir = 1; }
+        if (balance <= 0) fail('Dengen bozuldu!');
+      }
+    };
+    this.draw = function(g){
+      squares.forEach(function(sq){
+        g.fillStyle = sq.n < target ? '#1e4a39' : (sq.n === target ? '#22345c' : '#1b2740');
+        g.strokeStyle = '#2b3a5a'; g.lineWidth = 2;
+        g.beginPath(); g.roundRect(sq.x, sq.y, sq.w, sq.h, 14); g.fill(); g.stroke();
+        g.fillStyle = '#dbe6ff'; g.font = 'bold 34px system-ui'; g.textAlign = 'center';
+        g.fillText(sq.n, sq.x + sq.w / 2, sq.y + sq.h / 2 + 12);
+      });
+      var s = stones[0];
+      g.fillStyle = '#ffd05e'; g.beginPath(); g.arc(s.x, s.y, 10, 0, Math.PI * 2); g.fill();
+      if (phase === 'hop'){
+        g.fillStyle = '#0b1220cc'; g.fillRect(90, H - 130, W - 180, 70);
+        g.fillStyle = '#22345c'; g.fillRect(110, H - 115, W - 220, 26);
+        g.fillStyle = '#3ecf8e'; g.fillRect(110 + (W - 220) * 0.34, H - 115, (W - 220) * 0.32, 26);
+        g.fillStyle = '#fff'; g.fillRect(110 + (W - 220) * marker, H - 120, 5, 36);
+        g.fillStyle = '#cfe0ff'; g.font = '16px system-ui'; g.textAlign = 'center';
+        g.fillText('Yeşil alanda dokun · zıplama ' + (hop + 1) + '/8', W / 2, H - 84);
+      }
+    };
+  }
+
+  /* ---------- 2) BEŞ TAŞ: top havada, taş topla ---------- */
+  function Bestas(){
+    var stones = [], ball = null, picked = 0, tosses = 5;
+    var cx = W / 2, groundY = H - 90;
+    this.setup = function(){
+      picked = 0; tosses = 5;
+      stones = [];
+      for (var i = 0; i < 5; i++) stones.push({ x: cx - 200 + i * 100, y: groundY + 20, taken: false });
+      ball = { x: cx, y: groundY - 260, vy: 0, caught: true };
+    };
+    function toss(){
+      ball.caught = false;
+      ball.x = cx; ball.y = groundY - 40;
+      ball.vy = -620;
+    }
+    this.down = function(p){
+      if (ball && !ball.caught && ball.vy > 0 && ball.y > groundY - 90 && ball.y < groundY - 10){
+        ball.caught = true; tosses--;
+        play('k-02-dogru');
+        if (picked >= 5) finish(25, 3, 'Beş taşı da topladın ve topu yakaladın!');
+      } else {
+        for (var i = 0; i < stones.length; i++){
+          var s = stones[i];
+          if (!s.taken && Math.hypot(p.x - s.x, p.y - s.y) < 34){ s.taken = true; picked++; break; }
+        }
+      }
+    };
+    this.update = function(dt){
+      energy = Math.max(0, tosses / 5);
+      if (!ball.caught){
+        ball.vy += 1300 * dt; ball.y += ball.vy * dt;
+        if (ball.y > groundY){ ball.y = groundY; ball.caught = true; tosses--; play('k-03-yanlis'); energy = Math.max(0, tosses / 5); }
+      } else if (tosses > 0 && picked < 5){
+        toss();
+      }
+      if (tosses <= 0 && picked < 5) fail('Toplar bitti, taşlar kaldı!');
+      if (picked >= 5 && ball.caught) finish(25, 3, 'Beş taşı topladın!');
+    };
+    this.draw = function(g){
+      g.fillStyle = '#22345c'; g.fillRect(0, groundY, W, 40);
+      stones.forEach(function(s){
+        if (s.taken) return;
+        g.fillStyle = '#e0952d'; g.beginPath(); g.arc(s.x, s.y, 20, 0, Math.PI * 2); g.fill();
+      });
+      if (ball){
+        g.fillStyle = '#8fb4ff'; g.beginPath(); g.arc(ball.x, ball.y, 14, 0, Math.PI * 2); g.fill();
+      }
+      g.fillStyle = '#cfe0ff'; g.font = '16px system-ui'; g.textAlign = 'center';
+      g.fillText('Top yere düşerken dokun · yakala!   Top: ' + Math.max(0, tosses) + '  Taş: ' + picked + '/5', W / 2, 34);
+    };
+  }
+
+  /* ---------- 3) YAKAR TOP: çoklu top, fizik ---------- */
+  function YakarTop(){
+    var hero = { x: W / 2, y: H / 2, r: 18 }, balls = [], spawn = 0, survived = 0, goal = 30;
+    this.setup = function(){ hero = { x: W / 2, y: H / 2, r: 18 }; balls = []; spawn = 0.6; survived = 0; };
+    this.move = function(p){ hero.x = p.x; hero.y = p.y; };
+    this.key = function(k){
+      var step = 26;
+      if (k === 'ArrowLeft') hero.x -= step;
+      if (k === 'ArrowRight') hero.x += step;
+      if (k === 'ArrowUp') hero.y -= step;
+      if (k === 'ArrowDown') hero.y += step;
+    };
+    this.update = function(dt){
+      survived += dt; clock = survived; energy = 1 - survived / goal;
+      spawn -= dt;
+      if (spawn <= 0){
+        spawn = Math.max(0.35, 1.2 - survived * 0.025) / levelScale();
+        var edge = Math.floor(Math.random() * 4), x = 0, y = 0;
+        if (edge === 0){ x = 0; y = Math.random() * H; }
+        if (edge === 1){ x = W; y = Math.random() * H; }
+        if (edge === 2){ x = Math.random() * W; y = 0; }
+        if (edge === 3){ x = Math.random() * W; y = H; }
+        var ang = Math.atan2(hero.y - y, hero.x - x) + (Math.random() - .5) * .5;
+        var speed = (190 + survived * 6) * levelScale();
+        balls.push({ x: x, y: y, vx: Math.cos(ang) * speed, vy: Math.sin(ang) * speed, r: 14 });
+      }
+      balls.forEach(function(b){ b.x += b.vx * dt; b.y += b.vy * dt; });
+      balls = balls.filter(function(b){ return b.x > -60 && b.x < W + 60 && b.y > -60 && b.y < H + 60; });
+      for (var i = balls.length - 1; i >= 0; i--){
+        var b = balls[i];
+        if (Math.hypot(b.x - hero.x, b.y - hero.y) < b.r + hero.r){
+          balls.splice(i, 1); lives--; play('k-03-yanlis');
+          if (lives <= 0) fail('Topa yakalandın!');
+        }
+      }
+      if (survived >= goal) finish(35, 3, '30 saniye dayandın!');
+    };
+    this.draw = function(g){
+      g.strokeStyle = '#2b3a5a'; g.strokeRect(1, 1, W - 2, H - 2);
+      g.fillStyle = '#6f9bff'; g.beginPath(); g.arc(hero.x, hero.y, hero.r, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#fff'; g.font = '18px system-ui'; g.textAlign = 'center'; g.fillText('🧒', hero.x, hero.y + 6);
+      balls.forEach(function(b){
+        g.fillStyle = '#e2562f'; g.beginPath(); g.arc(b.x, b.y, b.r, 0, Math.PI * 2); g.fill();
+        g.fillStyle = '#ffd0a8'; g.beginPath(); g.arc(b.x - 4, b.y - 4, 4, 0, Math.PI * 2); g.fill();
+      });
+      g.fillStyle = '#cfe0ff'; g.font = '15px system-ui'; g.textAlign = 'left';
+      g.fillText('Fare/parmak veya oklar ile kaç · dayanma ' + survived.toFixed(1) + '/' + goal + ' s', 14, 26);
+    };
+  }
+
+  /* ---------- 4) YERDEN YÜKSEK: kovalama ---------- */
+  function YerdenYuksek(){
+    var me = { x: 90, y: H - 90, r: 16 }, catcher = { x: W - 120, y: H - 90, r: 18 };
+    var platforms = [], safe = 0, survived = 0, goal = 25;
+    this.setup = function(){
+      me = { x: 90, y: H - 90, r: 16 }; catcher = { x: W - 120, y: H - 90, r: 18 };
+      survived = 0; safe = 0;
+      platforms = [
+        { x: 200, y: H - 200, w: 130, h: 22 },
+        { x: 420, y: H - 290, w: 130, h: 22 },
+        { x: 650, y: H - 180, w: 130, h: 22 }
+      ];
+    };
+    this.move = function(p){ me.x = p.x; me.y = p.y; };
+    this.key = function(k){
+      if (k === 'ArrowLeft') me.x -= 28;
+      if (k === 'ArrowRight') me.x += 28;
+      if (k === 'ArrowUp') me.y -= 28;
+      if (k === 'ArrowDown') me.y += 28;
+    };
+    this.update = function(dt){
+      survived += dt; clock = survived;
+      var onPlatform = platforms.some(function(p){
+        return me.x > p.x && me.x < p.x + p.w && Math.abs(me.y - p.y) < 26;
+      });
+      safe = onPlatform ? Math.min(1, safe + dt * 2) : Math.max(0, safe - dt * 0.7);
+      energy = safe;
+      var speed = (onPlatform ? 40 : (118 + survived * 2.2) * levelScale());
+      var ang = Math.atan2(me.y - catcher.y, me.x - catcher.x);
+      catcher.x += Math.cos(ang) * speed * dt;
+      catcher.y += Math.sin(ang) * speed * dt;
+      if (Math.hypot(catcher.x - me.x, catcher.y - me.y) < catcher.r + me.r){
+        lives--; play('k-03-yanlis');
+        catcher.x = W - 120; catcher.y = H - 90;
+        if (lives <= 0) fail('Yakalandın!');
+      }
+      if (survived >= goal) finish(30, 3, '25 saniye yakalanmadan dayandın!');
+    };
+    this.draw = function(g){
+      g.fillStyle = '#16233a'; g.fillRect(0, H - 60, W, 60);
+      platforms.forEach(function(p){
+        g.fillStyle = '#2f8f66'; g.fillRect(p.x, p.y, p.w, p.h);
+        g.fillStyle = '#9fe6c4'; g.font = '14px system-ui'; g.fillText('güvenli', p.x + 40, p.y - 8);
+      });
+      g.fillStyle = '#5b86ff'; g.beginPath(); g.arc(me.x, me.y, me.r, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#ff6b6b'; g.beginPath(); g.arc(catcher.x, catcher.y, catcher.r, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#cfe0ff'; g.font = '15px system-ui'; g.textAlign = 'left';
+      g.fillText('Yüksek yerde güvendesin · dayanma ' + survived.toFixed(1) + '/' + goal + ' s', 14, 26);
+    };
+  }
+
+  /* ---------- 5) YEDİ KULE: nişan + güç ---------- */
+  function YediKule(){
+    var towers = [], ball = null, aim = null, ballsLeft = 10;
+    this.setup = function(){
+      towers = []; ballsLeft = Math.max(6, 11 - window.__level * 2); ball = null; aim = null;
+      for (var i = 0; i < 7; i++) towers.push({ x: W - 90, y: H - 70 - i * 52, w: 54, h: 44, down: false });
+    };
+    this.down = function(p){ aim = { x: p.x, y: p.y }; };
+    this.up = function(p){
+      if (!aim || ballsLeft <= 0) return;
+      var dx = p.x - 80, dy = p.y - (H - 60);
+      var power = Math.min(1, Math.hypot(dx, dy) / 520);
+      ball = { x: 80, y: H - 60, vx: dx * 1.6 * power, vy: -Math.abs(dy) * 1.3 * power - 120, r: 12 };
+      ballsLeft--; aim = null;
+    };
+    this.update = function(dt){
+      energy = ballsLeft / 10;
+      if (ball){
+        ball.vy += 1100 * dt; ball.x += ball.vx * dt; ball.y += ball.vy * dt;
+        towers.forEach(function(t){
+          if (!t.down && ball.x > t.x - 10 && ball.x < t.x + t.w + 10 && ball.y > t.y && ball.y < t.y + t.h){
+            t.down = true; score += 10; score_ = score;
+          }
+        });
+        if (ball.x > W + 40 || ball.y > H + 40){ ball = null;
+          var left = towers.filter(function(t){ return !t.down; }).length;
+          if (left === 0) finish(30 + ballsLeft * 2, 3, 'Yedi kuleyi de devirdin!');
+          if (ballsLeft <= 0 && left > 0) fail('Toplar bitti, ' + left + ' kule kaldı.');
+        }
+      }
+    };
+    var score_ = 0;
+    this.draw = function(g){
+      towers.forEach(function(t){
+        g.save();
+        if (t.down){ g.translate(t.x + t.w / 2, t.y + t.h / 2); g.rotate(0.35); g.globalAlpha = .45;
+          g.fillStyle = '#3f63b8'; g.fillRect(-t.w / 2, -t.h / 2, t.w, t.h); }
+        else { g.fillStyle = '#8fb4ff'; g.fillRect(t.x, t.y, t.w, t.h);
+               g.fillStyle = '#22345c'; g.fillRect(t.x + 8, t.y + 10, 10, 14); g.fillRect(t.x + 30, t.y + 10, 10, 14); }
+        g.restore();
+      });
+      if (ball){ g.fillStyle = '#ffd05e'; g.beginPath(); g.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2); g.fill(); }
+      g.fillStyle = '#cfe0ff'; g.font = '15px system-ui'; g.textAlign = 'left';
+      g.fillText('Sürükle-bırak ile nişan al · top: ' + ballsLeft + ' · kule: ' + towers.filter(function(t){ return !t.done; }).filter(function(t){ return !t.down; }).length + '/7', 14, 26);
+    };
+  }
+
+  /* ---------- 6) SAKLAMBAÇ: görüş konisi + engel arkası ---------- */
+  function Saklambac(){
+    var me = { x: 120, y: H - 120, r: 15 }, seeker = { x: W - 140, y: 120, r: 18, ang: 0, path: 0 };
+    var hides = [], hidden = false, countdown = 10, survived = 0, goal = 25, spot = null;
+    var D = 1.0;
+    this.setup = function(){
+      D = window.__diff || 1.0;
+      me = { x: 120, y: H - 120, r: 15 };
+      seeker = { x: W - 140, y: 120, r: 18, ang: 0, path: 0 };
+      hidden = false; countdown = Math.round(10 / D); survived = 0; spot = null;
+      hides = [
+        { x: 200, y: 120, w: 110, h: 46 }, { x: 430, y: 240, w: 120, h: 46 },
+        { x: 240, y: H - 150, w: 120, h: 46 }, { x: 640, y: H - 190, w: 110, h: 46 },
+        { x: 560, y: 90, w: 110, h: 46 }
+      ];
+    };
+    this.move = function(p){
+      if (hidden) return;
+      me.x = Math.max(24, Math.min(W - 24, p.x));
+      me.y = Math.max(24, Math.min(H - 24, p.y));
+    };
+    this.down = function(p){
+      if (hidden) return;
+      // Bir engelin arkasına geçmek için engelin yakınında olmak gerekir.
+      for (var i = 0; i < hides.length; i++){
+        var h = hides[i];
+        if (p.x > h.x - 40 && p.x < h.x + h.w + 40 && p.y > h.y - 40 && p.y < h.y + h.h + 60){
+          spot = h; hidden = true; me.x = h.x + h.w / 2; me.y = h.y + h.h + 18;
+          play('k-04-yardim'); return;
+        }
+      }
+    };
+    this.key = function(k){
+      if (hidden) return;
+      var step = 26;
+      if (k === 'ArrowLeft') me.x -= step;
+      if (k === 'ArrowRight') me.x += step;
+      if (k === 'ArrowUp') me.y -= step;
+      if (k === 'ArrowDown') me.y += step;
+    };
+    function losBlocked(ax, ay, bx, by){
+      return hides.some(function(h){
+        // Basit ışın-kutu kesişimi: engelin içinden geçen görüş yok sayılır.
+        var steps = 18;
+        for (var i = 1; i < steps; i++){
+          var t = i / steps, x = ax + (bx - ax) * t, y = ay + (by - ay) * t;
+          if (x > h.x && x < h.x + h.w && y > h.y && y < h.y + h.h) return true;
+        }
+        return false;
+      });
+    }
+    this.update = function(dt){
+      if (!hidden && countdown > 0){ countdown -= dt; energy = Math.max(0, countdown / 10); return; }
+      if (!hidden && countdown <= 0){ fail('Saklanacak yer bulamadın, ebe seni gördü!'); return; }
+
+      survived += dt; clock = survived; energy = Math.max(0, 1 - survived / goal);
+      // Ebe devriye geziyor ve görüş konisi tarıyor.
+      seeker.path += dt * 0.7 * D;
+      seeker.x = W / 2 + Math.cos(seeker.path) * (W / 3);
+      seeker.y = H / 2 + Math.sin(seeker.path * 1.3) * (H / 3);
+      var toMe = Math.atan2(me.y - seeker.y, me.x - seeker.x);
+      seeker.ang = toMe + Math.sin(survived * 2.2) * 0.5;
+      var dist = Math.hypot(me.x - seeker.x, me.y - seeker.y);
+      var inCone = Math.abs(((toMe - seeker.ang + Math.PI * 3) % (Math.PI * 2)) - Math.PI) < 0.55;
+      if (dist < 330 * D && inCone && !losBlocked(seeker.x, seeker.y, me.x, me.y)){
+        lives--; play('k-03-yanlis');
+        hidden = false; spot = null; countdown = 0; survived = 0;
+        if (lives <= 0) fail('Ebe seni buldu!');
+        return;
+      }
+      if (survived >= goal) finish(40, 3, 'Ebe bulamadı, saklambaç ustasısın!');
+    };
+    this.draw = function(g){
+      g.fillStyle = '#12203a'; g.fillRect(0, 0, W, H);
+      // görüş konisi
+      g.save();
+      g.translate(seeker.x, seeker.y); g.rotate(seeker.ang);
+      var grad = g.createRadialGradient(0, 0, 10, 0, 0, 330 * D);
+      grad.addColorStop(0, 'rgba(255,214,94,.35)'); grad.addColorStop(1, 'rgba(255,214,94,0)');
+      g.fillStyle = grad;
+      g.beginPath(); g.moveTo(0, 0); g.arc(0, 0, 330 * D, -0.55, 0.55); g.closePath(); g.fill();
+      g.restore();
+      hides.forEach(function(h){
+        g.fillStyle = '#2f8f66'; g.beginPath(); g.roundRect(h.x, h.y, h.w, h.h, 12); g.fill();
+        g.fillStyle = '#9fe6c4'; g.font = '13px system-ui'; g.textAlign = 'center';
+        g.fillText('saklan', h.x + h.w / 2, h.y + h.h / 2 + 5);
+      });
+      g.fillStyle = '#5b86ff'; g.beginPath(); g.arc(me.x, me.y, me.r, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#ff6b6b'; g.beginPath(); g.arc(seeker.x, seeker.y, seeker.r, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#cfe0ff'; g.font = '15px system-ui'; g.textAlign = 'left';
+      g.fillText(hidden ? 'Saklandın! ' + survived.toFixed(1) + '/' + goal + ' s'
+                        : 'Yeşil yere yaklaş ve dokun (saklan) · geri sayım ' + Math.max(0, countdown).toFixed(1),
+                 14, 26);
+    };
+  }
+
+
+  /* ---------- 7) SAYI AVI (okul öncesi sayı tanıma) ---------- */
+  function Sayilar(){
+    var target = 1, options = [], rects = [], answered = false, tries = 0;
+    var EMOJI = ['⭐','🍎','🐟','🌸','🚗','🐥','🪁','🍓','🐞','🎈'];
+    this.setup = function(){
+      var lv = (window.__level || 1);
+      target = 1 + Math.floor(Math.random() * Math.min(10, 3 + lv * 3));
+      answered = false; tries = 0;
+      options = [target];
+      while (options.length < 3){
+        var value = 1 + Math.floor(Math.random() * 10);
+        if (options.indexOf(value) < 0) options.push(value);
+      }
+      options.sort(function(){ return Math.random() - 0.5; });
+      play('sayi-01-yonerge');
+    };
+    this.down = function(p){
+      if (answered) return;
+      for (var i = 0; i < rects.length; i++){
+        var r = rects[i];
+        if (p.x > r.x && p.x < r.x + r.w && p.y > r.y && p.y < r.y + r.h){
+          if (options[i] === target){
+            answered = true;
+            try { play('sayi-' + String(target).padStart(2, '0')); } catch(e){}
+            finish(12, tries === 0 ? 3 : (tries <= 2 ? 2 : 1), 'Doğru! ' + target + ' tane vardı.');
+          } else {
+            tries++; lives--; play('k-03-yanlis');
+            if (lives <= 0) fail('Sayıyı bilemedin, tekrar dene.');
+          }
+          return;
+        }
+      }
+    };
+    this.key = function(){};
+    this.update = function(){ energy = Math.max(0, lives / 3); };
+    this.draw = function(g){
+      g.fillStyle = '#cfe0ff'; g.font = '18px system-ui'; g.textAlign = 'center';
+      g.fillText('Kaç tane var?', W / 2, 40);
+      var emoji = EMOJI[target % EMOJI.length];
+      var startX = W / 2 - (target * 46) / 2;
+      g.font = '34px system-ui'; g.textAlign = 'left';
+      for (var i = 0; i < target; i++) g.fillText(emoji, startX + i * 46, 130);
+      rects = [];
+      var bw = 150, gap = 26, totalW = options.length * bw + (options.length - 1) * gap;
+      var bx = (W - totalW) / 2;
+      for (var k = 0; k < options.length; k++){
+        var r = { x: bx + k * (bw + gap), y: H - 160, w: bw, h: 110 };
+        rects.push(r);
+        g.fillStyle = '#22345c'; g.strokeStyle = '#3a4d78'; g.lineWidth = 2;
+        g.beginPath(); g.roundRect(r.x, r.y, r.w, r.h, 18); g.fill(); g.stroke();
+        g.fillStyle = '#eef3ff'; g.font = 'bold 46px system-ui'; g.textAlign = 'center';
+        g.fillText(String(options[k]), r.x + r.w / 2, r.y + r.h / 2 + 16);
+      }
+    };
+  }
+
+  /* ---------- 8) HARF EŞLEŞTİRME ---------- */
+  function Harfler(){
+    var words = [
+      { e:'🐝', w:'arı', l:'a' }, { e:'🍎', w:'elma', l:'e' }, { e:'🐄', w:'inek', l:'i' },
+      { e:'🚌', w:'otobüs', l:'o' }, { e:'✈️', w:'uçak', l:'u' }, { e:'🐟', w:'balık', l:'b' },
+      { e:'🐈', w:'kedi', l:'k' }, { e:'🐌', w:'salyangoz', l:'s' }
+    ];
+    var chosen = null, options = [], rects = [], answered = false, tries = 0;
+    this.setup = function(){
+      chosen = words[Math.floor(Math.random() * words.length)];
+      answered = false; tries = 0;
+      options = [chosen.l];
+      var pool = words.map(function(x){ return x.l; });
+      while (options.length < 3){
+        var letter = pool[Math.floor(Math.random() * pool.length)];
+        if (options.indexOf(letter) < 0) options.push(letter);
+      }
+      options.sort(function(){ return Math.random() - 0.5; });
+      play('harf-01-yonerge');
+    };
+    this.down = function(p){
+      if (answered) return;
+      for (var i = 0; i < rects.length; i++){
+        var r = rects[i];
+        if (p.x > r.x && p.x < r.x + r.w && p.y > r.y && p.y < r.y + r.h){
+          if (options[i] === chosen.l){
+            answered = true;
+            try { play('harf-' + chosen.l); } catch(e){}
+            finish(12, tries === 0 ? 3 : (tries <= 2 ? 2 : 1), 'Doğru! ' + chosen.w + ' ' + chosen.l + ' ile başlar.');
+          } else {
+            tries++; lives--; play('k-03-yanlis');
+            if (lives <= 0) fail('Harfi bilemedin, tekrar dene.');
+          }
+          return;
+        }
+      }
+    };
+    this.key = function(){};
+    this.update = function(){ energy = Math.max(0, lives / 3); };
+    this.draw = function(g){
+      g.fillStyle = '#cfe0ff'; g.font = '18px system-ui'; g.textAlign = 'center';
+      g.fillText('Hangi harfle başlıyor?', W / 2, 40);
+      g.font = '86px system-ui'; g.fillText(chosen.e, W / 2, 170);
+      g.fillStyle = '#eef3ff'; g.font = 'bold 30px system-ui';
+      g.fillText(chosen.w, W / 2, 220);
+      rects = [];
+      var bw = 130, gap = 26, totalW = options.length * bw + (options.length - 1) * gap;
+      var bx = (W - totalW) / 2;
+      for (var k = 0; k < options.length; k++){
+        var r = { x: bx + k * (bw + gap), y: H - 160, w: bw, h: 110 };
+        rects.push(r);
+        g.fillStyle = '#22345c'; g.strokeStyle = '#3a4d78'; g.lineWidth = 2;
+        g.beginPath(); g.roundRect(r.x, r.y, r.w, r.h, 18); g.fill(); g.stroke();
+        g.fillStyle = '#eef3ff'; g.font = 'bold 48px system-ui'; g.textAlign = 'center';
+        g.fillText(options[k], r.x + r.w / 2, r.y + r.h / 2 + 16);
+      }
+    };
+  }
+
+  var CLASSES = { seksek: Seksek, bestas: Bestas, yakartop: YakarTop, yerdenyuksek: YerdenYuksek, yedikule: YediKule, saklambac: Saklambac, sayilar: Sayilar, harfler: Harfler };
+
+  function renderMenu(){
+    var menu = document.getElementById('menu');
+    menu.innerHTML = '';
+    GAMES.forEach(function(game){
+      var card = document.createElement('article');
+      card.className = 'game'; card.tabIndex = 0;
+      card.innerHTML = '<div class="emoji">' + game.emoji + '</div><h2>' + game.title + '</h2><p>' + game.desc + '</p>' +
+        '<div class="stars">' + (state.stars[game.id] || [0,0,0]).map(function(v){ return starText(v); }).join(' ') + '</div>';
+      card.addEventListener('click', function(){ startGame(game); });
+      card.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' '){ startGame(game); } });
+      menu.appendChild(card);
+    });
+  }
+
+  document.getElementById('startBtn').addEventListener('click', function(){ if (current) startGame(current); });
+  document.getElementById('hintBtn').addEventListener('click', function(){ if (current && current.meta) play(current.meta.hint); });
+  document.getElementById('teachBtn').addEventListener('click', function(){ if (current && current.meta) play(current.meta.teacher); });
+  document.getElementById('speedBtn').addEventListener('click', function(){
+    state.slow = !state.slow; save();
+    this.textContent = state.slow ? '🐢 Yavaş' : '🐢 Normal';
+    this.classList.toggle('on', state.slow);
+  });
+  document.getElementById('muteBtn').addEventListener('click', function(){
+    state.muted = !state.muted; save();
+    this.textContent = state.muted ? '🔇 Sessiz' : '🔊 Ses';
+    this.classList.toggle('on', state.muted);
+  });
+  var DIFFS = [{label:'🎚️ Kolay', v:0.85}, {label:'🎚️ Normal', v:1.0}, {label:'🎚️ Zor', v:1.25}];
+  var diffIndex = (typeof state.diff === 'number') ? state.diff : 1;
+  window.__diff = DIFFS[diffIndex].v;
+  document.getElementById('diffBtn').textContent = DIFFS[diffIndex].label;
+  document.getElementById('diffBtn').addEventListener('click', function(){
+    diffIndex = (diffIndex + 1) % DIFFS.length;
+    window.__diff = DIFFS[diffIndex].v;
+    this.textContent = DIFFS[diffIndex].label;
+    state.diff = diffIndex; save();
+    toast('Zorluk: ' + DIFFS[diffIndex].label.replace('🎚️ ',''));
+    if (current && current.meta) startGame(current.meta);
+  });
+  document.getElementById('totalPill').textContent = '⭐ ' + (state.total || 0);
+  var pp = document.getElementById('profilePill');
+  if (pp) pp.textContent = '👦 ' + profile;
+  document.getElementById('speedBtn').textContent = state.slow ? '🐢 Yavaş' : '🐢 Normal';
+  document.getElementById('muteBtn').textContent = state.muted ? '🔇 Sessiz' : '🔊 Ses';
+
+  function setLevel(lv){
+    state.level = lv; window.__level = lv; save();
+    var bar = document.getElementById('levelBar');
+    if (bar){ bar.querySelectorAll('.lv').forEach(function(b){
+      b.classList.toggle('on', Number(b.dataset.lv) === lv);
+    }); }
+    if (current && current.meta) startGame(current.meta);
+  }
+  document.querySelectorAll('.lv').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var lv = Number(this.dataset.lv);
+      var unlocked = (state.unlocked[current && current.meta ? current.meta.id : ''] || 1);
+      if (lv > unlocked){ toast('Önce ' + (lv-1) + '. seviyeyi bitir'); return; }
+      setLevel(lv);
+    });
+  });
+  window.__level = state.level || 1;
+  renderMenu();
+  current = new Seksek(); current.meta = GAMES[0]; current.setup(); current.draw(ctx, 0);
+
+
+  // --- QA / doğrudan oynanış kancası (yalnız test ve ?auto=1 için) ---
+  window.__qa = {
+    start: function(){ startGame(GAMES[0]); return true; },
+    restart: function(){ startGame(GAMES[0]); return true; },
+    finish: function(){ if (current) finish(30, 3, 'Sekseği dengede tamamladın!'); return true; },
+    snap: function(){ return { score: score, lives: lives, clock: clock, running: running,
+                               hasGame: !!current }; }
+  };
+  try {
+    var qp = new URLSearchParams(location.search);
+    if (qp.get('auto') === '1') { startGame(GAMES[0]); }
+  } catch (e) {}
+
+  document.addEventListener('pointerdown', function once(){ play('t-01-merhaba'); document.removeEventListener('pointerdown', once); }, { once:true });
+})();
+</script>
+</body>
+</html>
