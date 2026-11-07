@@ -586,3 +586,20 @@ exit : 0
 ```json
 {"replayed": 13, "completed": 13, "delivery_verified": 13, "originals_still_blocked": 12, "documents_created_today": 39}
 ```
+
+## V5 işçi durumu — tek okuma ve yerel saat düzeltmesi (G013)
+generated_at: 2026-11-07T11:03:00
+
+komut : python -B -m pytest -q --no-header -p no:cacheprovider tests/test_v5_worker_layer.py tests/test_v5_worker_state.py tests/test_v5_worker_card.py tests/test_agent_office.py tests/test_office_3d.py tests/test_office_3d_operations.py tests/test_control_center.py
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\ahos_core
+exit : 0
+```text
+40 passed in 3.84s
+```
+
+komut : python -B -m pytest -q --no-header -p no:cacheprovider tests
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\ahos_core
+exit : 0
+```text
+1388 passed, 36 skipped in 388.66s (0:06:28)
+```

@@ -18,7 +18,7 @@
 | 014 Kuyruk güvenliği | PASS | pending≤300, lease recovery, tamamlanmış koruma; **12 pano kaynaklı engel** yeni kimlikle tekrarlandı → **13/13 completed, delivery.verified=1**, orijinaller blocked kaldı; tekrar **idempotent** (tamamlanmış çocuk varsa 0 aday) ve pano bozuksa **fail-closed**; 10 test. Kalan 25 (20 kriz kopyası + 3 bağlamı değişmiş düzenleme + 2 Ar-Ge) elle incelemeye bırakıldı |
 | 015 47 kanıtsız işçi | PARTIAL | `worker_tasks.py` gerçek görev önerisi üretiyor; toplu yürütme yok |
 | 016 Öğrenme etkisi | PARTIAL | Öncesi/sonrası ölçüm aracı var; yeterli örnek yok (0 ölçülmüş) |
-| 017 Kendi hatasını düzeltme | PARTIAL | 20 sentetik senaryo geçti; geçmiş gerçek hatalardan zincir yok |
+| 017 Kendi hatasını düzeltme | PARTIAL | 20 sentetik senaryo geçti. **Gerçek zincir (pano sınıfı)**: 37 gerçek `blocked` hata → kök neden (okunamayan pano) → pano geçerlilik ön koşulu → sınırlı replay → 13/13 doğrulanmış tamamlama; kod düzeltmesini sistem kendisi üretmedi, yalnız doğruladı (`docs/KUYRUK-KURTARMA.md`) |
 | 018 3D ofis canlı durum | PASS | `/api/roster` **81 kayıt** (önce 404 idi; 3D ad yedeği çalışmıyordu), `/api/agent-office` `state_code`+`stale`+`unknown`, 3D incelemede durum gerekçesi ve **`/worker/<id>` kart linki**; eşleme testi 5 |
 | 019 İşçi kartı | PASS | `worker_card` + `/api/worker-card/<id>` + `/worker/<id>` HTML; panelde **81 kart linki**, 3D incelemede "İşçi kartını aç →"; özel hafıza gizli (varsayılan), XSS kaçışı ve 404 testli |
 | 020 CEO paneli | PASS | `/intelligence`: durum kartı **çalışan/boşta/çevrimdışı = 0/34/47**, **Durum sütunu**, "eski"/"kayıt yok" işaretleri, 81 işçi kartı linki; HTTP 200 · 26.9 KB |

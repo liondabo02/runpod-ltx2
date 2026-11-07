@@ -148,6 +148,7 @@ def snapshot(runtime_dir: str | Path) -> dict:
         blocked = dep_counts.get('blocked', 0)
         completed = dep_counts.get('completed', 0)
         workers: list[dict] = []
+        records = worker_state.load_all(runtime)
         for worker in dep.get("workers") or []:
             if not isinstance(worker, dict):
                 continue
@@ -158,6 +159,7 @@ def snapshot(runtime_dir: str | Path) -> dict:
                 runtime, wid,
                 observed_task=str(observed_row.get("task_id") or ""),
                 last_active=str(st.get("last") or ""),
+                recorded=records.get(wid),
             )
             workers.append(
                 {

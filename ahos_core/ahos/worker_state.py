@@ -57,9 +57,8 @@ def _parse(value: str) -> datetime | None:
         stamp = datetime.fromisoformat(text.replace("Z", "+00:00"))
     except ValueError:
         return None
-    if stamp.tzinfo is None:
-        stamp = stamp.replace(tzinfo=timezone.utc)
-    return stamp
+    # `set_state` yerel saat yazar; saat dilimi yoksa yerel kabul et.
+    return stamp.astimezone() if stamp.tzinfo is None else stamp
 
 
 def _age_seconds(stamp: datetime | None, now: datetime) -> float | None:
@@ -102,8 +101,15 @@ def derive_from_event(runtime, worker: str, *, event: str, ok: bool = True,
     return set_state(runtime, worker, state, note=note or event)
 
 
+def load_all(runtime) -> dict:
+    """Tek okumada tüm açık kayıtlar (81 işçi için 81 dosya okumasını önler)."""
+
+    return _load(runtime)
+
+
 def derive(runtime, worker: str, *, observed_task: str = "",
-           last_active: str = "", now: datetime | None = None) -> dict:
+           last_active: str = "", now: datetime | None = None,
+           recorded: dict | None = None) -> dict:
     """İşçinin dürüst durumu: gözlem > taze açık kayıt > son aktivite > yok.
 
     Dönüş: state (İngilizce kanonik), label (Türkçe), reason (gerekçe),
@@ -112,7 +118,8 @@ def derive(runtime, worker: str, *, observed_task: str = "",
 
     worker = str(worker)
     now = now or datetime.now(timezone.utc)
-    recorded = _load(runtime).get(worker)
+    if recorded is None:
+        recorded = _load(runtime).get(worker)
     record_age = _age_seconds(_parse((recorded or {}).get("updated_at", "")), now)
     metric_age = _age_seconds(_parse(last_active), now)
 

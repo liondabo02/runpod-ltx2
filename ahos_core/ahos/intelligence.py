@@ -113,6 +113,7 @@ def _worker_rows(runtime: Path, departments: list[dict]) -> list[dict]:
         rec["success"] += 1 if row.get("success") is True else 0
         rec["last"] = max(rec["last"], str(row.get("at") or ""))
     rows = []
+    records = worker_state.load_all(runtime)
     for dep in departments:
         dep_id = str(dep.get("department_id") or "")
         for worker in dep.get("workers") or []:
@@ -132,7 +133,8 @@ def _worker_rows(runtime: Path, departments: list[dict]) -> list[dict]:
             top_skill = max(procedural, key=lambda row: row.get("ok", 0), default={})
             m = metrics.get(wid) or {}
             state = worker_state.derive(runtime, wid,
-                                        last_active=str(m.get("last") or ""))
+                                        last_active=str(m.get("last") or ""),
+                                        recorded=records.get(wid))
             rows.append({
                 "worker": wid, "name": str(worker.get("name") or wid),
                 "department": dep_id,
