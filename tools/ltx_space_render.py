@@ -83,6 +83,14 @@ def _client(space: str):
     except ImportError as exc:  # pragma: no cover - ortam bağımlılığı
         raise SystemExit("gradio_client kurulu değil: pip install gradio_client") from exc
     token = os.getenv("HF_TOKEN", "").strip() or None
+    if not token:
+        # Reuse the existing Hugging Face CLI OAuth login without copying secrets
+        # into repository files or logging them.
+        try:
+            from huggingface_hub import get_token
+            token = get_token()
+        except ImportError:
+            pass
     return Client(space, verbose=False, token=token)
 
 
