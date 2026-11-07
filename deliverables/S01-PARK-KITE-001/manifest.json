@@ -1,0 +1,120 @@
+{
+  "schema": "ahos.scene-delivery.v1",
+  "generated_at": "2026-11-07T17:54:08",
+  "scene_id": "S01-PARK-KITE-001",
+  "tag": "take1",
+  "model": "LTX-2.5 (HF Space, Lightricks/LTX-2.5)",
+  "workflow": "image-to-video /run; decoder conv; native 768x512; 121 frames; seed 101",
+  "cost_usd": 0.0,
+  "source": {
+    "path": "deliverables\\S01-PARK-KITE-001\\park-kite-take1-raw.mp4",
+    "bytes": 698760,
+    "sha256": "66c7faf92b56686a1868411e6e45e2239547b19ca594365665e60feff079d7ad"
+  },
+  "files": {
+    "video": {
+      "path": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\deliverables\\S01-PARK-KITE-001\\park-kite-take1-1080p.mp4",
+      "bytes": 5302165,
+      "sha256": "d3f1d16052597e3350c030c5760c5b37d9a54878ffafe114c40c35a9642842e0"
+    },
+    "start_frame": {
+      "path": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\deliverables\\S01-PARK-KITE-001\\park-kite-take1-start.png",
+      "sha256": "95b4af78cb926ed9550e5414658cc76c2d42f2bc118a6f31e623af0bf106e858"
+    },
+    "end_frame": {
+      "path": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\deliverables\\S01-PARK-KITE-001\\park-kite-take1-end.png",
+      "sha256": "a9d10c93afe01898c1a569258bc5167a88b3197eacfb95eb425294caad7dea33"
+    },
+    "technical_qa": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\deliverables\\S01-PARK-KITE-001\\qa-technical.json"
+  },
+  "technical": {
+    "duration_seconds": 5.022,
+    "video": {
+      "index": 0,
+      "codec_name": "h264",
+      "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+      "profile": "High",
+      "codec_type": "video",
+      "codec_time_base": "1/48",
+      "codec_tag_string": "avc1",
+      "codec_tag": "0x31637661",
+      "width": 1920,
+      "height": 1080,
+      "has_b_frames": 2,
+      "sample_aspect_ratio": "0:1",
+      "display_aspect_ratio": "0:1",
+      "pix_fmt": "yuv420p",
+      "level": 40,
+      "r_frame_rate": "24/1",
+      "avg_frame_rate": "24/1",
+      "time_base": "1/12288",
+      "start_pts": 0,
+      "start_time": "0.000000",
+      "duration_ts": 61440,
+      "duration": "5.000000",
+      "bit_rate": "8315155",
+      "nb_frames": "120",
+      "disposition": {
+        "default": 0,
+        "dub": 0,
+        "original": 0,
+        "comment": 0,
+        "lyrics": 0,
+        "karaoke": 0,
+        "forced": 0,
+        "hearing_impaired": 0,
+        "visual_impaired": 0,
+        "clean_effects": 0,
+        "attached_pic": 0
+      },
+      "tags": {
+        "language": "und",
+        "handler_name": "VideoHandler"
+      }
+    },
+    "audio": {
+      "index": 1,
+      "codec_name": "aac",
+      "codec_long_name": "AAC (Advanced Audio Coding)",
+      "codec_type": "audio",
+      "codec_time_base": "1/48000",
+      "codec_tag_string": "mp4a",
+      "codec_tag": "0x6134706d",
+      "sample_fmt": "fltp",
+      "sample_rate": "48000",
+      "channels": 2,
+      "bits_per_sample": 0,
+      "r_frame_rate": "0/0",
+      "avg_frame_rate": "0/0",
+      "time_base": "1/48000",
+      "start_pts": -1024,
+      "start_time": "-0.021333",
+      "duration_ts": 241024,
+      "duration": "5.021333",
+      "bit_rate": "159935",
+      "nb_frames": "236",
+      "disposition": {
+        "default": 0,
+        "dub": 0,
+        "original": 0,
+        "comment": 0,
+        "lyrics": 0,
+        "karaoke": 0,
+        "forced": 0,
+        "hearing_impaired": 0,
+        "visual_impaired": 0,
+        "clean_effects": 0,
+        "attached_pic": 0
+      },
+      "tags": {
+        "language": "und",
+        "handler_name": "SoundHandler"
+      }
+    }
+  },
+  "creative": {
+    "status": "NOT_EVALUATED",
+    "approver": "Harun"
+  },
+  "note": "Teknik PASS yaratıcı PASS değildir; medya git'e eklenmez, manifest girer."
+}

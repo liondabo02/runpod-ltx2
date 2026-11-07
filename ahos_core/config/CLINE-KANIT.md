@@ -784,3 +784,32 @@ exit : 3
 {"status":"blocked","blocked":"zerogpu_quota"}
 ```
 
+## Gerçek take1 üretimi (2026-11-07 17:52)
+generated_at: 2026-11-07T17:55:00
+
+komut : python tools/ltx_space_render.py --generate-keyframe --seed 41 --width 1280 --height 720 --tag kf41
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 3 (video adımı kota; keyframe üretildi)
+```text
+keyframe-seed-41.webp · 74.496 bayt · 7,0 sn · seed 41
+Not: görselde üçüncü çocuk ve logo var -> yaratıcı olarak elendi.
+```
+
+komut : Lightricks/LTX-2.5 /run (I2V, 768x512, 5,0 sn, seed 101, decoder conv)
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 0
+```text
+OK 32,6 sn · 121 frames (5.04s) · park-kite-take1-raw.mp4 · 698.760 bayt
+Hata (take2): "You have exceeded your ZeroGPU runs limit."
+```
+
+komut : python tools/finalize_scene.py --video park-kite-take1-raw.mp4 --tag take1 --seconds 5 ...
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 0
+```text
+park-kite-take1-1080p.mp4 · 5.302.165 bayt · 1920x1080 · 24 fps · 5,022 sn
+freeze_ratio 0,008 -> PASS · flicker 0,964 -> PASS · sharpness 9,22 (2,5x upscale)
+manifest.json + qa-technical.json + KALITE-RAPORU.md yazıldı
+creative = NOT_EVALUATED (onay Harun)
+```
+

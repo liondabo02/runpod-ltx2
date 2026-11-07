@@ -1,84 +1,86 @@
 # S01-PARK-KITE-001 — tek sahne durumu
 
-Tarih: 2026-11-07 · Sahne: Aden (3) + Kaan (1), parkta uçurtma · Hedef: 5–8 sn, 1080p
+Tarih: 2026-11-07 · Sahne: Aden (3) + Kaan (1), parkta uçurtma · Hedef: 5–8 sn
 
-> **Durum: üretim yarıda.** Gerçek LTX-2.5 hattı çalıştı; 5 sn'lik çekim, ücretsiz
-> ZeroGPU kotası dolduğu için tamamlanamadı. Ücret harcanmadı, hesap açılmadı.
+> **Durum: ilk gerçek çekim alındı (take1).** LTX-2.5 ile 5,04 sn video üretildi.
+> Teknik QA **PASS**; yaratıcı kalite **kabul edilemez** (kamera çocuklardan uzaklaşıyor).
+> Ücret: **0,00 USD**. Yeni çekim için ZeroGPU kotası gerekiyor.
 
-## 1. Çalışan hat (doğrulandı)
+## 1. Üretilen gerçek çıktı
 
-| Adım | Sağlayıcı | Sonuç |
-|---|---|---|
-| Keyframe | `black-forest-labs/FLUX.1-schnell` (HF Space) | **2 görsel**, 1280×720, seed 11 / 22, 6–13 sn |
-| I2V smoke | `Lightricks/LTX-2.5` (HF Space, resmî) | **2,04 sn MP4**, seed 42, **18,4 sn** |
-| I2V 5 sn | aynı | **engellendi**: ZeroGPU kotası |
+| Alan | Değer |
+|---|---|
+| Dosya | `deliverables/S01-PARK-KITE-001/park-kite-take1-raw.mp4` (698.760 bayt) |
+| Teslim (upscale) | `park-kite-take1-1080p.mp4` (5.302.165 bayt) |
+| Model | `Lightricks/LTX-2.5` (HF Space, image-to-video, `decoder=conv`) |
+| Doğal çözünürlük | **768×512**, 121 kare, 24 fps, **5,04 sn** |
+| Upscale | 2,5× → 1920×1080 (Lanczos). **Doğal 1080p değildir.** |
+| Seed | 101 · prompt: sabit kare, iki kardeş, uçurtma sağ üst |
+| Süre / maliyet | 32,6 sn üretim · **0 USD** |
+| SHA-256 (teslim) | `d3f1d16052597e33…` (manifest tam hash) |
 
-Kanıt dosyaları:
-- `deliverables/S01-PARK-KITE-001/keyframes/keyframe-seed-11.png` (WebP; `-rgb.png` dönüşümü)
-- `deliverables/S01-PARK-KITE-001/keyframes/keyframe-seed-22.png`
-- `deliverables/S01-PARK-KITE-001/smoke-ltx25-2s.mp4` (girdi eski poster; sadece hat testi)
-- `deliverables/S01-PARK-KITE-001/run-take1.json` (kota engeli manifesti)
+Yan dosyalar: `park-kite-take1-start.png`, `park-kite-take1-end.png`,
+`manifest.json`, `qa-technical.json`, `KALITE-RAPORU.md`.
 
-## 2. Keyframe değerlendirmesi (yaratıcı ön bakış)
-
-**seed-11 (aday):** kompozisyon doğru (çocuklar solda, uçurtma sağ üst), sıcak sabah
-ışığı, sığ alan derinliği, 3D çocuk animasyonu hissi güçlü. Eksik: **Kaan 1 yaşında
-gibi durmuyor**; iki kardeş neredeyse akran görünüyor, boy oranı 0,776 değil.
-**seed-22:** uçurtma Kaan'ın kafasına "şapka" olmuş, köşede ikinci uçurtma var — elenir.
-
-Bu haliyle keyframe **yaratıcı kabul için yeterli değil**; Kaan'ı bebekleştiren bir
-revizyon (daha güçlü prompt + yeni seed) gerekiyor.
-
-## 3. Engelin tam adı
+## 2. Teknik QA (otomatik) — PASS
 
 ```text
-Provider A: Hugging Face ZeroGPU (anonim)
-Hata: "You have exceeded your ZeroGPU runs limit." / "0s left"
-Tüketim: 3 çalıştırma (2 FLUX + 1 LTX smoke)
-Çözüm A: ücretsiz HF hesabı tokeni → HF_TOKEN (ücret yok, kota açılır)
-Çözüm B: günlük kotanın sıfırlanmasını beklemek
-
-Provider B: RunPod LTX endpoint
-Kimlik: control_plane_v2/.env.runtime içinde RUNPOD_API_KEY + RUNPOD_LTX2_ENDPOINT_ID
-        (endpoint dnwqoolyprqr69) — preflight artık bunları buluyor, "ready": true.
-Engel 1: api.runpod.ai bu makineden yanıt vermiyor (istekler asılı kalıyor).
-Engel 2: LB alt alanı (dnwqoolyprqr69.api.runpod.ai) yalnız 401/400 dönüyor:
-         "not allowed for QB API, load balancer endpoint"; /run, /runsync,
-         /generate, /v1/video/generate, /predict yolları aynı hatayı verdi.
-Sonuç: onay verilmesine rağmen (≤$1.50) bu makineden RunPod çağrısı YAPILAMADI;
-       ücret harcanmadı.
+1920x1080 · 24 fps · 5,022 sn · 120 kare tarandı
+motion_energy            = 12,13
+changed_pixel_ratio_mean = 0,381   (kare başına %38 piksel değişimi)
+freeze_ratio             = 0,008   -> PASS
+flicker_luma_delta       = 0,964   -> PASS
+sharpness_laplacian      = 9,22    (düşük: 2,5× upscale)
+creative                 = NOT_EVALUATED
 ```
 
-Teknik olarak istenen 5 sn'lik çekim **bir çağrı** ile alınabilir; LTX-2.5 Space'te
-süre sınırı **5,0 sn** (6 sn istemek "maximum 5.0" hatası verir). 5 sn, hedefin
-(5–8 sn) alt sınırı içindedir.
+Teknik PASS yalnız "dosya oynuyor, donmuş değil" demektir; **kalite onayı değildir**.
 
-## 4. Üretim komutu (kota açılınca)
+## 3. Yaratıcı QA (insan) — RED
+
+| Kontrol | Sonuç | Gerekçe |
+|---|---|---|
+| Karakter sürekliliği | ☒ | 0–1,5 sn iki kardeş net; sonra kamera yukarı kayıyor |
+| Kompozisyon | ☒ | 2,5 sn'de çocuklar kadrajın dışına çıkıyor; 4,9 sn'de yalnız uçurtma var |
+| Kaan'ın yaşı/oranı | ☒ | Keyframe'de 1 yaş görünümü zayıf; boy oranı 0,776 değil |
+| Hareket doğallığı | ◐ | Kumaş/ip hareketi iyi; karakter hareketi kısa |
+| Işık/atmosfer | ☑ | Sıcak sabah ışığı, bokeh, renk paleti güçlü |
+| Görsel bozulma | ☑ | Yüz/el erimesi, titreme yok |
+| Estetik | ◐ | 3D çocuk animasyonu hissi iyi; 768×512 + upscale yumuşak |
+
+**Karar: take1 teslim edilemez.** Prompt "uçurtma sağ üste tırmanır" dediği için model
+kamerayı gökyüzüne taşımış; "sabit kamera, çocuklar kadrajda kalır" vurgusu take2'de
+güçlendirildi ama **kota** nedeniyle üretilemedi.
+
+## 4. Keyframe denemeleri
+
+- **seed-11 (take1 girdisi):** iki kardeş, mavi/mercan tişört, uçurtma sağ üst, sıcak ışık.
+  Kusur: Kaan 1 yaş gibi değil, boy farkı küçük.
+- **seed-41 (baby-focus prompt):** üçüncü bir çocuk uydurdu, tişörtlerde logo, saç/ten
+  kanonu kaydı → **elenir**.
+- **seed-22:** uçurtma Kaan'ın başında "şapka", ikinci uçurtma → **elenir**.
+
+## 5. Kalan tek engel
+
+```text
+Hugging Face ZeroGPU (anonim): "You have exceeded your ZeroGPU runs limit."
+- take1 kotayı tüketti; take2 (sabit kamera) bu yüzden alınamadı.
+- Çözüm: ücretsiz HF hesabı tokeni (HF_TOKEN) → ek çalıştırma kotası, ücret yok.
+- Alternatif: kota sıfırlanmasını beklemek.
+- RunPod: kimlik var (dnwqoolyprqr69) ama api.runpod.ai bu makineden yanıt vermiyor;
+  LB yolu "not allowed for QB API" döndürüyor. Onay (≤$1.50) kullanılamadı, harcama 0.
+```
+
+## 6. Sonraki tek komut (kota açılınca)
 
 ```powershell
-# 1) keyframe revizyonu (Kaan'ı bebekleştir)
-python tools/ltx_space_render.py --generate-keyframe --seed 41
-
-# 2) 5 sn I2V
-python tools/ltx_space_render.py --keyframe deliverables/S01-PARK-KITE-001/keyframes/keyframe-seed-41.png --duration 5 --seed 101 --decoder diffusion --tag take1
-
-# 3) 1080p teslim paketi + teknik QA
-python tools/finalize_scene.py --video deliverables/S01-PARK-KITE-001/park-kite-take1.mp4 --tag take1 --model "LTX-2.5 (HF Space)" --cost-usd 0
+# take2: sabit kamera + iki çocuk kadrajda
+python tools/ltx_space_render.py --keyframe deliverables/S01-PARK-KITE-001/keyframes/keyframe-seed-11-rgb.png --duration 5 --seed 202 --decoder conv --tag take2
+python tools/finalize_scene.py --video deliverables/S01-PARK-KITE-001/park-kite-take2-raw.mp4 --tag take2 --seconds 5 --model "LTX-2.5 (HF Space)" --workflow "image-to-video /run; conv; native 768x512; seed 202" --cost-usd 0
 ```
 
-`tools/finalize_scene.py` başlangıç/bitiş karelerini, `manifest.json`, `qa-technical.json`
-ve `KALITE-RAPORU.md` dosyalarını üretir; **yaratıcı PASS vermez**.
+## 7. Dürüst not
 
-## 5. Kabul durumu
-
-| Kapı | Durum |
-|---|---|
-| Teknik (MP4, 5 sn, 1080p, 24 fps, donma/titreme) | **bekliyor** (çekim yok) |
-| Yaratıcı (karakter, hareket, ışık, estetik) | **NOT_EVALUATED** — Harun |
-| Maliyet | **0,00 USD** (ücretsiz kademe) |
-
-## 6. Dürüst not
-
-Bu turda "profesyonel çizgi film" **teslim edilmedi**. Teslim edilen: çalışan gerçek
-LTX-2.5 hattı, iki keyframe adayı, teknik QA ve teslim paketi araçları. Eksik olan
-tek şey kotadır; kalite iddiası değil, ölçüm ve onay vardır.
+Profesyonel sahne **henüz teslim edilmedi**. Ancak artık gerçek bir model çıktısı,
+ölçülmüş teknik rapor ve somut yaratıcı ret gerekçesi var. Sorun araç değil, **kota**;
+kota açıldığında take2 ve varyasyonları aynı hatla üretilebilir.

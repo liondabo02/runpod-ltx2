@@ -1,0 +1,53 @@
+{
+  "schema": "ahos.creative-qa.v1",
+  "generated_at": "2026-11-07T17:53:59",
+  "video": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\deliverables\\S01-PARK-KITE-001\\park-kite-take1-1080p.mp4",
+  "scene_id": "S01-PARK-KITE-001",
+  "technical": {
+    "ok": true,
+    "problems": [],
+    "container": "mov,mp4,m4a,3gp,3g2,mj2",
+    "duration_seconds": 5.022,
+    "size_bytes": 5302165,
+    "video": {
+      "codec": "h264",
+      "profile": "High",
+      "width": 1920,
+      "height": 1080,
+      "fps": 24.0,
+      "nb_frames": 120,
+      "bitrate": 8315155,
+      "pix_fmt": "yuv420p"
+    },
+    "audio": {
+      "codec": "aac",
+      "sample_rate": "48000",
+      "channels": 2
+    }
+  },
+  "creative": {
+    "status": "NOT_EVALUATED",
+    "reason": "Yaratıcı kalite otomatik PASS edilmez; insan onayı gerekir.",
+    "human_checks": [
+      "karakter kimliği ve kıyafet sürekliliği",
+      "doğal hareket ve ağırlık aktarımı",
+      "ışık yönü/sıcaklığı ve gölge tutarlılığı",
+      "kompozisyon ve sinematik his",
+      "yüz/el/uzuv bozulmaları, titreme, zıplama",
+      "genel estetik: profesyonel 3D çocuk animasyonu görünümü"
+    ],
+    "approver": "Harun"
+  },
+  "motion": {
+    "frames_scanned": 120,
+    "motion_energy": 12.13,
+    "changed_pixel_ratio_mean": 0.3813,
+    "freeze_ratio": 0.008,
+    "freeze_verdict": "PASS",
+    "flicker_luma_delta": 0.964,
+    "flicker_verdict": "PASS",
+    "sharpness_laplacian": 9.22,
+    "mean_luma": 115.99,
+    "duration_vs_frames": 23.89
+  }
+}

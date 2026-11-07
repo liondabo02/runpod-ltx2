@@ -57,7 +57,8 @@ def render_final(raw: Path, target: Path, *, seconds: float, width: int, height:
         "-pix_fmt", "yuv420p", "-movflags", "+faststart",
     ]
     if audio:
-        command += ["-c:a", "aac", "-b:a", "160k"]
+        # Eski ffmpeg derlemelerinde yerleşik AAC deneysel; -strict -2 gerekir.
+        command += ["-c:a", "aac", "-b:a", "160k", "-strict", "-2"]
     else:
         command += ["-an"]
     command.append(str(target))
