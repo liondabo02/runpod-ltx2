@@ -31,7 +31,7 @@ DEFAULT_OUT = ROOT / "assets" / "reference"
 ENDPOINT = "https://image.pollinations.ai/prompt/"
 STYLE = ("professional cinematic 3D children's animation character design, stylized Pixar-quality render, "
          "soft subsurface skin, felt-like fabrics, clean studio lighting, neutral warm-grey background, "
-         "full body, front view, A-pose, no text, no watermark")
+         "full body, no text, no watermark")
 
 
 def _load(path: Path) -> dict:
@@ -43,9 +43,11 @@ def _prompt_for(target: str) -> tuple[str, str]:
         canon = _load(CHARACTERS / f"{target}.json")
         name = canon["name"]
         return (
-            f"Character turnaround reference sheet of {canon['prompt_fragment']}. "
-            f"Three views in one image: front view, three-quarter side view, back view, same character, "
-            f"identical colors and proportions, standing on a neutral seamless background. {STYLE}",
+            f"Character model sheet of {canon['prompt_fragment']}. "
+            f"FOUR views of the SAME character arranged in one row on a neutral seamless light-grey studio "
+            f"background: 1) front view in A-pose, 2) three-quarter view, 3) side profile view, 4) back view. "
+            f"Identical face, hair, clothing colors and body proportions in every view; orthographic turnaround "
+            f"for a 3D animation studio, even studio lighting, full body visible, no cropping. {STYLE}",
             f"{target}-turnaround",
         )
     scene = _load(CHARACTERS / "scenes" / "park-kite-01.json")

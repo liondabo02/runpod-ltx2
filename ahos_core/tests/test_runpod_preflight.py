@@ -1,4 +1,4 @@
-"""tools/runpod_preflight.py — anahtarı sızdırmadan hazırlık kontrolü."""
+﻿"""tools/runpod_preflight.py â€” anahtarÄ± sÄ±zdÄ±rmadan hazÄ±rlÄ±k kontrolÃ¼."""
 from __future__ import annotations
 
 import json
@@ -31,7 +31,7 @@ def test_env_file_only_loads_allowed_keys(tmp_path, monkeypatch):
 def test_preflight_reports_ready_and_never_prints_secret(tmp_path, monkeypatch):
     import runpod_preflight
 
-    monkeypatch.setattr(runpod_preflight, "ENV_FILE", tmp_path / "yok.env")
+    monkeypatch.setattr(runpod_preflight, "ENV_FILES", (tmp_path / "yok.env",))
     monkeypatch.setenv("RUNPOD_LTX_ENDPOINT_ID", "abc123")
     monkeypatch.setenv("RUNPOD_API_KEY", "secret-value")
 
@@ -46,7 +46,7 @@ def test_preflight_reports_ready_and_never_prints_secret(tmp_path, monkeypatch):
 def test_preflight_lists_missing_without_credentials(tmp_path, monkeypatch):
     import runpod_preflight
 
-    monkeypatch.setattr(runpod_preflight, "ENV_FILE", tmp_path / "yok.env")
+    monkeypatch.setattr(runpod_preflight, "ENV_FILES", (tmp_path / "yok.env",))
     monkeypatch.delenv("RUNPOD_LTX_ENDPOINT_ID", raising=False)
     monkeypatch.delenv("RUNPOD_API_KEY", raising=False)
 
@@ -60,7 +60,7 @@ def test_preflight_lists_missing_without_credentials(tmp_path, monkeypatch):
 def test_payload_preview_uses_ltx_contract_and_never_contains_credentials(tmp_path, monkeypatch):
     import runpod_preflight
 
-    monkeypatch.setattr(runpod_preflight, "ENV_FILE", tmp_path / "yok.env")
+    monkeypatch.setattr(runpod_preflight, "ENV_FILES", (tmp_path / "yok.env",))
     payload = runpod_preflight.payload_preview()
 
     assert payload["workflow_api"] == "image_to_video.api.json"
@@ -68,3 +68,4 @@ def test_payload_preview_uses_ltx_contract_and_never_contains_credentials(tmp_pa
     assert payload["width"] % 32 == 0 and payload["height"] % 32 == 0
     assert "input_image_base64" in payload
     assert "RUNPOD_API_KEY" not in json.dumps(payload)
+

@@ -32,12 +32,21 @@ revizyon (daha güçlü prompt + yeni seed) gerekiyor.
 ## 3. Engelin tam adı
 
 ```text
-Provider: Hugging Face ZeroGPU (anonim)
+Provider A: Hugging Face ZeroGPU (anonim)
 Hata: "You have exceeded your ZeroGPU runs limit." / "0s left"
 Tüketim: 3 çalıştırma (2 FLUX + 1 LTX smoke)
 Çözüm A: ücretsiz HF hesabı tokeni → HF_TOKEN (ücret yok, kota açılır)
 Çözüm B: günlük kotanın sıfırlanmasını beklemek
-Çözüm C: RunPod anahtarı + LTX endpoint (GPU saat ücreti)
+
+Provider B: RunPod LTX endpoint
+Kimlik: control_plane_v2/.env.runtime içinde RUNPOD_API_KEY + RUNPOD_LTX2_ENDPOINT_ID
+        (endpoint dnwqoolyprqr69) — preflight artık bunları buluyor, "ready": true.
+Engel 1: api.runpod.ai bu makineden yanıt vermiyor (istekler asılı kalıyor).
+Engel 2: LB alt alanı (dnwqoolyprqr69.api.runpod.ai) yalnız 401/400 dönüyor:
+         "not allowed for QB API, load balancer endpoint"; /run, /runsync,
+         /generate, /v1/video/generate, /predict yolları aynı hatayı verdi.
+Sonuç: onay verilmesine rağmen (≤$1.50) bu makineden RunPod çağrısı YAPILAMADI;
+       ücret harcanmadı.
 ```
 
 Teknik olarak istenen 5 sn'lik çekim **bir çağrı** ile alınabilir; LTX-2.5 Space'te

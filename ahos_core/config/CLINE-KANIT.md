@@ -740,3 +740,47 @@ exit : 0
 5 passed in 16.11s
 ```
 
+## RunPod kimliği bulundu, çağrı yapılamadı (2026-11-07 13:40)
+generated_at: 2026-11-07T13:40:00
+
+komut : python tools/runpod_preflight.py
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 0
+```json
+{
+  "env_files": ["C:\\...\\control_plane_v2\\.env.runtime"],
+  "endpoint_id_present": true,
+  "api_key_present": true,
+  "ready": true,
+  "provider": {"endpoint_id": "dnwqoolyprqr69", "paid": true, "external": true},
+  "spending": "blocked until explicit paid approval"
+}
+```
+
+Onay: Harun — "RunPod LTX, en fazla 1.50 USD" (3 aday çekim).
+
+komut : curl https://api.runpod.ai/v2/dnwqoolyprqr69/health (Bearer)
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : (zaman aşımı)
+```text
+api.runpod.ai istekleri bu makineden yanıtlanmadı (curl -m 8/10/20 asılı kaldı).
+DNS ve TCP 443 0,1 sn içinde açılıyor; HTTP katmanı yanıt vermiyor.
+```
+
+komut : curl https://dnwqoolyprqr69.api.runpod.ai/health (Bearer) ve POST denemeleri
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 400
+```text
+GET /health               -> 400 {"detail":"not allowed for QB API, load balancer endpoint"}
+POST /                    -> 400 (aynı)
+POST /run,/runsync,/generate,/v1/video/generate,/predict -> 400 (aynı)
+Yetkisiz GET /health      -> 401 (uç nokta canlı, kimlik kabul ediliyor)
+```
+
+komut : python tools/ltx_space_render.py --generate-keyframe --seed 41 ...
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 3
+```text
+{"status":"blocked","blocked":"zerogpu_quota"}
+```
+

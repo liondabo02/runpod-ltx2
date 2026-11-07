@@ -22,25 +22,35 @@ ROOT = Path(__file__).resolve().parents[1]
 CORE = ROOT / "ahos_core"
 sys.path.insert(0, str(CORE))
 
-ENV_FILE = ROOT / ".env.runtime"
-ALLOWED = ("RUNPOD_API_KEY", "RUNPOD_LTX_ENDPOINT_ID", "RUNPOD_LTX_BASE_URL")
+ENV_FILES = (ROOT / ".env.runtime", ROOT / "control_plane_v2" / ".env.runtime")
+ENV_FILE = ENV_FILES[0]
+ALLOWED = ("RUNPOD_API_KEY", "RUNPOD_LTX_ENDPOINT_ID", "RUNPOD_LTX_BASE_URL",
+           "RUNPOD_LTX2_ENDPOINT_ID")
+ALIASES = {"RUNPOD_LTX2_ENDPOINT_ID": "RUNPOD_LTX_ENDPOINT_ID"}
 
 
-def load_env(path: Path = ENV_FILE) -> dict[str, str]:
-    """`.env.runtime` içinden yalnız izinli anahtarları okur; süreç ortamına yazar."""
+def load_env(path: Path | None = None) -> dict[str, str]:
+    """`.env.runtime` dosyalarından yalnız izinli anahtarları okur; süreç ortamına yazar.
 
+    `control_plane_v2/.env.runtime` da taranır: LTX endpoint kimliği orada
+    `RUNPOD_LTX2_ENDPOINT_ID` adıyla tutulabiliyor.
+    """
+
+    paths = (path,) if path is not None else ENV_FILES
     loaded: dict[str, str] = {}
-    if not path.is_file():
-        return loaded
-    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
-        line = line.strip()
-        if not line or line.startswith("#") or "=" not in line:
+    for candidate in paths:
+        if not candidate or not candidate.is_file():
             continue
-        key, value = line.split("=", 1)
-        key, value = key.strip(), value.strip().strip('"').strip("'")
-        if key in ALLOWED and value:
-            os.environ.setdefault(key, value)
-            loaded[key] = value
+        for line in candidate.read_text(encoding="utf-8", errors="replace").splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key, value = key.strip(), value.strip().strip('"').strip("'")
+            if key in ALLOWED and value:
+                target = ALIASES.get(key, key)
+                os.environ.setdefault(target, value)
+                loaded[target] = value
     return loaded
 
 
@@ -51,7 +61,7 @@ def preflight() -> dict:
     endpoint_id = os.getenv("RUNPOD_LTX_ENDPOINT_ID", "").strip()
     base_url = os.getenv("RUNPOD_LTX_BASE_URL", "https://api.runpod.ai/v2").strip()
     result: dict = {
-        "env_file": str(ENV_FILE) if ENV_FILE.is_file() else None,
+        "env_files": [str(path) for path in ENV_FILES if path.is_file()],
         "env_file_keys": sorted(loaded),
         "endpoint_id_present": bool(endpoint_id),
         "api_key_present": bool(os.getenv("RUNPOD_API_KEY", "").strip()),
