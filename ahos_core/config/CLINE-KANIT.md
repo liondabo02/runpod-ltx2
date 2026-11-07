@@ -664,3 +664,37 @@ exit : 0
 3 passed in 4.18s
 ```
 
+## RunPod LTX ön kontrolü (2026-11-07)
+generated_at: 2026-11-07T12:36:00
+
+komut : python tools/runpod_preflight.py
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 2
+```json
+{
+  "env_file": null,
+  "endpoint_id_present": false,
+  "api_key_present": false,
+  "ready": false,
+  "spending": "blocked until explicit paid approval",
+  "missing": ["RUNPOD_LTX_ENDPOINT_ID", "RUNPOD_API_KEY"]
+}
+```
+
+komut : python tools/runpod_preflight.py --payload-preview
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 2
+```text
+workflow_api = image_to_video.api.json
+duration_seconds = 6 · fps = 24 · steps = 8 · seed = 7
+width = 1024 · height = 576   (16:9 ve 32'ye bölünebilir; teslim 1920x1080)
+input_image_base64 = <keyframe.png → base64>
+```
+
+komut : python -B -m pytest -q --no-header -p no:cacheprovider tests/test_runpod_preflight.py tests/test_creative_qa.py
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\ahos_core
+exit : 0
+```text
+7 passed in 7.05s
+```
+

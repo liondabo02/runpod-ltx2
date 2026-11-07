@@ -93,3 +93,34 @@ deliverables/S01-PARK-KITE-001/
 Onay: LTX-2.5 Pro I2V, 6 sn, 1080p, en fazla 4 çekim, bütçe tavanı 5 USD.
 Anahtar: <sağlayıcı> ortam değişkeni olarak verilecek.
 ```
+
+## 9. Seçilen yol: RunPod (kendi GPU)
+
+Karar: **RunPod + repo'nun LTX-2 worker imajı**. Gereken iki değer:
+
+```text
+RUNPOD_API_KEY=...
+RUNPOD_LTX_ENDPOINT_ID=...
+```
+
+Bu iki satır repoya **yazılmaz**; `C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\.env.runtime`
+dosyasına yazılır (`.gitignore`'da). Verildikten sonra:
+
+```powershell
+python tools/runpod_preflight.py --payload-preview
+# "ready": true olmalı
+```
+
+Hazır olduğunda sıra:
+
+1. `--ping` (GPU uyandırır; **ücretlidir**, açık onay ister) → worker'ın ayakta olduğunu doğrular.
+2. Endpoint'in hangi modeli çalıştırdığını doğrula: **LTX-2 (19b) mi, LTX-2.5 mi?**
+   Repo imajı LTX-2'ye hedefli; LTX-2.5 için imajın/modelin güncellenmesi gerekir.
+3. Keyframe üretimi (görsel model) → I2V → MP4 → `tools/creative_qa.py` → Harun onayı.
+
+**Üretim parametresi:** model girişi 1024×576 (16:9, 32'ye bölünebilir); teslim
+1920×1080'e Lanczos ile ölçeklenir. 1080 doğrudan modele verilmez (32'ye bölünmez).
+
+> Not: Bu adımlar anahtar gelmeden çalıştırılmaz. `tools/runpod_preflight.py`
+> anahtarı yazdırmaz, ağ çağrısı yapmaz ve harcama başlatmaz.
+
