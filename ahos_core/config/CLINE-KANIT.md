@@ -953,3 +953,23 @@ exit : 0 / 0
 6 passed in 0.69s (global)
 ```
 
+## v2 üretim planı hazır (2026-11-07 20:20)
+generated_at: 2026-11-07T20:20:00
+
+komut : python tools/model_sheet_v2.py --dry-run
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 0
+```text
+4 adım: aden-turnaround (seed 501), aden-expressions (502),
+        kaan-turnaround (503), kaan-expressions (504)
+Model: black-forest-labs/FLUX.1-Kontext-Dev · ücret 0 · kota yoksa blocked ve durur.
+```
+
+komut : pytest tests/test_model_sheet_v2.py (global + venv)
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\ahos_core
+exit : 0 / 0
+```text
+3 passed in 0.26s (global)
+3 passed in 0.15s (venv)
+```
+
