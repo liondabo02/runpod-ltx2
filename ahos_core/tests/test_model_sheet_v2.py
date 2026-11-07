@@ -16,6 +16,14 @@ def _setup(tmp_path, monkeypatch):
     sheets.mkdir()
     monkeypatch.setattr(model_sheet_v2, "SHEETS", sheets)
     monkeypatch.setattr(model_sheet_v2, "MANIFEST", tmp_path / "manifest.json")
+    # Python default arguments capture MANIFEST at import time. Patch the
+    # accessors, not just the constant, so tests cannot touch live state.
+    original_load = model_sheet_v2.load_state
+    original_save = model_sheet_v2.save_state
+    monkeypatch.setattr(model_sheet_v2, "load_state",
+                        lambda: original_load(tmp_path / "manifest.json"))
+    monkeypatch.setattr(model_sheet_v2, "save_state",
+                        lambda state: original_save(state, tmp_path / "manifest.json"))
     return model_sheet_v2, sheets
 
 
@@ -94,3 +102,45 @@ def test_quality_gate_pauses_after_aden_turnaround():
     assert model_sheet_v2.pause_after("aden-turnaround", run_all=False) is True
     assert model_sheet_v2.pause_after("aden-turnaround", run_all=True) is False
     assert model_sheet_v2.pause_after("kaan-turnaround", run_all=False) is False
+
+
+def test_checksum_mismatch_fails_closed_without_force(tmp_path, monkeypatch):
+    model, sheets = _setup(tmp_path, monkeypatch)
+    step = model.STEPS[0]
+    _write(sheets / step["input"], b"input")
+    target = model.output_path(step)
+    _write(target, b"human-approved-existing-content")
+    before = target.read_bytes()
+    state = {"steps": {step["id"]: {"status": "ok", "sha256": "0" * 64}}}
+    outcome = model.run_step(step, state)
+    assert outcome == {"id": step["id"], "status": "error",
+                       "reason": "checksum_mismatch_requires_force"}
+    assert target.read_bytes() == before
+
+
+def test_untracked_existing_output_fails_closed(tmp_path, monkeypatch):
+    model, sheets = _setup(tmp_path, monkeypatch)
+    step = model.STEPS[0]
+    _write(sheets / step["input"])
+    target = model.output_path(step)
+    _write(target, b"existing-but-not-manifested")
+    result = model.run_step(step, {"steps": {}})
+    assert result["reason"] == "existing_output_unverified"
+    assert target.read_bytes() == b"existing-but-not-manifested"
+
+
+def test_repeated_run_preserves_original_sha_proof(tmp_path, monkeypatch):
+    model, sheets = _setup(tmp_path, monkeypatch)
+    step = model.STEPS[0]
+    _write(sheets / step["input"])
+    target = model.output_path(step)
+    _write(target, b"verified-aden-v2")
+    digest = model.sha256(target)
+    model.save_state({"steps": {step["id"]: {"status": "ok", "sha256": digest}}})
+    for _ in range(2):
+        assert model.main(["--only", "aden-turnaround"]) == 0
+        record = model.load_state()["steps"][step["id"]]
+        assert record["status"] == "ok"
+        assert record["sha256"] == digest
+        assert model.is_verified(step, model.load_state()) == (True, "verified")
+        assert target.read_bytes() == b"verified-aden-v2"

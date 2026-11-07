@@ -179,10 +179,16 @@ def classify(message: str) -> str:
 
 
 def run_step(step: dict, state: dict, *, force: bool = False) -> dict:
-    verified, _ = is_verified(step, state)
+    verified, verification_reason = is_verified(step, state)
     if verified and not force:
         return {"id": step["id"], "status": "already_done"}
     target = output_path(step)
+    if target.is_file() and not force:
+        # Existing, mismatching or untracked media must never be overwritten.
+        # A human must explicitly approve --force after inspecting it.
+        return {"id": step["id"], "status": "error",
+                "reason": "checksum_mismatch_requires_force"
+                if verification_reason == "checksum_mismatch" else "existing_output_unverified"}
     input_path = SHEETS / step["input"]
     if not input_path.is_file():
         return {"id": step["id"], "status": "error", "reason": f"input_missing:{input_path.name}"}
@@ -251,7 +257,11 @@ def main(argv: list[str] | None = None) -> int:
             continue
         outcome = run_step(step, state, force=args.force)
         results.append(outcome)
-        state["steps"][step["id"]] = {**outcome, "at": time.strftime("%Y-%m-%dT%H:%M:%S")}
+        if outcome["status"] != "already_done":
+            # Keep the original verified 'ok' record and SHA-256 intact.
+            # Replacing it with 'already_done' would make the next run
+            # consider the output unverified and regenerate it.
+            state["steps"][step["id"]] = {**outcome, "at": time.strftime("%Y-%m-%dT%H:%M:%S")}
         state["blocked"] = outcome["id"] if outcome["status"] == "blocked" else None
         save_state(state)
         print(json.dumps(outcome, ensure_ascii=False))

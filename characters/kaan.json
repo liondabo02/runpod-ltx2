@@ -52,7 +52,7 @@
     "stance": "hafif sallanan, dengede durmaya çalışan",
     "run": "paytak, kısa, kollar yukarıda",
     "kite_hand": "sol el (ipi kavrayamaz, yardım ister)",
-    "eye_contact": "ablaya/abisine hayran, sık sık güler"
+    "eye_contact": "ablasına hayran, sık sık güler"
   },
   "voice": {
     "engine": "edge-tts",

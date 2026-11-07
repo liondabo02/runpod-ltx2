@@ -1,0 +1,191 @@
+{
+  "schema": "ahos.studio.pilot-plan.v1",
+  "episode_id": "S01E001",
+  "status": "PROPOSED_NOT_OWNER_APPROVED",
+  "title": "Uçurtmanın Kayıp Kuyruğu",
+  "kind": "30-second proof-of-concept (not full 8-minute episode)",
+  "target_duration_seconds": 30,
+  "fps": 24,
+  "aspect_ratio": "16:9",
+  "native_render_note": "Existing HF outputs are 768x512; 1920x1080 delivery is upscale, not native resolution",
+  "learning_goals": [
+    "sabır",
+    "paylaşma",
+    "yardımlaşma"
+  ],
+  "cast_ids": [
+    "aden",
+    "kaan"
+  ],
+  "location": "Kanonik bahar sabahı parkı",
+  "safety": [
+    "Kaan 1 yaşındadır; cümleler yerine doğal kısa heceler ve gülüş",
+    "Bebek boynuna veya eline ip dolanmaz; makara Aden'in yetişkin gözetimindeki alanında",
+    "Kayıp kurdele yerde güvenli mesafede bulunur; yol, su, yükseklik, tehlike yok",
+    "Ek çocuk ve yetişkin yüzü icat edilmez; iki karakterin görünümü kanondan alınır"
+  ],
+  "owner_approval_required": true,
+  "render_blocked_until_v2_visuals_and_owner_approval": true,
+  "scenes": [
+    {
+      "scene_id": "PILOT-01",
+      "title": "Merak ve küçük sorun",
+      "duration_seconds": 10,
+      "clips": [
+        {
+          "clip_id": "P01-C01",
+          "duration_seconds": 5,
+          "cast_ids": [
+            "aden",
+            "kaan"
+          ],
+          "camera": "Sabit, çocuk göz hizasında orta-geniş; Aden/Kaan kadrajda",
+          "action": "Parkta renkli elmas uçurtma yerde hazır. Aden abla ipi güvenli şekilde tutuyor, Kaan yanında gülümsüyor.",
+          "dialogue": [],
+          "audio": [
+            "hafif rüzgar",
+            "kuşlar",
+            "yumuşak neşeli müzik"
+          ]
+        },
+        {
+          "clip_id": "P01-C02",
+          "duration_seconds": 5,
+          "cast_ids": [
+            "aden",
+            "kaan"
+          ],
+          "camera": "Aynı aks, sabit kadraj; uçurtma ve çocuklar birlikte görünür",
+          "action": "Uçurtmanın gökkuşağı kuyruğu küçük bir esintiyle ayrılıp yakındaki çimlere konar. Aden şaşırır, Kaan başını kaldırır.",
+          "dialogue": [
+            {
+              "character_id": "aden",
+              "text": "Aa! Uçurtmanın kuyruğu!",
+              "delivery": "meraklı, korkutmadan"
+            }
+          ],
+          "audio": [
+            "hafif kumaş hışırtısı"
+          ]
+        }
+      ]
+    },
+    {
+      "scene_id": "PILOT-02",
+      "title": "Sabırla birlikte arama",
+      "duration_seconds": 10,
+      "clips": [
+        {
+          "clip_id": "P02-C01",
+          "duration_seconds": 5,
+          "cast_ids": [
+            "aden",
+            "kaan"
+          ],
+          "camera": "Aynı park ve ekran yönü; Kaan'ın bebek oranı korunur",
+          "action": "Aden acele etmeden çevreye bakar, Kaan güvenli bir noktada parmağıyla renkli kumaşı gösterir.",
+          "dialogue": [
+            {
+              "character_id": "aden",
+              "text": "Bir bakalım... Nerede?",
+              "delivery": "sakin ve ritmik"
+            },
+            {
+              "character_id": "kaan",
+              "text": "Aa!",
+              "delivery": "1 yaşa uygun kısa ses"
+            }
+          ],
+          "audio": [
+            "kısa merak müzik motifi"
+          ]
+        },
+        {
+          "clip_id": "P02-C02",
+          "duration_seconds": 5,
+          "cast_ids": [
+            "aden",
+            "kaan"
+          ],
+          "camera": "Aden ve yerdeki kurdele aynı kadrajda; kesmeler temiz",
+          "action": "Aden çimlerin üzerindeki kuyruğu bulur, gülümser. Kaan sevincini ellerini çırparak gösterir.",
+          "dialogue": [
+            {
+              "character_id": "aden",
+              "text": "İşte burada!",
+              "delivery": "sıcak, başarı hissi"
+            }
+          ],
+          "audio": [
+            "hafif alkış",
+            "kumaş sesi"
+          ]
+        }
+      ]
+    },
+    {
+      "scene_id": "PILOT-03",
+      "title": "Yardımlaşma ve umut",
+      "duration_seconds": 10,
+      "clips": [
+        {
+          "clip_id": "P03-C01",
+          "duration_seconds": 5,
+          "cast_ids": [
+            "aden",
+            "kaan"
+          ],
+          "camera": "Alçak açı ama kamera sabit; iki çocuk görünür",
+          "action": "Aden uçurtma yere konmuşken kuyruktaki büyük cırt cırtlı bağlantıyı birleştirir; Kaan bir adım öteden seyreder. İp Kaan'a verilmez.",
+          "dialogue": [
+            {
+              "character_id": "aden",
+              "text": "Şimdi tamam!",
+              "delivery": "sakin ve neşeli"
+            }
+          ],
+          "audio": [
+            "yumuşak cırt cırt sesi"
+          ]
+        },
+        {
+          "clip_id": "P03-C02",
+          "duration_seconds": 5,
+          "cast_ids": [
+            "aden",
+            "kaan"
+          ],
+          "camera": "Sabit orta-geniş kadraj; uçurtma yukarıda ama her iki çocuk kadrajda kalır",
+          "action": "Kuyruklu uçurtma yeniden yükselir. Aden gülümser, Kaan iki elini çırpar. Yüzler ve kıyafetler değişmez.",
+          "dialogue": [
+            {
+              "character_id": "aden",
+              "text": "Birlikte başardık!",
+              "delivery": "neşeli, abartısız"
+            },
+            {
+              "character_id": "kaan",
+              "text": "Ya!",
+              "delivery": "kısa bebek sesi"
+            }
+          ],
+          "audio": [
+            "müzikte sıcak kapanış",
+            "rüzgar"
+          ]
+        }
+      ]
+    }
+  ],
+  "workflow_gate": {
+    "required_v2_sheets": [
+      "aden-turnaround",
+      "aden-expressions",
+      "kaan-turnaround",
+      "kaan-expressions"
+    ],
+    "required_manual_approval": true,
+    "requires_story_packet_owner_approval_for_full_episode": true,
+    "allow_paid_generation": false
+  }
+}
