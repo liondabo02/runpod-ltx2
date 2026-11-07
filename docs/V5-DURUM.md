@@ -21,7 +21,7 @@
 | 016 Öğrenme etkisi | PARTIAL | Öncesi/sonrası ölçüm aracı var; yeterli örnek yok (0 ölçülmüş) |
 | 017 Kendi hatasını düzeltme | PARTIAL | 20 sentetik senaryo geçti; geçmiş gerçek hatalardan zincir yok |
 | 018 3D ofis canlı durum | PARTIAL | Ofis ve durum API'si var; durum eşleme testi yok |
-| 019 İşçi kartı | PENDING | — |
+| 019 İşçi kartı | PARTIAL | `worker_card.py`: ad/rol/departman, yetenek, güncel görev, kanıtlı başarı, öğrenilen yöntem, son hata, son QA, duygu, son aktiflik, gerçek artifact; özel hafıza varsayılan gizli (2 test). Panel/3D tıklama bağlantısı yok |
 | 020 CEO paneli | PARTIAL | `/intelligence` holding/güvenlik/teslimat/işçi tablosu; `unknown/stale` işaretleme yok |
 | 021 Çizgi film pilotu | PASS | 34,022 sn gerçek MP4 + Almanca sürüm + poster + altyazı + bağımsız QA (RMS −22,93 dB); LTX-2 değil deterministik hat |
 | 022 Teslimat kayıt sistemi | PARTIAL | `artifact_registry.py`: SQLite kayıt defteri; dosya/SHA/QA/teslimat ayrı; manifest dışı kanıt yok. Gerçek pilot `ADEN-PILOT-001` kaydedildi → **verified=true**, 1.746.064 bayt, hash eşleşti; 3 test geçti |
