@@ -1,0 +1,53 @@
+{
+  "schema": "ahos.creative-qa.v1",
+  "generated_at": "2026-11-07T12:18:31",
+  "video": "deliverables\\ADEN-PILOT-001\\aden-pilot.mp4",
+  "scene_id": "",
+  "technical": {
+    "ok": true,
+    "problems": [],
+    "container": "mov,mp4,m4a,3gp,3g2,mj2",
+    "duration_seconds": 34.022,
+    "size_bytes": 1746064,
+    "video": {
+      "codec": "h264",
+      "profile": "High",
+      "width": 1920,
+      "height": 1080,
+      "fps": 24.0,
+      "nb_frames": 816,
+      "bitrate": 276832,
+      "pix_fmt": "yuv420p"
+    },
+    "audio": {
+      "codec": "aac",
+      "sample_rate": "48000",
+      "channels": 2
+    }
+  },
+  "creative": {
+    "status": "NOT_EVALUATED",
+    "reason": "Yaratıcı kalite otomatik PASS edilmez; insan onayı gerekir.",
+    "human_checks": [
+      "karakter kimliği ve kıyafet sürekliliği",
+      "doğal hareket ve ağırlık aktarımı",
+      "ışık yönü/sıcaklığı ve gölge tutarlılığı",
+      "kompozisyon ve sinematik his",
+      "yüz/el/uzuv bozulmaları, titreme, zıplama",
+      "genel estetik: profesyonel 3D çocuk animasyonu görünümü"
+    ],
+    "approver": "Harun"
+  },
+  "motion": {
+    "frames_scanned": 600,
+    "motion_energy": 0.159,
+    "changed_pixel_ratio_mean": 0.0005,
+    "freeze_ratio": 0.995,
+    "freeze_verdict": "FAIL",
+    "flicker_luma_delta": 0.106,
+    "flicker_verdict": "PASS",
+    "sharpness_laplacian": 147.0,
+    "mean_luma": 128.49,
+    "duration_vs_frames": 17.64
+  }
+}

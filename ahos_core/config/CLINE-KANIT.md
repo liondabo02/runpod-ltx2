@@ -603,3 +603,64 @@ exit : 0
 ```text
 1388 passed, 36 skipped in 388.66s (0:06:28)
 ```
+
+## V5/medya — profesyonel çizgi film hattı denetimi (2026-11-07)
+generated_at: 2026-11-07T12:20:00
+
+komut : nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 1 (komut bulunamadı)
+```text
+nvidia-smi YOK (GPU yok veya surucu yok)
+```
+
+komut : python -c "import torch;print(torch.__version__, torch.cuda.is_available())"
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 0
+```text
+torch 2.8.0+cpu cuda False
+```
+
+komut : curl http://127.0.0.1:8188/system_stats ; curl http://127.0.0.1:11500/v1/models
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 7 / 7
+```text
+HTTP:000 (ComfyUI kapalı)
+HTTP:000 (Ollama tüneli kapalı)
+```
+
+komut : git ls-files | Select-String '\.(safetensors|ckpt|gguf)$'
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 0
+```text
+0 (izlenen model ağırlığı yok)
+```
+
+komut : curl image.pollinations.ai (ücretsiz görsel kademesi)
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 22
+```text
+512x512 ilk istek: HTTP 200 (3,8 sn)
+model=flux / enhance=true / 1024x1024: HTTP 402
+kota sonrası 512x512: HTTP 402 (Payment Required)
+```
+
+komut : python tools/creative_qa.py --video deliverables\ADEN-PILOT-001\aden-pilot.mp4
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 0
+```text
+1920x1080 · 24 fps · 34,022 sn · h264+aac
+motion_energy            = 0,159
+changed_pixel_ratio_mean = 0,0005
+freeze_ratio             = 0,995  -> FAIL
+flicker_luma_delta       = 0,106  -> PASS
+creative                 = NOT_EVALUATED (onay: Harun)
+```
+
+komut : python -B -m pytest -q --no-header -p no:cacheprovider tests/test_creative_qa.py
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\ahos_core
+exit : 0
+```text
+3 passed in 4.18s
+```
+

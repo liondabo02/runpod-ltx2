@@ -34,3 +34,11 @@ quality/work/
 control_plane_v2/ajan_egitim_kutuphanesi_v1.zip
 control_plane_v2/ajan_egitim_kutuphanesi_v1/
 control_plane_v2/control_plane_v2/
+
+# generated media: yalnız manifest/QA/rapor girer; ağır dosyalar girmez
+assets/reference/
+deliverables/*/frames/
+deliverables/S01-PARK-KITE-001/*.mp4
+deliverables/S01-PARK-KITE-001/*.png
+deliverables/S01-PARK-KITE-001/*.wav
+

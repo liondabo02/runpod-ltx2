@@ -1,0 +1,98 @@
+{
+  "schema": "ahos.scene.v1",
+  "scene_id": "S01-PARK-KITE-001",
+  "title": "Parkta uçurtma — tek sahne",
+  "status": "PLANNED",
+  "duration_seconds": 6,
+  "fps": 24,
+  "resolution": [1920, 1080],
+  "aspect_ratio": "16:9",
+  "look": "cinematic 3D children's animation, Pixar/Illumination-adjacent but original: soft subsurface skin, felt-like fabrics, gentle bloom, physically plausible sunlight, shallow depth of field, no photoreal faces",
+  "characters": ["aden", "kaan"],
+  "setting": {
+    "name": "yemyeşil park, bahar sabahı",
+    "time_of_day": "sabah 09:00, altın saat başlangıcı",
+    "weather": "hafif esinti, 2-3 m/s, açık gökyüzü",
+    "ground": "yumuşak çimen, küçük beyaz papatyalar, toprak patika",
+    "background": "uzakta yuvarlak tepeler, birkaç büyük ağaç, sıcak bokeh",
+    "palette": {
+      "grass": "#4A9454",
+      "grass_light": "#6FBE74",
+      "sky_top": "#8CC8F0",
+      "sky_horizon": "#DCEFFA",
+      "sun": "#FFE280",
+      "tree_dark": "#2E6B46",
+      "path": "#D9C39A"
+    }
+  },
+  "prop": {
+    "kite": {
+      "shape": "elmas (diamond) uçurtma, beyaz iskelet",
+      "panels": ["#FFD65A", "#E64860", "#4084DC", "#6EBE78"],
+      "tail": "uzun, rengârenk kumaş şeritler, 6 parça",
+      "line": "ince beyaz ip, doğal gerilim"
+    }
+  },
+  "beats": [
+    {"t": "0.0-1.2", "action": "Kaan iki eliyle uçurtma ipini tutar, Aden arkasında elleriyle onu dengeler; ikisi de yukarı bakar"},
+    {"t": "1.2-3.0", "action": "Rüzgâr uçurtmayı yükseltir; Kaan sevinçle zıplar, Aden güler ve ipi birlikte çeker"},
+    {"t": "3.0-4.8", "action": "Uçurtma kadrajın sağ üstüne süzülür; kamera hafifçe yükselir, çocuklar arkada küçülür"},
+    {"t": "4.8-6.0", "action": "Kaan kollarını açar, Aden ona bakar; sıcak güneş parlaması, sahne yumuşak kapanır"}
+  ],
+  "camera": {
+    "type": "low-angle medium-wide, 35mm eşdeğeri",
+    "move": "yavaş dolly-in + hafif yukarı tilt (0.4 m ileri, 8 derece)",
+    "aperture": "f/2.8, arka plan yumuşak bokeh",
+    "height": "çocuk göz hizası 0.95 m",
+    "stabilization": "gimbal, mikro sarsıntı yok"
+  },
+  "lighting": {
+    "key": "sol arka üstten sıcak güneş (5200K), saç kenarında rim light",
+    "fill": "gökyüzü ambient 6500K, yumuşak",
+    "bounce": "çimenden hafif yeşil yansıma",
+    "shadows": "yumuşak, kontrast orta; siyah gölge yok",
+    "atmosphere": "hafif toz/çiçek poleni, volumetrik ışık huzmesi"
+  },
+  "composition": {
+    "rule": "çocuklar sol üçte birde, uçurtma sağ üstte, gökyüzüne nefes alanı",
+    "foreground": "bulanık papatyalar ve çimen uçları",
+    "horizon": "alt üçte bir çizgisinde",
+    "focus": "Aden'in yüzü merkezde net, Kaan hafif önde net, arka plan bokeh"
+  },
+  "prompts": {
+    "keyframe": "Cinematic 3D children's animation still, golden spring morning in a lush green park, a cheerful 3-year-old boy Aden (98 cm, round face, three freckles on left cheek, big dark-hazel eyes, short wavy dark-brown side-parted hair, cobalt blue t-shirt with small yellow kite print, navy shorts, cream sneakers with blue soles) stands behind his adorable 1-year-old brother Kaan (76 cm, chubby cheeks, huge dark-brown eyes, two-tooth smile, short soft curly black hair, coral-red t-shirt, navy shorts, cream baby shoes); together they hold a thin white string to a colorful diamond kite with yellow, red, blue and green panels and a long rainbow tail, soaring toward the upper right; low-angle 35mm shot, child eye level, soft backlit rim light, gentle bloom, shallow depth of field, blurred daisies in foreground, rolling hills and big trees in warm bokeh, Pixar-quality stylized 3D render, subsurface skin, felt-like fabric, no text, no watermark",
+    "image_to_video": "The two brothers gently fly the colorful diamond kite on a breezy spring morning. Slow dolly-in and slight tilt up. Kaan bounces with joy, Aden laughs and helps him hold the string. The kite climbs smoothly to the upper right, its long rainbow tail rippling in the wind. Soft warm backlight, natural secondary motion, stable faces, consistent clothing, cinematic 3D children's animation, 24 fps, no cuts, no text.",
+    "negative": "photorealistic human faces, uncanny valley, adult proportions, extra limbs, extra fingers, melted faces, face morphing, flickering, jitter, text, watermark, logo, rapid cuts, camera shake, oversaturation, plastic skin, inconsistent clothing colors, changing hair, multiple kites, background people"
+  },
+  "continuity": {
+    "must_match": [
+      "Aden saç rengi/silhouette ve mavi tişört",
+      "Kaan kıvırcık saç ve mercan tişört",
+      "boy oranı 1.29 (±%5)",
+      "uçurtma panel renkleri ve kuyruk uzunluğu",
+      "park paleti ve sabah ışığı yönü"
+    ],
+    "reference_policy": "her karakter için 3 görünüşlü (ön/yan/arka) referans sayfası + sahne keyframe'i; video modeline ilk kare olarak keyframe, kimlik için referans görselleri verilir",
+    "seed_policy": "keyframe ve video için sabit seed; her tekrar aynı seed ile üretilir, iyileştirme yalnız prompt/parametre değişimiyle yapılır"
+  },
+  "acceptance": {
+    "technical": [
+      "MP4 H.264/H.265 açılıyor, süre 6.0 ±0.2 sn",
+      "1920x1080, 24 fps ±0.5, ses varsa 48 kHz",
+      "kare sayısı 144 ±5",
+      "donmuş kare yok (1 sn içinde piksel değişimi > %0.5)",
+      "flicker: ardışık kare luma farkı < 6/255 ortalama"
+    ],
+    "creative": [
+      "yüz kimliği sahnede bozulmuyor (Aden/Kaan ayırt edilebilir)",
+      "kıyafet renkleri kanonla eşleşiyor",
+      "boy oranı korunuyor",
+      "hareket doğal: ağırlık aktarımı, rüzgâr tepkisi, ip gerilimi",
+      "ışık yönü ve sıcaklığı tutarlı; gölge yönü değişmiyor",
+      "kompozisyon: çocuklar sol üçte bir, uçurtma sağ üst, nefes alanı",
+      "görsel bozukluk yok: el/yüz erimesi, titreme, zıplama, çift uzuv",
+      "estetik: sinematik 3D çocuk animasyonu hissi; düz vektör/geometrik görünüm değil"
+    ],
+    "approval": "nihai görsel onay Harun'a aittir; teknik PASS yaratıcı PASS değildir"
+  }
+}

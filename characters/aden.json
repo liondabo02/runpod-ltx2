@@ -1,0 +1,63 @@
+{
+  "schema": "ahos.character.v1",
+  "character_id": "aden",
+  "name": "Aden",
+  "age_years": 3,
+  "age_note": "Kardeşi Kaan'dan 2 yaş büyük; sahne boyunca 3 yaşında.",
+  "height_cm": 98,
+  "height_ratio_vs_kaan": 1.29,
+  "proportions": {
+    "heads_tall": 3.6,
+    "head_width_ratio": 0.31,
+    "limb_style": "yumuşak, yuvarlak hatlı, bebek yağı; keskin kas yok",
+    "hands": "dört parmak + başparmak, kısa ve tombul",
+    "feet": "küçük, yuvarlak burunlu spor ayakkabı"
+  },
+  "palette": {
+    "skin": "#F5CDAA",
+    "skin_shadow": "#E3AE86",
+    "cheek_blush": "#EFA98E",
+    "hair": "#462D1E",
+    "hair_highlight": "#6B4630",
+    "eyes": "#3A2A1E",
+    "shirt": "#286EC8",
+    "shirt_shadow": "#1E56A0",
+    "pants": "#283246",
+    "shoes": "#F7F4EC",
+    "shoe_sole": "#286EC8"
+  },
+  "face": {
+    "shape": "yuvarlak, dolgun yanak, yumuşak çene",
+    "eyes": "büyük, koyu ela, hafif çekik üst kapak, parlak catchlight",
+    "eyebrows": "ince, yumuşak kavisli, koyu kahve",
+    "nose": "küçük düğme burun",
+    "mouth": "küçük, kolay gülümseyen",
+    "ears": "küçük, yuvarlak",
+    "signature": "sol yanağın üstünde 3 küçük çil"
+  },
+  "hair": {
+    "style": "kısa dalgalı, yandan ayrık, alında yumuşak perçem",
+    "length": "kulak üstüne kadar",
+    "texture": "ipek gibi, hacimli ama dağınık değil"
+  },
+  "clothing": {
+    "top": "kobalt mavi kısa kollu tişört, göğüste küçük sarı uçurtma baskısı",
+    "bottom": "lacivert şort, lastik bel",
+    "shoes": "krem spor ayakkabı, mavi taban",
+    "socks": "kısa beyaz çorap",
+    "rule": "sahne boyunca aynı kıyafet; üst değişmez"
+  },
+  "body_language": {
+    "stance": "sağlam, meraklı öne eğilme",
+    "run": "kısa adımlar, kollar dengede",
+    "kite_hand": "sağ el",
+    "eye_contact": "Kaan'a sık sık bakar, koruyucu abi"
+  },
+  "voice": {
+    "engine": "edge-tts",
+    "voice": "tr-TR-EmelNeural",
+    "register": "sıcak, sakin, 3 yaş çocuk tonu"
+  },
+  "prompt_fragment": "Aden, a cheerful 3-year-old boy, 98 cm tall, round face with full cheeks and three tiny freckles on his left cheek, big dark-hazel eyes with catchlights, small button nose, short wavy dark-brown hair parted on the side with a soft fringe, cobalt blue (#286EC8) short-sleeve t-shirt with a small yellow kite print, navy (#283246) shorts, cream sneakers with blue soles, soft rounded toddler proportions (3.6 heads tall)",
+  "negative_fragment": "adult proportions, muscular body, realistic skin pores, extra fingers, six fingers, missing fingers, asymmetric eyes, different hair color, different shirt color, logos, text, watermark"
+}

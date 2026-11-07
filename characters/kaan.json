@@ -1,0 +1,63 @@
+{
+  "schema": "ahos.character.v1",
+  "character_id": "kaan",
+  "name": "Kaan",
+  "age_years": 1,
+  "age_note": "Aden'in küçük kardeşi; 1 yaşında, yeni yürümeye başlamış.",
+  "height_cm": 76,
+  "height_ratio_vs_aden": 0.78,
+  "proportions": {
+    "heads_tall": 3.1,
+    "head_width_ratio": 0.34,
+    "limb_style": "çok yuvarlak, kısa kol-bacak, bebek yağı",
+    "hands": "dört parmak + başparmak, minik",
+    "feet": "yumuşak tabanlı bebek ayakkabısı"
+  },
+  "palette": {
+    "skin": "#E8BE96",
+    "skin_shadow": "#D3A277",
+    "cheek_blush": "#E39A80",
+    "hair": "#19191E",
+    "hair_highlight": "#3A3A44",
+    "eyes": "#241A14",
+    "shirt": "#DC5A46",
+    "shirt_shadow": "#B8432F",
+    "pants": "#3C3C5A",
+    "shoes": "#F3E7D3",
+    "shoe_sole": "#C9A97E"
+  },
+  "face": {
+    "shape": "tombul, çok yuvarlak yanaklar, minik çene",
+    "eyes": "çok büyük, koyu kahve, neredeyse siyah, parlak",
+    "eyebrows": "ince, yumuşak, siyah",
+    "nose": "minik düğme burun",
+    "mouth": "küçük, iki dişli gülümseme",
+    "ears": "küçük, yuvarlak",
+    "signature": "sağ kulağın arkasında küçük bir tutam kıvırcık"
+  },
+  "hair": {
+    "style": "kısa yumuşak kıvırcık, alında bukleler",
+    "length": "çok kısa",
+    "texture": "pamuk gibi, hafif dağınık"
+  },
+  "clothing": {
+    "top": "mercan kırmızısı kısa kollu tişört",
+    "bottom": "lacivert yumuşak şort",
+    "shoes": "krem yumuşak bebek ayakkabısı",
+    "socks": "kısa beyaz çorap",
+    "rule": "sahne boyunca aynı kıyafet; üst değişmez"
+  },
+  "body_language": {
+    "stance": "hafif sallanan, dengede durmaya çalışan",
+    "run": "paytak, kısa, kollar yukarıda",
+    "kite_hand": "sol el (ipi kavrayamaz, yardım ister)",
+    "eye_contact": "ablaya/abisine hayran, sık sık güler"
+  },
+  "voice": {
+    "engine": "edge-tts",
+    "voice": "tr-TR-AhmetNeural",
+    "register": "neşeli, kısa heceli, 1 yaş babıldama tonu"
+  },
+  "prompt_fragment": "Kaan, an adorable 1-year-old toddler boy, 76 cm tall, very round chubby cheeks, huge dark-brown eyes, tiny button nose, two-tooth smile, short soft curly near-black hair with baby curls on the forehead, coral-red (#DC5A46) short-sleeve t-shirt, navy (#3C3C5A) soft shorts, cream baby shoes, extremely rounded toddler proportions (3.1 heads tall), wobbly first-step stance",
+  "negative_fragment": "adult proportions, tall child, realistic skin pores, extra fingers, six fingers, missing fingers, asymmetric eyes, different hair color, different shirt color, logos, text, watermark"
+}
