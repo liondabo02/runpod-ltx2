@@ -15,7 +15,7 @@
 | 010 Departman beyinleri | PARTIAL | `department_brain.py`: müdür, işçiler, yetenek, kuyruk, engel, teslimat, paylaşılan bilgi, bağımlılık, haftalık oran; 2 departman testi geçti |
 | 011 17 departman gerçek çıktı | PARTIAL | Pilotla creative/software/quality çıktı+QA var; diğer 14 departman yok |
 | 012 Otonom hedef→görev | PARTIAL | `goal_intake.py`: yalnız **Harun onaylı** hedef → 3 plan → görev grafiği → kuyruk; idempotent (4 test). Forensik: initiative 1 kayıt/2,5 gün eski; yürütme+QA kapanışı henüz bağlı değil |
-| 013 Sürekli kontrollü çalışma | PENDING | İşçi durumları (learning vb.) yok |
+| 013 Sürekli kontrollü çalışma | PARTIAL | `worker_state.py`: 10 durum (working/learning/.../offline), olaydan türetme, kalıcı kayıt; öğrenme üretim sayılmıyor (4 test). 3D ofis bağlantısı yok |
 | 014 Kuyruk güvenliği | PARTIAL | pending≤300, lease recovery, tamamlanmış koruma testli; **57 blocked/failed sınıflandırıldı**: 37 geçersiz girdi, 11 kod doğrulama, 7 QA, 1 lease; 8 tekrar denenebilir, otomatik toplu tekrar yok |
 | 015 47 kanıtsız işçi | PARTIAL | `worker_tasks.py` gerçek görev önerisi üretiyor; toplu yürütme yok |
 | 016 Öğrenme etkisi | PARTIAL | Öncesi/sonrası ölçüm aracı var; yeterli örnek yok (0 ölçülmüş) |
