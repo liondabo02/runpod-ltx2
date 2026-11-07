@@ -155,6 +155,16 @@ def _worker_rows(runtime: Path, departments: list[dict]) -> list[dict]:
 
 
 def _deliveries(root: Path) -> list[dict]:
+    registry = {}
+    db = root / "ahos_core" / "runtime" / "delivery-registry.db"
+    if db.is_file():
+        try:
+            with sqlite3.connect(f"file:{db.as_posix()}?mode=ro", uri=True) as con:
+                for artifact_id, verified in con.execute(
+                        "select artifact_id, verified from artifacts"):
+                    registry[artifact_id] = bool(verified)
+        except sqlite3.Error:
+            registry = {}
     rows = []
     for manifest_path in sorted((root / "deliverables").glob("*/manifest.json")):
         try:
@@ -179,6 +189,7 @@ def _deliveries(root: Path) -> list[dict]:
             "width": (qa.get("checks") or {}).get("width"),
             "seconds": (qa.get("checks") or {}).get("duration"),
             "qa_ok": qa.get("ok"),
+            "registry_verified": registry.get(payload.get("delivery_id")),
         })
     return rows
 
@@ -238,7 +249,7 @@ def render_html(data: dict) -> str:
             f"{label}={'✓' if item.get(key) else '—'}"
             for label, key in (("işlem", "processed"), ("dosya", "file_created"),
                                ("doğrulama", "file_verified"), ("QA", "qa_passed"),
-                               ("teslim", "delivered")))
+                               ("teslim", "delivered"), ("kayıt", "registry_verified")))
         delivery_rows.append(
             "<tr>"
             f"<td>{_esc(item['delivery_id'])}<br><small>{_esc(item['generated_at'])}</small></td>"
