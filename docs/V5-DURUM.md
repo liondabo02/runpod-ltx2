@@ -7,11 +7,12 @@
 | 003 Planlama/karar | PARTIAL | `build_plans`/`assess_task` delivery pilot preflight'ta gerçek görevde kullanıldı; 10 senaryoluk plan→uygulama→ölçüm zinciri yok |
 | 004 Üstbiliş | PARTIAL | `assess_task` research/ask_help/safe_test/verify/proceed; gerçek yardım başlatma testi yok |
 | 005 İşlevsel duygu | PARTIAL | 12 boyut mevcut (merak, araştırma, güven, temkin, sabır, motivasyon, iş birliği, toparlanma, iş yükü, kalite, belirsizlik, açıklık); karar politikası testli; simülasyon sınırı korunuyor |
-| 006 Çalışma kişiliği | PENDING | — |
-| 007 Mesajlaşma altyapısı | PENDING | — |
+| 006 Çalışma kişiliği | PARTIAL | `work_personality.py`: departman/role göre stil, plan tercihi, iletişim; yetki/harcama etkisi yok; aynı planlar farklı departmanda farklı sıralanıyor (test) |
+| 007 Mesajlaşma altyapısı | PARTIAL | `message_bus.py`: 11 tip, tekrar bastırma, görev/çift tavanı, ack kalıcı, restart-dayanıklı; gerçek işçi yardımıyla uçtan uca bağlanmadı |
+| 010 Departman beyinleri | PARTIAL | `department_brain.py`: müdür, işçiler, yetenek, kuyruk, engel, teslimat, paylaşılan bilgi, bağımlılık, haftalık oran; 2 departman testi geçti |
 | 008 Kolektif problem çözme | PARTIAL | `project_run` 3 departmanlı gerçek pilot (creative/software/quality) + QA; işçi bilişi deterministik araç |
 | 009 Departmanlar arası bilgi | PARTIAL | `share_knowledge` doğrulanmış kayıt + dedupe; gerçek görevde çapraz kullanım izleme yok |
-| 010 Departman beyinleri | PENDING | — |
+| 010 Departman beyinleri | PARTIAL | `department_brain.py`: müdür, işçiler, yetenek, kuyruk, engel, teslimat, paylaşılan bilgi, bağımlılık, haftalık oran; 2 departman testi geçti |
 | 011 17 departman gerçek çıktı | PARTIAL | Pilotla creative/software/quality çıktı+QA var; diğer 14 departman yok |
 | 012 Otonom hedef→görev | PENDING | Initiative→queue kök nedeni analiz edilmedi |
 | 013 Sürekli kontrollü çalışma | PENDING | İşçi durumları (learning vb.) yok |
