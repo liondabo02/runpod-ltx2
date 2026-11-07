@@ -154,7 +154,37 @@ def _worker_rows(runtime: Path, departments: list[dict]) -> list[dict]:
     return rows
 
 
-def snapshot(runtime, *, backup_root: Path | None = None) -> dict:
+def _deliveries(root: Path) -> list[dict]:
+    rows = []
+    for manifest_path in sorted((root / "deliverables").glob("*/manifest.json")):
+        try:
+            payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        delivery = payload.get("delivery") or {}
+        files = payload.get("files") or {}
+        video = files.get("video") or {}
+        qa = payload.get("qa") or {}
+        rows.append({
+            "delivery_id": payload.get("delivery_id") or manifest_path.parent.name,
+            "generated_at": payload.get("generated_at"),
+            "processed": delivery.get("processed"),
+            "file_created": delivery.get("file_created"),
+            "file_verified": delivery.get("file_verified"),
+            "qa_passed": delivery.get("qa_passed"),
+            "delivered": delivery.get("delivered"),
+            "video_path": video.get("path"),
+            "video_bytes": video.get("bytes"),
+            "sha256": video.get("sha256"),
+            "width": (qa.get("checks") or {}).get("width"),
+            "seconds": (qa.get("checks") or {}).get("duration"),
+            "qa_ok": qa.get("ok"),
+        })
+    return rows
+
+
+def snapshot(runtime, *, backup_root: Path | None = None,
+             repo_root: Path | None = None) -> dict:
     runtime = Path(runtime)
     payload = _json(runtime / "departments.json", {"departments": []})
     departments = payload.get("departments") if isinstance(payload, dict) else payload
@@ -176,6 +206,7 @@ def snapshot(runtime, *, backup_root: Path | None = None) -> dict:
         "workers": workers,
         "security": _security(runtime),
         "backups": _backups(backup_root),
+        "deliveries": _deliveries(repo_root or Path(__file__).resolve().parents[2]),
         "note": "null = kayıt yok; uydurma değer üretilmez",
     }
 
@@ -201,6 +232,21 @@ def render_html(data: dict) -> str:
             f"<td>{_esc(worker['last_run'][:19] or '—')}</td>"
             "</tr>")
     queue = holding["queue"]
+    delivery_rows = []
+    for item in data.get("deliveries") or []:
+        stages = " · ".join(
+            f"{label}={'✓' if item.get(key) else '—'}"
+            for label, key in (("işlem", "processed"), ("dosya", "file_created"),
+                               ("doğrulama", "file_verified"), ("QA", "qa_passed"),
+                               ("teslim", "delivered")))
+        delivery_rows.append(
+            "<tr>"
+            f"<td>{_esc(item['delivery_id'])}<br><small>{_esc(item['generated_at'])}</small></td>"
+            f"<td>{_esc(stages)}</td>"
+            f"<td>{_esc(item['seconds'])} sn · {_esc(item['video_bytes'])} bayt</td>"
+            f"<td><code>{_esc((item['sha256'] or '')[:16])}</code><br>"
+            f"<small>{_esc(item['video_path'])}</small></td>"
+            "</tr>")
     queue_text = ", ".join(f"{key}={value}" for key, value in sorted(queue.items())) or "kayıt yok"
     return f"""<!doctype html><html lang="tr"><meta charset="utf-8">
 <title>AHOS CEO Intelligence</title>
@@ -230,6 +276,10 @@ th{{color:#8fa6c8;font-weight:600}} code{{color:#9fc1ff}}
 <div class="card"><small>Güvenlik reddi</small><b>{_esc(data['security']['security_denials'])}</b></div>
 <div class="card"><small>Denetim satırı</small><b>{_esc(data['security']['audit_rows'])}</b></div>
 <div class="card"><small>Memory vault</small><b>{_esc(data['backups']['vaults'])}</b></div>
+<h2>Ürün Teslimatları</h2>
+<table><tr><th>Teslimat</th><th>Aşamalar</th><th>Süre / boyut</th><th>SHA-256 / yol</th></tr>
+{''.join(delivery_rows) or '<tr><td colspan="4">kayıt yok</td></tr>'}
+</table>
 <h2>İşçi Görünümü</h2>
 <table><tr><th>İşçi</th><th>Uzmanlık</th><th>Koşu / başarı</th><th>En iyi plan</th>
 <th>Öğrenilen yöntem</th><th>Kanıt</th><th>Yardım (ver/al)</th><th>Son görev</th></tr>
