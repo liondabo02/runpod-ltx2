@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, quote, urlparse
+from urllib.parse import parse_qs, quote, unquote, urlparse
 
 from .autonomous_company import PersistentMissionQueue, QueueStatus
 from .owner_approval import ApprovalStatus, OwnerApprovalInbox
@@ -1238,6 +1238,32 @@ def build_handler(state: ControlCenterState):
                 from .agent_office import snapshot as agent_snapshot
                 body = json.dumps(agent_snapshot(state.runtime_dir), ensure_ascii=False).encode("utf-8")
                 self._send(200, body, "application/json; charset=utf-8")
+                return
+            if parsed.path == "/api/roster":
+                # 3D ofis ad/rol yedeği; yalnız kimlik görünürlüğü.
+                from .agent_office import roster_index
+                body = json.dumps(roster_index(state.runtime_dir), ensure_ascii=False).encode("utf-8")
+                self._send(200, body, "application/json; charset=utf-8")
+                return
+            if parsed.path.startswith("/api/worker-card/"):
+                from . import worker_card
+                wid = unquote(parsed.path[len("/api/worker-card/"):])
+                if not wid or not worker_card.exists(state.runtime_dir, wid):
+                    self._send(404, b'{"error":"worker not found"}', "application/json; charset=utf-8")
+                    return
+                body = json.dumps(worker_card.card(state.runtime_dir, wid),
+                                  ensure_ascii=False).encode("utf-8")
+                self._send(200, body, "application/json; charset=utf-8")
+                return
+            if parsed.path.startswith("/worker/"):
+                from . import worker_card
+                wid = unquote(parsed.path[len("/worker/"):])
+                if not wid or not worker_card.exists(state.runtime_dir, wid):
+                    self._send(404, b"worker not found", "text/plain; charset=utf-8")
+                    return
+                body = worker_card.render_html(
+                    worker_card.card(state.runtime_dir, wid)).encode("utf-8")
+                self._send(200, body, "text/html; charset=utf-8")
                 return
             if parsed.path == "/api/office":
                 body = json.dumps(state.office_model(), indent=2).encode("utf-8")

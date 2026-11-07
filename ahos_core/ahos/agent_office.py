@@ -20,6 +20,8 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from . import worker_state
+
 
 def _db(runtime: Path) -> Path:
     return runtime / "company-service.db"
@@ -151,6 +153,12 @@ def snapshot(runtime_dir: str | Path) -> dict:
                 continue
             wid = str(worker.get("worker_id") or "")
             st = stats.get(wid, {})
+            observed_row = observed.get(wid) or {}
+            state = worker_state.derive(
+                runtime, wid,
+                observed_task=str(observed_row.get("task_id") or ""),
+                last_active=str(st.get("last") or ""),
+            )
             workers.append(
                 {
                     "worker_id": wid,
@@ -160,7 +168,11 @@ def snapshot(runtime_dir: str | Path) -> dict:
                     "runs": st.get("runs", 0),
                     "avg_seconds": st.get("avg_seconds", 0.0),
                     "last_run": st.get("last", ""),
-                    "state": 'çalışıyor' if wid in observed else _worker_activity(st, None),
+                    "state": state["label"],
+                    "state_code": state["state"],
+                    "state_reason": state["reason"],
+                    "stale": state["stale"],
+                    "unknown": state["unknown"],
                     "activity_verified": wid in observed,
                     "active_task": observed.get(wid),
                     "skills": list(worker.get("capabilities") or [])[:4],
@@ -182,6 +194,7 @@ def snapshot(runtime_dir: str | Path) -> dict:
         )
 
     departments.sort(key=lambda item: (item["state"] != "çalışıyor", -item["completed"]))
+    worker_rows = [worker for item in departments for worker in item["workers"]]
     totals = {
         "departments": len(departments),
         "workers": sum(len(item["workers"]) for item in departments),
@@ -190,6 +203,9 @@ def snapshot(runtime_dir: str | Path) -> dict:
         "blocked": sum(v.get('blocked', 0) for v in counts.values()),
         "completed": sum(v.get('completed', 0) for v in counts.values()),
         "verified_active_workers": len(observed),
+        "states": worker_state.counts(worker_rows, key="state_code"),
+        "unknown_workers": sum(1 for worker in worker_rows if worker["unknown"]),
+        "stale_workers": sum(1 for worker in worker_rows if worker["stale"]),
     }
     try:
         from .atrium import attention_counts, chronicle, needs_attention, title_text
@@ -210,6 +226,31 @@ def snapshot(runtime_dir: str | Path) -> dict:
         "feed": feed(runtime, limit=12),
         "approvals": approvals(runtime),
     }
+
+
+def roster_index(runtime_dir: str | Path) -> dict[str, dict]:
+    """İşçi kimliği → ad/rol/departman (3D ofisin `/api/roster` kaynağı)."""
+
+    runtime = Path(runtime_dir)
+    try:
+        payload = json.loads((runtime / "departments.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    departments = payload.get("departments") if isinstance(payload, dict) else payload
+    index: dict[str, dict] = {}
+    for department in departments or []:
+        if not isinstance(department, dict):
+            continue
+        dep_id = str(department.get("department_id") or "")
+        for worker in department.get("workers") or []:
+            if not isinstance(worker, dict):
+                continue
+            wid = str(worker.get("worker_id") or "")
+            if wid:
+                index[wid] = {"name": str(worker.get("name") or wid),
+                              "role": str(worker.get("role") or ""),
+                              "department": dep_id}
+    return index
 
 
 def _observed_workers(runtime: Path, missions: dict) -> dict:

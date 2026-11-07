@@ -389,3 +389,174 @@ LIVE_GROWTH_EXIT=0
 ```
 
 Not verified: a genuinely conscious agent, independently trained model weights, genuine emotion, infallible security/obedience, or automatic success on all real-world tasks. Admin credentials, GitHub permissions and API authentication require separate secure handling.
+
+## ECC reference verification
+generated_at: 2026-11-07T08:22:29.292106+00:00
+
+komut : C:\Users\esmak\AppData\Local\Programs\Python\Python312\python.exe -B -m pytest -q --no-header -p no:cacheprovider tests/test_ecc_reference.py tests/test_ceo_knowledge.py
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\ahos_core
+exit : 0
+```text
+............                                                             [100%]
+12 passed in 5.51s
+```
+
+komut : C:\Users\esmak\AppData\Local\Programs\Python\Python312\python.exe -m py_compile ahos/ecc_reference.py ahos/knowledge.py
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\ahos_core
+exit : 0
+```text
+```
+
+komut : git diff --check -- ahos_core/ahos/knowledge.py
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 0
+```text
+```
+
+## V5 işçi katmanı (G013/G018/G019/G020)
+generated_at: 2026-11-07T10:48:16
+
+komut : -B -m pytest -q --no-header -p no:cacheprovider tests/test_v5_worker_layer.py tests/test_office_3d.py tests/test_agent_office.py tests/test_control_center.py tests/test_v5_worker_state.py tests/test_v5_worker_card.py
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\ahos_core
+exit : 0
+```text
+.................................                                        [100%]
+33 passed in 8.87s
+```
+
+komut : tools/worker_layer_check.py
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 0
+```text
+{
+  "base": "http://127.0.0.1:8766",
+  "checks": [
+    {
+      "check": "roster 200",
+      "ok": true,
+      "detail": 200
+    },
+    {
+      "check": "roster 81 işçi",
+      "ok": true,
+      "detail": 81
+    },
+    {
+      "check": "roster alanları",
+      "ok": true,
+      "detail": 81
+    },
+    {
+      "check": "agent-office 200",
+      "ok": true,
+      "detail": 200
+    },
+    {
+      "check": "durum kodları geçerli",
+      "ok": true,
+      "detail": [
+        "blocked",
+        "collaborating",
+        "idle",
+        "learning",
+        "offline",
+        "researching",
+        "reviewing",
+        "waiting_approval",
+        "waiting_dependency",
+        "working"
+      ]
+    },
+    {
+      "check": "durum toplamı = işçi",
+      "ok": true,
+      "detail": {
+        "sum": 81,
+        "workers": 81
+      }
+    },
+    {
+      "check": "bilinmeyen işçi 47",
+      "ok": true,
+      "detail": 47
+    },
+    {
+      "check": "kart 200",
+      "ok": true,
+      "detail": 200
+    },
+    {
+      "check": "kart durumu geçerli",
+      "ok": true,
+      "detail": "idle"
+    },
+    {
+      "check": "özel hafıza gizli",
+      "ok": true,
+      "detail": true
+    },
+    {
+      "check": "kart sayfası 200",
+      "ok": true,
+      "detail": 200
+    },
+    {
+      "check": "kart sayfası ismi taşır",
+      "ok": true,
+      "detail": 2359
+    },
+    {
+      "check": "olmayan işçi 404",
+      "ok": true,
+      "detail": 404
+    },
+    {
+      "check": "olmayan kart 404",
+      "ok": true,
+      "detail": 404
+    },
+    {
+      "check": "panel 200",
+      "ok": true,
+      "detail": 200
+    },
+    {
+      "check": "panel durum sütunu",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "check": "panel işçi kartı linkleri",
+      "ok": true,
+      "detail": {
+        "links": 81,
+        "roster": 81
+      }
+    },
+    {
+      "check": "panel bayat/kayıt yok işareti",
+      "ok": true,
+      "detail": null
+    }
+  ],
+  "passed": 18,
+  "failed": 0
+}
+```
+
+komut : -m py_compile ahos/worker_state.py ahos/agent_office.py ahos/worker_card.py ahos/intelligence.py ahos/control_center.py ahos/office_3d.py
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\ahos_core
+exit : 0
+```text
+
+```
+
+komut : diff --check
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 0
+```text
+warning: in the working copy of 'ahos_core/ahos/intelligence.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ahos_core/ahos/worker_card.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ahos_core/ahos/worker_state.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ahos_core/config/CLINE-KANIT.md', LF will be replaced by CRLF the next time Git touches it
+```

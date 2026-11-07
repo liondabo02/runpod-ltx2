@@ -13,6 +13,7 @@ import time
 from pathlib import Path
 
 from . import cognitive_memory as cm
+from . import worker_state
 
 
 def _json(path: Path, default):
@@ -130,10 +131,17 @@ def _worker_rows(runtime: Path, departments: list[dict]) -> list[dict]:
             procedural = (profile or {}).get("memory", {}).get("procedural") or []
             top_skill = max(procedural, key=lambda row: row.get("ok", 0), default={})
             m = metrics.get(wid) or {}
+            state = worker_state.derive(runtime, wid,
+                                        last_active=str(m.get("last") or ""))
             rows.append({
                 "worker": wid, "name": str(worker.get("name") or wid),
                 "department": dep_id,
                 "role": str(worker.get("role") or ""),
+                "state_code": state["state"],
+                "state_label": state["label"],
+                "state_reason": state["reason"],
+                "stale": state["stale"],
+                "unknown": state["unknown"],
                 "authority": str(worker.get("authority_level") or ""),
                 "capabilities": list(worker.get("capabilities") or [])[:3],
                 "runs": int(m.get("runs") or 0),
@@ -208,6 +216,7 @@ def snapshot(runtime, *, backup_root: Path | None = None,
             "departments": len(departments),
             "workers": len(workers),
             "active_workers": sum(1 for row in workers if row["last_run"]),
+            "states": worker_state.counts(workers, key="state_code"),
             "queue": queue.get("counts") or {},
             "verified_deliveries": queue.get("verified_deliveries"),
             "completed_today": queue.get("completed_today"),
@@ -230,10 +239,14 @@ def render_html(data: dict) -> str:
     holding = data["holding"]
     rows = []
     for worker in data["workers"]:
+        stale = " <small>eski</small>" if worker["stale"] else ""
+        unknown = " <small>kayıt yok</small>" if worker["unknown"] else ""
         rows.append(
             "<tr>"
-            f"<td>{_esc(worker['name'])}<br><small>{_esc(worker['department'])} · "
+            f'<td><a href="/worker/{_esc(worker["worker"])}">{_esc(worker["name"])}</a>'
+            f"<br><small>{_esc(worker['department'])} · "
             f"{_esc(worker['role'])}</small></td>"
+            f"<td>{_esc(worker['state_label'])}{stale}{unknown}</td>"
             f"<td>{_esc(', '.join(worker['capabilities']))}</td>"
             f"<td>{_esc(worker['runs'])} · {_esc(worker['run_rate'])}</td>"
             f"<td>{_esc(worker['best_plan'] or '—')}</td>"
@@ -276,6 +289,7 @@ th{{color:#8fa6c8;font-weight:600}} code{{color:#9fc1ff}}
 <h2>Holding</h2>
 <div class="card"><small>Departman</small><b>{_esc(holding['departments'])}</b></div>
 <div class="card"><small>İşçi / aktif</small><b>{_esc(holding['workers'])} / {_esc(holding['active_workers'])}</b></div>
+<div class="card"><small>Durum (çalışan/boşta/çevrimdışı)</small><b>{_esc(holding['states'].get('working', 0))} / {_esc(holding['states'].get('idle', 0))} / {_esc(holding['states'].get('offline', 0))}</b></div>
 <div class="card"><small>Doğrulanmış teslim</small><b>{_esc(holding['verified_deliveries'])}</b></div>
 <div class="card"><small>Bugün tamamlanan</small><b>{_esc(holding['completed_today'])}</b></div>
 <div class="card"><small>Günlük maliyet</small><b>${_esc(holding['daily_cost']['cost_usd'])}</b></div>
@@ -292,7 +306,7 @@ th{{color:#8fa6c8;font-weight:600}} code{{color:#9fc1ff}}
 {''.join(delivery_rows) or '<tr><td colspan="4">kayıt yok</td></tr>'}
 </table>
 <h2>İşçi Görünümü</h2>
-<table><tr><th>İşçi</th><th>Uzmanlık</th><th>Koşu / başarı</th><th>En iyi plan</th>
+<table><tr><th>İşçi</th><th>Durum</th><th>Uzmanlık</th><th>Koşu / başarı</th><th>En iyi plan</th>
 <th>Öğrenilen yöntem</th><th>Kanıt</th><th>Yardım (ver/al)</th><th>Son görev</th></tr>
 {''.join(rows)}
 </table></html>"""

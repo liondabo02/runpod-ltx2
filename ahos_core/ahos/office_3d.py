@@ -144,6 +144,7 @@ HTML = r"""<!doctype html>
     <div class="metric">Engel<b id="detailBlocked">0</b></div></div>
   <div id="inspectorNote" class="focus-note">Canlı veri · gerçek görev durumu</div>
   <div id="workerDetail" hidden></div>
+  <div id="workerCardLink" hidden><a id="workerCardHref" href="#">İşçi kartını aç →</a></div>
 </aside>
 <div id="chat"><h4>CANLI SOHBET <span class="dept">Çalışanla konuş</span></h4><div id="chatbody">…</div>
   <select id="who"></select>
@@ -554,17 +555,25 @@ function inspectDepartment(id, workerName='', workerId=''){
   document.getElementById('inspectorNote').textContent=
     `${(dep.workers||[]).length} çalışan · doğrulanmış aktif ${active} · ${dep.state||'boşta'}`;
   const detail=document.getElementById('workerDetail');
+  const cardLink=document.getElementById('workerCardLink');
   detail.hidden=!worker;
+  if(cardLink) cardLink.hidden=!worker;
   if(worker){
     const runs=Number(worker.runs||0);
     const success=runs>0?(Math.round(Number(worker.rate||0)*100)+'%'):'kanıt yok';
     const activity=worker.activity_verified===true?'Doğrulanmış aktif':'Aktif görev kanıtı yok';
     const task=worker.active_task?.task_id||'—';
+    const stateLine=`${worker.state||'bilinmiyor'}${worker.state_code?' ('+worker.state_code+')':''}`+
+      `${worker.state_reason?' — '+worker.state_reason:''}`;
     detail.textContent=
       `İşçi: ${worker.worker_id}\nRol: ${worker.role||'belirtilmedi'}\n`+
-      `Durum: ${activity}\nÖlçülen çalışma: ${runs} · Başarı: ${success}\n`+
+      `Durum: ${stateLine}\n${activity}\nÖlçülen çalışma: ${runs} · Başarı: ${success}\n`+
       `Son çalışma: ${worker.last_run||'kayıt yok'}\nAktif görev: ${task}\n`+
       `Uzmanlık: ${(worker.skills||[]).join(', ')||'kayıt yok'}`;
+    if(cardLink){
+      const href=document.getElementById('workerCardHref');
+      if(href) href.href='/worker/'+encodeURIComponent(worker.worker_id);
+    }
   }else{detail.textContent='';}
   pane.hidden=false;
   const renders=document.getElementById('renders');
