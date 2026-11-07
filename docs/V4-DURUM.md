@@ -11,6 +11,12 @@
 | 007 Hata öğrenme zinciri | PASS | `tests/test_failure_learning.py`: **20/20 senaryo** hata→yansıma→düzeltme→QA→doğrulanmış ders; eski yöntem korunuyor |
 | 008 Beceri ölçümü | PARTIAL | `tools/skill_metrics.py`: 83 işçi, 34 koşu, 39 görev kaydı; ilk deneme/QA/hata tekrarı/süre/yeniden çalışma/yardım; işçi bazlı maliyet `null` (atfedilmiş kayıt yok) |
 | 009 Boşta öğrenmenin etkisi | PARTIAL | Öncesi/sonrası karşılaştırma hesaplanıyor; **0 işçide yeterli örnek** (37 yetersiz, 2 kayıt yok) → iyileşme iddia edilmiyor |
-| 010–020 | PENDING | Sıradaki turlar |
+| 010 Uzman yönlendirme | PASS | `expert_router.py` + `test_v4_collaboration.py`: **20 çapraz departman senaryosu** (yetenek, kanıt, iş yükü, aynı/çapraz departman gerekçeli) |
+| 011 Gerçek yardımlaşma | PASS | `help_workflow.py`: **10 vaka** talep→öneri→bağımsız QA→ortak bilgi; kendi kendine doğrulama reddedildi |
+| 012 Çok-departman projesi | PASS | `project_run.py`: creative→software→quality uçtan uca (izole tmp), QA düşünce bağımlı görev bloke, döngü reddi |
+| 013 Duygu politikası | PASS | 9 boyut + `test_v4_emotion.py`: başarısızlık→ask_help, yük→drain, belirsiz→research; `authority_effect=none` |
+| 014 Sahip güvenliği | PARTIAL | `harun` sabit + exclusive-create (yarış testi), panel same-origin/CSRF, GET salt-okunur; RunPod/Oracle erişim sınırları doğrulanmadı |
+| 015–016 Kuyruk/dayanıklılık | PARTIAL | Kapasite testleri (9) + memory vault doğrulaması var; restart/çift görev enjeksiyon testi henüz yok |
+| 017–020 | PENDING | Sıradaki turlar |
 
 Bu tablo her turda güncellenir; PASS yalnız ham test/komut kanıtıyla verilir.
