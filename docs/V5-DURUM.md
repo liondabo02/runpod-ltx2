@@ -14,7 +14,7 @@
 | 009 Departmanlar arası bilgi | PARTIAL | `share_knowledge` doğrulanmış kayıt + dedupe; gerçek görevde çapraz kullanım izleme yok |
 | 010 Departman beyinleri | PARTIAL | `department_brain.py`: müdür, işçiler, yetenek, kuyruk, engel, teslimat, paylaşılan bilgi, bağımlılık, haftalık oran; 2 departman testi geçti |
 | 011 17 departman gerçek çıktı | PARTIAL | Pilotla creative/software/quality çıktı+QA var; diğer 14 departman yok |
-| 012 Otonom hedef→görev | PARTIAL | Forensik: initiative **1 kayıt / 2,5 gün eski**, fikir→gerçek görev dönüşümü yok; owner goal→plan→queue hattı hâlâ kurulmadı ([KUYRUK-FORENSIK.md](KUYRUK-FORENSIK.md)) |
+| 012 Otonom hedef→görev | PARTIAL | `goal_intake.py`: yalnız **Harun onaylı** hedef → 3 plan → görev grafiği → kuyruk; idempotent (4 test). Forensik: initiative 1 kayıt/2,5 gün eski; yürütme+QA kapanışı henüz bağlı değil |
 | 013 Sürekli kontrollü çalışma | PENDING | İşçi durumları (learning vb.) yok |
 | 014 Kuyruk güvenliği | PARTIAL | pending≤300, lease recovery, tamamlanmış koruma testli; **57 blocked/failed sınıflandırıldı**: 37 geçersiz girdi, 11 kod doğrulama, 7 QA, 1 lease; 8 tekrar denenebilir, otomatik toplu tekrar yok |
 | 015 47 kanıtsız işçi | PARTIAL | `worker_tasks.py` gerçek görev önerisi üretiyor; toplu yürütme yok |
