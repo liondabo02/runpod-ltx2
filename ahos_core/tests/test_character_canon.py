@@ -87,3 +87,20 @@ def test_scene_and_character_prompts_say_girl_not_boy():
         assert "3-year-old boy" not in text
         assert "brothers" not in text.lower()
         assert "girl" in text or "sister" in text
+
+
+def test_aden_v2_single_star_clip_and_freckles_locked():
+    aden = json.loads((ROOT / "characters" / "aden.json").read_text(encoding="utf-8"))
+    assert aden["gender"] == "female"
+    assert "TEK" in aden["hair"]["style"] or "tek" in aden["hair"]["style"]
+    assert "star hair clip" in aden["prompt_fragment"]
+    assert "three tiny freckles" in aden["prompt_fragment"]
+
+
+def test_kaan_v2_baby_proportions_locked():
+    kaan = json.loads((ROOT / "characters" / "kaan.json").read_text(encoding="utf-8"))
+    assert kaan["gender"] == "male"
+    assert kaan["age_years"] == 1
+    assert kaan["proportions"]["heads_tall"] <= 3.0
+    assert "large head" in kaan["prompt_fragment"]
+    assert "short chubby legs" in kaan["prompt_fragment"]

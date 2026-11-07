@@ -8,9 +8,9 @@
   "height_cm": 76,
   "height_ratio_vs_aden": 0.78,
   "proportions": {
-    "heads_tall": 3.1,
-    "head_width_ratio": 0.34,
-    "limb_style": "çok yuvarlak, kısa kol-bacak, bebek yağı",
+    "heads_tall": 3.0,
+    "head_width_ratio": 0.37,
+    "limb_style": "çok yuvarlak, kısa kol-bacak, büyük kafa; gövde bebeksi ve tombul",
     "hands": "dört parmak + başparmak, minik",
     "feet": "yumuşak tabanlı bebek ayakkabısı"
   },
@@ -59,6 +59,6 @@
     "voice": "tr-TR-AhmetNeural",
     "register": "neşeli, kısa heceli, 1 yaş babıldama tonu"
   },
-  "prompt_fragment": "Kaan, an adorable 1-year-old toddler boy, 76 cm tall, very round chubby cheeks, huge dark-brown eyes, tiny button nose, two-tooth smile, short soft curly near-black hair with baby curls on the forehead, coral-red (#DC5A46) short-sleeve t-shirt, navy (#3C3C5A) soft shorts, cream baby shoes, extremely rounded toddler proportions (3.1 heads tall), wobbly first-step stance",
+  "prompt_fragment": "Kaan, an adorable 1-year-old toddler boy, 76 cm tall, very round chubby cheeks, huge dark-brown eyes, tiny button nose, two-tooth smile, short soft curly near-black hair with baby curls on the forehead, coral-red (#DC5A46) short-sleeve t-shirt, navy (#3C3C5A) soft shorts, cream baby shoes, extremely rounded baby proportions: very large head relative to the body (3.0 heads tall), short chubby legs, fuller cheeks, soft baby belly, wobbly first-step stance",
   "negative_fragment": "adult proportions, tall child, realistic skin pores, extra fingers, six fingers, missing fingers, asymmetric eyes, different hair color, different shirt color, logos, text, watermark"
 }

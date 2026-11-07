@@ -924,3 +924,32 @@ Etiketli sayfalar + manifest: control_plane_v2/runtime/private/animation-studio/
 Görsel referans; 3D mesh/rig üretilmedi.
 ```
 
+## v2 retouch denemesi ve kota durumu (2026-11-07 20:10)
+generated_at: 2026-11-07T20:10:00
+
+komut : Kontext ile Aden turnaround v2 retouch (tek yıldız + çiller)
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : zaman aşımı (15+ dk, çıktı yok; iptal edildi)
+```text
+İstek kuyruğa girdi ancak GPU kotası nedeniyle tamamlanmadı.
+```
+
+komut : FLUX.1-schnell 512x512 kota testi
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 1
+```text
+AppError: You have exceeded your free ZeroGPU quota (90s requested vs. 0s left).
+Subscribe to Hugging Face PRO to get 40 min of ZeroGPU quota a day.
+```
+
+Kanon kararları (JSON) güncellendi: Aden TEK yıldız + 3 çil; Kaan 3,0 kafa,
+büyük kafa/kısa bacak. Görseller kota nedeniyle v2'ye çekilemedi; ücret harcanmadı.
+
+komut : pytest tests/test_character_canon.py (venv + global)
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\ahos_core
+exit : 0 / 0
+```text
+6 passed in 0.77s (venv)
+6 passed in 0.69s (global)
+```
+

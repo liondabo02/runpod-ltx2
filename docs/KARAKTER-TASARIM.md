@@ -1,10 +1,22 @@
-# Aden & Kaan — profesyonel karakter tasarımı (v1)
+# Aden & Kaan — profesyonel karakter tasarımı (v2 yolda)
 
 Tarih: 2026-11-07 · Kanon: Aden 3 yaş **kız**, Kaan 1 yaş **erkek**
-Durum: **Aden tam**, **Kaan turu tam / ifadeler BEKLİYOR** (ZeroGPU kotası)
+Durum: **v2 kararları kilitlendi; v2 görselleri kota nedeniyle BEKLİYOR.**
 
 > Önemli: Bunlar **görsel referanstır (model sheet)**. Gerçek 3D mesh, rig veya
 > oynatılabilir model **üretilmedi**; "3D model" olarak adlandırılmaz.
+
+## 0. v2 kararları (Harun, şartlı onay)
+
+| Karakter | Karar | Kanon dosyası |
+|---|---|---|
+| Aden | 3 yaş **kız**; omuz hizası saç; **TEK** sarı yıldız toka; **3 çil** tüm panellerde | `characters/aden.json` |
+| Kaan | 1 yaş **erkek**; daha büyük kafa, kısa bacak, dolgun yanak, bebeksi gövde (**3,0 kafa**) | `characters/kaan.json` |
+
+**v2 görsel durumu:** Aden turnaround/ifade retouch + Kaan bebeksi retouch + Kaan
+ifade sheet → **ZeroGPU kotası 0** (`You have exceeded your free ZeroGPU quota`).
+Ücret harcanmadı; onaylı ücretli yol veya kota sıfırlanması bekleniyor.
+JSON kanonu değil, **gerçek görsel** teslim edilecek.
 
 ## 1. Üretilen görseller
 
