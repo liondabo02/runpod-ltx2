@@ -1,0 +1,27 @@
+{
+  "generated_at": "2026-11-07T08:22:29.292106+00:00",
+  "scope": "ECC curated offline reference fallback; not a full ECC install or live restart",
+  "checks": [
+    {
+      "command": "C:\\Users\\esmak\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -B -m pytest -q --no-header -p no:cacheprovider tests/test_ecc_reference.py tests/test_ceo_knowledge.py",
+      "cwd": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\ahos_core",
+      "stdout": "............                                                             [100%]\n12 passed in 5.51s\n",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "command": "C:\\Users\\esmak\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -m py_compile ahos/ecc_reference.py ahos/knowledge.py",
+      "cwd": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\ahos_core",
+      "stdout": "",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "command": "git diff --check -- ahos_core/ahos/knowledge.py",
+      "cwd": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2",
+      "stdout": "",
+      "stderr": "",
+      "exit": 0
+    }
+  ]
+}

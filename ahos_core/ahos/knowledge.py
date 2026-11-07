@@ -148,6 +148,14 @@ def search(runtime_dir: str | Path, query: str, limit: int = 3) -> list[dict]:
             continue
         score = overlap / (len(terms) + 1)
         scored.append((score, row))
+    # Curated, offline fallback only: never displace the owner's matching notes.
+    # No indexing, hooks, remote requests or runtime writes are needed.
+    if not scored:
+        from .ecc_reference import reference_rows
+        for row in reference_rows():
+            overlap = len(terms & set(row["keywords"]))
+            if overlap:
+                scored.append((overlap / (len(terms) + 1), row))
     scored.sort(key=lambda item: item[0], reverse=True)
     return [
         {
