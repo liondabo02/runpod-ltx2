@@ -1,0 +1,155 @@
+{
+  "generated_at": "2026-11-07T22:23:06",
+  "runtime": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\ahos_core\\runtime",
+  "completed_total": 4028,
+  "completed_with_result": 1956,
+  "verified_deliveries": 1336,
+  "roster_workers": 81,
+  "workers_with_verified_output": 34,
+  "workers_without_verified_output": 47,
+  "unproven_sample": [
+    "ai-platform-evaluator",
+    "ai-platform-gateway-engineer",
+    "ai-platform-tool-curator",
+    "creative-animation-lead",
+    "creative-art-lead",
+    "creative-art-specialist",
+    "creative-audio-lead",
+    "creative-audio-specialist",
+    "creative-growth-lead",
+    "creative-growth-specialist"
+  ],
+  "departments": {
+    "ai-platform": {
+      "completed": 227,
+      "verified": 26
+    },
+    "creative": {
+      "completed": 905,
+      "verified": 579
+    },
+    "data": {
+      "completed": 841,
+      "verified": 569
+    },
+    "finance": {
+      "completed": 139,
+      "verified": 10
+    },
+    "genel": {
+      "completed": 140,
+      "verified": 10
+    },
+    "guvenlik": {
+      "completed": 154,
+      "verified": 10
+    },
+    "holding": {
+      "completed": 141,
+      "verified": 10
+    },
+    "hukuk": {
+      "completed": 29,
+      "verified": 21
+    },
+    "infrastructure": {
+      "completed": 139,
+      "verified": 10
+    },
+    "marketing": {
+      "completed": 146,
+      "verified": 10
+    },
+    "operations": {
+      "completed": 139,
+      "verified": 10
+    },
+    "oyun": {
+      "completed": 261,
+      "verified": 17
+    },
+    "quality": {
+      "completed": 138,
+      "verified": 9
+    },
+    "research": {
+      "completed": 136,
+      "verified": 7
+    },
+    "sales": {
+      "completed": 153,
+      "verified": 22
+    },
+    "software": {
+      "completed": 205,
+      "verified": 10
+    },
+    "support": {
+      "completed": 135,
+      "verified": 6
+    }
+  },
+  "top_workers": [
+    {
+      "worker_id": "qa-01",
+      "verified": 1335,
+      "qa": 2661,
+      "last": "2026-11-07T09:53:20.207021+00:00"
+    },
+    {
+      "worker_id": "creative-animation-specialist",
+      "verified": 579,
+      "qa": 0,
+      "last": "2026-11-07T09:52:56.356308+00:00"
+    },
+    {
+      "worker_id": "creative-manager",
+      "verified": 579,
+      "qa": 0,
+      "last": "2026-11-07T09:52:56.356308+00:00"
+    },
+    {
+      "worker_id": "data-01",
+      "verified": 569,
+      "qa": 0,
+      "last": "2026-11-07T09:52:58.714945+00:00"
+    },
+    {
+      "worker_id": "mgr-data-01",
+      "verified": 569,
+      "qa": 0,
+      "last": "2026-11-07T09:52:58.714945+00:00"
+    },
+    {
+      "worker_id": "ai-platform-manager",
+      "verified": 26,
+      "qa": 0,
+      "last": "2026-11-07T09:52:53.913833+00:00"
+    },
+    {
+      "worker_id": "mgr-sales-01",
+      "verified": 22,
+      "qa": 0,
+      "last": "2026-11-06T20:25:16.902329+00:00"
+    },
+    {
+      "worker_id": "sales-01",
+      "verified": 22,
+      "qa": 0,
+      "last": "2026-11-06T20:25:16.902329+00:00"
+    },
+    {
+      "worker_id": "hukuk-01",
+      "verified": 21,
+      "qa": 0,
+      "last": "2026-11-06T20:24:54.324552+00:00"
+    },
+    {
+      "worker_id": "hukuk-manager",
+      "verified": 21,
+      "qa": 0,
+      "last": "2026-11-06T20:24:54.324552+00:00"
+    }
+  ],
+  "note": "Yalnız delivery.verified=1 ürün sayıldı; düşünce/mesaj/öneri sayılmadı."
+}
