@@ -1,0 +1,90 @@
+{
+  "schema": "ahos.voice-inventory.v1",
+  "episode_id": "S01E001",
+  "measured_with": "wave + numpy RMS; dosyalar değiştirilmedi",
+  "assets": [
+    {
+      "character_id": "aden",
+      "path": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\control_plane_v2\\runtime\\private\\animation-studio\\audio\\core-voices\\aden\\tr.wav",
+      "role": "reference voice print",
+      "exists": true,
+      "duration_seconds": 6.68,
+      "sample_rate": 24000,
+      "channels": 1,
+      "sample_width": 2,
+      "dbfs": -16.2,
+      "bytes": 320684,
+      "sha256": "31a13528f66d68f166ceda87c4045bbb9f376c5973d7ad40f0d52548bb77f7c4",
+      "episode_lines": 14
+    },
+    {
+      "character_id": "kaan",
+      "path": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\control_plane_v2\\runtime\\private\\animation-studio\\audio\\core-voices\\kaan\\tr.wav",
+      "role": "reference voice print",
+      "exists": true,
+      "duration_seconds": 5.24,
+      "sample_rate": 24000,
+      "channels": 1,
+      "sample_width": 2,
+      "dbfs": -13.9,
+      "bytes": 251564,
+      "sha256": "ae885c159811e808274212fc5db80a9bc1bcf26919e9e1e634fc2645e4cf0536",
+      "episode_lines": 12
+    },
+    {
+      "character_id": "esra",
+      "path": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\control_plane_v2\\runtime\\private\\animation-studio\\audio\\core-voices\\esra\\tr.wav",
+      "role": "reference voice print",
+      "exists": true,
+      "duration_seconds": 5.4,
+      "sample_rate": 24000,
+      "channels": 1,
+      "sample_width": 2,
+      "dbfs": -21.7,
+      "bytes": 259244,
+      "sha256": "7f04b92845186b4f95fa322d4fae28a5f62da4fa61e17e9a309532e5ee0d580f",
+      "episode_lines": 11
+    },
+    {
+      "character_id": "harun",
+      "path": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\control_plane_v2\\runtime\\private\\animation-studio\\audio\\core-voices\\harun\\tr.wav",
+      "role": "reference voice print",
+      "exists": true,
+      "duration_seconds": 6.08,
+      "sample_rate": 24000,
+      "channels": 1,
+      "sample_width": 2,
+      "dbfs": -21.8,
+      "bytes": 291884,
+      "sha256": "7c4f569608ff601b63bc2101336f8efad9ccd95bba1e435a4fece124cc621bfd",
+      "episode_lines": 1
+    }
+  ],
+  "episode_line_counts": {
+    "aden": 14,
+    "kaan": 12,
+    "esra": 11,
+    "harun": 1
+  },
+  "usable": [
+    "aden",
+    "kaan",
+    "esra",
+    "harun"
+  ],
+  "missing_episode_lines": [
+    "aden",
+    "kaan",
+    "esra",
+    "harun"
+  ],
+  "quality_risks": [
+    "Tüm referanslar 24 kHz mono; yayın standardı 48 kHz değil.",
+    "Dosyalar bölüm repliği değil, jenerik referans kaydı; duygu/ton çeşitliliği yok.",
+    "Çocuk yaşında ses doğallığı ve Türkçe fonem kapsaması insan dinlemesiyle doğrulanmadı.",
+    "Robotiklik değerlendirmesi yapılmadı; bu nedenle hiçbir ses 'onaylı' değil.",
+    "fatos/tr.wav süre aykırısı bu bölüm kadrosunda değil; yine de genel katalog riski."
+  ],
+  "approval": "NOT_EVALUATED",
+  "note": "Referans sesler kullanılabilir ses izi olarak listelenir; bölüm replikleri henüz seslendirilmedi."
+}
