@@ -24,6 +24,6 @@
 | 019 İşçi kartı | PENDING | — |
 | 020 CEO paneli | PARTIAL | `/intelligence` holding/güvenlik/teslimat/işçi tablosu; `unknown/stale` işaretleme yok |
 | 021 Çizgi film pilotu | PASS | 34,022 sn gerçek MP4 + Almanca sürüm + poster + altyazı + bağımsız QA (RMS −22,93 dB); LTX-2 değil deterministik hat |
-| 022 Teslimat kayıt sistemi | PARTIAL | manifest: artifact/mission/worker/dosya/sha/ffprobe/QA/teslim ayrımı; dashboard gerçek yolu gösteriyor; DB kayıt defteri yok |
+| 022 Teslimat kayıt sistemi | PARTIAL | `artifact_registry.py`: SQLite kayıt defteri; dosya/SHA/QA/teslimat ayrı; manifest dışı kanıt yok. Gerçek pilot `ADEN-PILOT-001` kaydedildi → **verified=true**, 1.746.064 bayt, hash eşleşti; 3 test geçti |
 
 Bu tablo her turda güncellenir; PASS yalnız ham test/komut kanıtıyla verilir.
