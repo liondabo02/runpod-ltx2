@@ -1,7 +1,7 @@
 """İşçi → görev → çıktı → bağımsız QA → kayıt zincirini denetler (salt okunur).
 
-Yalnız `delivery.verified=1` olan görevler "ürün" sayılır; düşünce/öneri/mesaj
-kayıtları ürün sayılmaz. Rapor: hangi işçi gerçekten doğrulanmış çıktı üretmiş,
+`delivery.verified=1` yalnız teslimat işareti sayılır; gerçek ürün kanıtı değildir.
+QA dosyaları isteğe bağlı olarak ayrıca doğrulanır; öneriler ürün sayılmaz. Rapor: hangi işçi gerçekten doğrulanmış çıktı üretmiş,
 hangi departman kapsanmış, kaç işçi henüz kanıtsız.
 
 Kullanım:
@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sqlite3
 import sys
 import time
@@ -31,11 +32,28 @@ def _loads(raw: str | None) -> dict:
     return payload if isinstance(payload, dict) else {}
 
 
-def audit(runtime: Path) -> dict:
+def _load_qa_proof(step: dict, runtime: Path) -> dict:
+    """Read a QA proof from within the trusted runtime tree, never external URLs."""
+    summary = str(step.get("qa_summary") or "")
+    match = re.search(r'([A-Za-z]:\\[^\r\n"<>|]*?\.json)', summary, re.IGNORECASE)
+    if not match:
+        return {}
+    path = Path(match.group(1))
+    try:
+        if not path.resolve().is_relative_to(runtime.resolve()):
+            return {}
+        return _loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def audit(runtime: Path, *, verify_qa_files: bool = False) -> dict:
     db = runtime / "company-service.db"
     workers: dict[str, dict] = defaultdict(lambda: {"verified": 0, "qa": 0, "last": ""})
     departments: dict[str, dict] = defaultdict(lambda: {"completed": 0, "verified": 0})
     verified_total = 0
+    qa_proof_files = 0
+    qa_functional_pass = 0
     parsed = 0
     if db.is_file():
         con = sqlite3.connect(f"file:{db.as_posix()}?mode=ro", uri=True)
@@ -54,6 +72,13 @@ def audit(runtime: Path) -> dict:
                 continue
             verified_total += 1
             departments[department]["verified"] += 1
+            if verify_qa_files:
+                proofs = [_load_qa_proof(step, runtime)
+                          for step in (payload.get("steps") or [])]
+                qa_proof_files += any(bool(item.get("passed")) for item in proofs)
+                qa_functional_pass += any(bool(item.get("passed")) and
+                                          bool(item.get("functional_verified"))
+                                          for item in proofs)
             stamp = str(row["updated_at"] or "")
             seen = set()
             for step in payload.get("steps") or []:
@@ -88,6 +113,12 @@ def audit(runtime: Path) -> dict:
         "completed_total": sum(item["completed"] for item in departments.values()),
         "completed_with_result": parsed,
         "verified_deliveries": verified_total,
+        "verified_delivery_flags": verified_total,
+        "qa_evidence_checked": verify_qa_files,
+        "qa_proof_file_pass_missions": qa_proof_files if verify_qa_files else None,
+        "functional_qa_proof_missions": qa_functional_pass if verify_qa_files else None,
+        "delivery_flags_without_qa_file_proof": (verified_total - qa_proof_files)
+                                              if verify_qa_files else None,
         "roster_workers": len(roster),
         "workers_with_verified_output": len(proven),
         "workers_without_verified_output": len(unproven),
@@ -96,7 +127,7 @@ def audit(runtime: Path) -> dict:
         "top_workers": sorted(
             ({"worker_id": name, **item} for name, item in workers.items() if item["verified"]),
             key=lambda item: (-item["verified"], item["worker_id"]))[:10],
-        "note": "Yalnız delivery.verified=1 ürün sayıldı; düşünce/mesaj/öneri sayılmadı.",
+        "note": "delivery.verified=True bir görev METAVERİSİDİR, fiziksel olarak teslim edilmiş veya yayınlanabilir ürün kanıtı değildir; QA dosyaları yalnız ayrı kanıt seviyesidir.",
     }
 
 
@@ -104,8 +135,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runtime", default=str(Path("ahos_core") / "runtime"))
     parser.add_argument("--out", default="")
+    parser.add_argument("--verify-qa", action="store_true", help="Check stored QA proof JSON files, offline; may be slower")
     args = parser.parse_args(argv)
-    report = audit(Path(args.runtime))
+    report = audit(Path(args.runtime), verify_qa_files=args.verify_qa)
     if args.out:
         target = Path(args.out)
         target.parent.mkdir(parents=True, exist_ok=True)

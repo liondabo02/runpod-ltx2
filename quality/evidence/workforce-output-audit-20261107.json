@@ -1,9 +1,14 @@
 {
-  "generated_at": "2026-11-07T22:23:06",
+  "generated_at": "2026-11-07T22:46:43",
   "runtime": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\ahos_core\\runtime",
   "completed_total": 4028,
   "completed_with_result": 1956,
   "verified_deliveries": 1336,
+  "verified_delivery_flags": 1336,
+  "qa_evidence_checked": true,
+  "qa_proof_file_pass_missions": 1127,
+  "functional_qa_proof_missions": 1127,
+  "delivery_flags_without_qa_file_proof": 209,
   "roster_workers": 81,
   "workers_with_verified_output": 34,
   "workers_without_verified_output": 47,
@@ -151,5 +156,5 @@
       "last": "2026-11-06T20:24:54.324552+00:00"
     }
   ],
-  "note": "Yalnız delivery.verified=1 ürün sayıldı; düşünce/mesaj/öneri sayılmadı."
+  "note": "delivery.verified=True bir görev METAVERİSİDİR, fiziksel olarak teslim edilmiş veya yayınlanabilir ürün kanıtı değildir; QA dosyaları yalnız ayrı kanıt seviyesidir."
 }
