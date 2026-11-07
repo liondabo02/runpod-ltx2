@@ -200,6 +200,7 @@ class PersistentMissionQueue:
                         updated_at=excluded.updated_at,
                         last_error=NULL,
                         result_json=NULL
+                    WHERE missions.status != 'completed'
                     """,
                     (
                         mission_id,

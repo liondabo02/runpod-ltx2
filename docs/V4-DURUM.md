@@ -16,7 +16,10 @@
 | 012 Çok-departman projesi | PASS | `project_run.py`: creative→software→quality uçtan uca (izole tmp), QA düşünce bağımlı görev bloke, döngü reddi |
 | 013 Duygu politikası | PASS | 9 boyut + `test_v4_emotion.py`: başarısızlık→ask_help, yük→drain, belirsiz→research; `authority_effect=none` |
 | 014 Sahip güvenliği | PARTIAL | `harun` sabit + exclusive-create (yarış testi), panel same-origin/CSRF, GET salt-okunur; RunPod/Oracle erişim sınırları doğrulanmadı |
-| 015–016 Kuyruk/dayanıklılık | PARTIAL | Kapasite testleri (9) + memory vault doğrulaması var; restart/çift görev enjeksiyon testi henüz yok |
-| 017–020 | PENDING | Sıradaki turlar |
+| 015 Kuyruk güvenliği | PASS | `test_v4_resilience.py` + kapasite testleri: expired lease recovery, **tamamlanmış görev replace ile geri açılamaz** (kural eklendi), iptal yönetimi, tek satır/çift görev yok |
+| 016 Restart/dayanıklılık | PARTIAL | Zihin restart + bozuk hafıza koruma testleri; tam daemon çökme enjeksiyonu henüz yok (memory vault doğrulaması mevcut) |
+| 017 Model yönlendirme | PASS | `task_routing.py`: **30 görev tipi**, deterministik→python, QA bağımsız, ücretli model yalnız açık onay + bütçe |
+| 018 Deneysel model | PASS (fizibilite) | `finetune_feasibility.py`: 1.324 doğrulanmış görev, 1.179 tekrarlı hedef, GPU yok, dengesiz etiket → **eğitim yapılmadı**, gerekçeli rapor |
+| 019–020 | PENDING | Sıradaki turlar |
 
 Bu tablo her turda güncellenir; PASS yalnız ham test/komut kanıtıyla verilir.
