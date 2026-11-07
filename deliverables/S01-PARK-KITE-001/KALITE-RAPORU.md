@@ -1,8 +1,8 @@
 # Kalite Raporu — S01-PARK-KITE-001
 
-- Üretim: 2026-11-07T17:54:08 · etiket: `take1`
+- Üretim: 2026-11-07T19:29:21 · etiket: `take2-girl`
 - Model/sağlayıcı: LTX-2.5 (HF Space, Lightricks/LTX-2.5)
-- Dosya: `C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\deliverables\S01-PARK-KITE-001\park-kite-take1-1080p.mp4`
+- Dosya: `C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\deliverables\S01-PARK-KITE-001\park-kite-take2-girl-1080p.mp4`
 - Süre/çözünürlük: 5.022 sn · 1920x1080 · 24.0 fps
 - Maliyet: 0.0 USD
 
@@ -10,9 +10,9 @@
 
 - Sonuç: **PASS**
 - Donma oranı: 0.008 → PASS
-- Titreme (flicker): 0.964 → PASS
-- Değişen piksel oranı (ort.): 0.3813
-- Keskinlik (Laplacian): 9.22
+- Titreme (flicker): 0.13 → PASS
+- Değişen piksel oranı (ort.): 0.0442
+- Keskinlik (Laplacian): 8.2
 
 ## Yaratıcı QA (insan onayı)
 

@@ -2,13 +2,29 @@
 
 Tarih: 2026-11-07 · Sahne: Aden (3) + Kaan (1), parkta uçurtma · Hedef: 5–8 sn
 
-> **Durum: ilk gerçek çekim alındı (take1).** LTX-2.5 ile 5,04 sn video üretildi.
-> Teknik QA **PASS**; yaratıcı kalite **kabul edilemez** (kamera çocuklardan uzaklaşıyor).
-> Ücret: **0,00 USD**. Yeni çekim için ZeroGPU kotası gerekiyor.
+> **Durum: iki gerçek çekim var.** take1 (erkek Aden, kamera kayması) elendi;
+> **take2-girl** doğru kanonla (kız Aden), sabit kamera ve iki çocuk kadrajda üretildi.
+> Teknik QA **PASS**; yaratıcı onay **Harun'da** (NOT_EVALUATED). Ücret: **0,00 USD**.
 >
 > **Kanon uyarısı:** take1, Aden **erkek** promptuyla üretildi. Doğru kanon Aden'in
 > **kız** olduğudur (`core_cast_voice_catalog`: girl). Bu yüzden take1 geçerli
 > referans değildir; yeni çekimler kız Aden kanonuyla yapılır.
+
+## 0. Take2-girl (güncel çekim)
+
+| Alan | Değer |
+|---|---|
+| Dosya | `park-kite-take2-girl-raw.mp4` (454.310 bayt) · teslim `park-kite-take2-girl-1080p.mp4` |
+| Model | LTX-2.5 (HF Space), I2V, `decoder=conv` |
+| Doğal çıktı | **768×512**, 121 kare, 24 fps, **5,04 sn** · seed 303 |
+| Keyframe | `keyframes/keyframe-girl-seed-77.png` (1280×720, FLUX; kız Aden) |
+| Upscale | 2,5× → 1920×1080 (Lanczos) — **doğal 1080p değil** |
+| Teknik QA | PASS: freeze 0,008 · flicker 0,13 · 5,022 sn · sharpness 8,2 |
+| Yaratıcı | **NOT_EVALUATED** — Harun; kamera sabit, iki çocuk 0–5 sn kadrajda |
+
+Gözlenen güçlü yanlar: kimlik sürekliliği (kız Aden + Kaan), sabit kamera, yumuşak
+sabah ışığı, uçurtma kompozisyonu. Zayıf yanlar: 768×512 + upscale nedeniyle
+yumuşaklık; sahne çok parlak (mean luma 182); hareket enerjisi düşük (1,88).
 
 ## 1. Üretilen gerçek çıktı
 

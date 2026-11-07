@@ -850,3 +850,38 @@ Aden kimliği: eski kanon = kız (`core_cast_voice_catalog` "girl", production p
 Düzeltildi: `characters/aden.json` (gender female, girl prompt), sahne promptları,
 KARAKTER-KANONU; regresyon testi eklendi. Take1 (erkek prompt) geçersiz referans.
 
+## Take2-girl: kimlik düzeltmesi sonrası gerçek çekim (2026-11-07 19:50)
+generated_at: 2026-11-07T19:50:00
+
+komut : hf auth whoami / huggingface_hub.get_token()
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 0
+```text
+user: Harunaslan
+huggingface_hub.get_token() -> present
+token değeri yazdırılmadı, loglanmadı, repoya yazılmadı.
+```
+
+komut : FLUX.1-schnell /infer (kız Aden keyframe, 1280x720, seed 77)
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 0
+```text
+OK 8,7 sn · 51.836 bayt · keyframe-girl-seed-77.webp/.png
+```
+
+komut : Lightricks/LTX-2.5 /run (I2V, 768x512, 5,0 sn, seed 303, conv, sabit kamera)
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 0
+```text
+OK 22,3 sn · 121 frames (5.04s) · park-kite-take2-girl-raw.mp4 · 454.310 bayt
+```
+
+komut : python tools/finalize_scene.py --video ...take2-girl-raw.mp4 --tag take2-girl ...
+cwd : C:\actions-runner\_work\runpod-ltx2\runpod-ltx2
+exit : 0
+```text
+park-kite-take2-girl-1080p.mp4 · 3.253.712 bayt · 1920x1080 · 24 fps · 5,022 sn
+freeze_ratio 0,008 -> PASS · flicker 0,13 -> PASS · sharpness 8,2 (2,5x upscale)
+creative = NOT_EVALUATED (onay Harun)
+```
+

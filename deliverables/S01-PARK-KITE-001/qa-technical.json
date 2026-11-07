@@ -1,14 +1,14 @@
 {
   "schema": "ahos.creative-qa.v1",
-  "generated_at": "2026-11-07T17:53:59",
-  "video": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\deliverables\\S01-PARK-KITE-001\\park-kite-take1-1080p.mp4",
+  "generated_at": "2026-11-07T19:29:14",
+  "video": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\deliverables\\S01-PARK-KITE-001\\park-kite-take2-girl-1080p.mp4",
   "scene_id": "S01-PARK-KITE-001",
   "technical": {
     "ok": true,
     "problems": [],
     "container": "mov,mp4,m4a,3gp,3g2,mj2",
     "duration_seconds": 5.022,
-    "size_bytes": 5302165,
+    "size_bytes": 3253712,
     "video": {
       "codec": "h264",
       "profile": "High",
@@ -16,7 +16,7 @@
       "height": 1080,
       "fps": 24.0,
       "nb_frames": 120,
-      "bitrate": 8315155,
+      "bitrate": 5037403,
       "pix_fmt": "yuv420p"
     },
     "audio": {
@@ -40,14 +40,14 @@
   },
   "motion": {
     "frames_scanned": 120,
-    "motion_energy": 12.13,
-    "changed_pixel_ratio_mean": 0.3813,
+    "motion_energy": 1.88,
+    "changed_pixel_ratio_mean": 0.0442,
     "freeze_ratio": 0.008,
     "freeze_verdict": "PASS",
-    "flicker_luma_delta": 0.964,
+    "flicker_luma_delta": 0.13,
     "flicker_verdict": "PASS",
-    "sharpness_laplacian": 9.22,
-    "mean_luma": 115.99,
+    "sharpness_laplacian": 8.2,
+    "mean_luma": 182.15,
     "duration_vs_frames": 23.89
   }
 }
