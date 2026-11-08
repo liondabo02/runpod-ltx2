@@ -25,6 +25,7 @@
 - Ev sahneleri kaldırıldı; kumaş çantası piknik örtüsüne gelir. Park–ev–park geçişi yok.
 - Prodüksiyon: v1: 12 sahne / 2 mekân; v2: 11 sahne / 1 mekân.
 - Aden 3 yaş kız; Kaan 1 yaş erkek; Kaan yalnız dört kısa ses kullanır.
+- Kuyruk altı büyük şeritten oluşur; S04'te düğümler tek tek açılır.
 
 ## V2-S01 — Kuyruk uyanıyor (00:00.00–00:45.00)
 
@@ -96,15 +97,15 @@
 **Mekân:** Park, açık çimenlik; sabah  
 **Amaç:** Küçük ve güvenli sorun: kuyruk kopar
 
-**Aksiyon:** Sert rüzgâr uçurtmayı sarsar; düğüm kayar, kuyruk kopar ve havada savrulur. Kite alçalır; Esra ipi kontrollü çeker.
+**Aksiyon:** Sert rüzgâr uçurtmayı sarsar; kuyruğun düğümleri tek tek açılır. Altı büyük şerit havada ayrılır: kırmızı, sarı, mavi piknik örtüsüne; yeşil, turuncu papatya yanındaki çimene; mor alçak çalıya düşer. Uçurtma alçalır, Esra ipi kontrollü çeker.
 
 | Zaman | Sn | Eylem | Odak | Kaan |
 |---|---|---|---|---|
-| 02:10.00 | 7 | Rüzgâr sertleşir; uçurtma yana yatar, kuyruk gerilir. | gökyüzü | looks_up |
-| 02:17.00 | 7 | Düğüm kayar; kuyruk uçurtmadan ayrılır ve havada döner. | yakın plan düğüm | gasps |
-| 02:24.00 | 7 | Kuyruk çimene doğru süzülür; Kaan arkasından bakar. | takip | points |
-| 02:31.00 | 7 | Uçurtma alçalır; Esra ipi yavaşça çeker, Aden yanına koşar. | geniş | watches |
-| 02:38.00 | 7 | Kuyruk piknik örtüsünün üstüne düşer; Kaan 'Aa!' der. | örtü | surprised |
+| 02:10.00 | 7 | Sert rüzgâr kuyruğu gerer; ilk düğüm kayar, kuyruk iki uzun parçaya ayrılır. | düğüm + gökyüzü | looks_up |
+| 02:17.00 | 7 | İkinci düğüm de açılır; altı büyük şerit havada tek tek ayrılır. | havada şeritler | gasps |
+| 02:24.00 | 7 | Kırmızı, sarı ve mavi şeritler piknik örtüsünün üstüne düşer. | piknik örtüsü | points |
+| 02:31.00 | 7 | Yeşil ve turuncu şeritler papatyaların yanındaki çimene süzülür. | çimen | watches |
+| 02:38.00 | 7 | Mor şerit alçak çalıya takılır; Kaan 'Aa!' der. | alçak çalı | surprised |
 
 | Zaman | Karakter | Replik | Duygu | Ses |
 |---|---|---|---|---|
@@ -117,41 +118,41 @@
 **Mekân:** Park, piknik örtüsü ve çalı kenarı; sabah  
 **Amaç:** Yardımlaşma: parçaları birlikte toplama
 
-**Aksiyon:** Üçü çimen ve örtü çevresinde kuyruk parçalarını arar. Aden kırmızı şeridi, Kaan mavi şeridi bulur; Esra parçaları büyük bir kaba koyar.
+**Aksiyon:** Dört yönlü arama: Aden örtüde kırmızı, sarı ve mavi şeritleri; çimende yeşil ve turuncuyu bulur. Esra mor şeridi alçak çalıdan alır. Altı şerit de sepete konur.
 
 | Zaman | Sn | Eylem | Odak | Kaan |
 |---|---|---|---|---|
-| 02:45.00 | 8 | Aden örtünün altına bakar; Kaan çalı kenarına yürür. | ikili | waddles |
-| 02:53.00 | 8 | Kaan mavi şeridi gösterir; Aden yanına gelir. | Kaan + şerit | points |
-| 03:01.00 | 8 | Aden kırmızı şeridi papatyaların arasından alır. | yakın plan | watches |
-| 03:09.00 | 8 | Esra parçaları büyük kaba koyar; Kaan kapağı kapatmaya yardım eder. | eller | helps_lid |
-| 03:17.00 | 8 | Kalan parçaları sayarlar; bir parça eksik kalır, Aden etrafa bakar. | üçlü | looks_around |
+| 02:45.00 | 8 | Aden örtüde kırmızı ve sarı şeritleri bulur; sepete koyar. | piknik örtüsü | watches |
+| 02:53.00 | 8 | Kaan mavi şeridi gösterir; Aden alıp sepete koyar. | Kaan + şerit | points |
+| 03:01.00 | 8 | Aden papatyaların yanında yeşil ve turuncu şeritleri bulur. | çimen | waddles |
+| 03:09.00 | 8 | Esra mor şeridi alçak çalıdan dikkatlice alır; Kaan izler. | çalı + Esra'nın eli | watches |
+| 03:17.00 | 8 | Altı şeridi sepete dizerler; hepsi tamamdır. | sepet | claps |
 
 | Zaman | Karakter | Replik | Duygu | Ses |
 |---|---|---|---|---|
 | 02:49.00 | aden | Burada mı? | meraklı | 1.2 sn |
 | 02:59.00 | kaan | Mavi! | bulmuş | 1.0 sn |
 | 03:02.00 | aden | Buldun! | sevinçli | 1.0 sn |
-| 03:15.00 | esra | Bir parça daha olmalı. | sakin | 2.0 sn |
+| 03:15.00 | esra | Altı şerit de burada. | sakin | 2.0 sn |
 
 ## V2-S06 — Kumaş çantası (03:25.00–04:10.00)
 
 **Mekân:** Park, piknik örtüsü; sabah  
 **Amaç:** Paylaşma: Kaan önce seçer, renkler paylaşılır
 
-**Aksiyon:** Esra piknik çantasından büyük kumaş şeritleri çıkarır. Aden uzanır ama durur, Kaan'a öncelik verir. Kaan mavi şeridi seçer; Aden kırmızıyı alır.
+**Aksiyon:** Esra onarım çantasını açar; içinde büyük kumaş bağlar ve yamalar vardır. Aden Kaan'a öncelik verir; Kaan mavi bağı, Aden kırmızı bağı seçer.
 
 | Zaman | Sn | Eylem | Odak | Kaan |
 |---|---|---|---|---|
-| 03:25.00 | 9 | Esra çantayı açar; renkli büyük şeritler görünür. | çanta | looks |
+| 03:25.00 | 9 | Esra onarım çantasını açar; büyük bağlar ve yamalar görünür. | çanta | looks |
 | 03:34.00 | 9 | Aden elini uzatır, sonra geri çeker: 'Kaan önce seçsin.' | Aden | watches |
-| 03:43.00 | 9 | Kaan mavi şeridi iki eliyle çeker; Aden gülümser. | Kaan | pulls |
-| 03:52.00 | 9 | Aden kırmızı şeridi alır; ikisi şeritleri yan yana koyar. | eller | places |
-| 04:01.00 | 9 | Esra şeritleri örtüye serer; üçü renk sırasına bakar. | üçlü | looks |
+| 03:43.00 | 9 | Kaan mavi bağı iki eliyle çeker; Aden gülümser. | Kaan | pulls |
+| 03:52.00 | 9 | Aden kırmızı bağı alır; ikisi bağları yan yana koyar. | eller | places |
+| 04:01.00 | 9 | Esra altı şeridi örtüye serer; bağlar hazırdır. | üçlü | looks |
 
 | Zaman | Karakter | Replik | Duygu | Ses |
 |---|---|---|---|---|
-| 03:27.00 | esra | Kumaş çantası burada. | davet eden | 2.0 sn |
+| 03:27.00 | esra | Onarım çantası burada. | davet eden | 2.0 sn |
 | 03:37.00 | aden | Kaan önce seçsin. | paylaşan | 1.6 sn |
 | 03:43.00 | kaan | Mavi! | seçen | 1.0 sn |
 | 03:49.00 | aden | Ben kırmızı. | sıcak | 1.2 sn |
@@ -161,15 +162,15 @@
 **Mekân:** Park, piknik örtüsü; sabah  
 **Amaç:** Sabır: ilk onarım gülünç biçimde başarısız olur
 
-**Aksiyon:** Aden şeritleri bağlar; kuyruk kısa kalır. Uçurtmayı kaldırdıklarında kuyruk dönerek uçurtmayı sallar ve yere indirir. Kaan kıkırdar.
+**Aksiyon:** Aden altı şeritten üçünü (kırmızı, sarı, mavi) uç uca bağlar; kuyruk kısa kalır. Uçurtma kalkınca kısa kuyruk hızla döner ve uçurtmayı yana yatırır. Kaan kıkırdar.
 
 | Zaman | Sn | Eylem | Odak | Kaan |
 |---|---|---|---|---|
-| 04:10.00 | 9 | Aden üç şeridi uç uca bağlar; kuyruk kısa kalır. | eller | watches |
+| 04:10.00 | 9 | Aden üç şeridi (kırmızı, sarı, mavi) uç uca bağlar; kuyruk kısa kalır. | eller | watches |
 | 04:19.00 | 9 | Esra uçurtmayı kaldırır; kısa kuyruk hızla döner. | uçurtma | claps |
 | 04:28.00 | 9 | Uçurtma sallanıp yana devrilir; Kaan kıkırdayarak elleriyle yüzünü kapatır. | üçlü | giggles |
-| 04:37.00 | 9 | Aden kuyruğu ölçer; bir şerit daha gerektiğini görür. | yakın plan | watches |
-| 04:46.00 | 9 | Kaan sarı şeridi uzatır; Aden 'Biraz daha uzun' der. | eller | hands_strip |
+| 04:37.00 | 9 | Aden kuyruğu ölçer; kalan üç şeridi sepette görür. | yakın plan | watches |
+| 04:46.00 | 9 | Kaan sepetteki yeşil şeridi işaret eder; Aden 'Biraz daha uzun' der. | eller | points |
 
 | Zaman | Karakter | Replik | Duygu | Ses |
 |---|---|---|---|---|
@@ -183,13 +184,13 @@
 **Mekân:** Park, piknik örtüsü; sabah  
 **Amaç:** Yardımlaşma: güvenli rollerle kuyruğu tamamla
 
-**Aksiyon:** Esra uçurtmayı yerde tutar, Aden düğümleri atar, Kaan büyük şeritleri yakınına iter. Son düğüm sıkılaşır; kuyruk yere serilir.
+**Aksiyon:** Aden kalan üç şeridi (yeşil, turuncu, mor) ekler; Esra uçurtmayı yerde tutar, Kaan büyük bağları yakına iter. Son düğüm sıkılaşır; altı şeritli kuyruk yere serilir.
 
 | Zaman | Sn | Eylem | Odak | Kaan |
 |---|---|---|---|---|
-| 04:55.00 | 9 | Esra uçurtmayı yerde tutar; Aden şeritleri dizer. | üçlü | watches |
-| 05:04.00 | 9 | Aden ilk düğümü atar; Kaan büyük mavi şeridi yakına iter. | eller | pushes |
-| 05:13.00 | 9 | İkinci düğüm zorlanır; Aden bekler, parmaklarını gevşetir. | yakın plan | watches |
+| 04:55.00 | 9 | Esra uçurtmayı yerde tutar; Aden altı şeridi sıraya dizer. | üçlü | watches |
+| 05:04.00 | 9 | Aden ilk üç şeridi bağlar; Kaan büyük mavi bağı yakına iter. | eller | pushes |
+| 05:13.00 | 9 | Aden kalan üç şeridi ekler; düğüm zorlanınca bekler, parmaklarını gevşetir. | yakın plan | watches |
 | 05:22.00 | 9 | Aden son düğümü sıkar; Esra 'Oldu' der, Kaan el çırpar. | eller + yüzler | claps |
 | 05:31.00 | 9 | Kuyruk yere serilir; üçü uzunluğuna bakar. | geniş | looks |
 
