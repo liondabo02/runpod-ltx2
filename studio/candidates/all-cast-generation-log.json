@@ -1,0 +1,15 @@
+{
+  "aden": {
+    "turnaround": "C:\\actions-runner\\_work\\AHOS-STUDIO-16\\studio\\candidates\\aden\\model-sheet\\aden-turnaround-kontext-seed-1001.png",
+    "expressions": "C:\\actions-runner\\_work\\AHOS-STUDIO-16\\studio\\candidates\\aden\\model-sheet\\aden-expressions-kontext-seed-1203.png",
+    "skipped": "already generated"
+  },
+  "kaan": {
+    "turnaround": "C:\\actions-runner\\_work\\AHOS-STUDIO-16\\studio\\candidates\\kaan\\model-sheet\\kaan-turnaround-kontext-seed-2002.png",
+    "expressions": "C:\\actions-runner\\_work\\AHOS-STUDIO-16\\studio\\candidates\\kaan\\model-sheet\\kaan-expressions-kontext-seed-3002.png"
+  },
+  "esra": {
+    "error": "AppError",
+    "detail": "You have exceeded your ZeroGPU runs limit. Subscribe to Hugging Face PRO to get 40 min of ZeroGPU quota a day - https://huggingface.co/subscribe/pro?from=ZeroGPU"
+  }
+}

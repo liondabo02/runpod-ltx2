@@ -1,0 +1,26 @@
+{
+  "schema": "ahos.studio.candidate-model-sheet.v1",
+  "character_id": "kaan",
+  "status": "CANDIDATE_PENDING_REVIEW",
+  "owner_approval": "NONE",
+  "final_use_allowed": false,
+  "identity_lock_modified": false,
+  "model": "black-forest-labs/FLUX.1-Kontext-Dev",
+  "model_license": "FLUX.1-Kontext-Dev NON-COMMERCIAL; commercial use not verified",
+  "views": 4,
+  "expression_panels": 12,
+  "seed_turnaround": 2002,
+  "seed_expressions": 3002,
+  "source_reference": "studio/reference/owner_accepted_roster_v1/characters/02_kaan.png",
+  "assets": [
+    {
+      "path": "studio\\candidates\\kaan\\model-sheet\\kaan-expressions-kontext-seed-3002.png",
+      "sha256": "2c1028d47e0c9992046f60897983c2b8b8bf5d3652286ee3f94a291a6aac0731"
+    },
+    {
+      "path": "studio\\candidates\\kaan\\model-sheet\\kaan-turnaround-kontext-seed-2002.png",
+      "sha256": "3e48cde014576f68fcdb01cad9c1c59d44a9e86938d5e204dfb23cff9345a490"
+    }
+  ],
+  "note": "Ücretsiz ZeroGPU kotası; onay yok, ticari kullanım yok."
+}

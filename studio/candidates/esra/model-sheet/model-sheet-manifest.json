@@ -1,0 +1,22 @@
+{
+  "schema": "ahos.studio.candidate-model-sheet.v1",
+  "character_id": "esra",
+  "status": "CANDIDATE_PENDING_REVIEW",
+  "owner_approval": "NONE",
+  "final_use_allowed": false,
+  "identity_lock_modified": false,
+  "model": "black-forest-labs/FLUX.1-Kontext-Dev",
+  "model_license": "FLUX.1-Kontext-Dev NON-COMMERCIAL; commercial use not verified",
+  "views": 4,
+  "expression_panels": 0,
+  "seed_turnaround": 2003,
+  "seed_expressions": null,
+  "source_reference": "studio/reference/owner_accepted_roster_v1/characters/03_esra.png",
+  "assets": [
+    {
+      "path": "studio\\candidates\\esra\\model-sheet\\esra-turnaround-kontext-seed-2003.png",
+      "sha256": "6d1241656b9119cb79992a32bd9c5adb0a4b83fcd19172c6fb1793e02ba59454"
+    }
+  ],
+  "note": "Ücretsiz ZeroGPU kotası; onay yok, ticari kullanım yok."
+}
