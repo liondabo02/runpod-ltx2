@@ -1,0 +1,23 @@
+{
+  "schema": "ahos.motion.v1",
+  "character_id": "kaan",
+  "age_stage": "toddler",
+  "allowed": [
+    "emekleme",
+    "tutunarak yürüme",
+    "yalpalayarak yürüme",
+    "oturma",
+    "işaret etme",
+    "el çırpma",
+    "kısa gülüş"
+  ],
+  "forbidden": [
+    "koşma",
+    "zıplama",
+    "uzun cümle",
+    "küçük parça tutma",
+    "ip çekme"
+  ],
+  "signature": "iki eliyle büyük nesne tutma; yetişkin desteğiyle denge",
+  "status": "SPEC_READY"
+}

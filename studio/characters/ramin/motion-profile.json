@@ -1,0 +1,20 @@
+{
+  "schema": "ahos.motion.v1",
+  "character_id": "ramin",
+  "age_stage": "infant",
+  "allowed": [
+    "sırtüstü uzanma",
+    "baş çevirme",
+    "uzanma",
+    "kısa gülüş/agu",
+    "yetişkin kucağında taşınma"
+  ],
+  "forbidden": [
+    "yürüme",
+    "koşma",
+    "tek başına oturma",
+    "ip/toksa tutma"
+  ],
+  "signature": "kısa nefes ve agu; beden dili sade",
+  "status": "SPEC_READY"
+}

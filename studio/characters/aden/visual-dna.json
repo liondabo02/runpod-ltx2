@@ -1,0 +1,46 @@
+{
+  "owner_brief": "3 yaş kız; tek sarı yıldız toka, sol yanakta 3 çil, omuz hizası dalgalı koyu kahve saç, kobalt tişört",
+  "status": "READY_FOR_QA",
+  "source": "characters/aden.json",
+  "palette": {
+    "skin": "#F5CDAA",
+    "skin_shadow": "#E3AE86",
+    "cheek_blush": "#EFA98E",
+    "hair": "#462D1E",
+    "hair_highlight": "#6B4630",
+    "eyes": "#3A2A1E",
+    "shirt": "#286EC8",
+    "shirt_shadow": "#1E56A0",
+    "pants": "#283246",
+    "shoes": "#F7F4EC",
+    "shoe_sole": "#286EC8"
+  },
+  "face": {
+    "shape": "yuvarlak, dolgun yanak, yumuşak çene",
+    "eyes": "büyük, koyu ela, hafif çekik üst kapak, parlak catchlight",
+    "eyebrows": "ince, yumuşak kavisli, koyu kahve",
+    "nose": "küçük düğme burun",
+    "mouth": "küçük, kolay gülümseyen",
+    "ears": "küçük, yuvarlak",
+    "signature": "sol yanağın üstünde 3 küçük çil"
+  },
+  "hair": {
+    "style": "omuz hizasında dalgalı, yandan ayrık, alında yumuşak perçem, TEK küçük sarı yıldız toka",
+    "length": "omuz hizasına kadar",
+    "texture": "ipek gibi, hacimli ama dağınık değil"
+  },
+  "clothing": {
+    "top": "kobalt mavi kısa kollu tişört, göğüste küçük sarı uçurtma baskısı",
+    "bottom": "lacivert şort, lastik bel",
+    "shoes": "krem spor ayakkabı, mavi taban",
+    "socks": "kısa beyaz çorap",
+    "rule": "sahne boyunca aynı kıyafet; üst değişmez"
+  },
+  "proportions": {
+    "heads_tall": 3.6,
+    "head_width_ratio": 0.31,
+    "limb_style": "yumuşak, yuvarlak hatlı, bebek yağı; keskin kas yok",
+    "hands": "dört parmak + başparmak, kısa ve tombul",
+    "feet": "küçük, yuvarlak burunlu spor ayakkabı"
+  }
+}

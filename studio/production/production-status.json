@@ -1,0 +1,22 @@
+{
+  "schema": "ahos.studio.production-status.v1",
+  "generated_at": "2026-11-08",
+  "studio": "SPEC_READY",
+  "character_canon": "16/16",
+  "visual_reference": "2/16 READY_FOR_QA",
+  "voice_reference": "14/16 READY_FOR_QA",
+  "mesh_3d": "0/16",
+  "rig": "0/16",
+  "s01e001_script": "DRAFT_FOR_OWNER_APPROVAL",
+  "s01e001_storyboard": "BOARD_SPEC_READY",
+  "video": "NONE",
+  "owner_approval": "NONE",
+  "spend_eur": 0,
+  "blockers": [
+    "ZeroGPU kotası kapalı",
+    "yerel CUDA yok",
+    "Blender kurulu değil",
+    "16 karakterin 14'ünde görsel kanon yok",
+    "58 beat beklentisi vs 55 gerçek"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "owner_brief": "1 yaş erkek; bebeksi oran (3,0 kafa), kısa kıvırcık siyah saç, mercan tişört",
+  "status": "READY_FOR_QA",
+  "source": "characters/kaan.json",
+  "palette": {
+    "skin": "#E8BE96",
+    "skin_shadow": "#D3A277",
+    "cheek_blush": "#E39A80",
+    "hair": "#19191E",
+    "hair_highlight": "#3A3A44",
+    "eyes": "#241A14",
+    "shirt": "#DC5A46",
+    "shirt_shadow": "#B8432F",
+    "pants": "#3C3C5A",
+    "shoes": "#F3E7D3",
+    "shoe_sole": "#C9A97E"
+  },
+  "face": {
+    "shape": "tombul, çok yuvarlak yanaklar, minik çene",
+    "eyes": "çok büyük, koyu kahve, neredeyse siyah, parlak",
+    "eyebrows": "ince, yumuşak, siyah",
+    "nose": "minik düğme burun",
+    "mouth": "küçük, iki dişli gülümseme",
+    "ears": "küçük, yuvarlak",
+    "signature": "sağ kulağın arkasında küçük bir tutam kıvırcık"
+  },
+  "hair": {
+    "style": "kısa yumuşak kıvırcık, alında bukleler",
+    "length": "çok kısa",
+    "texture": "pamuk gibi, hafif dağınık"
+  },
+  "clothing": {
+    "top": "mercan kırmızısı kısa kollu tişört",
+    "bottom": "lacivert yumuşak şort",
+    "shoes": "krem yumuşak bebek ayakkabısı",
+    "socks": "kısa beyaz çorap",
+    "rule": "sahne boyunca aynı kıyafet; üst değişmez"
+  },
+  "proportions": {
+    "heads_tall": 3.0,
+    "head_width_ratio": 0.37,
+    "limb_style": "çok yuvarlak, kısa kol-bacak, büyük kafa; gövde bebeksi ve tombul",
+    "hands": "dört parmak + başparmak, minik",
+    "feet": "yumuşak tabanlı bebek ayakkabısı"
+  }
+}

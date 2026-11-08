@@ -1,0 +1,41 @@
+{
+  "schema": "ahos.studio.assets.v1",
+  "assets": [
+    {
+      "asset_id": "park-kite-scene",
+      "kind": "environment_spec",
+      "path": "characters/scenes/park-kite-01.json",
+      "status": "SPEC_READY",
+      "note": "Palet/ışık/prompt kanonu; 3D set yok"
+    },
+    {
+      "asset_id": "kite-six-strip-tail",
+      "kind": "prop_spec",
+      "path": "studio/canon/continuity-rules.json",
+      "status": "SPEC_READY",
+      "note": "Altı şerit; 3D mesh yok"
+    },
+    {
+      "asset_id": "aden-keyframe-v1",
+      "kind": "image",
+      "path": "deliverables/S01-PARK-KITE-001/keyframes/keyframe-girl-seed-77.png",
+      "status": "READY_FOR_QA",
+      "note": "v1 görsel; v2 model sheet değil"
+    },
+    {
+      "asset_id": "take2-5s-test",
+      "kind": "video",
+      "path": "deliverables/S01-PARK-KITE-001/park-kite-take2-girl-1080p.mp4",
+      "status": "VIDEO_RENDERED_TEST",
+      "note": "5 sn teknik test; 30 sn pilot değil"
+    },
+    {
+      "asset_id": "voice-refs-tr",
+      "kind": "audio_refs",
+      "path": "private animation-studio/audio/core-voices",
+      "status": "READY_FOR_QA",
+      "note": "14 karakterde tr.wav; Medine/Ramin yok; onay yok"
+    }
+  ],
+  "note": "Yalnız gerçek dosya yolu olanlar listelendi; 3D mesh/rig yok."
+}

@@ -1,0 +1,1133 @@
+{
+  "schema": "ahos.studio.shot-schedule.v1",
+  "episode_id": "S01E001",
+  "target_seconds": 480,
+  "shot_count": 55,
+  "shots": [
+    {
+      "shot_id": "V2-S01-SH01",
+      "scene_id": "V2-S01",
+      "start_seconds": 0,
+      "duration_seconds": 10,
+      "action": "Rüzgâr kuyruk ucunu kaldırır, Kaan'ın yanağını gıdıklar; Kaan gözlerini kırpıştırır.",
+      "focus": "kuyruk + Kaan yüzü",
+      "kaan_action": "blinks",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S01-SH02",
+      "scene_id": "V2-S01",
+      "start_seconds": 10,
+      "duration_seconds": 10,
+      "action": "Kaan kuyruğu yakalamaya çalışırken yana yalpalar; Aden elini uzatıp dengede tutar. Kuyruk başına düşer.",
+      "focus": "iki çocuk ayakta",
+      "kaan_action": "wobbles",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S01-SH03",
+      "scene_id": "V2-S01",
+      "start_seconds": 20,
+      "duration_seconds": 10,
+      "action": "Aden kuyruğu Kaan'ın başından alır; Kaan 'Aa!' der, ikisi birlikte güler. Esra kadraj dışından seslenir.",
+      "focus": "ikili plan",
+      "kaan_action": "laughs",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S01-SH04",
+      "scene_id": "V2-S01",
+      "start_seconds": 30,
+      "duration_seconds": 8,
+      "action": "Aden çömelir, kuyruğu uçurtmaya bağlamaya başlar; Kaan mavi panele dokunur.",
+      "focus": "eller + Kaan",
+      "kaan_action": "touches",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S01-SH05",
+      "scene_id": "V2-S01",
+      "start_seconds": 38,
+      "duration_seconds": 7,
+      "action": "Düğüm yarım kalır; rüzgâr uçurtmanın köşesini kaldırır. Aden 'Şimdi bekle' der.",
+      "focus": "uçurtma + Aden",
+      "kaan_action": "watches",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S02-SH01",
+      "scene_id": "V2-S02",
+      "start_seconds": 45,
+      "duration_seconds": 9,
+      "action": "Aden düğümü sıkılaştırır; Esra ipi çözer ve yere serer.",
+      "focus": "eller",
+      "kaan_action": "watches",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S02-SH02",
+      "scene_id": "V2-S02",
+      "start_seconds": 54,
+      "duration_seconds": 9,
+      "action": "Aden ipi iki eliyle tutar, geriye yürür; Esra uçurtmayı kaldırır.",
+      "focus": "geniş ikili",
+      "kaan_action": "claps",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S02-SH03",
+      "scene_id": "V2-S02",
+      "start_seconds": 63,
+      "duration_seconds": 9,
+      "action": "Rüzgâr kesilir; uçurtma yana devrilir, kuyruk çimene yayılır.",
+      "focus": "uçurtma",
+      "kaan_action": "giggles",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S02-SH04",
+      "scene_id": "V2-S02",
+      "start_seconds": 72,
+      "duration_seconds": 9,
+      "action": "Kaan kıkırdayınca Aden de güler; Esra 'Bir daha' der.",
+      "focus": "üçlü",
+      "kaan_action": "laughs",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S02-SH05",
+      "scene_id": "V2-S02",
+      "start_seconds": 81,
+      "duration_seconds": 9,
+      "action": "Aden ipi toplar, duruşunu düzeltir; ikinci deneme için hazırlanır.",
+      "focus": "Aden",
+      "kaan_action": "watches",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S03-SH01",
+      "scene_id": "V2-S03",
+      "start_seconds": 90,
+      "duration_seconds": 8,
+      "action": "Rüzgâr çimeni dalgalandırır; Esra uçurtmayı bırakır, Aden ipi çeker.",
+      "focus": "geniş",
+      "kaan_action": "watches",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S03-SH02",
+      "scene_id": "V2-S03",
+      "start_seconds": 98,
+      "duration_seconds": 8,
+      "action": "Uçurtma yükselir; kuyruk havada S çizer.",
+      "focus": "gökyüzü",
+      "kaan_action": "points",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S03-SH03",
+      "scene_id": "V2-S03",
+      "start_seconds": 106,
+      "duration_seconds": 8,
+      "action": "Kaan kollarını açar, 'Kuş!' der; Aden güler.",
+      "focus": "ikili plan",
+      "kaan_action": "points",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S03-SH04",
+      "scene_id": "V2-S03",
+      "start_seconds": 114,
+      "duration_seconds": 8,
+      "action": "Esra ipin ucunu Aden'in elinin altında tutar; ikisi birlikte dengeler.",
+      "focus": "eller",
+      "kaan_action": "claps",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S03-SH05",
+      "scene_id": "V2-S03",
+      "start_seconds": 122,
+      "duration_seconds": 8,
+      "action": "Uçurtma tepe noktaya ulaşır; üçü de yukarı bakar.",
+      "focus": "alçak açı",
+      "kaan_action": "looks_up",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S04-SH01",
+      "scene_id": "V2-S04",
+      "start_seconds": 130,
+      "duration_seconds": 7,
+      "action": "Sert rüzgâr kuyruğu gerer; ilk düğüm kayar, kuyruk iki uzun parçaya ayrılır.",
+      "focus": "düğüm + gökyüzü",
+      "kaan_action": "looks_up",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S04-SH02",
+      "scene_id": "V2-S04",
+      "start_seconds": 137,
+      "duration_seconds": 7,
+      "action": "İkinci düğüm de açılır; altı büyük şerit havada tek tek ayrılır.",
+      "focus": "havada şeritler",
+      "kaan_action": "gasps",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S04-SH03",
+      "scene_id": "V2-S04",
+      "start_seconds": 144,
+      "duration_seconds": 7,
+      "action": "Kırmızı, sarı ve mavi şeritler piknik örtüsünün üstüne düşer.",
+      "focus": "piknik örtüsü",
+      "kaan_action": "points",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S04-SH04",
+      "scene_id": "V2-S04",
+      "start_seconds": 151,
+      "duration_seconds": 7,
+      "action": "Yeşil ve turuncu şeritler papatyaların yanındaki çimene süzülür.",
+      "focus": "çimen",
+      "kaan_action": "watches",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S04-SH05",
+      "scene_id": "V2-S04",
+      "start_seconds": 158,
+      "duration_seconds": 7,
+      "action": "Mor şerit alçak çalıya takılır; Kaan 'Aa!' der.",
+      "focus": "alçak çalı",
+      "kaan_action": "surprised",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S05-SH01",
+      "scene_id": "V2-S05",
+      "start_seconds": 165,
+      "duration_seconds": 8,
+      "action": "Aden örtüde kırmızı ve sarı şeritleri bulur; sepete koyar.",
+      "focus": "piknik örtüsü",
+      "kaan_action": "watches",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S05-SH02",
+      "scene_id": "V2-S05",
+      "start_seconds": 173,
+      "duration_seconds": 8,
+      "action": "Kaan mavi şeridi gösterir; Aden alıp sepete koyar.",
+      "focus": "Kaan + şerit",
+      "kaan_action": "points",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S05-SH03",
+      "scene_id": "V2-S05",
+      "start_seconds": 181,
+      "duration_seconds": 8,
+      "action": "Aden papatyaların yanında yeşil ve turuncu şeritleri bulur.",
+      "focus": "çimen",
+      "kaan_action": "waddles",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S05-SH04",
+      "scene_id": "V2-S05",
+      "start_seconds": 189,
+      "duration_seconds": 8,
+      "action": "Esra mor şeridi alçak çalıdan dikkatlice alır; Kaan izler.",
+      "focus": "çalı + Esra'nın eli",
+      "kaan_action": "watches",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S05-SH05",
+      "scene_id": "V2-S05",
+      "start_seconds": 197,
+      "duration_seconds": 8,
+      "action": "Altı şeridi sepete dizerler; hepsi tamamdır.",
+      "focus": "sepet",
+      "kaan_action": "claps",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S06-SH01",
+      "scene_id": "V2-S06",
+      "start_seconds": 205,
+      "duration_seconds": 9,
+      "action": "Esra onarım çantasını açar; büyük bağlar ve yamalar görünür.",
+      "focus": "çanta",
+      "kaan_action": "looks",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S06-SH02",
+      "scene_id": "V2-S06",
+      "start_seconds": 214,
+      "duration_seconds": 9,
+      "action": "Aden elini uzatır, sonra geri çeker: 'Kaan önce seçsin.'",
+      "focus": "Aden",
+      "kaan_action": "watches",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S06-SH03",
+      "scene_id": "V2-S06",
+      "start_seconds": 223,
+      "duration_seconds": 9,
+      "action": "Kaan mavi bağı iki eliyle çeker; Aden gülümser.",
+      "focus": "Kaan",
+      "kaan_action": "pulls",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S06-SH04",
+      "scene_id": "V2-S06",
+      "start_seconds": 232,
+      "duration_seconds": 9,
+      "action": "Aden kırmızı bağı alır; ikisi bağları yan yana koyar.",
+      "focus": "eller",
+      "kaan_action": "places",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S06-SH05",
+      "scene_id": "V2-S06",
+      "start_seconds": 241,
+      "duration_seconds": 9,
+      "action": "Esra altı şeridi örtüye serer; bağlar hazırdır.",
+      "focus": "üçlü",
+      "kaan_action": "looks",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S07-SH01",
+      "scene_id": "V2-S07",
+      "start_seconds": 250,
+      "duration_seconds": 9,
+      "action": "Aden üç şeridi (kırmızı, sarı, mavi) uç uca bağlar; kuyruk kısa kalır.",
+      "focus": "eller",
+      "kaan_action": "watches",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S07-SH02",
+      "scene_id": "V2-S07",
+      "start_seconds": 259,
+      "duration_seconds": 9,
+      "action": "Esra uçurtmayı kaldırır; kısa kuyruk hızla döner.",
+      "focus": "uçurtma",
+      "kaan_action": "claps",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S07-SH03",
+      "scene_id": "V2-S07",
+      "start_seconds": 268,
+      "duration_seconds": 9,
+      "action": "Uçurtma sallanıp yana devrilir; Kaan kıkırdayarak elleriyle yüzünü kapatır.",
+      "focus": "üçlü",
+      "kaan_action": "giggles",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S07-SH04",
+      "scene_id": "V2-S07",
+      "start_seconds": 277,
+      "duration_seconds": 9,
+      "action": "Aden kuyruğu ölçer; kalan üç şeridi sepette görür.",
+      "focus": "yakın plan",
+      "kaan_action": "watches",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S07-SH05",
+      "scene_id": "V2-S07",
+      "start_seconds": 286,
+      "duration_seconds": 9,
+      "action": "Kaan sepetteki yeşil şeridi işaret eder; Aden 'Biraz daha uzun' der.",
+      "focus": "eller",
+      "kaan_action": "points",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S08-SH01",
+      "scene_id": "V2-S08",
+      "start_seconds": 295,
+      "duration_seconds": 9,
+      "action": "Esra uçurtmayı yerde tutar; Aden altı şeridi sıraya dizer.",
+      "focus": "üçlü",
+      "kaan_action": "watches",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S08-SH02",
+      "scene_id": "V2-S08",
+      "start_seconds": 304,
+      "duration_seconds": 9,
+      "action": "Aden ilk üç şeridi bağlar; Kaan büyük mavi bağı yakına iter.",
+      "focus": "eller",
+      "kaan_action": "pushes",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S08-SH03",
+      "scene_id": "V2-S08",
+      "start_seconds": 313,
+      "duration_seconds": 9,
+      "action": "Aden kalan üç şeridi ekler; düğüm zorlanınca bekler, parmaklarını gevşetir.",
+      "focus": "yakın plan",
+      "kaan_action": "watches",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S08-SH04",
+      "scene_id": "V2-S08",
+      "start_seconds": 322,
+      "duration_seconds": 9,
+      "action": "Aden son düğümü sıkar; Esra 'Oldu' der, Kaan el çırpar.",
+      "focus": "eller + yüzler",
+      "kaan_action": "claps",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S08-SH05",
+      "scene_id": "V2-S08",
+      "start_seconds": 331,
+      "duration_seconds": 9,
+      "action": "Kuyruk yere serilir; üçü uzunluğuna bakar.",
+      "focus": "geniş",
+      "kaan_action": "looks",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S09-SH01",
+      "scene_id": "V2-S09",
+      "start_seconds": 340,
+      "duration_seconds": 9,
+      "action": "Aden elini havaya kaldırır; yapraklar kıpırdamaz.",
+      "focus": "gökyüzü",
+      "kaan_action": "looks_up",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S09-SH02",
+      "scene_id": "V2-S09",
+      "start_seconds": 349,
+      "duration_seconds": 9,
+      "action": "Aden sayar; Kaan parmağıyla ritme katılır.",
+      "focus": "ikili",
+      "kaan_action": "counts",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S09-SH03",
+      "scene_id": "V2-S09",
+      "start_seconds": 358,
+      "duration_seconds": 9,
+      "action": "Yaprak Kaan'ın burnuna konar; Kaan hapşırır, şaşkın bakar.",
+      "focus": "yakın plan",
+      "kaan_action": "sneezes",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S09-SH04",
+      "scene_id": "V2-S09",
+      "start_seconds": 367,
+      "duration_seconds": 9,
+      "action": "Aden ve Esra güler; Kaan da güler, yaprağı üfler.",
+      "focus": "üçlü",
+      "kaan_action": "blows",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S09-SH05",
+      "scene_id": "V2-S09",
+      "start_seconds": 376,
+      "duration_seconds": 9,
+      "action": "Rüzgâr yaprakları kaldırır; Esra uçurtmayı işaret eder.",
+      "focus": "geniş",
+      "kaan_action": "points",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S10-SH01",
+      "scene_id": "V2-S10",
+      "start_seconds": 385,
+      "duration_seconds": 10,
+      "action": "Esra uçurtmayı kaldırır; Aden ipi iki eliyle çeker.",
+      "focus": "geniş",
+      "kaan_action": "watches",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S10-SH02",
+      "scene_id": "V2-S10",
+      "start_seconds": 395,
+      "duration_seconds": 10,
+      "action": "Uçurtma yükselir; uzun kuyruk düzgün dalgalanır.",
+      "focus": "gökyüzü",
+      "kaan_action": "points",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S10-SH03",
+      "scene_id": "V2-S10",
+      "start_seconds": 405,
+      "duration_seconds": 10,
+      "action": "Kaan 'Kuş!' der; gökyüzündeki kuşları gösterir.",
+      "focus": "Kaan",
+      "kaan_action": "points",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S10-SH04",
+      "scene_id": "V2-S10",
+      "start_seconds": 415,
+      "duration_seconds": 10,
+      "action": "Aden ipi Esra'nın gözetiminde tutar; omuzları gevşer.",
+      "focus": "eller",
+      "kaan_action": "claps",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S10-SH05",
+      "scene_id": "V2-S10",
+      "start_seconds": 425,
+      "duration_seconds": 10,
+      "action": "Uçurtma tepe noktada süzülür; üçü birlikte güler.",
+      "focus": "alçak açı",
+      "kaan_action": "laughs",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S11-SH01",
+      "scene_id": "V2-S11",
+      "start_seconds": 435,
+      "duration_seconds": 9,
+      "action": "Esra ipi tutar; Aden örtüye oturur, Kaan yanına yuvarlanır.",
+      "focus": "geniş",
+      "kaan_action": "sits",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S11-SH02",
+      "scene_id": "V2-S11",
+      "start_seconds": 444,
+      "duration_seconds": 9,
+      "action": "Aden kurabiye kutusunu açar; önce Kaan'a uzatır.",
+      "focus": "eller",
+      "kaan_action": "reaches",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S11-SH03",
+      "scene_id": "V2-S11",
+      "start_seconds": 453,
+      "duration_seconds": 9,
+      "action": "Kaan bir kurabiyeyi Aden'e geri uzatır; Aden güler.",
+      "focus": "ikili",
+      "kaan_action": "offers",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S11-SH04",
+      "scene_id": "V2-S11",
+      "start_seconds": 462,
+      "duration_seconds": 9,
+      "action": "Esra kuyruğu işaret eder; üçü gökyüzüne bakar.",
+      "focus": "gökyüzü",
+      "kaan_action": "looks_up",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    },
+    {
+      "shot_id": "V2-S11-SH05",
+      "scene_id": "V2-S11",
+      "start_seconds": 471,
+      "duration_seconds": 9,
+      "action": "Kuyruk rüzgârda dalgalanır; yavaş fade.",
+      "focus": "geniş",
+      "kaan_action": "laughs",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "camera": "çocuk göz hizası; 180° kuralı; ışık soldan",
+      "status": "BOARD_SPEC_READY",
+      "storyboard_image": null
+    }
+  ],
+  "opening": {
+    "kind": "EPISODE-OPEN-30s",
+    "source": "studio/s01e001/episode-open-30s-v2.json",
+    "shots": [
+      {
+        "shot_id": "OPEN-SH01",
+        "start_seconds": 0,
+        "duration_seconds": 5,
+        "source_scene": "V2-S01",
+        "source_beat": 0,
+        "event": "tail_tickle",
+        "camera": {
+          "lens": "85 mm makro",
+          "height": "çocuk yüz hizası",
+          "angle": "yakın, hafif alttan",
+          "movement": "sabit; odak kuyruk ucundan Kaan'ın yanağına kayar"
+        },
+        "positions": {
+          "aden": "kadraj sol kenarda, elleri uçurtmada",
+          "kaan": "sağda, yüzü merkeze yakın",
+          "esra": "kadraj dışı"
+        },
+        "action": "Rüzgâr kuyruk ucunu kaldırır; uç, Kaan'ın yanağını gıdıklar. Kaan gözlerini kırpıştırır.",
+        "dialogue": [],
+        "emotion": "merak",
+        "sound": "hafif rüzgâr, kumaş hışırtısı, tek marimba notası",
+        "lighting": "sol arka üstten 5200K; yumuşak gölge",
+        "continuity": "Kuyruk henüz uçurtmaya bağlı değil; Aden kobalt tişört, Kaan mercan tişört",
+        "safety": "Kuyruk yüzü sıyırır, baskı yok"
+      },
+      {
+        "shot_id": "OPEN-SH02",
+        "start_seconds": 5,
+        "duration_seconds": 5,
+        "source_scene": "V2-S01",
+        "source_beat": 0,
+        "event": "tail_tickle",
+        "camera": {
+          "lens": "50 mm",
+          "height": "çocuk göz hizası",
+          "angle": "ikili orta plan",
+          "movement": "sabit; Kaan'a doğru hafif pan"
+        },
+        "positions": {
+          "aden": "solda, elleri aşağıda",
+          "kaan": "sağda, kuyruğa uzanır",
+          "esra": "kadraj dışı"
+        },
+        "action": "Kaan kuyruğu yakalamaya çalışırken yana yalpalar; Aden elini uzatıp onu dengede tutar. Kaan kıkırdar.",
+        "dialogue": [],
+        "emotion": "neşe",
+        "sound": "çocuk kıkırtısı, çimen hışırtısı",
+        "lighting": "aynı yön; iki yüzde eşit key",
+        "continuity": "Kaan'ın elleri kuyruğa yakın ama ip yok",
+        "safety": "Aden desteği belden, sert çekme yok"
+      },
+      {
+        "shot_id": "OPEN-SH03",
+        "start_seconds": 10,
+        "duration_seconds": 5,
+        "source_scene": "V2-S01",
+        "source_beat": 1,
+        "event": "tail_on_head",
+        "camera": {
+          "lens": "50 mm",
+          "height": "çocuk göz hizası",
+          "angle": "ikili plan",
+          "movement": "sabit"
+        },
+        "positions": {
+          "aden": "solda",
+          "kaan": "ortada",
+          "esra": "kadraj dışı"
+        },
+        "action": "Rüzgâr kuyruğu Kaan'ın başına bırakır; kuyruk renkli bir peruk gibi durur. Kaan donar.",
+        "dialogue": [],
+        "emotion": "şaşkınlık",
+        "sound": "rüzgâr vurgusu; müzik kısa duraklar",
+        "lighting": "aynı",
+        "continuity": "Kuyruk başta; Kaan'ın saçı görünür",
+        "safety": "Kumaş başı örtmez, nefes yolu kapalı değil"
+      },
+      {
+        "shot_id": "OPEN-SH04",
+        "start_seconds": 15,
+        "duration_seconds": 5,
+        "source_scene": "V2-S01",
+        "source_beat": 1,
+        "event": "tail_on_head",
+        "camera": {
+          "lens": "50 mm",
+          "height": "çocuk göz hizası",
+          "angle": "ikili plan",
+          "movement": "hafif push-in"
+        },
+        "positions": {
+          "aden": "solda, gülüyor",
+          "kaan": "ortada, başını sallıyor",
+          "esra": "kadraj dışı"
+        },
+        "action": "Kaan başını sallar; kuyruk yana kayar. Kaan 'Aa!' der; Aden gülüşünü tutamaz.",
+        "dialogue": [
+          {
+            "speaker": "kaan",
+            "text": "Aa!",
+            "start_seconds": 18.0,
+            "emotion": "şaşkın gülüş"
+          }
+        ],
+        "emotion": "sıcak mizah",
+        "sound": "kıkırtı, yumuşak yaylı motif",
+        "lighting": "aynı",
+        "continuity": "Kuyruk Kaan'ın omzuna kayar",
+        "safety": "Yok"
+      },
+      {
+        "shot_id": "OPEN-SH05",
+        "start_seconds": 20,
+        "duration_seconds": 5,
+        "source_scene": "V2-S01",
+        "source_beat": 2,
+        "event": "adult_call",
+        "camera": {
+          "lens": "35 mm",
+          "height": "çocuk göz hizası",
+          "angle": "ikili plan",
+          "movement": "sabit"
+        },
+        "positions": {
+          "aden": "solda, kuyruğu alır",
+          "kaan": "sağda",
+          "esra": "kadraj dışı, ses sağdan"
+        },
+        "action": "Aden kuyruğu Kaan'ın omzundan alır. Esra kadraj dışından seslenir; Aden başını kaldırır.",
+        "dialogue": [
+          {
+            "speaker": "aden",
+            "text": "Kuyruk seninle oynuyor!",
+            "start_seconds": 20.5,
+            "emotion": "gülerek"
+          },
+          {
+            "speaker": "esra",
+            "text": "Kuyruğu birlikte bağlayın.",
+            "start_seconds": 24.0,
+            "emotion": "sıcak, kadraj dışı"
+          }
+        ],
+        "emotion": "güven",
+        "sound": "Esra'nın sesi sağdan; kuşlar",
+        "lighting": "aynı",
+        "continuity": "Esra görünmez; yalnız ses",
+        "safety": "Yetişkin gözetimi sesle belirtilir"
+      },
+      {
+        "shot_id": "OPEN-SH06",
+        "start_seconds": 25,
+        "duration_seconds": 5,
+        "source_scene": "V2-S01",
+        "source_beat": 2,
+        "event": "adult_call",
+        "camera": {
+          "lens": "85 mm makro",
+          "height": "el hizası",
+          "angle": "üstten 45°",
+          "movement": "sabit; odak düğümde"
+        },
+        "positions": {
+          "aden": "çömelmiş, elleri merkezde",
+          "kaan": "sağda, mavi panele dokunur",
+          "esra": "kadraj dışı"
+        },
+        "action": "Aden kuyruğu bağlamaya başlar; Kaan mavi panele dokunur. Rüzgâr uçurtmanın köşesini kaldırır.",
+        "dialogue": [
+          {
+            "speaker": "kaan",
+            "text": "Mavi!",
+            "start_seconds": 26.5,
+            "emotion": "işaret ederek"
+          }
+        ],
+        "emotion": "odaklanma",
+        "sound": "düğüm sesi; rüzgâr hafif yükselir",
+        "lighting": "aynı",
+        "continuity": "Düğüm yarım; 30. saniyede S01 beat 3'e bağlanır",
+        "safety": "Kaan'ın elinde küçük parça yok; yalnız panele dokunur"
+      }
+    ]
+  },
+  "note": "Storyboard görselleri yok; board spec hazır."
+}

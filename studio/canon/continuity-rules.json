@@ -1,0 +1,36 @@
+{
+  "schema": "ahos.studio.continuity.v1",
+  "palette_rule": "Aden/Kaan paletleri characters/*.json; diğer karakterler MISSING.",
+  "scale_rule": {
+    "aden_cm": 98,
+    "kaan_cm": 76,
+    "adult_cm": "MISSING"
+  },
+  "kaan_limits": [
+    "1 yaş; koşma/zıplama yok",
+    "yalnız dört kısa ses: Kuş!, Aa!, Mavi!, Ya!",
+    "ip/boyun/el dolanması yok"
+  ],
+  "tail_strips": {
+    "count": 6,
+    "blanket": [
+      "kırmızı",
+      "sarı",
+      "mavi"
+    ],
+    "grass": [
+      "yeşil",
+      "turuncu"
+    ],
+    "bush": [
+      "mor"
+    ]
+  },
+  "residence": {
+    "claim": "Aden ailesi Harun'un evinde yaşıyor",
+    "status": "UNVERIFIED",
+    "evidence": "character-memory.db canon_facts ve docs taramasında kayıt yok",
+    "rule": "Doğrulanmadan sahne kanonu yapılmaz."
+  },
+  "owner_approval": "NONE"
+}

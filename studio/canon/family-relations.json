@@ -1,0 +1,146 @@
+{
+  "schema": "ahos.studio.relations.v1",
+  "count": 28,
+  "relations": [
+    {
+      "from": "aden",
+      "type": "sibling_of",
+      "to": "kaan"
+    },
+    {
+      "from": "ahmet",
+      "type": "father_of",
+      "to": "aden"
+    },
+    {
+      "from": "ahmet",
+      "type": "father_of",
+      "to": "kaan"
+    },
+    {
+      "from": "aras",
+      "type": "twin_of",
+      "to": "berzan"
+    },
+    {
+      "from": "berzan",
+      "type": "twin_of",
+      "to": "aras"
+    },
+    {
+      "from": "davut",
+      "type": "parent_of",
+      "to": "aras"
+    },
+    {
+      "from": "davut",
+      "type": "parent_of",
+      "to": "berzan"
+    },
+    {
+      "from": "davut",
+      "type": "parent_of",
+      "to": "emos"
+    },
+    {
+      "from": "davut",
+      "type": "parent_of",
+      "to": "ramin"
+    },
+    {
+      "from": "davut",
+      "type": "partner_of",
+      "to": "fatos"
+    },
+    {
+      "from": "esma",
+      "type": "aunt_of",
+      "to": "aden"
+    },
+    {
+      "from": "esma",
+      "type": "aunt_of",
+      "to": "kaan"
+    },
+    {
+      "from": "esra",
+      "type": "mother_of",
+      "to": "aden"
+    },
+    {
+      "from": "esra",
+      "type": "mother_of",
+      "to": "kaan"
+    },
+    {
+      "from": "fatos",
+      "type": "parent_of",
+      "to": "aras"
+    },
+    {
+      "from": "fatos",
+      "type": "parent_of",
+      "to": "berzan"
+    },
+    {
+      "from": "fatos",
+      "type": "parent_of",
+      "to": "emos"
+    },
+    {
+      "from": "fatos",
+      "type": "parent_of",
+      "to": "ramin"
+    },
+    {
+      "from": "fatos",
+      "type": "partner_of",
+      "to": "davut"
+    },
+    {
+      "from": "harun",
+      "type": "uncle_of",
+      "to": "aden"
+    },
+    {
+      "from": "harun",
+      "type": "uncle_of",
+      "to": "kaan"
+    },
+    {
+      "from": "kaan",
+      "type": "sibling_of",
+      "to": "aden"
+    },
+    {
+      "from": "oznur",
+      "type": "parent_of",
+      "to": "medine"
+    },
+    {
+      "from": "oznur",
+      "type": "parent_of",
+      "to": "salih"
+    },
+    {
+      "from": "oznur",
+      "type": "partner_of",
+      "to": "veysel"
+    },
+    {
+      "from": "veysel",
+      "type": "parent_of",
+      "to": "medine"
+    },
+    {
+      "from": "veysel",
+      "type": "parent_of",
+      "to": "salih"
+    },
+    {
+      "from": "veysel",
+      "type": "partner_of",
+      "to": "oznur"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "schema": "ahos.motion.v1",
+  "character_id": "aden",
+  "age_stage": "preschool",
+  "allowed": [
+    "yürüme",
+    "hafif koşu",
+    "zıplama",
+    "oturma",
+    "dönme",
+    "işaret etme",
+    "el çırpma",
+    "sarılma"
+  ],
+  "forbidden": [
+    "yetişkin gücü",
+    "tehlikeli tırmanma",
+    "uzun/karmaşık cümle"
+  ],
+  "signature": "meraklı öne eğilme; sevinçte küçük zıplama",
+  "status": "SPEC_READY"
+}
