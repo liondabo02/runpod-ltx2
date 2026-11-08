@@ -1,0 +1,38 @@
+{
+  "schema": "ahos.studio.2d-rig-scene.v1",
+  "status": "TECHNICAL_TEST_PENDING_REVIEW",
+  "method": "2D vector puppet (PIL) with independent limb/head/eye/mouth joints; FFmpeg encode",
+  "is_3d": false,
+  "video": "deliverables/S01E001-SCENE01-2D-RIG/S01E001-SCENE01-2D-RIG-1080p24.mp4",
+  "fps": 24,
+  "duration_seconds": 10,
+  "frames": 240,
+  "resolution": [
+    1920,
+    1080
+  ],
+  "audio": "SILENT",
+  "characters": [
+    "aden",
+    "kaan"
+  ],
+  "source_reference": "studio/reference/owner_accepted_roster_v1/characters/01_aden.png,02_kaan.png",
+  "joints": [
+    "hip",
+    "knee",
+    "ankle",
+    "shoulder",
+    "elbow",
+    "hand",
+    "neck",
+    "head",
+    "eyes",
+    "mouth"
+  ],
+  "identity_note": "Vector approximation from accepted roster; face likeness not owner-approved.",
+  "professional_quality": "NOT_ACHIEVED",
+  "qa_file": "deliverables/S01E001-SCENE01-2D-RIG/qa.json",
+  "license": "UNVERIFIED",
+  "interaction": "Aden yürür, durur, Kaan'a bakar ve el sallar; Kaan emekler, bakar ve gülümser.",
+  "sha256": "d8731bbfc0692505a7afdb98575781eaef78f35dad37ee8f51133b9fda380e24"
+}

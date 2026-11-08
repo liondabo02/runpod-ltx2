@@ -1,0 +1,40 @@
+{
+  "schema": "ahos.studio.2d-rig-qa.v1",
+  "status": "TECHNICAL_TEST_PENDING_REVIEW",
+  "professional_quality": "NOT_ACHIEVED",
+  "video": "deliverables\\S01E001-SCENE01-2D-RIG\\S01E001-SCENE01-2D-RIG-1080p24.mp4",
+  "sha256": "d8731bbfc0692505a7afdb98575781eaef78f35dad37ee8f51133b9fda380e24",
+  "bytes": 476537,
+  "codec": "h264",
+  "width": 1920,
+  "height": 1080,
+  "fps": "24/1",
+  "frames": 240,
+  "duration_seconds": 10.0,
+  "audio": "SILENT",
+  "is_3d": false,
+  "method": "2D vector puppet (PIL) with independent limb/head/eye/mouth joints; FFmpeg encode",
+  "joints": [
+    "hip",
+    "knee",
+    "ankle",
+    "shoulder",
+    "elbow",
+    "hand",
+    "neck",
+    "head",
+    "eyes",
+    "mouth"
+  ],
+  "blank_frames": 0,
+  "mean_motion": 0.452,
+  "min_motion": 0.007,
+  "issues": [
+    "identity_vector_approximation_not_owner_approved",
+    "no_audio",
+    "no_phoneme_lipsync",
+    "not_3d",
+    "professional_gate_failed"
+  ],
+  "note": "Gerçek eklem hareketi var; profesyonel/3D/onaylı değil."
+}
