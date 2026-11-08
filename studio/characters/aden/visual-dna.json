@@ -1,6 +1,6 @@
 {
-  "owner_brief": "3 yaş kız; tek sarı yıldız toka, sol yanakta 3 çil, omuz hizası dalgalı koyu kahve saç, kobalt tişört",
-  "status": "READY_FOR_QA",
+  "owner_brief": "3 yaş; koyu kahverengi dalgalı saç; TEK sarı yıldız toka; sol yanakta ÜÇ çil; kobalt tişörtte sarı uçurtma; lacivert şort",
+  "status": "DESIGN_PENDING_REVIEW",
   "source": "characters/aden.json",
   "palette": {
     "skin": "#F5CDAA",
@@ -42,5 +42,6 @@
     "limb_style": "yumuşak, yuvarlak hatlı, bebek yağı; keskin kas yok",
     "hands": "dört parmak + başparmak, kısa ve tombul",
     "feet": "küçük, yuvarlak burunlu spor ayakkabı"
-  }
+  },
+  "portrait_design": "portrait-design.json"
 }

@@ -1,0 +1,22 @@
+{
+  "schema": "ahos.studio.portrait-design.v1",
+  "character_id": "veysel",
+  "version": "1.1.0",
+  "status": "DESIGN_PENDING_REVIEW",
+  "owner_constraints": "33 yaş; MAVİ GÖZLÜ; Öznur'un eşi; Salih ve Medine'nin babası; Ahmet'ten ayrı yüz ve saç",
+  "proposal_notice": "Unspecified artistic choices below are proposals, not owner-approved canon or finished images.",
+  "face_preset": "veysel-p7-v1",
+  "head_jaw": "square upper face / rounded lower jaw",
+  "eyes_shape_spacing_color": "round open / wide / BLUE",
+  "nose_brows_mouth": "short broad / gently curved / thin upper lip",
+  "hair_hairline": "short sandy textured hair / soft widow peak",
+  "body_height_age_proportions": "adult sturdy medium frame / 7 heads",
+  "skin_clothing_palette": "light warm / teal and ochre",
+  "distinctive_marks": "bright BLUE eyes; distinct hair and jaw from Ahmet",
+  "visual_reference": null,
+  "owner_approval": "NONE",
+  "seed": 7006,
+  "seed_note": "Reproducibility hint only; model/version/settings and reference hashes are also required",
+  "negative_prompt": "another named character face, adult body on infant, copied original, mixed identities, text, watermark",
+  "prompt": "Single character portrait, Veysel, age 33.0 years. 33 yaş; MAVİ GÖZLÜ; Öznur'un eşi; Salih ve Medine'nin babası; Ahmet'ten ayrı yüz ve saç. square upper face / rounded lower jaw; round open / wide / BLUE; short broad / gently curved / thin upper lip; short sandy textured hair / soft widow peak; adult sturdy medium frame / 7 heads; light warm / teal and ochre; bright BLUE eyes; distinct hair and jaw from Ahmet. Family-friendly stylized animation, neutral background, visible face, consistent lighting. Only this one character."
+}

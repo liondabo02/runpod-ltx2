@@ -1,0 +1,22 @@
+{
+  "schema": "ahos.studio.portrait-design.v1",
+  "character_id": "emos",
+  "version": "1.1.0",
+  "status": "DESIGN_PENDING_REVIEW",
+  "owner_constraints": "4 yaş kız; Davut ve Fatoş'un çocuğu; Aden'den ayrı yüz",
+  "proposal_notice": "Unspecified artistic choices below are proposals, not owner-approved canon or finished images.",
+  "face_preset": "emos-p7-v1",
+  "head_jaw": "soft diamond / short tapered chin",
+  "eyes_shape_spacing_color": "large upturned / medium / hazel",
+  "nose_brows_mouth": "small pointed / playful angled / wide grin",
+  "hair_hairline": "dark chestnut straight bob / blunt fringe",
+  "body_height_age_proportions": "four-year preschool / 4 heads",
+  "skin_clothing_palette": "golden peach / turquoise and apricot",
+  "distinctive_marks": "bob and diamond face distinct from Aden; no copied star clip/freckles",
+  "visual_reference": null,
+  "owner_approval": "NONE",
+  "seed": 7012,
+  "seed_note": "Reproducibility hint only; model/version/settings and reference hashes are also required",
+  "negative_prompt": "another named character face, adult body on infant, copied original, mixed identities, text, watermark",
+  "prompt": "Single character portrait, Emoş, age 4.0 years. 4 yaş kız; Davut ve Fatoş'un çocuğu; Aden'den ayrı yüz. soft diamond / short tapered chin; large upturned / medium / hazel; small pointed / playful angled / wide grin; dark chestnut straight bob / blunt fringe; four-year preschool / 4 heads; golden peach / turquoise and apricot; bob and diamond face distinct from Aden; no copied star clip/freckles. Family-friendly stylized animation, neutral background, visible face, consistent lighting. Only this one character."
+}

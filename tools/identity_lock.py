@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CHARACTERS = ROOT / "studio" / "characters"
 LOCK = ROOT / "studio" / "identity" / "identity-lock.json"
 FILES = ("character.json", "visual-dna.json", "color-palette.json",
-         "motion-profile.json", "voice-profile.json", "model-spec.json")
+         "motion-profile.json", "voice-profile.json", "model-spec.json", "portrait-design.json")
 DATE = "2026-11-08"
 
 

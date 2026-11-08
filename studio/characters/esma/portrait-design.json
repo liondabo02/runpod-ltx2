@@ -1,0 +1,22 @@
+{
+  "schema": "ahos.studio.portrait-design.v1",
+  "character_id": "esma",
+  "version": "1.1.0",
+  "status": "DESIGN_PENDING_REVIEW",
+  "owner_constraints": "29 yaş; Harun'un eşi; başörtülü, güzel ve zarif; mevcut hikâyede 5 aylık hamile",
+  "proposal_notice": "Unspecified artistic choices below are proposals, not owner-approved canon or finished images.",
+  "face_preset": "esma-p7-v1",
+  "head_jaw": "heart shaped / tapered chin",
+  "eyes_shape_spacing_color": "soft upturned / wide / hazel",
+  "nose_brows_mouth": "fine straight / fine arch / small cupid bow",
+  "hair_hairline": "covered by hijab; no visible hairline",
+  "body_height_age_proportions": "graceful adult / 6.8 heads",
+  "skin_clothing_palette": "warm ivory / sage and ivory",
+  "distinctive_marks": "sage headscarf; pregnancy belongs only to story timeline",
+  "visual_reference": null,
+  "owner_approval": "NONE",
+  "seed": 7004,
+  "seed_note": "Reproducibility hint only; model/version/settings and reference hashes are also required",
+  "negative_prompt": "another named character face, adult body on infant, copied original, mixed identities, text, watermark",
+  "prompt": "Single character portrait, Esma, age 29.0 years. 29 yaş; Harun'un eşi; başörtülü, güzel ve zarif; mevcut hikâyede 5 aylık hamile. heart shaped / tapered chin; soft upturned / wide / hazel; fine straight / fine arch / small cupid bow; covered by hijab; no visible hairline; graceful adult / 6.8 heads; warm ivory / sage and ivory; sage headscarf; pregnancy belongs only to story timeline. Family-friendly stylized animation, neutral background, visible face, consistent lighting. Only this one character."
+}

@@ -1,0 +1,22 @@
+{
+  "schema": "ahos.studio.portrait-design.v1",
+  "character_id": "davut",
+  "version": "1.1.0",
+  "status": "DESIGN_PENDING_REVIEW",
+  "owner_constraints": "30 yaş; uzun saçlı; İRİ, KİLOLU, geniş vücutlu, dolgun yüz; Fatoş'un eşi; Harun'a benzemeyecek",
+  "proposal_notice": "Unspecified artistic choices below are proposals, not owner-approved canon or finished images.",
+  "face_preset": "davut-p7-v1",
+  "head_jaw": "broad round / full cheeks and double chin",
+  "eyes_shape_spacing_color": "small smiling / medium / brown",
+  "nose_brows_mouth": "broad rounded / bushy curved / full broad smile",
+  "hair_hairline": "long thick dark hair / broad receding temples",
+  "body_height_age_proportions": "large heavy wide body / full abdomen / 6.5 heads",
+  "skin_clothing_palette": "warm tan / rust and dark brown",
+  "distinctive_marks": "heavy silhouette and full face; never Harun face/body",
+  "visual_reference": null,
+  "owner_approval": "NONE",
+  "seed": 7010,
+  "seed_note": "Reproducibility hint only; model/version/settings and reference hashes are also required",
+  "negative_prompt": "another named character face, adult body on infant, copied original, mixed identities, text, watermark",
+  "prompt": "Single character portrait, Davut, age 30.0 years. 30 yaş; uzun saçlı; İRİ, KİLOLU, geniş vücutlu, dolgun yüz; Fatoş'un eşi; Harun'a benzemeyecek. broad round / full cheeks and double chin; small smiling / medium / brown; broad rounded / bushy curved / full broad smile; long thick dark hair / broad receding temples; large heavy wide body / full abdomen / 6.5 heads; warm tan / rust and dark brown; heavy silhouette and full face; never Harun face/body. Family-friendly stylized animation, neutral background, visible face, consistent lighting. Only this one character."
+}

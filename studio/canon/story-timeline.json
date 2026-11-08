@@ -1,0 +1,14 @@
+{
+  "schema": "ahos.studio.timeline.v1",
+  "current_story_period": "s01e001",
+  "temporary_traits": [
+    {
+      "character_id": "esma",
+      "trait": "pregnancy",
+      "months": 5,
+      "period": "s01e001",
+      "source": "owner P7 instruction",
+      "permanent_identity": false
+    }
+  ]
+}

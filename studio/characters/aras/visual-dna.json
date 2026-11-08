@@ -1,5 +1,6 @@
 {
-  "owner_brief": "Yaklaşık 2 yaş erkek; Berzan'ın ikizi, daha sakin",
-  "status": "MISSING",
-  "source": "owner brief; görsel kanon yok"
+  "owner_brief": "2 yaş; Berzan'ın ikizi; Davut ve Fatoş'un çocuğu; ayrı orijinal görsel",
+  "status": "DESIGN_PENDING_REVIEW",
+  "source": "owner brief; görsel kanon yok",
+  "portrait_design": "portrait-design.json"
 }

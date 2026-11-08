@@ -1,0 +1,22 @@
+{
+  "schema": "ahos.studio.portrait-design.v1",
+  "character_id": "harun",
+  "version": "1.1.0",
+  "status": "DESIGN_PENDING_REVIEW",
+  "owner_constraints": "30 yaş; Esma'nın eşi; Aden ve Kaan'ın ENİŞTESİ; uzun boylu, uzun saçlı, yakışıklı, karizmatik; Davut'tan ayrı yüz ve vücut",
+  "proposal_notice": "Unspecified artistic choices below are proposals, not owner-approved canon or finished images.",
+  "face_preset": "harun-p7-v1",
+  "head_jaw": "elongated oval / defined lean jaw",
+  "eyes_shape_spacing_color": "almond / medium / brown",
+  "nose_brows_mouth": "long straight / expressive arched / broad lips",
+  "hair_hairline": "long dark loose waves / low rounded hairline",
+  "body_height_age_proportions": "tall lean broad shoulders / 7.5 heads",
+  "skin_clothing_palette": "warm olive / midnight blue and sand",
+  "distinctive_marks": "upright charismatic posture; never heavy Davut silhouette",
+  "visual_reference": null,
+  "owner_approval": "NONE",
+  "seed": 7005,
+  "seed_note": "Reproducibility hint only; model/version/settings and reference hashes are also required",
+  "negative_prompt": "another named character face, adult body on infant, copied original, mixed identities, text, watermark",
+  "prompt": "Single character portrait, Harun, age 30.0 years. 30 yaş; Esma'nın eşi; Aden ve Kaan'ın ENİŞTESİ; uzun boylu, uzun saçlı, yakışıklı, karizmatik; Davut'tan ayrı yüz ve vücut. elongated oval / defined lean jaw; almond / medium / brown; long straight / expressive arched / broad lips; long dark loose waves / low rounded hairline; tall lean broad shoulders / 7.5 heads; warm olive / midnight blue and sand; upright charismatic posture; never heavy Davut silhouette. Family-friendly stylized animation, neutral background, visible face, consistent lighting. Only this one character."
+}

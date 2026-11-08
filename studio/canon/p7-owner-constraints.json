@@ -1,0 +1,30 @@
+{
+  "source": "Owner P7 request 2026-11-08",
+  "constraints": {
+    "aden": "3 yaş; koyu kahverengi dalgalı saç; TEK sarı yıldız toka; sol yanakta ÜÇ çil; kobalt tişörtte sarı uçurtma; lacivert şort",
+    "kaan": "1 yaş; Aden'in küçük kardeşi; belirgin bebeksi oran; Salih ve Berzan'dan ayrı yüz",
+    "esra": "Aden ve Kaan'ın annesi; başörtülü",
+    "ahmet": "Aden ve Kaan'ın babası; koyu gözlü; Veysel'den ayrı yüz ve saç",
+    "esma": "29 yaş; Harun'un eşi; başörtülü, güzel ve zarif; mevcut hikâyede 5 aylık hamile",
+    "harun": "30 yaş; Esma'nın eşi; Aden ve Kaan'ın ENİŞTESİ; uzun boylu, uzun saçlı, yakışıklı, karizmatik; Davut'tan ayrı yüz ve vücut",
+    "veysel": "33 yaş; MAVİ GÖZLÜ; Öznur'un eşi; Salih ve Medine'nin babası; Ahmet'ten ayrı yüz ve saç",
+    "oznur": "31 yaş; başörtülü; Veysel'in eşi; Salih ve Medine'nin annesi; Esra ve Esma'dan ayrı tasarım",
+    "salih": "2 yaş; Veysel ve Öznur'un oğlu; kendine özgü yüz ve saç",
+    "medine": "2 aylık kız bebek",
+    "davut": "30 yaş; uzun saçlı; İRİ, KİLOLU, geniş vücutlu, dolgun yüz; Fatoş'un eşi; Harun'a benzemeyecek",
+    "fatos": "30 yaş; BAŞÖRTÜSÜZ; ameliyat sonrası zayıflamış ve yüz görünümü değişmiş; doğal ve saygılı; Davut'un eşi",
+    "emos": "4 yaş kız; Davut ve Fatoş'un çocuğu; Aden'den ayrı yüz",
+    "berzan": "2 yaş; Aras'ın ikizi; Davut ve Fatoş'un çocuğu; ayrı orijinal görsel",
+    "aras": "2 yaş; Berzan'ın ikizi; Davut ve Fatoş'un çocuğu; ayrı orijinal görsel",
+    "ramin": "1 aylık bebek; Davut ve Fatoş'un çocuğu"
+  },
+  "age_policy": "Existing manifest values preserved; months exact for infants",
+  "adult_age_conflicts": [],
+  "search_scope": [
+    "studio/canon",
+    "studio/characters",
+    "characters",
+    "docs/KARAKTER-KANONU.md"
+  ],
+  "limitation": "No conflicting older approved adult ages found in inspected repository sources; not a claim about inaccessible conversations"
+}

@@ -1,0 +1,22 @@
+{
+  "schema": "ahos.studio.portrait-design.v1",
+  "character_id": "ramin",
+  "version": "1.1.0",
+  "status": "DESIGN_PENDING_REVIEW",
+  "owner_constraints": "1 aylık bebek; Davut ve Fatoş'un çocuğu",
+  "proposal_notice": "Unspecified artistic choices below are proposals, not owner-approved canon or finished images.",
+  "face_preset": "ramin-p7-v1",
+  "head_jaw": "elongated newborn cranium / very small chin",
+  "eyes_shape_spacing_color": "mostly resting / medium / dark brown proposal",
+  "nose_brows_mouth": "tiny low bridge / very sparse / small pursed mouth",
+  "hair_hairline": "sparse dark down / high soft newborn hairline",
+  "body_height_age_proportions": "one-month newborn / supported head / 2.4 heads",
+  "skin_clothing_palette": "warm pink beige / mint and cream",
+  "distinctive_marks": "newborn proportions distinguish from Medine; no walking",
+  "visual_reference": null,
+  "owner_approval": "NONE",
+  "seed": 7015,
+  "seed_note": "Reproducibility hint only; model/version/settings and reference hashes are also required",
+  "negative_prompt": "another named character face, adult body on infant, copied original, mixed identities, text, watermark",
+  "prompt": "Single character portrait, Ramin, age 1 months. 1 aylık bebek; Davut ve Fatoş'un çocuğu. elongated newborn cranium / very small chin; mostly resting / medium / dark brown proposal; tiny low bridge / very sparse / small pursed mouth; sparse dark down / high soft newborn hairline; one-month newborn / supported head / 2.4 heads; warm pink beige / mint and cream; newborn proportions distinguish from Medine; no walking. Family-friendly stylized animation, neutral background, visible face, consistent lighting. Only this one character."
+}

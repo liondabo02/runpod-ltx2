@@ -1,0 +1,32 @@
+{
+  "generated_at": "2026-11-08T16:59:57.530611+00:00",
+  "commands": [
+    {
+      "command": "C:\\Users\\esmak\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -B -m pytest -q --no-header -p no:cacheprovider ahos_core/tests/test_p7_portraits.py ahos_core/tests/test_candidate_import.py ahos_core/tests/test_identity_lock.py ahos_core/tests/test_studio_16.py ahos_core/tests/test_p5_identity_gate.py",
+      "stdout": "......................................                                   [100%]\n38 passed in 7.07s\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "C:\\Users\\esmak\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -B -m py_compile tools/p7_portraits.py tools/identity_lock.py tools/candidate_import.py tools/build_studio_cast.py",
+      "stdout": "",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "C:\\Users\\esmak\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -B tools/identity_lock.py --verify",
+      "stdout": "{\n  \"ok\": true,\n  \"problems\": []\n}\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "git diff --check",
+      "stdout": "",
+      "stderr": "",
+      "exit_code": 0
+    }
+  ],
+  "real_portraits_generated": 0,
+  "paid_cost_usd": 0,
+  "status": "PIPELINE_TESTED_REAL_PORTRAITS_PENDING"
+}

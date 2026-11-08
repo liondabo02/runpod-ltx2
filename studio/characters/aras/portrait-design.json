@@ -1,0 +1,22 @@
+{
+  "schema": "ahos.studio.portrait-design.v1",
+  "character_id": "aras",
+  "version": "1.1.0",
+  "status": "DESIGN_PENDING_REVIEW",
+  "owner_constraints": "2 yaş; Berzan'ın ikizi; Davut ve Fatoş'un çocuğu; ayrı orijinal görsel",
+  "proposal_notice": "Unspecified artistic choices below are proposals, not owner-approved canon or finished images.",
+  "face_preset": "aras-p7-v1",
+  "head_jaw": "round-square / soft broad chin",
+  "eyes_shape_spacing_color": "almond / wide / brown",
+  "nose_brows_mouth": "small rounded / short straight / relaxed smile",
+  "hair_hairline": "dark short waves / right side part",
+  "body_height_age_proportions": "two-year toddler / 3.5 heads",
+  "skin_clothing_palette": "warm olive / sky blue and slate",
+  "distinctive_marks": "twin shared traits; right part and sky-blue outfit; separate original",
+  "visual_reference": null,
+  "owner_approval": "NONE",
+  "seed": 7014,
+  "seed_note": "Reproducibility hint only; model/version/settings and reference hashes are also required",
+  "negative_prompt": "another named character face, adult body on infant, copied original, mixed identities, text, watermark",
+  "prompt": "Single character portrait, Aras, age 2.0 years. 2 yaş; Berzan'ın ikizi; Davut ve Fatoş'un çocuğu; ayrı orijinal görsel. round-square / soft broad chin; almond / wide / brown; small rounded / short straight / relaxed smile; dark short waves / right side part; two-year toddler / 3.5 heads; warm olive / sky blue and slate; twin shared traits; right part and sky-blue outfit; separate original. Family-friendly stylized animation, neutral background, visible face, consistent lighting. Only this one character."
+}

@@ -6,21 +6,22 @@
   "characters": [
     {
       "character_id": "aden",
-      "canon_version": "1.0.0",
+      "canon_version": "1.2.0",
       "lock_status": "LOCKED_FOR_EDIT",
       "approval_status": "NONE",
       "approved_by": null,
       "approved_at": null,
       "locked_at": "2026-11-08",
       "source_commit": "e77f7ef",
-      "identity_sha256": "49346176957b6d074a592673fec0ebcb210699065c12c8fb36063a30e0908605",
+      "identity_sha256": "ea26a64272a9ca95624559fd70db442ebeef6018e4298b7c989dedc2d8e5b780",
       "files": {
-        "character.json": "2be2b7bae74b6c28c365c6ee2c4a2cba9dd3f91643375d8e9c6f11c53269295c",
-        "visual-dna.json": "3db18ea38e01310d118d01e3526819cb25397c0ca23e4ebd5262c13359f6d134",
+        "character.json": "995d57de89754737aa2ee8396cf1672615f52d745c9f8f4c673066066192affd",
+        "visual-dna.json": "26f228b9a7a6b079b61bb36b861ca700336825974444eda6ab5e32967c34decd",
         "color-palette.json": "2c868bd75298d9a3836a921dfe931312e5752837259cfb2d1c4307792d17332d",
         "motion-profile.json": "02783d03672324c41e04f9801064069eb82a7c63fcf8fae3f8f3dcea0b9f2d9a",
         "voice-profile.json": "ec21027672d8be837b4d374dc6b4746309393c582e5548578372c4a903712af0",
-        "model-spec.json": "6dda780a77b51b62e45f3d634b036eabbc6bf86710c9d72d8bc9ac934e6808a8"
+        "model-spec.json": "6dda780a77b51b62e45f3d634b036eabbc6bf86710c9d72d8bc9ac934e6808a8",
+        "portrait-design.json": "27fd00608fa26a1ed021255869c056aa5c52555bf91878a890ede2080fd25d3c"
       },
       "history": [
         {
@@ -28,26 +29,40 @@
           "change": "ilk kimlik kilidi",
           "from": null,
           "to": "49346176957b6d074a592673fec0ebcb210699065c12c8fb36063a30e0908605"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 owner canon corrections and separately identified portrait design proposals",
+          "from": "49346176957b6d074a592673fec0ebcb210699065c12c8fb36063a30e0908605",
+          "to": "dfee22df9839218914bd066bfe8069cfe359dada7c352d12a4d798841c781ad1"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 portrait design included in existing composite identity hash",
+          "from": "dfee22df9839218914bd066bfe8069cfe359dada7c352d12a4d798841c781ad1",
+          "to": "ea26a64272a9ca95624559fd70db442ebeef6018e4298b7c989dedc2d8e5b780"
         }
-      ]
+      ],
+      "portrait_design_sha256": "27fd00608fa26a1ed021255869c056aa5c52555bf91878a890ede2080fd25d3c"
     },
     {
       "character_id": "ahmet",
-      "canon_version": "1.0.0",
+      "canon_version": "1.2.0",
       "lock_status": "LOCKED_FOR_EDIT",
       "approval_status": "NONE",
       "approved_by": null,
       "approved_at": null,
       "locked_at": "2026-11-08",
       "source_commit": "e77f7ef",
-      "identity_sha256": "0119457eafc8028087f38ab089eb6df2983fbf39c38e7beb1e33a61454b1fdba",
+      "identity_sha256": "1253e16cf05e6189b8489657b93bc0a679f7c5db76a27604d2b85275666952c0",
       "files": {
-        "character.json": "b4b9ac2eb100dd3466fab71b87afcc0f7bd0f8cb2cfe538793cd86525e425592",
-        "visual-dna.json": "a307585ae505fc2ac1ca7ddd199c35c44de09ed65d5ccd7955f64fa43b9cb34e",
+        "character.json": "e4f9d40ae6acc9295fa3623c1a9d2087d123f230c1034c35d9310cff4d9b0922",
+        "visual-dna.json": "7dab922818c457835d39908299b418adb2d9cbde4b0faa0ada3771e227cb66e3",
         "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
         "motion-profile.json": "faf5931d4ce306b010ffb8ae50eac83731ea194d0f0cc2e4e4dcb5f410c8e6b9",
         "voice-profile.json": "ce6e3adfb31b3e097654ca1daa9cb331a57e1b52a9b36ddfd3e3fc7ae7803141",
-        "model-spec.json": "7758d08f1765139ce4f365756e636ac7b85532e455696647f354f2b8641dd120"
+        "model-spec.json": "7758d08f1765139ce4f365756e636ac7b85532e455696647f354f2b8641dd120",
+        "portrait-design.json": "11101acd3fcb74a653c34b2b6231961ac720070158e7706b5e4613f306ad2342"
       },
       "history": [
         {
@@ -55,26 +70,40 @@
           "change": "ilk kimlik kilidi",
           "from": null,
           "to": "0119457eafc8028087f38ab089eb6df2983fbf39c38e7beb1e33a61454b1fdba"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 owner canon corrections and separately identified portrait design proposals",
+          "from": "0119457eafc8028087f38ab089eb6df2983fbf39c38e7beb1e33a61454b1fdba",
+          "to": "79edbd018e5469abcea4ae3d6e2a6c36d2cb7b7032a6712cecc68438b4263751"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 portrait design included in existing composite identity hash",
+          "from": "79edbd018e5469abcea4ae3d6e2a6c36d2cb7b7032a6712cecc68438b4263751",
+          "to": "1253e16cf05e6189b8489657b93bc0a679f7c5db76a27604d2b85275666952c0"
         }
-      ]
+      ],
+      "portrait_design_sha256": "11101acd3fcb74a653c34b2b6231961ac720070158e7706b5e4613f306ad2342"
     },
     {
       "character_id": "aras",
-      "canon_version": "1.0.0",
+      "canon_version": "1.2.0",
       "lock_status": "LOCKED_FOR_EDIT",
       "approval_status": "NONE",
       "approved_by": null,
       "approved_at": null,
       "locked_at": "2026-11-08",
       "source_commit": "e77f7ef",
-      "identity_sha256": "ba9922627bf247a90c16b9a693168f16565b5a6155854f7e635cf0a51a1f0394",
+      "identity_sha256": "f273a82ac37c97e0395a8f42d905469a8142421068184b658d2263c8c0a26f8b",
       "files": {
-        "character.json": "b13fc463bf10d08a92a001296d463ac89a2c91e384858c8f9f95ea0624d4b2e7",
-        "visual-dna.json": "435cadec72a6c1309ff9912dd168417e9a709df0fbe82a3d3fab723032236ed8",
+        "character.json": "6bf6c5c20da9d936ebfb0d10883bd653ebb51ad17be0a6ce3699d57f0f44a615",
+        "visual-dna.json": "58da31752cb6f2b5e75931934efb5104f3c4ed0d15fa2178422aab7695a45e49",
         "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
         "motion-profile.json": "26855da26324e0fb93373c2bfade3ad1de7b5e02088a8b9a6bed52cb8ba01955",
         "voice-profile.json": "71b12f011bc6bf5e0ec824596c9e7c8210ab90d24f5e98210a7d2be70ab72ebd",
-        "model-spec.json": "f677c83b34ee470d2e067f3631cdf54b1e0f8d209bd183a4c2944a9651d4ee04"
+        "model-spec.json": "f677c83b34ee470d2e067f3631cdf54b1e0f8d209bd183a4c2944a9651d4ee04",
+        "portrait-design.json": "c44cc16609e4fc5431cc047cffa1ec1ceb59e627ff09d06bc5104c2ddbb649b3"
       },
       "history": [
         {
@@ -82,26 +111,40 @@
           "change": "ilk kimlik kilidi",
           "from": null,
           "to": "ba9922627bf247a90c16b9a693168f16565b5a6155854f7e635cf0a51a1f0394"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 owner canon corrections and separately identified portrait design proposals",
+          "from": "ba9922627bf247a90c16b9a693168f16565b5a6155854f7e635cf0a51a1f0394",
+          "to": "cf7eadd4e5381dabc43c163922066990686a6e7efb84aa72cb1d939ec5643162"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 portrait design included in existing composite identity hash",
+          "from": "cf7eadd4e5381dabc43c163922066990686a6e7efb84aa72cb1d939ec5643162",
+          "to": "f273a82ac37c97e0395a8f42d905469a8142421068184b658d2263c8c0a26f8b"
         }
-      ]
+      ],
+      "portrait_design_sha256": "c44cc16609e4fc5431cc047cffa1ec1ceb59e627ff09d06bc5104c2ddbb649b3"
     },
     {
       "character_id": "berzan",
-      "canon_version": "1.0.0",
+      "canon_version": "1.2.0",
       "lock_status": "LOCKED_FOR_EDIT",
       "approval_status": "NONE",
       "approved_by": null,
       "approved_at": null,
       "locked_at": "2026-11-08",
       "source_commit": "e77f7ef",
-      "identity_sha256": "c06489fff2a65cda92faa863c823d03d74d65b7a70a77a85170bed7fb134fe65",
+      "identity_sha256": "6883fb1729b85e00fc46e9265d6b9a8566a02636dff75c109ab59e29a95c6026",
       "files": {
-        "character.json": "7346c3e66c6b7eba95a555671edc8fc9900ed9ef90e5a9219b1d7a72756b9a99",
-        "visual-dna.json": "c1ffd0dd062a5c2cd3635478b695a756d7654ac6d1a3e2037317bf7aa82c5657",
+        "character.json": "91d2e2eecc4aca139ceabbc229928a578540f4a65ee1baba330a96d809a9cf91",
+        "visual-dna.json": "553eab4d8bbc1cc339ec31998889f2070616f32fd01a96f468fd271e3db5ca5f",
         "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
         "motion-profile.json": "7103101f0ed0a7690ec988d95e7cd49699abec42ee2b26695a4805dbeab02bbc",
         "voice-profile.json": "e133f607cfcdb7c81f2b975679a737e2c5ce6e97c08e53cb00a16bfea0e77d1e",
-        "model-spec.json": "b6df79e30c2aef5c5c93f0c6cfb7c4b236daf48c2c39c01f17b411f7b3cebfc3"
+        "model-spec.json": "b6df79e30c2aef5c5c93f0c6cfb7c4b236daf48c2c39c01f17b411f7b3cebfc3",
+        "portrait-design.json": "1f057d19d2e12d45c1f14ab1bcb29a6f01eadfcde2e9450d2bdcfc5418c1d219"
       },
       "history": [
         {
@@ -109,26 +152,40 @@
           "change": "ilk kimlik kilidi",
           "from": null,
           "to": "c06489fff2a65cda92faa863c823d03d74d65b7a70a77a85170bed7fb134fe65"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 owner canon corrections and separately identified portrait design proposals",
+          "from": "c06489fff2a65cda92faa863c823d03d74d65b7a70a77a85170bed7fb134fe65",
+          "to": "91602ce767076056eb2a10296e90e4a02cc43812c86ac7d558b294c7624ecaf9"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 portrait design included in existing composite identity hash",
+          "from": "91602ce767076056eb2a10296e90e4a02cc43812c86ac7d558b294c7624ecaf9",
+          "to": "6883fb1729b85e00fc46e9265d6b9a8566a02636dff75c109ab59e29a95c6026"
         }
-      ]
+      ],
+      "portrait_design_sha256": "1f057d19d2e12d45c1f14ab1bcb29a6f01eadfcde2e9450d2bdcfc5418c1d219"
     },
     {
       "character_id": "davut",
-      "canon_version": "1.0.0",
+      "canon_version": "1.2.0",
       "lock_status": "LOCKED_FOR_EDIT",
       "approval_status": "NONE",
       "approved_by": null,
       "approved_at": null,
       "locked_at": "2026-11-08",
       "source_commit": "e77f7ef",
-      "identity_sha256": "46a3d6fd7a656b694f1915b2934aec7dfd096bd9be3da3d517f69c65bc74f4bd",
+      "identity_sha256": "be6cca91b7d2a7f169c1b1efb6a0701295bb83584fd461171f78e131dd34abe3",
       "files": {
-        "character.json": "8b23b90502b13c38600fdb0d59d07af19b1643531fcf0bb25a82e8334b966956",
-        "visual-dna.json": "51e1ded6ffaf6a1c64a98d3ce4f0cc90bccdb0b8868cefa1eb8b65174038dc90",
+        "character.json": "36538ba32537f4f3651d53db28320231e6a62d00ca57cb18152ed9584780e1fb",
+        "visual-dna.json": "3baa388817a38d645e8544c491f1fa69b1447c9178bf4e47c37bfa9f78ca9bb3",
         "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
         "motion-profile.json": "fa1713e9744bbf170dcf195f905c55f97e2be21fa0810ad41b49ce8a660585fe",
         "voice-profile.json": "250da54456facaba7bdefb1bbf9edbf6d7b336900b88b3922ad3fc1fa764ad4c",
-        "model-spec.json": "7b0d436f02e63c7d0677ddce4aa649f646f79ec867845da68d6b72c35be91e15"
+        "model-spec.json": "7b0d436f02e63c7d0677ddce4aa649f646f79ec867845da68d6b72c35be91e15",
+        "portrait-design.json": "77a3ae3facafc1058c7b9ca7c63ab3081aca0a836840f815ff208b7292f2fada"
       },
       "history": [
         {
@@ -136,26 +193,40 @@
           "change": "ilk kimlik kilidi",
           "from": null,
           "to": "46a3d6fd7a656b694f1915b2934aec7dfd096bd9be3da3d517f69c65bc74f4bd"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 owner canon corrections and separately identified portrait design proposals",
+          "from": "46a3d6fd7a656b694f1915b2934aec7dfd096bd9be3da3d517f69c65bc74f4bd",
+          "to": "5e98067ffe79a4a1be9ec6d421628fbef018b11f0ab3b27eb99e295a1f3540ff"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 portrait design included in existing composite identity hash",
+          "from": "5e98067ffe79a4a1be9ec6d421628fbef018b11f0ab3b27eb99e295a1f3540ff",
+          "to": "be6cca91b7d2a7f169c1b1efb6a0701295bb83584fd461171f78e131dd34abe3"
         }
-      ]
+      ],
+      "portrait_design_sha256": "77a3ae3facafc1058c7b9ca7c63ab3081aca0a836840f815ff208b7292f2fada"
     },
     {
       "character_id": "emos",
-      "canon_version": "1.0.0",
+      "canon_version": "1.2.0",
       "lock_status": "LOCKED_FOR_EDIT",
       "approval_status": "NONE",
       "approved_by": null,
       "approved_at": null,
       "locked_at": "2026-11-08",
       "source_commit": "e77f7ef",
-      "identity_sha256": "a07de4c4483cdb9246f793f7d569d49787ea7b2bd9635dd9c166fa1a00f996ad",
+      "identity_sha256": "07f19e94747e0f6347c666fd1c7128e2c1731c96d7594cafe72ad50744c637e4",
       "files": {
-        "character.json": "5f2ed1c4fb68bc8ffaaa9bc2a55c08fae146a27fede13805d9c2e2240784bb6a",
-        "visual-dna.json": "605dbd8aebf46099c0daee12ae4fc5cb3eedf02bc3d09c943c50d0d8ef786b77",
+        "character.json": "99c5dd9d5068617e2d08bce8620e48e4ee1141b8a289cc9f34f119c2fcaa985f",
+        "visual-dna.json": "ee452fb9ff0d8a9df782f326e5d0f52c4aa7c5a82ee6f5dc8d7a4065532f3438",
         "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
         "motion-profile.json": "dd269e4215e33b35924e9749e16b234b659cc6e0bdb1eea23cd7c6ed691b1eff",
         "voice-profile.json": "348bf2c60bba7a97250f0504aa9fd4f40173239b9dd33e76e7819041af2060a0",
-        "model-spec.json": "a4c011afb36bbb8e427bb27d4711fe1d1b5629c4d7ff6785b1de6623f6a61f7a"
+        "model-spec.json": "a4c011afb36bbb8e427bb27d4711fe1d1b5629c4d7ff6785b1de6623f6a61f7a",
+        "portrait-design.json": "97a5bd6a32e87c890bd1ba89791345d1e57e46d32059c5437eff710110916f2d"
       },
       "history": [
         {
@@ -163,26 +234,40 @@
           "change": "ilk kimlik kilidi",
           "from": null,
           "to": "a07de4c4483cdb9246f793f7d569d49787ea7b2bd9635dd9c166fa1a00f996ad"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 owner canon corrections and separately identified portrait design proposals",
+          "from": "a07de4c4483cdb9246f793f7d569d49787ea7b2bd9635dd9c166fa1a00f996ad",
+          "to": "9b4b0cdc6e921e4ee1fd242333e1716614fddef93c09e2a19dd3075ebde25acd"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 portrait design included in existing composite identity hash",
+          "from": "9b4b0cdc6e921e4ee1fd242333e1716614fddef93c09e2a19dd3075ebde25acd",
+          "to": "07f19e94747e0f6347c666fd1c7128e2c1731c96d7594cafe72ad50744c637e4"
         }
-      ]
+      ],
+      "portrait_design_sha256": "97a5bd6a32e87c890bd1ba89791345d1e57e46d32059c5437eff710110916f2d"
     },
     {
       "character_id": "esma",
-      "canon_version": "1.0.0",
+      "canon_version": "1.2.0",
       "lock_status": "LOCKED_FOR_EDIT",
       "approval_status": "NONE",
       "approved_by": null,
       "approved_at": null,
       "locked_at": "2026-11-08",
       "source_commit": "e77f7ef",
-      "identity_sha256": "4caa71dfe087d30d0c17c261fca4e922a4468560e782c787060bfcdb7ebfdb9f",
+      "identity_sha256": "385b1cde9cec48b8fc7ccc814cbce526221e6721e8be62001ffdcc3008b399eb",
       "files": {
-        "character.json": "2f4ad14327122aafe13044e0e1dd9d9f49162dd508d8041fe90f42d4c1b5bf24",
-        "visual-dna.json": "4c6e52abcaf88e7c0afb05c22df2029aac876b7e5cb614e7f48e4c90f8b0f577",
+        "character.json": "6513b6593b9208367faf4d89e4fff600ce39a0e89c8c6a416dbc2951999a2f9d",
+        "visual-dna.json": "95e1bcf80ca4082e4b6827ea73b465fa5f07b0a4d8caa060af3f91996263d131",
         "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
         "motion-profile.json": "1be63fb52898c212de0455bb37af49d2060c74ec1617884141b36d4af27fc68b",
         "voice-profile.json": "e1f736356f0d4890874c74e3297290c90a56b31b84a0868c32dcddd64cf5dee5",
-        "model-spec.json": "5748fe05fd3a2c9d6faf3a4d68b3b19b80e90957cb68da4bf7c156aae8a90d72"
+        "model-spec.json": "5748fe05fd3a2c9d6faf3a4d68b3b19b80e90957cb68da4bf7c156aae8a90d72",
+        "portrait-design.json": "7495463a32b1fec643047de36f15ec00b6848604224965266285c439735fba49"
       },
       "history": [
         {
@@ -190,26 +275,40 @@
           "change": "ilk kimlik kilidi",
           "from": null,
           "to": "4caa71dfe087d30d0c17c261fca4e922a4468560e782c787060bfcdb7ebfdb9f"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 owner canon corrections and separately identified portrait design proposals",
+          "from": "4caa71dfe087d30d0c17c261fca4e922a4468560e782c787060bfcdb7ebfdb9f",
+          "to": "4eae4ee5a88e7cfd6023784b429cd6f7da4c95ef110756582de3b1acaf6f5444"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 portrait design included in existing composite identity hash",
+          "from": "4eae4ee5a88e7cfd6023784b429cd6f7da4c95ef110756582de3b1acaf6f5444",
+          "to": "385b1cde9cec48b8fc7ccc814cbce526221e6721e8be62001ffdcc3008b399eb"
         }
-      ]
+      ],
+      "portrait_design_sha256": "7495463a32b1fec643047de36f15ec00b6848604224965266285c439735fba49"
     },
     {
       "character_id": "esra",
-      "canon_version": "1.0.0",
+      "canon_version": "1.2.0",
       "lock_status": "LOCKED_FOR_EDIT",
       "approval_status": "NONE",
       "approved_by": null,
       "approved_at": null,
       "locked_at": "2026-11-08",
       "source_commit": "e77f7ef",
-      "identity_sha256": "73b6730c06842750063c1069331819f04ded5bfc8124468c775a78d925911c58",
+      "identity_sha256": "f20acb0d0d05694c6c3ae7188c8aff61f83e80f4b9a6092f2bd9757ebe87f8f4",
       "files": {
-        "character.json": "6c7f0b86f1f1a683d47493bb72d7e5cd60ddc7ca4aa8f4198a54243932605258",
-        "visual-dna.json": "04c0e847966c0414a866e820059b027bd8e517d903eeaac43cb85e8ddd066045",
+        "character.json": "c1bd3eccd6563ba397cda89646836059480605a3d33d23419bdb230e5b149fce",
+        "visual-dna.json": "4b30fa3bb1c98b23d37864f979d2bf9b6d29da2fb107b1456d962a0f81cd34fd",
         "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
         "motion-profile.json": "ff85ec990b72213684b3c3f524d75d9d8ac85a95d224b18c5e7be26c5a9de5b9",
         "voice-profile.json": "a37f501566c44bddb5a3959700ac11d1d7ad0ffe9f4d88ea46f003188facf556",
-        "model-spec.json": "4a215e4e306ffa60571a470eac830d18e31d8141d178f39e9ef654c9ecdd4e63"
+        "model-spec.json": "4a215e4e306ffa60571a470eac830d18e31d8141d178f39e9ef654c9ecdd4e63",
+        "portrait-design.json": "cb14d6cf33ec3b22050146a51cc6321a8d954e41da94a0355d0fc4f00684eb2b"
       },
       "history": [
         {
@@ -217,26 +316,40 @@
           "change": "ilk kimlik kilidi",
           "from": null,
           "to": "73b6730c06842750063c1069331819f04ded5bfc8124468c775a78d925911c58"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 owner canon corrections and separately identified portrait design proposals",
+          "from": "73b6730c06842750063c1069331819f04ded5bfc8124468c775a78d925911c58",
+          "to": "aceda6e59188158a894d4ef3d578251b1df4f0221e06c2c01586218436045d0c"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 portrait design included in existing composite identity hash",
+          "from": "aceda6e59188158a894d4ef3d578251b1df4f0221e06c2c01586218436045d0c",
+          "to": "f20acb0d0d05694c6c3ae7188c8aff61f83e80f4b9a6092f2bd9757ebe87f8f4"
         }
-      ]
+      ],
+      "portrait_design_sha256": "cb14d6cf33ec3b22050146a51cc6321a8d954e41da94a0355d0fc4f00684eb2b"
     },
     {
       "character_id": "fatos",
-      "canon_version": "1.0.0",
+      "canon_version": "1.2.0",
       "lock_status": "LOCKED_FOR_EDIT",
       "approval_status": "NONE",
       "approved_by": null,
       "approved_at": null,
       "locked_at": "2026-11-08",
       "source_commit": "e77f7ef",
-      "identity_sha256": "caddfba8fe077d5a08322c75aa110fa3bdaf21c35cf261cd2ce00fe2757023a7",
+      "identity_sha256": "0b14fdad7742d498338bb72ba7f7d8e494e0ac6c4f2436df6c17c8852114648b",
       "files": {
-        "character.json": "fc585aa4e4940a925a9a84a08c0774410d1e4eb9c574f79f10cf9af7244f5fd3",
-        "visual-dna.json": "2eec69d6deac65bfedd94972f8dee0e0679209736eabbe829a2a6fe62a880284",
+        "character.json": "75ce4ff60bebd7075f141d5f8c743a131628ea7b3f6ab68154696ebef1a630d8",
+        "visual-dna.json": "c940113fe25aaa952948c213a154e6f521addd9dcecc8adfb8e2e39a1ebf1c2c",
         "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
         "motion-profile.json": "68d15b33998d8df90467d8fa11d0497825f227bbd9cb09f147b6cf1b1788620f",
         "voice-profile.json": "9aca5f5037c73caffe9c613b299199fd80b1c5025935c169c99bc37fd46087a4",
-        "model-spec.json": "7d9ab4ac31b8039d84ca2c3aa02656c6a420dae69a1f83012560855eb509f480"
+        "model-spec.json": "7d9ab4ac31b8039d84ca2c3aa02656c6a420dae69a1f83012560855eb509f480",
+        "portrait-design.json": "208a6cb812a5fc7e15fe4cb7d67dd7795f04e2bcaf687f7839f786cd432e6a08"
       },
       "history": [
         {
@@ -244,26 +357,40 @@
           "change": "ilk kimlik kilidi",
           "from": null,
           "to": "caddfba8fe077d5a08322c75aa110fa3bdaf21c35cf261cd2ce00fe2757023a7"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 owner canon corrections and separately identified portrait design proposals",
+          "from": "caddfba8fe077d5a08322c75aa110fa3bdaf21c35cf261cd2ce00fe2757023a7",
+          "to": "abc906917e49384406ccc0e699b17d9a9559142862ed0572e5fdb93abc92120d"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 portrait design included in existing composite identity hash",
+          "from": "abc906917e49384406ccc0e699b17d9a9559142862ed0572e5fdb93abc92120d",
+          "to": "0b14fdad7742d498338bb72ba7f7d8e494e0ac6c4f2436df6c17c8852114648b"
         }
-      ]
+      ],
+      "portrait_design_sha256": "208a6cb812a5fc7e15fe4cb7d67dd7795f04e2bcaf687f7839f786cd432e6a08"
     },
     {
       "character_id": "harun",
-      "canon_version": "1.0.0",
+      "canon_version": "1.2.0",
       "lock_status": "LOCKED_FOR_EDIT",
       "approval_status": "NONE",
       "approved_by": null,
       "approved_at": null,
       "locked_at": "2026-11-08",
       "source_commit": "e77f7ef",
-      "identity_sha256": "19a9d57069ea43ca8f545da09863dec2e4d7530d9cf8e35426a1b30d3a3cc84d",
+      "identity_sha256": "ec920c54afaa08d92b0f4fa8a34a3d24daefca8e8494483bc3fb009346802bee",
       "files": {
-        "character.json": "1bfd8c2de2c3d3ccd25fcb8e2b99d72198550f2ae97499e87c33a78508fd83dc",
-        "visual-dna.json": "9633b25bc8d8e98d25752e1b55e599bcbac10fb9f38a72e19c8d6de5c217ad1e",
+        "character.json": "8985bded3545a01679b56320ab5a32f402fcfc4e1674a243a672e4547b11cc88",
+        "visual-dna.json": "7576980f7eb0e738fa5bc5c3ebd06d553e7863059a0ac7bd9f4f106eb2960cf1",
         "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
         "motion-profile.json": "09ff292ef4da88a4c81e993e9db307fa432d3c5a740b900e370ab6e1fe50d84e",
         "voice-profile.json": "82c514296aeec6bd972e13756be8f218e730e857dd9fd6ee2937dee5981ade4c",
-        "model-spec.json": "5a0e029cf9e600d3d7d02de68953731a522de9a5b2c65b23e683281893169683"
+        "model-spec.json": "5a0e029cf9e600d3d7d02de68953731a522de9a5b2c65b23e683281893169683",
+        "portrait-design.json": "38a889a5dd12dfd02ca7527af084bd6ebe0355affe5b4f45d7aee5d74d969e12"
       },
       "history": [
         {
@@ -271,26 +398,40 @@
           "change": "ilk kimlik kilidi",
           "from": null,
           "to": "19a9d57069ea43ca8f545da09863dec2e4d7530d9cf8e35426a1b30d3a3cc84d"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 owner canon corrections and separately identified portrait design proposals",
+          "from": "19a9d57069ea43ca8f545da09863dec2e4d7530d9cf8e35426a1b30d3a3cc84d",
+          "to": "a97fcfc7d2555b9c76085a6d72345124120bc30166f0712510eee1f29f79a6b9"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 portrait design included in existing composite identity hash",
+          "from": "a97fcfc7d2555b9c76085a6d72345124120bc30166f0712510eee1f29f79a6b9",
+          "to": "ec920c54afaa08d92b0f4fa8a34a3d24daefca8e8494483bc3fb009346802bee"
         }
-      ]
+      ],
+      "portrait_design_sha256": "38a889a5dd12dfd02ca7527af084bd6ebe0355affe5b4f45d7aee5d74d969e12"
     },
     {
       "character_id": "kaan",
-      "canon_version": "1.0.0",
+      "canon_version": "1.2.0",
       "lock_status": "LOCKED_FOR_EDIT",
       "approval_status": "NONE",
       "approved_by": null,
       "approved_at": null,
       "locked_at": "2026-11-08",
       "source_commit": "e77f7ef",
-      "identity_sha256": "d0a8e9aaffb74d768bb4af419095f868be7237493f9a928f166ae484cfc14d32",
+      "identity_sha256": "bfc0ecedb7f13898d46b48a747040374364a44afe8a5f2228308e64fc723aa3e",
       "files": {
-        "character.json": "419d4b77f985973797332ce96ff7cc84aff1536a1aaed01c40a126981fb0d625",
-        "visual-dna.json": "0f87a25a68ebe792681ef3c225877c60c1e5a9c1f7acc1aa6dd66b7b360d8d94",
+        "character.json": "0e1a71d84a76cdf463a4bc00eda3bc64b4a72d6d220b79403541ebe75feeb585",
+        "visual-dna.json": "6e30002d7173fa7a9cf23b2cef08a7c633cec3e5d52b20eafd597c47a443d35d",
         "color-palette.json": "e009a4bfa4becf954cdf3b5520e54245c9765a5a11e9b943f39181ee4675c42e",
         "motion-profile.json": "16af9e72504917504d66b883293b226b77eef9f571525c7068abfa2df1505301",
         "voice-profile.json": "cc03bd134479b42e644229b8aba7e064cded52ee66595890296ec471b0dab265",
-        "model-spec.json": "063b35a01f877240f1ffa64c9b52f6214019a4e150ecedd3156ba9b1524a8faa"
+        "model-spec.json": "063b35a01f877240f1ffa64c9b52f6214019a4e150ecedd3156ba9b1524a8faa",
+        "portrait-design.json": "f7d866aba01ba5fad3821621d66ddbddeb9cfd73148d00b0e1869e7fd14cb3f9"
       },
       "history": [
         {
@@ -298,26 +439,40 @@
           "change": "ilk kimlik kilidi",
           "from": null,
           "to": "d0a8e9aaffb74d768bb4af419095f868be7237493f9a928f166ae484cfc14d32"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 owner canon corrections and separately identified portrait design proposals",
+          "from": "d0a8e9aaffb74d768bb4af419095f868be7237493f9a928f166ae484cfc14d32",
+          "to": "cc776c09ac19b57b0ee4d708dd62056db8fa9b5d7f3acdcf606dcf1be7b8e4fb"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 portrait design included in existing composite identity hash",
+          "from": "cc776c09ac19b57b0ee4d708dd62056db8fa9b5d7f3acdcf606dcf1be7b8e4fb",
+          "to": "bfc0ecedb7f13898d46b48a747040374364a44afe8a5f2228308e64fc723aa3e"
         }
-      ]
+      ],
+      "portrait_design_sha256": "f7d866aba01ba5fad3821621d66ddbddeb9cfd73148d00b0e1869e7fd14cb3f9"
     },
     {
       "character_id": "medine",
-      "canon_version": "1.0.0",
+      "canon_version": "1.2.0",
       "lock_status": "LOCKED_FOR_EDIT",
       "approval_status": "NONE",
       "approved_by": null,
       "approved_at": null,
       "locked_at": "2026-11-08",
       "source_commit": "e77f7ef",
-      "identity_sha256": "99e00b0dff0e62b6c7ded4cfb00b04f39ff5adf009801bde241bf0bf0eaec696",
+      "identity_sha256": "1fda4486ac0846876825a35c98becc6a81e9b583bef7a11124cc6c869e3204f3",
       "files": {
-        "character.json": "e24ae32b250cc40ee1527f9b53b91010436202635bcbb5d407a066adae4e217f",
-        "visual-dna.json": "16c9225eeb286c13083e886cba5c43648b08720be82b7bcfce37c27be795976d",
+        "character.json": "c581fce7c018ee3954233bd59572ddb5a052c9f8b73ada44ac8f21976e156642",
+        "visual-dna.json": "c1cedc6f62baf38cd7f8c894ed1f324ec12e082bd4b7119dfa775eb1c1ec2446",
         "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
         "motion-profile.json": "735e1f2df4ae84411fe63032fc790252e3ad475a5889c23ed429e249de9d39bf",
         "voice-profile.json": "00fe4217c56e54230759a34b8a8bac0883340269c87520599f63af09a71d0a50",
-        "model-spec.json": "f21191884925cbf9d99cb180a6182fceb9d39825cf66c36cf64ff34010bda44b"
+        "model-spec.json": "f21191884925cbf9d99cb180a6182fceb9d39825cf66c36cf64ff34010bda44b",
+        "portrait-design.json": "e52f9bed9abc014d79b7aa6e777ef6a9304857244295df53b032cebd42a1e989"
       },
       "history": [
         {
@@ -325,26 +480,40 @@
           "change": "ilk kimlik kilidi",
           "from": null,
           "to": "99e00b0dff0e62b6c7ded4cfb00b04f39ff5adf009801bde241bf0bf0eaec696"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 owner canon corrections and separately identified portrait design proposals",
+          "from": "99e00b0dff0e62b6c7ded4cfb00b04f39ff5adf009801bde241bf0bf0eaec696",
+          "to": "b0a301dbc71e80e3461782a3a857efa1382dadda60121f4a597597135afb6ec9"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 portrait design included in existing composite identity hash",
+          "from": "b0a301dbc71e80e3461782a3a857efa1382dadda60121f4a597597135afb6ec9",
+          "to": "1fda4486ac0846876825a35c98becc6a81e9b583bef7a11124cc6c869e3204f3"
         }
-      ]
+      ],
+      "portrait_design_sha256": "e52f9bed9abc014d79b7aa6e777ef6a9304857244295df53b032cebd42a1e989"
     },
     {
       "character_id": "oznur",
-      "canon_version": "1.0.0",
+      "canon_version": "1.2.0",
       "lock_status": "LOCKED_FOR_EDIT",
       "approval_status": "NONE",
       "approved_by": null,
       "approved_at": null,
       "locked_at": "2026-11-08",
       "source_commit": "e77f7ef",
-      "identity_sha256": "d093969e6af84dcac15ca8d7227bb4c559c1cb5ab18e094563b2796737d771df",
+      "identity_sha256": "4a9c4ba94b943233227bcd8a1753ab683914b1a6cafcc793423da95928b57707",
       "files": {
-        "character.json": "7b9e1c438a36e4db357fe238df66110a08218506b467021e66f285a02e003c84",
-        "visual-dna.json": "3a7655306ef2e017a7a5ba96c27ae1bbd58ffabf8b7a5d103374185aba40de74",
+        "character.json": "70de0dbbcba480bcdc2c59e1fc646adb02f14b365ee1d23fd6b6c1451724b993",
+        "visual-dna.json": "99746b738a6cd01be0aaa2ded87f1d835a0b6ef2bf034aaa5cb891a79364f005",
         "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
         "motion-profile.json": "d94ccb5f03f3a6e08abd8e38d74ca94cb402e7b04eb70fbe1012c6b486e2da75",
         "voice-profile.json": "3036d14146cf0182cc1539773bcaa27be33e92edd23e7a36e3c280cdba37a8eb",
-        "model-spec.json": "a492120349eb59a11d2f5cfb25ef168aa1b4869d70c0f038af7c9bcf5e03917e"
+        "model-spec.json": "a492120349eb59a11d2f5cfb25ef168aa1b4869d70c0f038af7c9bcf5e03917e",
+        "portrait-design.json": "47a8e0bfd6b4f61fac4adda6bb3e6920474b35ba694c0feab7eefddb40a4344e"
       },
       "history": [
         {
@@ -352,26 +521,40 @@
           "change": "ilk kimlik kilidi",
           "from": null,
           "to": "d093969e6af84dcac15ca8d7227bb4c559c1cb5ab18e094563b2796737d771df"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 owner canon corrections and separately identified portrait design proposals",
+          "from": "d093969e6af84dcac15ca8d7227bb4c559c1cb5ab18e094563b2796737d771df",
+          "to": "40fccb89ecef4e1a0eccf12c23e71cddf25c7378e7ba81d9431dba3f4b8d9c7c"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 portrait design included in existing composite identity hash",
+          "from": "40fccb89ecef4e1a0eccf12c23e71cddf25c7378e7ba81d9431dba3f4b8d9c7c",
+          "to": "4a9c4ba94b943233227bcd8a1753ab683914b1a6cafcc793423da95928b57707"
         }
-      ]
+      ],
+      "portrait_design_sha256": "47a8e0bfd6b4f61fac4adda6bb3e6920474b35ba694c0feab7eefddb40a4344e"
     },
     {
       "character_id": "ramin",
-      "canon_version": "1.0.0",
+      "canon_version": "1.2.0",
       "lock_status": "LOCKED_FOR_EDIT",
       "approval_status": "NONE",
       "approved_by": null,
       "approved_at": null,
       "locked_at": "2026-11-08",
       "source_commit": "e77f7ef",
-      "identity_sha256": "a4249c67cdf999086affd9f5339c58584eaa45b4bca60a294c36fffb0183858b",
+      "identity_sha256": "2855c85e10b86a6eb7c17e136cead3bcda983be20a6be0a80451df90633343fe",
       "files": {
-        "character.json": "c3bd2d3283f4b73d512a402786a26d13bd2fc82886cac2ad7682bc42e657794f",
-        "visual-dna.json": "e6802bfd7b9e1e9f2e34bde5a5f135d7cbba5bc08fa2d1712bf0e1905ef324d6",
+        "character.json": "60ddd940d2fec45c3e7b4165e7aa445e915215fd04136da6898ac102719072f8",
+        "visual-dna.json": "2896e7a8cacddca2f5d76825def509a51d6370f4b53e02add0d7baf777dfdd7e",
         "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
         "motion-profile.json": "4278366bf0452f4ced530c959281ce1a88deaad3d6bc5d5fbf157eb1957bfa6f",
         "voice-profile.json": "3b95e1483853d3c66eb01fe5947a83d6d905ba73421e39127cde272fec9ec789",
-        "model-spec.json": "a0abe4a7a08850ee7bcbe5bb4607ba9d6ba3e5ef9ac0216d3e21607e6a03ad03"
+        "model-spec.json": "a0abe4a7a08850ee7bcbe5bb4607ba9d6ba3e5ef9ac0216d3e21607e6a03ad03",
+        "portrait-design.json": "d916356c2094d4ab2eb34786a84e2bf18683faad41553c8442ecc1f7ae2a03c4"
       },
       "history": [
         {
@@ -379,26 +562,40 @@
           "change": "ilk kimlik kilidi",
           "from": null,
           "to": "a4249c67cdf999086affd9f5339c58584eaa45b4bca60a294c36fffb0183858b"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 owner canon corrections and separately identified portrait design proposals",
+          "from": "a4249c67cdf999086affd9f5339c58584eaa45b4bca60a294c36fffb0183858b",
+          "to": "3478f8f5231420755b01fe2c5186acd072a0be8aed295b4592192ada09e303e2"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 portrait design included in existing composite identity hash",
+          "from": "3478f8f5231420755b01fe2c5186acd072a0be8aed295b4592192ada09e303e2",
+          "to": "2855c85e10b86a6eb7c17e136cead3bcda983be20a6be0a80451df90633343fe"
         }
-      ]
+      ],
+      "portrait_design_sha256": "d916356c2094d4ab2eb34786a84e2bf18683faad41553c8442ecc1f7ae2a03c4"
     },
     {
       "character_id": "salih",
-      "canon_version": "1.0.0",
+      "canon_version": "1.2.0",
       "lock_status": "LOCKED_FOR_EDIT",
       "approval_status": "NONE",
       "approved_by": null,
       "approved_at": null,
       "locked_at": "2026-11-08",
       "source_commit": "e77f7ef",
-      "identity_sha256": "48b3b0a8196822df7ef4864a2d5993ed78e6e15e8d797d3d6ba80fe9684e4426",
+      "identity_sha256": "189703d05be52e1495f7458f1a6b3c1d0f000b743855a5b7bb62b2a4185758e0",
       "files": {
-        "character.json": "1f333209acc9ebb6156017933db88beb45e630046f0fc1a8db74f06fa94e62e0",
-        "visual-dna.json": "4d0207e04afdf54549659d3d5b559e1e069b5bf2ad8b4efa051fd5a19ab26bc7",
+        "character.json": "0e1a2fc1c5e5ff984fcec64696605168973ac7028f502f6b565e12fec25af473",
+        "visual-dna.json": "638ce355601002ab95d323c37871cef890a08eb527a720aaee42fb2d51e9ec30",
         "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
         "motion-profile.json": "abb2e0fb86b0066d0f450dffc47a3036aaa19f4a977ebfb0f82aaf5ce7b77ab6",
         "voice-profile.json": "028b6df4a4432e65f326e34b65cedc6aaba8d8ee417abd1007ca5acfb611b8f0",
-        "model-spec.json": "71a109c4be0d8b41f2fe76b6fdaa1f8a2fafe3821ec098460ab15b5742c32d00"
+        "model-spec.json": "71a109c4be0d8b41f2fe76b6fdaa1f8a2fafe3821ec098460ab15b5742c32d00",
+        "portrait-design.json": "81a73f841c820345c5a623e2d71a566c5894b9c9e13ed196ad9023820c7ef10b"
       },
       "history": [
         {
@@ -406,26 +603,40 @@
           "change": "ilk kimlik kilidi",
           "from": null,
           "to": "48b3b0a8196822df7ef4864a2d5993ed78e6e15e8d797d3d6ba80fe9684e4426"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 owner canon corrections and separately identified portrait design proposals",
+          "from": "48b3b0a8196822df7ef4864a2d5993ed78e6e15e8d797d3d6ba80fe9684e4426",
+          "to": "36433a0b536c7ac7a6eeaf25a4c74a37416c89b1f5a22dd10619c3b197c77e0e"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 portrait design included in existing composite identity hash",
+          "from": "36433a0b536c7ac7a6eeaf25a4c74a37416c89b1f5a22dd10619c3b197c77e0e",
+          "to": "189703d05be52e1495f7458f1a6b3c1d0f000b743855a5b7bb62b2a4185758e0"
         }
-      ]
+      ],
+      "portrait_design_sha256": "81a73f841c820345c5a623e2d71a566c5894b9c9e13ed196ad9023820c7ef10b"
     },
     {
       "character_id": "veysel",
-      "canon_version": "1.0.0",
+      "canon_version": "1.2.0",
       "lock_status": "LOCKED_FOR_EDIT",
       "approval_status": "NONE",
       "approved_by": null,
       "approved_at": null,
       "locked_at": "2026-11-08",
       "source_commit": "e77f7ef",
-      "identity_sha256": "92a099c0fb3f4582ca8b262ab691805ebbefeb12a92dbc2445f1c99bc188ee96",
+      "identity_sha256": "55dbab5274130b1fae305c718a9b85aed30aeba86d26bf0a3d4b9b9dc7677723",
       "files": {
-        "character.json": "46013e95d216991266c903b1b50ae614d43d26946e8832b483af790bf20308d8",
-        "visual-dna.json": "1be5cff65ad056012957825341ed596f1d622daa868018c7f3079097f3dc77a0",
+        "character.json": "927a6adae61106edbbda42890c08074a1524db26552dc05b05d1a3494f43a013",
+        "visual-dna.json": "4946cee900f52554bd7032708ad633e50b8667b02613b7542a6740fc413a2d2f",
         "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
         "motion-profile.json": "e7cc78e9e4077f26b9ad76a21a1ed0e7505aa7f295d0075cbc7b1c38f9e20bf2",
         "voice-profile.json": "92e64d6f90cfa3c96772caacbab97628de7bd2f4b41460d53817889c38349b6f",
-        "model-spec.json": "79064367cd7f40d68ffe764af53113309623f0ca0e6f5b3929055ddfdcfe220d"
+        "model-spec.json": "79064367cd7f40d68ffe764af53113309623f0ca0e6f5b3929055ddfdcfe220d",
+        "portrait-design.json": "bb1f4d3db1cef940f36c4b37a3b8fd67290cf01d83598915db163b04b134d257"
       },
       "history": [
         {
@@ -433,8 +644,21 @@
           "change": "ilk kimlik kilidi",
           "from": null,
           "to": "92a099c0fb3f4582ca8b262ab691805ebbefeb12a92dbc2445f1c99bc188ee96"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 owner canon corrections and separately identified portrait design proposals",
+          "from": "92a099c0fb3f4582ca8b262ab691805ebbefeb12a92dbc2445f1c99bc188ee96",
+          "to": "a629869e431a3062e2c21f7e648058f5f17007c0984f269beb07e1319f028fd9"
+        },
+        {
+          "date": "2026-11-08",
+          "change": "P7 portrait design included in existing composite identity hash",
+          "from": "a629869e431a3062e2c21f7e648058f5f17007c0984f269beb07e1319f028fd9",
+          "to": "55dbab5274130b1fae305c718a9b85aed30aeba86d26bf0a3d4b9b9dc7677723"
         }
-      ]
+      ],
+      "portrait_design_sha256": "bb1f4d3db1cef940f36c4b37a3b8fd67290cf01d83598915db163b04b134d257"
     }
   ]
 }

@@ -1,5 +1,6 @@
 {
-  "owner_brief": "Teyze; başörtülü, neşeli ama yumuşak",
-  "status": "MISSING",
-  "source": "owner brief; görsel kanon yok"
+  "owner_brief": "29 yaş; Harun'un eşi; başörtülü, güzel ve zarif; mevcut hikâyede 5 aylık hamile",
+  "status": "DESIGN_PENDING_REVIEW",
+  "source": "owner brief; görsel kanon yok",
+  "portrait_design": "portrait-design.json"
 }

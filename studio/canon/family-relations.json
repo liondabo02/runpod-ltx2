@@ -1,6 +1,6 @@
 {
   "schema": "ahos.studio.relations.v1",
-  "count": 28,
+  "count": 32,
   "relations": [
     {
       "from": "aden",
@@ -55,12 +55,14 @@
     {
       "from": "esma",
       "type": "aunt_of",
-      "to": "aden"
+      "to": "aden",
+      "label_tr": "teyze"
     },
     {
       "from": "esma",
       "type": "aunt_of",
-      "to": "kaan"
+      "to": "kaan",
+      "label_tr": "teyze"
     },
     {
       "from": "esra",
@@ -99,13 +101,15 @@
     },
     {
       "from": "harun",
-      "type": "uncle_of",
-      "to": "aden"
+      "type": "uncle_by_marriage_of",
+      "to": "aden",
+      "label_tr": "enişte"
     },
     {
       "from": "harun",
-      "type": "uncle_of",
-      "to": "kaan"
+      "type": "uncle_by_marriage_of",
+      "to": "kaan",
+      "label_tr": "enişte"
     },
     {
       "from": "kaan",
@@ -141,6 +145,27 @@
       "from": "veysel",
       "type": "partner_of",
       "to": "oznur"
+    },
+    {
+      "from": "harun",
+      "type": "partner_of",
+      "to": "esma"
+    },
+    {
+      "from": "esma",
+      "type": "partner_of",
+      "to": "harun"
+    },
+    {
+      "from": "ahmet",
+      "type": "partner_of",
+      "to": "esra"
+    },
+    {
+      "from": "esra",
+      "type": "partner_of",
+      "to": "ahmet"
     }
-  ]
+  ],
+  "unlisted_extended_relations": "UNVERIFIED; do not infer uncle/aunt/cousin titles"
 }

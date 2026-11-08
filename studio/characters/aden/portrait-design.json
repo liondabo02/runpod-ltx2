@@ -1,0 +1,22 @@
+{
+  "schema": "ahos.studio.portrait-design.v1",
+  "character_id": "aden",
+  "version": "1.1.0",
+  "status": "DESIGN_PENDING_REVIEW",
+  "owner_constraints": "3 yaş; koyu kahverengi dalgalı saç; TEK sarı yıldız toka; sol yanakta ÜÇ çil; kobalt tişörtte sarı uçurtma; lacivert şort",
+  "proposal_notice": "Unspecified artistic choices below are proposals, not owner-approved canon or finished images.",
+  "face_preset": "aden-p7-v1",
+  "head_jaw": "round cheeks / soft short jaw",
+  "eyes_shape_spacing_color": "large almond / medium spacing / dark hazel",
+  "nose_brows_mouth": "button / fine curved / small smile",
+  "hair_hairline": "dark brown wavy / side part / single yellow star clip",
+  "body_height_age_proportions": "preschool soft limbs / 3.6 heads",
+  "skin_clothing_palette": "warm peach / cobalt and navy",
+  "distinctive_marks": "three freckles on LEFT cheek; yellow kite on shirt; navy shorts",
+  "visual_reference": null,
+  "owner_approval": "NONE",
+  "seed": 7000,
+  "seed_note": "Reproducibility hint only; model/version/settings and reference hashes are also required",
+  "negative_prompt": "another named character face, adult body on infant, copied original, mixed identities, text, watermark",
+  "prompt": "Single character portrait, Aden, age 3.0 years. 3 yaş; koyu kahverengi dalgalı saç; TEK sarı yıldız toka; sol yanakta ÜÇ çil; kobalt tişörtte sarı uçurtma; lacivert şort. round cheeks / soft short jaw; large almond / medium spacing / dark hazel; button / fine curved / small smile; dark brown wavy / side part / single yellow star clip; preschool soft limbs / 3.6 heads; warm peach / cobalt and navy; three freckles on LEFT cheek; yellow kite on shirt; navy shorts. Family-friendly stylized animation, neutral background, visible face, consistent lighting. Only this one character."
+}

@@ -5,7 +5,7 @@
   "age_years": 30.0,
   "age_stage": "adult",
   "gender_presentation": "man",
-  "role": "uncle",
+  "role": "uncle_by_marriage",
   "family_group": "merkez aile",
   "lead": false,
   "hijab": false,
@@ -17,7 +17,7 @@
   },
   "status": {
     "canon": "READY",
-    "visual_dna": "MISSING",
+    "visual_dna": "DESIGN_PENDING_REVIEW",
     "palette": "MISSING",
     "motion": "SPEC_READY",
     "voice": "READY_FOR_QA",

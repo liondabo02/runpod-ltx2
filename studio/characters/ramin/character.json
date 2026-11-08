@@ -17,7 +17,7 @@
   },
   "status": {
     "canon": "READY",
-    "visual_dna": "MISSING",
+    "visual_dna": "DESIGN_PENDING_REVIEW",
     "palette": "MISSING",
     "motion": "SPEC_READY",
     "voice": "MISSING",
@@ -26,5 +26,6 @@
   },
   "source_refs": [
     "studio/canon/cast-manifest.json"
-  ]
+  ],
+  "age_months": 1
 }

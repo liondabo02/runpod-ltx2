@@ -1,0 +1,22 @@
+{
+  "schema": "ahos.studio.portrait-design.v1",
+  "character_id": "fatos",
+  "version": "1.1.0",
+  "status": "DESIGN_PENDING_REVIEW",
+  "owner_constraints": "30 yaş; BAŞÖRTÜSÜZ; ameliyat sonrası zayıflamış ve yüz görünümü değişmiş; doğal ve saygılı; Davut'un eşi",
+  "proposal_notice": "Unspecified artistic choices below are proposals, not owner-approved canon or finished images.",
+  "face_preset": "fatos-p7-v1",
+  "head_jaw": "narrow oval / softened tapered jaw",
+  "eyes_shape_spacing_color": "almond / close / warm brown",
+  "nose_brows_mouth": "small curved / thin curved / medium smile",
+  "hair_hairline": "uncovered shoulder-length chestnut / side fringe",
+  "body_height_age_proportions": "slim adult after surgery / 6.7 heads",
+  "skin_clothing_palette": "warm beige / coral and cream",
+  "distinctive_marks": "NO HIJAB; natural respectful post-surgery changed face, no invented scars",
+  "visual_reference": null,
+  "owner_approval": "NONE",
+  "seed": 7011,
+  "seed_note": "Reproducibility hint only; model/version/settings and reference hashes are also required",
+  "negative_prompt": "another named character face, adult body on infant, copied original, mixed identities, text, watermark",
+  "prompt": "Single character portrait, Fatoş, age 30.0 years. 30 yaş; BAŞÖRTÜSÜZ; ameliyat sonrası zayıflamış ve yüz görünümü değişmiş; doğal ve saygılı; Davut'un eşi. narrow oval / softened tapered jaw; almond / close / warm brown; small curved / thin curved / medium smile; uncovered shoulder-length chestnut / side fringe; slim adult after surgery / 6.7 heads; warm beige / coral and cream; NO HIJAB; natural respectful post-surgery changed face, no invented scars. Family-friendly stylized animation, neutral background, visible face, consistent lighting. Only this one character."
+}

@@ -1,0 +1,22 @@
+{
+  "schema": "ahos.studio.portrait-design.v1",
+  "character_id": "salih",
+  "version": "1.1.0",
+  "status": "DESIGN_PENDING_REVIEW",
+  "owner_constraints": "2 yaş; Veysel ve Öznur'un oğlu; kendine özgü yüz ve saç",
+  "proposal_notice": "Unspecified artistic choices below are proposals, not owner-approved canon or finished images.",
+  "face_preset": "salih-p7-v1",
+  "head_jaw": "pear shaped baby cheeks / broad small chin",
+  "eyes_shape_spacing_color": "round / medium / brown",
+  "nose_brows_mouth": "upturned / short curved / broad grin",
+  "hair_hairline": "chestnut soft side curls / rounded hairline",
+  "body_height_age_proportions": "two-year toddler / 3.5 heads",
+  "skin_clothing_palette": "golden beige / mustard and forest green",
+  "distinctive_marks": "side curls and broad grin; not Kaan or twins",
+  "visual_reference": null,
+  "owner_approval": "NONE",
+  "seed": 7008,
+  "seed_note": "Reproducibility hint only; model/version/settings and reference hashes are also required",
+  "negative_prompt": "another named character face, adult body on infant, copied original, mixed identities, text, watermark",
+  "prompt": "Single character portrait, Salih, age 2.0 years. 2 yaş; Veysel ve Öznur'un oğlu; kendine özgü yüz ve saç. pear shaped baby cheeks / broad small chin; round / medium / brown; upturned / short curved / broad grin; chestnut soft side curls / rounded hairline; two-year toddler / 3.5 heads; golden beige / mustard and forest green; side curls and broad grin; not Kaan or twins. Family-friendly stylized animation, neutral background, visible face, consistent lighting. Only this one character."
+}

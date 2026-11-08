@@ -1,0 +1,22 @@
+{
+  "schema": "ahos.studio.portrait-design.v1",
+  "character_id": "kaan",
+  "version": "1.1.0",
+  "status": "DESIGN_PENDING_REVIEW",
+  "owner_constraints": "1 yaş; Aden'in küçük kardeşi; belirgin bebeksi oran; Salih ve Berzan'dan ayrı yüz",
+  "proposal_notice": "Unspecified artistic choices below are proposals, not owner-approved canon or finished images.",
+  "face_preset": "kaan-p7-v1",
+  "head_jaw": "wide baby forehead / short round jaw",
+  "eyes_shape_spacing_color": "very large round / wide / dark brown",
+  "nose_brows_mouth": "tiny round / short soft / two-tooth smile",
+  "hair_hairline": "short black curls / forehead curl",
+  "body_height_age_proportions": "one-year baby / 3.1 heads",
+  "skin_clothing_palette": "warm tan / coral and navy",
+  "distinctive_marks": "curl behind right ear; never Salih or Berzan face",
+  "visual_reference": null,
+  "owner_approval": "NONE",
+  "seed": 7001,
+  "seed_note": "Reproducibility hint only; model/version/settings and reference hashes are also required",
+  "negative_prompt": "another named character face, adult body on infant, copied original, mixed identities, text, watermark",
+  "prompt": "Single character portrait, Kaan, age 1.0 years. 1 yaş; Aden'in küçük kardeşi; belirgin bebeksi oran; Salih ve Berzan'dan ayrı yüz. wide baby forehead / short round jaw; very large round / wide / dark brown; tiny round / short soft / two-tooth smile; short black curls / forehead curl; one-year baby / 3.1 heads; warm tan / coral and navy; curl behind right ear; never Salih or Berzan face. Family-friendly stylized animation, neutral background, visible face, consistent lighting. Only this one character."
+}

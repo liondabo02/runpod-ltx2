@@ -39,17 +39,17 @@ def test_ages_and_genders_match_canon():
 
 def test_hijab_and_long_hair_flags():
     rows = {row["character_id"]: row for row in load("canon", "cast-manifest.json")["characters"]}
-    assert {cid for cid, row in rows.items() if row["hijab"]} == {"esra", "oznur"}
+    assert {cid for cid, row in rows.items() if row["hijab"]} == {"esra", "esma", "oznur"}
     assert {cid for cid, row in rows.items() if row["long_hair"]} == {"harun", "davut"}
 
 
 def test_family_relations_are_complete_and_locked():
     relations = load("canon", "family-relations.json")
-    assert relations["count"] == 28
+    assert relations["count"] == 32
     pairs = {(row["from"], row["type"], row["to"]) for row in relations["relations"]}
     assert ("esra", "mother_of", "aden") in pairs
     assert ("ahmet", "father_of", "kaan") in pairs
-    assert ("harun", "uncle_of", "aden") in pairs
+    assert ("harun", "uncle_by_marriage_of", "aden") in pairs
     assert ("berzan", "twin_of", "aras") in pairs
     assert ("davut", "parent_of", "ramin") in pairs
 

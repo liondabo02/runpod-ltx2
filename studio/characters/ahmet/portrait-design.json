@@ -1,0 +1,22 @@
+{
+  "schema": "ahos.studio.portrait-design.v1",
+  "character_id": "ahmet",
+  "version": "1.1.0",
+  "status": "DESIGN_PENDING_REVIEW",
+  "owner_constraints": "Aden ve Kaan'ın babası; koyu gözlü; Veysel'den ayrı yüz ve saç",
+  "proposal_notice": "Unspecified artistic choices below are proposals, not owner-approved canon or finished images.",
+  "face_preset": "ahmet-p7-v1",
+  "head_jaw": "rectangular / firm broad jaw",
+  "eyes_shape_spacing_color": "deep set / narrow / dark brown",
+  "nose_brows_mouth": "straight broad / thick straight / wide smile",
+  "hair_hairline": "short dark hair / angular hairline",
+  "body_height_age_proportions": "adult medium shoulders / 7 heads",
+  "skin_clothing_palette": "olive / charcoal and burgundy",
+  "distinctive_marks": "angular hairline and dark eyes; never Veysel face",
+  "visual_reference": null,
+  "owner_approval": "NONE",
+  "seed": 7003,
+  "seed_note": "Reproducibility hint only; model/version/settings and reference hashes are also required",
+  "negative_prompt": "another named character face, adult body on infant, copied original, mixed identities, text, watermark",
+  "prompt": "Single character portrait, Ahmet, age 33.0 years. Aden ve Kaan'ın babası; koyu gözlü; Veysel'den ayrı yüz ve saç. rectangular / firm broad jaw; deep set / narrow / dark brown; straight broad / thick straight / wide smile; short dark hair / angular hairline; adult medium shoulders / 7 heads; olive / charcoal and burgundy; angular hairline and dark eyes; never Veysel face. Family-friendly stylized animation, neutral background, visible face, consistent lighting. Only this one character."
+}

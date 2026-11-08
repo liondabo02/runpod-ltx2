@@ -101,6 +101,8 @@ def motion_for(stage: str) -> dict:
 
 
 def build() -> None:
+    if (OUT / "canon/p7-owner-constraints.json").exists():
+        raise SystemExit("P7 canon installed: legacy destructive rebuild disabled; use targeted canon changes and identity_lock --change")
     aden = load(ROOT / "characters" / "aden.json")
     kaan = load(ROOT / "characters" / "kaan.json")
     audio_root = Path(r"C:\actions-runner\_work\runpod-ltx2\runpod-ltx2\control_plane_v2"

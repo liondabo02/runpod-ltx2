@@ -1,0 +1,22 @@
+{
+  "schema": "ahos.studio.portrait-design.v1",
+  "character_id": "oznur",
+  "version": "1.1.0",
+  "status": "DESIGN_PENDING_REVIEW",
+  "owner_constraints": "31 yaş; başörtülü; Veysel'in eşi; Salih ve Medine'nin annesi; Esra ve Esma'dan ayrı tasarım",
+  "proposal_notice": "Unspecified artistic choices below are proposals, not owner-approved canon or finished images.",
+  "face_preset": "oznur-p7-v1",
+  "head_jaw": "long oval / narrow rounded chin",
+  "eyes_shape_spacing_color": "hooded / medium / deep brown",
+  "nose_brows_mouth": "soft curved / high arch / full smile",
+  "hair_hairline": "covered by hijab; no visible hairline",
+  "body_height_age_proportions": "adult slender shoulders / 6.7 heads",
+  "skin_clothing_palette": "warm medium / plum and dusty blue",
+  "distinctive_marks": "plum headscarf; long oval distinct from Esra and Esma",
+  "visual_reference": null,
+  "owner_approval": "NONE",
+  "seed": 7007,
+  "seed_note": "Reproducibility hint only; model/version/settings and reference hashes are also required",
+  "negative_prompt": "another named character face, adult body on infant, copied original, mixed identities, text, watermark",
+  "prompt": "Single character portrait, Öznur, age 31.0 years. 31 yaş; başörtülü; Veysel'in eşi; Salih ve Medine'nin annesi; Esra ve Esma'dan ayrı tasarım. long oval / narrow rounded chin; hooded / medium / deep brown; soft curved / high arch / full smile; covered by hijab; no visible hairline; adult slender shoulders / 6.7 heads; warm medium / plum and dusty blue; plum headscarf; long oval distinct from Esra and Esma. Family-friendly stylized animation, neutral background, visible face, consistent lighting. Only this one character."
+}

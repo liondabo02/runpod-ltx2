@@ -18,7 +18,7 @@
       "height_status": "READY_FOR_QA",
       "status": {
         "canon": "READY",
-        "visual_dna": "READY_FOR_QA",
+        "visual_dna": "DESIGN_PENDING_REVIEW",
         "palette": "READY_FOR_QA",
         "motion": "SPEC_READY",
         "voice": "READY_FOR_QA",
@@ -41,7 +41,7 @@
       "height_status": "READY_FOR_QA",
       "status": {
         "canon": "READY",
-        "visual_dna": "READY_FOR_QA",
+        "visual_dna": "DESIGN_PENDING_REVIEW",
         "palette": "READY_FOR_QA",
         "motion": "SPEC_READY",
         "voice": "READY_FOR_QA",
@@ -64,7 +64,7 @@
       "height_status": "MISSING",
       "status": {
         "canon": "READY",
-        "visual_dna": "MISSING",
+        "visual_dna": "DESIGN_PENDING_REVIEW",
         "palette": "MISSING",
         "motion": "SPEC_READY",
         "voice": "READY_FOR_QA",
@@ -87,7 +87,7 @@
       "height_status": "MISSING",
       "status": {
         "canon": "READY",
-        "visual_dna": "MISSING",
+        "visual_dna": "DESIGN_PENDING_REVIEW",
         "palette": "MISSING",
         "motion": "SPEC_READY",
         "voice": "READY_FOR_QA",
@@ -104,13 +104,13 @@
       "role": "aunt",
       "family_group": "merkez aile",
       "lead": false,
-      "hijab": false,
+      "hijab": true,
       "long_hair": false,
       "height_cm": null,
       "height_status": "MISSING",
       "status": {
         "canon": "READY",
-        "visual_dna": "MISSING",
+        "visual_dna": "DESIGN_PENDING_REVIEW",
         "palette": "MISSING",
         "motion": "SPEC_READY",
         "voice": "READY_FOR_QA",
@@ -124,7 +124,7 @@
       "age_years": 30.0,
       "age_stage": "adult",
       "gender_presentation": "man",
-      "role": "uncle",
+      "role": "uncle_by_marriage",
       "family_group": "merkez aile",
       "lead": false,
       "hijab": false,
@@ -133,7 +133,7 @@
       "height_status": "MISSING",
       "status": {
         "canon": "READY",
-        "visual_dna": "MISSING",
+        "visual_dna": "DESIGN_PENDING_REVIEW",
         "palette": "MISSING",
         "motion": "SPEC_READY",
         "voice": "READY_FOR_QA",
@@ -156,7 +156,7 @@
       "height_status": "MISSING",
       "status": {
         "canon": "READY",
-        "visual_dna": "MISSING",
+        "visual_dna": "DESIGN_PENDING_REVIEW",
         "palette": "MISSING",
         "motion": "SPEC_READY",
         "voice": "READY_FOR_QA",
@@ -179,7 +179,7 @@
       "height_status": "MISSING",
       "status": {
         "canon": "READY",
-        "visual_dna": "MISSING",
+        "visual_dna": "DESIGN_PENDING_REVIEW",
         "palette": "MISSING",
         "motion": "SPEC_READY",
         "voice": "READY_FOR_QA",
@@ -202,7 +202,7 @@
       "height_status": "MISSING",
       "status": {
         "canon": "READY",
-        "visual_dna": "MISSING",
+        "visual_dna": "DESIGN_PENDING_REVIEW",
         "palette": "MISSING",
         "motion": "SPEC_READY",
         "voice": "READY_FOR_QA",
@@ -225,13 +225,14 @@
       "height_status": "MISSING",
       "status": {
         "canon": "READY",
-        "visual_dna": "MISSING",
+        "visual_dna": "DESIGN_PENDING_REVIEW",
         "palette": "MISSING",
         "motion": "SPEC_READY",
         "voice": "MISSING",
         "model_3d": "MISSING",
         "owner_approval": "NONE"
-      }
+      },
+      "age_months": 2
     },
     {
       "character_id": "davut",
@@ -248,7 +249,7 @@
       "height_status": "MISSING",
       "status": {
         "canon": "READY",
-        "visual_dna": "MISSING",
+        "visual_dna": "DESIGN_PENDING_REVIEW",
         "palette": "MISSING",
         "motion": "SPEC_READY",
         "voice": "READY_FOR_QA",
@@ -271,7 +272,7 @@
       "height_status": "MISSING",
       "status": {
         "canon": "READY",
-        "visual_dna": "MISSING",
+        "visual_dna": "DESIGN_PENDING_REVIEW",
         "palette": "MISSING",
         "motion": "SPEC_READY",
         "voice": "READY_FOR_QA",
@@ -294,7 +295,7 @@
       "height_status": "MISSING",
       "status": {
         "canon": "READY",
-        "visual_dna": "MISSING",
+        "visual_dna": "DESIGN_PENDING_REVIEW",
         "palette": "MISSING",
         "motion": "SPEC_READY",
         "voice": "READY_FOR_QA",
@@ -317,7 +318,7 @@
       "height_status": "MISSING",
       "status": {
         "canon": "READY",
-        "visual_dna": "MISSING",
+        "visual_dna": "DESIGN_PENDING_REVIEW",
         "palette": "MISSING",
         "motion": "SPEC_READY",
         "voice": "READY_FOR_QA",
@@ -340,7 +341,7 @@
       "height_status": "MISSING",
       "status": {
         "canon": "READY",
-        "visual_dna": "MISSING",
+        "visual_dna": "DESIGN_PENDING_REVIEW",
         "palette": "MISSING",
         "motion": "SPEC_READY",
         "voice": "READY_FOR_QA",
@@ -363,13 +364,14 @@
       "height_status": "MISSING",
       "status": {
         "canon": "READY",
-        "visual_dna": "MISSING",
+        "visual_dna": "DESIGN_PENDING_REVIEW",
         "palette": "MISSING",
         "motion": "SPEC_READY",
         "voice": "MISSING",
         "model_3d": "MISSING",
         "owner_approval": "NONE"
-      }
+      },
+      "age_months": 1
     }
   ],
   "note": "Yalnız Aden/Kaan görsel kanona sahip; diğerleri MISSING."

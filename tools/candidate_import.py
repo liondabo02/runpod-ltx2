@@ -23,6 +23,10 @@ def sha256(path: Path) -> str:
 
 def import_candidate(character: str, image: Path, *, root: Path = ROOT,
                      source: str = "external", note: str = "") -> dict:
+    if (root / "studio/characters" / character / "portrait-design.json").is_file() and character.isidentifier():
+        from p7_portraits import import_portrait
+        return import_portrait(root, character, image, source=source, model="UNKNOWN",
+                               prompt=note or "UNKNOWN", license_status="UNVERIFIED")
     if character != "aden":
         raise SystemExit("P6 yalnız aden adayı kabul eder")
     suffix = image.suffix.lower()

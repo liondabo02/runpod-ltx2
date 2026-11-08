@@ -1,0 +1,118 @@
+{
+  "scope": "P7 only",
+  "paid_budget_usd": 0,
+  "orders": [
+    {
+      "character_id": "aden",
+      "design": "studio/characters/aden/portrait-design.json",
+      "candidate_limit": 1,
+      "status": "AWAITING_FREE_GENERATOR_OR_IMPORT",
+      "next": "individual portrait -> human canon and similarity QA -> explicit approval"
+    },
+    {
+      "character_id": "kaan",
+      "design": "studio/characters/kaan/portrait-design.json",
+      "candidate_limit": 1,
+      "status": "AWAITING_FREE_GENERATOR_OR_IMPORT",
+      "next": "individual portrait -> human canon and similarity QA -> explicit approval"
+    },
+    {
+      "character_id": "esra",
+      "design": "studio/characters/esra/portrait-design.json",
+      "candidate_limit": 1,
+      "status": "AWAITING_FREE_GENERATOR_OR_IMPORT",
+      "next": "individual portrait -> human canon and similarity QA -> explicit approval"
+    },
+    {
+      "character_id": "ahmet",
+      "design": "studio/characters/ahmet/portrait-design.json",
+      "candidate_limit": 1,
+      "status": "AWAITING_FREE_GENERATOR_OR_IMPORT",
+      "next": "individual portrait -> human canon and similarity QA -> explicit approval"
+    },
+    {
+      "character_id": "esma",
+      "design": "studio/characters/esma/portrait-design.json",
+      "candidate_limit": 1,
+      "status": "AWAITING_FREE_GENERATOR_OR_IMPORT",
+      "next": "individual portrait -> human canon and similarity QA -> explicit approval"
+    },
+    {
+      "character_id": "harun",
+      "design": "studio/characters/harun/portrait-design.json",
+      "candidate_limit": 1,
+      "status": "AWAITING_FREE_GENERATOR_OR_IMPORT",
+      "next": "individual portrait -> human canon and similarity QA -> explicit approval"
+    },
+    {
+      "character_id": "veysel",
+      "design": "studio/characters/veysel/portrait-design.json",
+      "candidate_limit": 1,
+      "status": "AWAITING_FREE_GENERATOR_OR_IMPORT",
+      "next": "individual portrait -> human canon and similarity QA -> explicit approval"
+    },
+    {
+      "character_id": "oznur",
+      "design": "studio/characters/oznur/portrait-design.json",
+      "candidate_limit": 1,
+      "status": "AWAITING_FREE_GENERATOR_OR_IMPORT",
+      "next": "individual portrait -> human canon and similarity QA -> explicit approval"
+    },
+    {
+      "character_id": "salih",
+      "design": "studio/characters/salih/portrait-design.json",
+      "candidate_limit": 1,
+      "status": "AWAITING_FREE_GENERATOR_OR_IMPORT",
+      "next": "individual portrait -> human canon and similarity QA -> explicit approval"
+    },
+    {
+      "character_id": "medine",
+      "design": "studio/characters/medine/portrait-design.json",
+      "candidate_limit": 1,
+      "status": "AWAITING_FREE_GENERATOR_OR_IMPORT",
+      "next": "individual portrait -> human canon and similarity QA -> explicit approval"
+    },
+    {
+      "character_id": "davut",
+      "design": "studio/characters/davut/portrait-design.json",
+      "candidate_limit": 1,
+      "status": "AWAITING_FREE_GENERATOR_OR_IMPORT",
+      "next": "individual portrait -> human canon and similarity QA -> explicit approval"
+    },
+    {
+      "character_id": "fatos",
+      "design": "studio/characters/fatos/portrait-design.json",
+      "candidate_limit": 1,
+      "status": "AWAITING_FREE_GENERATOR_OR_IMPORT",
+      "next": "individual portrait -> human canon and similarity QA -> explicit approval"
+    },
+    {
+      "character_id": "emos",
+      "design": "studio/characters/emos/portrait-design.json",
+      "candidate_limit": 1,
+      "status": "AWAITING_FREE_GENERATOR_OR_IMPORT",
+      "next": "individual portrait -> human canon and similarity QA -> explicit approval"
+    },
+    {
+      "character_id": "berzan",
+      "design": "studio/characters/berzan/portrait-design.json",
+      "candidate_limit": 1,
+      "status": "AWAITING_FREE_GENERATOR_OR_IMPORT",
+      "next": "individual portrait -> human canon and similarity QA -> explicit approval"
+    },
+    {
+      "character_id": "aras",
+      "design": "studio/characters/aras/portrait-design.json",
+      "candidate_limit": 1,
+      "status": "AWAITING_FREE_GENERATOR_OR_IMPORT",
+      "next": "individual portrait -> human canon and similarity QA -> explicit approval"
+    },
+    {
+      "character_id": "ramin",
+      "design": "studio/characters/ramin/portrait-design.json",
+      "candidate_limit": 1,
+      "status": "AWAITING_FREE_GENERATOR_OR_IMPORT",
+      "next": "individual portrait -> human canon and similarity QA -> explicit approval"
+    }
+  ]
+}

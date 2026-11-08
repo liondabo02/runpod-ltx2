@@ -1,5 +1,6 @@
 {
-  "owner_brief": "Dayı; uzun boylu, uzun saçlı, güçlü ve sıcak",
-  "status": "MISSING",
-  "source": "owner brief; görsel kanon yok"
+  "owner_brief": "30 yaş; Esma'nın eşi; Aden ve Kaan'ın ENİŞTESİ; uzun boylu, uzun saçlı, yakışıklı, karizmatik; Davut'tan ayrı yüz ve vücut",
+  "status": "DESIGN_PENDING_REVIEW",
+  "source": "owner brief; görsel kanon yok",
+  "portrait_design": "portrait-design.json"
 }

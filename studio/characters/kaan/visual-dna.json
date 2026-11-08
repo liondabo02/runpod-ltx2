@@ -1,6 +1,6 @@
 {
-  "owner_brief": "1 yaş erkek; bebeksi oran (3,0 kafa), kısa kıvırcık siyah saç, mercan tişört",
-  "status": "READY_FOR_QA",
+  "owner_brief": "1 yaş; Aden'in küçük kardeşi; belirgin bebeksi oran; Salih ve Berzan'dan ayrı yüz",
+  "status": "DESIGN_PENDING_REVIEW",
   "source": "characters/kaan.json",
   "palette": {
     "skin": "#E8BE96",
@@ -42,5 +42,6 @@
     "limb_style": "çok yuvarlak, kısa kol-bacak, büyük kafa; gövde bebeksi ve tombul",
     "hands": "dört parmak + başparmak, minik",
     "feet": "yumuşak tabanlı bebek ayakkabısı"
-  }
+  },
+  "portrait_design": "portrait-design.json"
 }

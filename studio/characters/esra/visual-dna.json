@@ -1,5 +1,6 @@
 {
-  "owner_brief": "Aden ve Kaan'ın annesi; başörtülü, sıcak ve sakin",
-  "status": "MISSING",
-  "source": "owner brief; görsel kanon yok"
+  "owner_brief": "Aden ve Kaan'ın annesi; başörtülü",
+  "status": "DESIGN_PENDING_REVIEW",
+  "source": "owner brief; görsel kanon yok",
+  "portrait_design": "portrait-design.json"
 }

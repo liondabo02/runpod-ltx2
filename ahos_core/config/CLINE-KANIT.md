@@ -1000,3 +1000,35 @@ exit : 0 / 0
 23 passed in 8.69s (venv)
 ```
 
+
+## P7 2026-11-08T16:59:57.530611+00:00
+
+komut : C:\Users\esmak\AppData\Local\Programs\Python\Python312\python.exe -B -m pytest -q --no-header -p no:cacheprovider ahos_core/tests/test_p7_portraits.py ahos_core/tests/test_candidate_import.py ahos_core/tests/test_identity_lock.py ahos_core/tests/test_studio_16.py ahos_core/tests/test_p5_identity_gate.py
+exit : 0
+çıktı :
+```text
+......................................                                   [100%]
+38 passed in 7.07s
+```
+
+komut : C:\Users\esmak\AppData\Local\Programs\Python\Python312\python.exe -B -m py_compile tools/p7_portraits.py tools/identity_lock.py tools/candidate_import.py tools/build_studio_cast.py
+exit : 0
+çıktı :
+```text
+```
+
+komut : C:\Users\esmak\AppData\Local\Programs\Python\Python312\python.exe -B tools/identity_lock.py --verify
+exit : 0
+çıktı :
+```text
+{
+  "ok": true,
+  "problems": []
+}
+```
+
+komut : git diff --check
+exit : 0
+çıktı :
+```text
+```

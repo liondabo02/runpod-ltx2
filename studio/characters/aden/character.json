@@ -21,7 +21,7 @@
   },
   "status": {
     "canon": "READY",
-    "visual_dna": "READY_FOR_QA",
+    "visual_dna": "DESIGN_PENDING_REVIEW",
     "palette": "READY_FOR_QA",
     "motion": "SPEC_READY",
     "voice": "READY_FOR_QA",

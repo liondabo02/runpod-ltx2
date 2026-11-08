@@ -1,5 +1,6 @@
 {
-  "owner_brief": "Uzun saçlı, iri yapılı yetişkin; Emoş, Berzan, Aras ve Ramin'in babası",
-  "status": "MISSING",
-  "source": "owner brief; görsel kanon yok"
+  "owner_brief": "30 yaş; uzun saçlı; İRİ, KİLOLU, geniş vücutlu, dolgun yüz; Fatoş'un eşi; Harun'a benzemeyecek",
+  "status": "DESIGN_PENDING_REVIEW",
+  "source": "owner brief; görsel kanon yok",
+  "portrait_design": "portrait-design.json"
 }

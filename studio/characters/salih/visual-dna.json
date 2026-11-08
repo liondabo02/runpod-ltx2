@@ -1,5 +1,6 @@
 {
-  "owner_brief": "Yaklaşık 2 yaş erkek çocuk",
-  "status": "MISSING",
-  "source": "owner brief; görsel kanon yok"
+  "owner_brief": "2 yaş; Veysel ve Öznur'un oğlu; kendine özgü yüz ve saç",
+  "status": "DESIGN_PENDING_REVIEW",
+  "source": "owner brief; görsel kanon yok",
+  "portrait_design": "portrait-design.json"
 }

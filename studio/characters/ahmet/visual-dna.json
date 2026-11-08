@@ -1,5 +1,6 @@
 {
-  "owner_brief": "Aden ve Kaan'ın babası; sakin, destekleyici",
-  "status": "MISSING",
-  "source": "owner brief; görsel kanon yok"
+  "owner_brief": "Aden ve Kaan'ın babası; koyu gözlü; Veysel'den ayrı yüz ve saç",
+  "status": "DESIGN_PENDING_REVIEW",
+  "source": "owner brief; görsel kanon yok",
+  "portrait_design": "portrait-design.json"
 }

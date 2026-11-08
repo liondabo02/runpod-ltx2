@@ -1,5 +1,6 @@
 {
-  "owner_brief": "Yenidoğan bebek; yalnız agu, nefes ve kısa tepkiler",
-  "status": "MISSING",
-  "source": "owner brief; görsel kanon yok"
+  "owner_brief": "1 aylık bebek; Davut ve Fatoş'un çocuğu",
+  "status": "DESIGN_PENDING_REVIEW",
+  "source": "owner brief; görsel kanon yok",
+  "portrait_design": "portrait-design.json"
 }

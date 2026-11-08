@@ -1,5 +1,6 @@
 {
-  "owner_brief": "Yetişkin kadın; Davut'un eşi, dört çocuğun annesi",
-  "status": "MISSING",
-  "source": "owner brief; görsel kanon yok"
+  "owner_brief": "30 yaş; BAŞÖRTÜSÜZ; ameliyat sonrası zayıflamış ve yüz görünümü değişmiş; doğal ve saygılı; Davut'un eşi",
+  "status": "DESIGN_PENDING_REVIEW",
+  "source": "owner brief; görsel kanon yok",
+  "portrait_design": "portrait-design.json"
 }

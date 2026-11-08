@@ -8,7 +8,7 @@
   "role": "aunt",
   "family_group": "merkez aile",
   "lead": false,
-  "hijab": false,
+  "hijab": true,
   "long_hair": false,
   "height_cm": null,
   "height_status": "MISSING",
@@ -17,7 +17,7 @@
   },
   "status": {
     "canon": "READY",
-    "visual_dna": "MISSING",
+    "visual_dna": "DESIGN_PENDING_REVIEW",
     "palette": "MISSING",
     "motion": "SPEC_READY",
     "voice": "READY_FOR_QA",

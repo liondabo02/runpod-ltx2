@@ -1,0 +1,22 @@
+{
+  "schema": "ahos.studio.portrait-design.v1",
+  "character_id": "esra",
+  "version": "1.1.0",
+  "status": "DESIGN_PENDING_REVIEW",
+  "owner_constraints": "Aden ve Kaan'ın annesi; başörtülü",
+  "proposal_notice": "Unspecified artistic choices below are proposals, not owner-approved canon or finished images.",
+  "face_preset": "esra-p7-v1",
+  "head_jaw": "soft oval / rounded chin",
+  "eyes_shape_spacing_color": "almond / medium / warm brown",
+  "nose_brows_mouth": "small straight / soft arch / rounded smile",
+  "hair_hairline": "covered by hijab; no visible hairline",
+  "body_height_age_proportions": "adult average frame / 6.5 heads",
+  "skin_clothing_palette": "warm beige / muted rose and cream",
+  "distinctive_marks": "rose headscarf, gentle oval face",
+  "visual_reference": null,
+  "owner_approval": "NONE",
+  "seed": 7002,
+  "seed_note": "Reproducibility hint only; model/version/settings and reference hashes are also required",
+  "negative_prompt": "another named character face, adult body on infant, copied original, mixed identities, text, watermark",
+  "prompt": "Single character portrait, Esra, age 33.0 years. Aden ve Kaan'ın annesi; başörtülü. soft oval / rounded chin; almond / medium / warm brown; small straight / soft arch / rounded smile; covered by hijab; no visible hairline; adult average frame / 6.5 heads; warm beige / muted rose and cream; rose headscarf, gentle oval face. Family-friendly stylized animation, neutral background, visible face, consistent lighting. Only this one character."
+}

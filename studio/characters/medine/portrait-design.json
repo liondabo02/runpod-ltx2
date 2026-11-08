@@ -1,0 +1,22 @@
+{
+  "schema": "ahos.studio.portrait-design.v1",
+  "character_id": "medine",
+  "version": "1.1.0",
+  "status": "DESIGN_PENDING_REVIEW",
+  "owner_constraints": "2 aylık kız bebek",
+  "proposal_notice": "Unspecified artistic choices below are proposals, not owner-approved canon or finished images.",
+  "face_preset": "medine-p7-v1",
+  "head_jaw": "round infant cranium / tiny chin",
+  "eyes_shape_spacing_color": "sleepy rounded / wide / dark brown proposal",
+  "nose_brows_mouth": "tiny button / sparse / small relaxed mouth",
+  "hair_hairline": "fine dark down / soft infant hairline",
+  "body_height_age_proportions": "two-month infant / supported neck / 2.5 heads",
+  "skin_clothing_palette": "soft peach / blush and cream",
+  "distinctive_marks": "two-month baby proportions; never standing",
+  "visual_reference": null,
+  "owner_approval": "NONE",
+  "seed": 7009,
+  "seed_note": "Reproducibility hint only; model/version/settings and reference hashes are also required",
+  "negative_prompt": "another named character face, adult body on infant, copied original, mixed identities, text, watermark",
+  "prompt": "Single character portrait, Medine, age 2 months. 2 aylık kız bebek. round infant cranium / tiny chin; sleepy rounded / wide / dark brown proposal; tiny button / sparse / small relaxed mouth; fine dark down / soft infant hairline; two-month infant / supported neck / 2.5 heads; soft peach / blush and cream; two-month baby proportions; never standing. Family-friendly stylized animation, neutral background, visible face, consistent lighting. Only this one character."
+}

@@ -1,5 +1,6 @@
 {
-  "owner_brief": "Yaklaşık 4 yaş kız; Aden'den ayrı, enerjik",
-  "status": "MISSING",
-  "source": "owner brief; görsel kanon yok"
+  "owner_brief": "4 yaş kız; Davut ve Fatoş'un çocuğu; Aden'den ayrı yüz",
+  "status": "DESIGN_PENDING_REVIEW",
+  "source": "owner brief; görsel kanon yok",
+  "portrait_design": "portrait-design.json"
 }
