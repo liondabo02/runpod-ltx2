@@ -362,41 +362,41 @@
         "esra"
       ],
       "objective": "Küçük ve güvenli sorun: kuyruk kopar",
-      "action": "Sert rüzgâr uçurtmayı sarsar; düğüm kayar, kuyruk kopar ve havada savrulur. Kite alçalır; Esra ipi kontrollü çeker.",
+      "action": "Sert rüzgâr uçurtmayı sarsar; kuyruğun düğümleri tek tek açılır. Altı büyük şerit havada ayrılır: kırmızı, sarı, mavi piknik örtüsüne; yeşil, turuncu papatya yanındaki çimene; mor alçak çalıya düşer. Uçurtma alçalır, Esra ipi kontrollü çeker.",
       "beats": [
         {
           "start_seconds": 130,
           "duration_seconds": 7,
-          "action": "Rüzgâr sertleşir; uçurtma yana yatar, kuyruk gerilir.",
-          "focus": "gökyüzü",
+          "action": "Sert rüzgâr kuyruğu gerer; ilk düğüm kayar, kuyruk iki uzun parçaya ayrılır.",
+          "focus": "düğüm + gökyüzü",
           "kaan_action": "looks_up"
         },
         {
           "start_seconds": 137,
           "duration_seconds": 7,
-          "action": "Düğüm kayar; kuyruk uçurtmadan ayrılır ve havada döner.",
-          "focus": "yakın plan düğüm",
+          "action": "İkinci düğüm de açılır; altı büyük şerit havada tek tek ayrılır.",
+          "focus": "havada şeritler",
           "kaan_action": "gasps"
         },
         {
           "start_seconds": 144,
           "duration_seconds": 7,
-          "action": "Kuyruk çimene doğru süzülür; Kaan arkasından bakar.",
-          "focus": "takip",
+          "action": "Kırmızı, sarı ve mavi şeritler piknik örtüsünün üstüne düşer.",
+          "focus": "piknik örtüsü",
           "kaan_action": "points"
         },
         {
           "start_seconds": 151,
           "duration_seconds": 7,
-          "action": "Uçurtma alçalır; Esra ipi yavaşça çeker, Aden yanına koşar.",
-          "focus": "geniş",
+          "action": "Yeşil ve turuncu şeritler papatyaların yanındaki çimene süzülür.",
+          "focus": "çimen",
           "kaan_action": "watches"
         },
         {
           "start_seconds": 158,
           "duration_seconds": 7,
-          "action": "Kuyruk piknik örtüsünün üstüne düşer; Kaan 'Aa!' der.",
-          "focus": "örtü",
+          "action": "Mor şerit alçak çalıya takılır; Kaan 'Aa!' der.",
+          "focus": "alçak çalı",
           "kaan_action": "surprised"
         }
       ],
@@ -436,42 +436,42 @@
         "esra"
       ],
       "objective": "Yardımlaşma: parçaları birlikte toplama",
-      "action": "Üçü çimen ve örtü çevresinde kuyruk parçalarını arar. Aden kırmızı şeridi, Kaan mavi şeridi bulur; Esra parçaları büyük bir kaba koyar.",
+      "action": "Dört yönlü arama: Aden örtüde kırmızı, sarı ve mavi şeritleri; çimende yeşil ve turuncuyu bulur. Esra mor şeridi alçak çalıdan alır. Altı şerit de sepete konur.",
       "beats": [
         {
           "start_seconds": 165,
           "duration_seconds": 8,
-          "action": "Aden örtünün altına bakar; Kaan çalı kenarına yürür.",
-          "focus": "ikili",
-          "kaan_action": "waddles"
+          "action": "Aden örtüde kırmızı ve sarı şeritleri bulur; sepete koyar.",
+          "focus": "piknik örtüsü",
+          "kaan_action": "watches"
         },
         {
           "start_seconds": 173,
           "duration_seconds": 8,
-          "action": "Kaan mavi şeridi gösterir; Aden yanına gelir.",
+          "action": "Kaan mavi şeridi gösterir; Aden alıp sepete koyar.",
           "focus": "Kaan + şerit",
           "kaan_action": "points"
         },
         {
           "start_seconds": 181,
           "duration_seconds": 8,
-          "action": "Aden kırmızı şeridi papatyaların arasından alır.",
-          "focus": "yakın plan",
-          "kaan_action": "watches"
+          "action": "Aden papatyaların yanında yeşil ve turuncu şeritleri bulur.",
+          "focus": "çimen",
+          "kaan_action": "waddles"
         },
         {
           "start_seconds": 189,
           "duration_seconds": 8,
-          "action": "Esra parçaları büyük kaba koyar; Kaan kapağı kapatmaya yardım eder.",
-          "focus": "eller",
-          "kaan_action": "helps_lid"
+          "action": "Esra mor şeridi alçak çalıdan dikkatlice alır; Kaan izler.",
+          "focus": "çalı + Esra'nın eli",
+          "kaan_action": "watches"
         },
         {
           "start_seconds": 197,
           "duration_seconds": 8,
-          "action": "Kalan parçaları sayarlar; bir parça eksik kalır, Aden etrafa bakar.",
-          "focus": "üçlü",
-          "kaan_action": "looks_around"
+          "action": "Altı şeridi sepete dizerler; hepsi tamamdır.",
+          "focus": "sepet",
+          "kaan_action": "claps"
         }
       ],
       "dialogue": [
@@ -498,7 +498,7 @@
         },
         {
           "speaker": "esra",
-          "text": "Bir parça daha olmalı.",
+          "text": "Altı şerit de burada.",
           "emotion": "sakin",
           "voice_duration_seconds": 2.0,
           "start_seconds": 195.0
@@ -517,12 +517,12 @@
         "esra"
       ],
       "objective": "Paylaşma: Kaan önce seçer, renkler paylaşılır",
-      "action": "Esra piknik çantasından büyük kumaş şeritleri çıkarır. Aden uzanır ama durur, Kaan'a öncelik verir. Kaan mavi şeridi seçer; Aden kırmızıyı alır.",
+      "action": "Esra onarım çantasını açar; içinde büyük kumaş bağlar ve yamalar vardır. Aden Kaan'a öncelik verir; Kaan mavi bağı, Aden kırmızı bağı seçer.",
       "beats": [
         {
           "start_seconds": 205,
           "duration_seconds": 9,
-          "action": "Esra çantayı açar; renkli büyük şeritler görünür.",
+          "action": "Esra onarım çantasını açar; büyük bağlar ve yamalar görünür.",
           "focus": "çanta",
           "kaan_action": "looks"
         },
@@ -536,21 +536,21 @@
         {
           "start_seconds": 223,
           "duration_seconds": 9,
-          "action": "Kaan mavi şeridi iki eliyle çeker; Aden gülümser.",
+          "action": "Kaan mavi bağı iki eliyle çeker; Aden gülümser.",
           "focus": "Kaan",
           "kaan_action": "pulls"
         },
         {
           "start_seconds": 232,
           "duration_seconds": 9,
-          "action": "Aden kırmızı şeridi alır; ikisi şeritleri yan yana koyar.",
+          "action": "Aden kırmızı bağı alır; ikisi bağları yan yana koyar.",
           "focus": "eller",
           "kaan_action": "places"
         },
         {
           "start_seconds": 241,
           "duration_seconds": 9,
-          "action": "Esra şeritleri örtüye serer; üçü renk sırasına bakar.",
+          "action": "Esra altı şeridi örtüye serer; bağlar hazırdır.",
           "focus": "üçlü",
           "kaan_action": "looks"
         }
@@ -558,7 +558,7 @@
       "dialogue": [
         {
           "speaker": "esra",
-          "text": "Kumaş çantası burada.",
+          "text": "Onarım çantası burada.",
           "emotion": "davet eden",
           "voice_duration_seconds": 2.0,
           "start_seconds": 207.0
@@ -598,12 +598,12 @@
         "esra"
       ],
       "objective": "Sabır: ilk onarım gülünç biçimde başarısız olur",
-      "action": "Aden şeritleri bağlar; kuyruk kısa kalır. Uçurtmayı kaldırdıklarında kuyruk dönerek uçurtmayı sallar ve yere indirir. Kaan kıkırdar.",
+      "action": "Aden altı şeritten üçünü (kırmızı, sarı, mavi) uç uca bağlar; kuyruk kısa kalır. Uçurtma kalkınca kısa kuyruk hızla döner ve uçurtmayı yana yatırır. Kaan kıkırdar.",
       "beats": [
         {
           "start_seconds": 250,
           "duration_seconds": 9,
-          "action": "Aden üç şeridi uç uca bağlar; kuyruk kısa kalır.",
+          "action": "Aden üç şeridi (kırmızı, sarı, mavi) uç uca bağlar; kuyruk kısa kalır.",
           "focus": "eller",
           "kaan_action": "watches"
         },
@@ -624,16 +624,16 @@
         {
           "start_seconds": 277,
           "duration_seconds": 9,
-          "action": "Aden kuyruğu ölçer; bir şerit daha gerektiğini görür.",
+          "action": "Aden kuyruğu ölçer; kalan üç şeridi sepette görür.",
           "focus": "yakın plan",
           "kaan_action": "watches"
         },
         {
           "start_seconds": 286,
           "duration_seconds": 9,
-          "action": "Kaan sarı şeridi uzatır; Aden 'Biraz daha uzun' der.",
+          "action": "Kaan sepetteki yeşil şeridi işaret eder; Aden 'Biraz daha uzun' der.",
           "focus": "eller",
-          "kaan_action": "hands_strip"
+          "kaan_action": "points"
         }
       ],
       "dialogue": [
@@ -679,26 +679,26 @@
         "esra"
       ],
       "objective": "Yardımlaşma: güvenli rollerle kuyruğu tamamla",
-      "action": "Esra uçurtmayı yerde tutar, Aden düğümleri atar, Kaan büyük şeritleri yakınına iter. Son düğüm sıkılaşır; kuyruk yere serilir.",
+      "action": "Aden kalan üç şeridi (yeşil, turuncu, mor) ekler; Esra uçurtmayı yerde tutar, Kaan büyük bağları yakına iter. Son düğüm sıkılaşır; altı şeritli kuyruk yere serilir.",
       "beats": [
         {
           "start_seconds": 295,
           "duration_seconds": 9,
-          "action": "Esra uçurtmayı yerde tutar; Aden şeritleri dizer.",
+          "action": "Esra uçurtmayı yerde tutar; Aden altı şeridi sıraya dizer.",
           "focus": "üçlü",
           "kaan_action": "watches"
         },
         {
           "start_seconds": 304,
           "duration_seconds": 9,
-          "action": "Aden ilk düğümü atar; Kaan büyük mavi şeridi yakına iter.",
+          "action": "Aden ilk üç şeridi bağlar; Kaan büyük mavi bağı yakına iter.",
           "focus": "eller",
           "kaan_action": "pushes"
         },
         {
           "start_seconds": 313,
           "duration_seconds": 9,
-          "action": "İkinci düğüm zorlanır; Aden bekler, parmaklarını gevşetir.",
+          "action": "Aden kalan üç şeridi ekler; düğüm zorlanınca bekler, parmaklarını gevşetir.",
           "focus": "yakın plan",
           "kaan_action": "watches"
         },
@@ -963,5 +963,36 @@
         }
       ]
     }
-  ]
+  ],
+  "tail_consistency": {
+    "strip_count": 6,
+    "separation": "Rüzgâr, kuyruğu oluşturan altı büyük kumaş şeridin düğümlerini sırayla açar; şeritler havada tek tek ayrılır.",
+    "strips": [
+      {
+        "color": "kırmızı",
+        "landing": "piknik örtüsü"
+      },
+      {
+        "color": "sarı",
+        "landing": "piknik örtüsü"
+      },
+      {
+        "color": "mavi",
+        "landing": "piknik örtüsü"
+      },
+      {
+        "color": "yeşil",
+        "landing": "papatya yanındaki çimen"
+      },
+      {
+        "color": "turuncu",
+        "landing": "papatya yanındaki çimen"
+      },
+      {
+        "color": "mor",
+        "landing": "alçak çalı"
+      }
+    ],
+    "repair_plan": "S07'de üç şerit (kırmızı, sarı, mavi) kısa kuyruk yapar; S08'de yeşil, turuncu ve mor eklenir."
+  }
 }

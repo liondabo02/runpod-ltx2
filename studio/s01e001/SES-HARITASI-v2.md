@@ -21,8 +21,8 @@ Henüz ses üretilmedi. Her replik; karakter, duygu, konuşma süresi ve zaman k
 | 15 | 02:49.00 | aden | Burada mı? | meraklı | 1.2 sn |
 | 16 | 02:59.00 | kaan | Mavi! | bulmuş | 1.0 sn |
 | 17 | 03:02.00 | aden | Buldun! | sevinçli | 1.0 sn |
-| 18 | 03:15.00 | esra | Bir parça daha olmalı. | sakin | 2.0 sn |
-| 19 | 03:27.00 | esra | Kumaş çantası burada. | davet eden | 2.0 sn |
+| 18 | 03:15.00 | esra | Altı şerit de burada. | sakin | 2.0 sn |
+| 19 | 03:27.00 | esra | Onarım çantası burada. | davet eden | 2.0 sn |
 | 20 | 03:37.00 | aden | Kaan önce seçsin. | paylaşan | 1.6 sn |
 | 21 | 03:43.00 | kaan | Mavi! | seçen | 1.0 sn |
 | 22 | 03:49.00 | aden | Ben kırmızı. | sıcak | 1.2 sn |
