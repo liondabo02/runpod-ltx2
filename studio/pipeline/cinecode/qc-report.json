@@ -1,0 +1,42 @@
+{
+  "schema": "ahos.studio.cinecode-qc.v1",
+  "video": "deliverables\\S01E001-SCENE01-2D-RIG\\S01E001-SCENE01-2D-RIG-1080p24.mp4",
+  "sha256": "4c429506c222b7cb9a4ec9b1d9871448346731f873b79172ba0c1a91030b46f1",
+  "status": {
+    "home": "C:\\Users\\esmak\\.claude\\skills\\cinecode",
+    "exists": true,
+    "scripts": {
+      "make.py": true,
+      "qc.py": true,
+      "capture.mjs": true,
+      "tts.py": true,
+      "mix.py": true
+    },
+    "node": "C:\\Program Files\\nodejs\\node.EXE",
+    "python": "C:\\Users\\esmak\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+    "ffmpeg": "C:\\Users\\esmak\\AppData\\Local\\Programs\\Python\\Python312\\Scripts\\ffmpeg.EXE",
+    "claude_cli": "C:\\Users\\esmak\\AppData\\Local\\Microsoft\\WinGet\\Links\\claude.EXE"
+  },
+  "checks": {
+    "info": {
+      "exit": 0,
+      "stdout": "== info: deliverables\\S01E001-SCENE01-2D-RIG\\S01E001-SCENE01-2D-RIG-1080p24.mp4\nduration=12.000000\nsize=1267451\nbit_rate=844967\ncodec_name=h264\nprofile=High\nwidth=1920\nheight=1080\npix_fmt=yuv420p\nr_frame_rate=24/1\nframes=288\naudio: none",
+      "stderr": ""
+    },
+    "black": {
+      "exit": 0,
+      "stdout": "== black intervals (>= 0.1 s, 98% of pixels dark):\nnone",
+      "stderr": ""
+    },
+    "freeze": {
+      "exit": 0,
+      "stdout": "== frozen intervals (>= 1.5 s):\nnone\n(grain hides freezes from this detector; also check strips and duplicates)",
+      "stderr": ""
+    },
+    "dup": {
+      "exit": 0,
+      "stdout": "== exact duplicate consecutive frames:\nframes: 0, duplicates: 0",
+      "stderr": ""
+    }
+  }
+}
