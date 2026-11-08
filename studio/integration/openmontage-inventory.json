@@ -1,0 +1,99 @@
+{
+  "schema": "ahos.studio.openmontage-inventory.v1",
+  "generated_at": "2026-11-08",
+  "note": "Dosya varlığı ile çalışan servis ayrıldı; hiçbir ücretli kaynak başlatılmadı.",
+  "systems": [
+    {
+      "name": "OpenMontage",
+      "path": "ahos_core/runtime/projects/harun-ai-foundry/external-integrations/OpenMontage",
+      "files_present": true,
+      "license": "AGPLv3",
+      "license_risk": "Ticari/SaaS kullanımda kaynak paylaşımı; hukuk incelemesi gerekli",
+      "evidence": {"pipeline_defs": 13, "tests": 248, "remotion_composer": true,
+                    "node_modules": true, "node_modules_packages": 199},
+      "status": "PARTIAL",
+      "runnable": {"python_pipeline": "UNVERIFIED", "remotion_render": "BLOCKED"},
+      "detail": "node_modules npm --offline ile 199 paket kuruldu (yeni indirme yok). Remotion CLI --version 90 sn yanıtsız kaldı; render denenmedi."
+    },
+    {
+      "name": "workflows",
+      "path": "workflows/",
+      "files_present": true,
+      "evidence": {"files": 8, "examples": ["image_to_video.json", "cinematic_i2v.json", "ltx2_text2video.json", "S01E001-pilot-30s-plan.json"]},
+      "status": "FILES_ONLY",
+      "runnable": "UNVERIFIED",
+      "detail": "ComfyUI/LTX2 API workflow tanımları; GPU kotası olmadan çalıştırılmadı."
+    },
+    {
+      "name": "custom_nodes/ltx2_compat",
+      "path": "custom_nodes/ltx2_compat",
+      "files_present": true,
+      "evidence": {"files": 1, "bytes": 2262},
+      "status": "FILES_ONLY",
+      "runnable": "UNVERIFIED",
+      "detail": "ComfyUI uyumluluk düğümü; ComfyUI kurulu değil."
+    },
+    {
+      "name": "studio",
+      "path": "studio/",
+      "files_present": true,
+      "evidence": {"characters": 16, "identity_locked": 16, "approved": 0,
+                    "visual_ready": 0, "voice_ready": 14, "mesh_3d": 0},
+      "status": "SPEC_READY",
+      "runnable": "N/A",
+      "detail": "Kanon/kimlik hazır; görsel/3D/video yok."
+    },
+    {
+      "name": "deliverables",
+      "path": "deliverables/",
+      "files_present": true,
+      "evidence": {"projects": ["ADEN-PILOT-001", "S01-PARK-KITE-001"],
+                    "take2_video": "1920x1080 5.0 sn upscale",
+                    "keyframe": "1280x720 PNG"},
+      "status": "TEST_ASSETS",
+      "runnable": "N/A",
+      "detail": "5 sn teknik test ve keyframe; 30 sn pilot veya onaylı bölüm değil."
+    },
+    {
+      "name": "RunPod endpoint",
+      "path": "control_plane_v2/.env.runtime (private)",
+      "files_present": true,
+      "evidence": {"endpoint_id": "dnwqoolyprqr69", "api_key_present": true,
+                    "paid": true, "external": true, "health_probe": "TIMEOUT"},
+      "status": "CONFIGURED_UNREACHABLE",
+      "runnable": false,
+      "detail": "Kimlik bilgisi var; sağlık isteği 10 sn içinde yanıt vermedi. Ücretli kaynak başlatılmadı."
+    },
+    {
+      "name": "Oracle instance",
+      "path": "ops/oracle/last-instance.json",
+      "files_present": true,
+      "evidence": {"public_ip": "130.61.35.81", "shape": "VM.Standard.A1.Flex",
+                    "ocpus": 2, "memory_gb": 12, "ssh_22": true, "ollama_11434": false,
+                    "recorded_model": "qwen2.5-coder:7b (4.7 GB)"},
+      "status": "REACHABLE_SSH_ONLY",
+      "runnable": "PARTIAL",
+      "detail": "SSH açık; Ollama servisi kapalı. Kaynak başlatılmadı, model yüklenmedi."
+    },
+    {
+      "name": "Pre-downloaded models",
+      "path": "~/.cache/huggingface/hub",
+      "files_present": true,
+      "evidence": {"models": ["zeroscope_v2_576w (video)", "Kokoro-82M (TTS)"],
+                    "sdxl": false, "kontext": false, "blender": false, "ffmpeg": true},
+      "status": "LIMITED",
+      "runnable": "PARTIAL",
+      "detail": "SDXL/Kontext/IP-Adapter yok; Blender yok. Zeroscope/Kokoro ticari lisansı ayrıca doğrulanmalı."
+    },
+    {
+      "name": "Cost systems",
+      "path": "OpenMontage tools/cost_tracker.py + studio/production/cost-policy.json",
+      "files_present": true,
+      "evidence": {"openmontage_budget_usd": 10.0, "single_action_approval_usd": 0.5,
+                    "studio_policy_usd": 0.0, "live_llm_gate": "ahos_core/ahos/llm_executor.py::_studio_budget_preflight"},
+      "status": "PARTIAL_WIRED",
+      "runnable": true,
+      "detail": "Token ön-kontrolü canlı LLM çağrısına bağlandı; OpenMontage CostTracker ayrı çalışıyor; önbellek/pending entegrasyonu yok."
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+# P3 envanter kanıtları (2026-11-08)
+
+## OpenMontage / Remotion
+
+```text
+npm install --offline --no-audit --no-fund
+added 199 packages in 49s          # yeni indirme yok, npm cache
+npx remotion --version             # 90 sn yanıtsız -> BLOCKED
+node @remotion/cli/remotion-cli.js --version  # 90 sn yanıtsız -> BLOCKED
+```
+
+## Oracle
+
+```text
+130.61.35.81:22 -> True
+130.61.35.81:11434 -> False
+```
+
+Instance: `VM.Standard.A1.Flex`, 2 OCPU / 12 GB, kayıtlı model `qwen2.5-coder:7b (4.7 GB)`.
+Kaynak başlatılmadı; Ollama servisi kapalı olduğu için model yüklü doğrulanamadı.
+
+## RunPod
+
+```text
+endpoint_id=dnwqoolyprqr69  api_key_present=true  paid=true  external=true
+GET /v2/dnwqoolyprqr69/health -> 10 sn timeout
+```
+
+Ücretli endpoint başlatılmadı, iş gönderilmedi.
+
+## Model önbelleği
+
+```text
+~/.cache/huggingface/hub: zeroscope_v2_576w, Kokoro-82M
+SDXL / Kontext / IP-Adapter: yok
+Blender: yok; ffmpeg: var
+```
+
+## Testler
+
+```text
+33 passed (global)   exit 0
+33 passed (.venv)    exit 0
+25 passed tests/test_llm_executor.py (regresyon) exit 0
+```
+
+## Not
+
+Remotion CLI yanıt vermediği için hiçbir video render edilmedi; props dosyası
+`PROPS_READY_RENDER_BLOCKED` olarak işaretlendi.

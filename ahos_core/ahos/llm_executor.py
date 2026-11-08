@@ -166,10 +166,27 @@ def load_settings(env: Mapping[str, str] | None = None) -> ModelSettings | None:
 Transport = Callable[[str, str, ModelSettings], str]
 
 
+def _studio_budget_preflight(system_prompt: str, user_prompt: str, settings: ModelSettings) -> None:
+    """Studio-16 token sınırı; ücretli sağlayıcı zaten ayrıca kapılıdır."""
+    if os.environ.get("AHOS_STUDIO_COST_GUARD", "1") == "0":
+        return
+    try:
+        from .studio_cost_guard import BudgetExceeded, Policy, charge, estimate_tokens
+    except Exception:  # noqa: BLE001 - koruma yoksa eski davranış korunur
+        return
+    tokens = estimate_tokens(system_prompt) + estimate_tokens(user_prompt) + int(settings.max_tokens or 0)
+    try:
+        charge(tokens, 0.0, Policy())
+    except BudgetExceeded as exc:
+        raise ModelError(f"studio bütçe sınırı: {exc}") from exc
+
+
 def http_transport(system_prompt: str, user_prompt: str, settings: ModelSettings) -> str:
     if settings.base_url.rstrip("/") == "http://127.0.0.1:11434/v1":
         from .local_ollama import transport
         return transport(system_prompt, user_prompt, settings)
+
+    _studio_budget_preflight(system_prompt, user_prompt, settings)
 
     # Ücretsiz modeller gün içinde kaybolabiliyor (404) veya oran sınırına
     # takılıyor (429). Zincirdeki bir sonraki modele geç; hiçbiri çalışmazsa

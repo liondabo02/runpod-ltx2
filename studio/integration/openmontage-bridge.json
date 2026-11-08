@@ -1,0 +1,229 @@
+{
+  "schema": "ahos.studio.openmontage-bridge.v1",
+  "generated_at": "2026-11-08",
+  "target": {
+    "system": "OpenMontage",
+    "path": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\ahos_core\\runtime\\projects\\harun-ai-foundry\\external-integrations\\OpenMontage",
+    "pipeline": "pipeline_defs/character-animation.yaml",
+    "license": "AGPLv3",
+    "license_risk": "Ticari/SaaS kullanımda kaynak paylaşım yükümlülüğü; hukuk incelemesi gerekli.",
+    "installed_state": {
+      "python_package": true,
+      "pipeline_defs": 13,
+      "remotion_composer": true,
+      "node_modules": true,
+      "node_modules_source": "npm install --offline (199 paket; yeni indirme yok)",
+      "remotion_cli": "BLOCKED — --version 90 sn içinde yanıt vermedi"
+    }
+  },
+  "character_map": [
+    {
+      "character_id": "aden",
+      "display_name": "Aden",
+      "age_stage": "preschool",
+      "canon_dir": "studio/characters/aden/",
+      "visual_status": "NEEDS_REVISION",
+      "voice_status": "READY_FOR_QA",
+      "owner_approval": "NONE",
+      "use_in_opening": true
+    },
+    {
+      "character_id": "kaan",
+      "display_name": "Kaan",
+      "age_stage": "toddler",
+      "canon_dir": "studio/characters/kaan/",
+      "visual_status": "NEEDS_REVISION",
+      "voice_status": "READY_FOR_QA",
+      "owner_approval": "NONE",
+      "use_in_opening": true
+    },
+    {
+      "character_id": "esra",
+      "display_name": "Esra",
+      "age_stage": "adult",
+      "canon_dir": "studio/characters/esra/",
+      "visual_status": "MISSING",
+      "voice_status": "READY_FOR_QA",
+      "owner_approval": "NONE",
+      "use_in_opening": false
+    },
+    {
+      "character_id": "ahmet",
+      "display_name": "Ahmet",
+      "age_stage": "adult",
+      "canon_dir": "studio/characters/ahmet/",
+      "visual_status": "MISSING",
+      "voice_status": "READY_FOR_QA",
+      "owner_approval": "NONE",
+      "use_in_opening": false
+    },
+    {
+      "character_id": "esma",
+      "display_name": "Esma",
+      "age_stage": "adult",
+      "canon_dir": "studio/characters/esma/",
+      "visual_status": "MISSING",
+      "voice_status": "READY_FOR_QA",
+      "owner_approval": "NONE",
+      "use_in_opening": false
+    },
+    {
+      "character_id": "harun",
+      "display_name": "Harun",
+      "age_stage": "adult",
+      "canon_dir": "studio/characters/harun/",
+      "visual_status": "MISSING",
+      "voice_status": "READY_FOR_QA",
+      "owner_approval": "NONE",
+      "use_in_opening": false
+    },
+    {
+      "character_id": "veysel",
+      "display_name": "Veysel",
+      "age_stage": "adult",
+      "canon_dir": "studio/characters/veysel/",
+      "visual_status": "MISSING",
+      "voice_status": "READY_FOR_QA",
+      "owner_approval": "NONE",
+      "use_in_opening": false
+    },
+    {
+      "character_id": "oznur",
+      "display_name": "Öznur",
+      "age_stage": "adult",
+      "canon_dir": "studio/characters/oznur/",
+      "visual_status": "MISSING",
+      "voice_status": "READY_FOR_QA",
+      "owner_approval": "NONE",
+      "use_in_opening": false
+    },
+    {
+      "character_id": "salih",
+      "display_name": "Salih",
+      "age_stage": "toddler",
+      "canon_dir": "studio/characters/salih/",
+      "visual_status": "MISSING",
+      "voice_status": "READY_FOR_QA",
+      "owner_approval": "NONE",
+      "use_in_opening": false
+    },
+    {
+      "character_id": "medine",
+      "display_name": "Medine",
+      "age_stage": "infant",
+      "canon_dir": "studio/characters/medine/",
+      "visual_status": "MISSING",
+      "voice_status": "MISSING",
+      "owner_approval": "NONE",
+      "use_in_opening": false
+    },
+    {
+      "character_id": "davut",
+      "display_name": "Davut",
+      "age_stage": "adult",
+      "canon_dir": "studio/characters/davut/",
+      "visual_status": "MISSING",
+      "voice_status": "READY_FOR_QA",
+      "owner_approval": "NONE",
+      "use_in_opening": false
+    },
+    {
+      "character_id": "fatos",
+      "display_name": "Fatoş",
+      "age_stage": "adult",
+      "canon_dir": "studio/characters/fatos/",
+      "visual_status": "MISSING",
+      "voice_status": "READY_FOR_QA",
+      "owner_approval": "NONE",
+      "use_in_opening": false
+    },
+    {
+      "character_id": "emos",
+      "display_name": "Emoş",
+      "age_stage": "preschool",
+      "canon_dir": "studio/characters/emos/",
+      "visual_status": "MISSING",
+      "voice_status": "READY_FOR_QA",
+      "owner_approval": "NONE",
+      "use_in_opening": false
+    },
+    {
+      "character_id": "berzan",
+      "display_name": "Berzan",
+      "age_stage": "toddler",
+      "canon_dir": "studio/characters/berzan/",
+      "visual_status": "MISSING",
+      "voice_status": "READY_FOR_QA",
+      "owner_approval": "NONE",
+      "use_in_opening": false
+    },
+    {
+      "character_id": "aras",
+      "display_name": "Aras",
+      "age_stage": "toddler",
+      "canon_dir": "studio/characters/aras/",
+      "visual_status": "MISSING",
+      "voice_status": "READY_FOR_QA",
+      "owner_approval": "NONE",
+      "use_in_opening": false
+    },
+    {
+      "character_id": "ramin",
+      "display_name": "Ramin",
+      "age_stage": "infant",
+      "canon_dir": "studio/characters/ramin/",
+      "visual_status": "MISSING",
+      "voice_status": "MISSING",
+      "owner_approval": "NONE",
+      "use_in_opening": false
+    }
+  ],
+  "scene_map": {
+    "episode": "S01E001",
+    "opening_30s": "studio/s01e001/episode-open-30s-v2.json",
+    "shot_schedule": "studio/s01e001/storyboard/shot-schedule.json",
+    "pipeline_stages": [
+      "script",
+      "character_specs",
+      "storyboard",
+      "keyframe",
+      "i2v",
+      "edit",
+      "qa",
+      "owner_review"
+    ],
+    "render_runtime": "remotion-composer (Explainer) / HyperFrames alternatifi"
+  },
+  "asset_map": {
+    "park": "characters/scenes/park-kite-01.json",
+    "kite": "studio/canon/continuity-rules.json",
+    "tail_six_strips": "studio/canon/continuity-rules.json",
+    "reference_keyframe": "deliverables/S01-PARK-KITE-001/keyframes/keyframe-girl-seed-77.png",
+    "test_video_5s": "deliverables/S01-PARK-KITE-001/park-kite-take2-girl-1080p.mp4"
+  },
+  "cost_control": {
+    "existing": "OpenMontage tools/cost_tracker.py (budget_total_usd, single_action_approval_usd, cap/warn)",
+    "studio_policy": "studio/production/cost-policy.json (0 USD, 12000 token, 300 pending)",
+    "live_gate": "ahos_core/ahos/llm_executor.py::_studio_budget_preflight",
+    "paid_tools": "require_approval_for_new_paid_tool=true; onaysız ücretli araç yok"
+  },
+  "minimal_changes": [
+    "OpenMontage kodunu değiştirme; mevcut character-animation.yaml kullan.",
+    "Karakter girdilerini studio/characters/<id>/ üzerinden okuyan salt-okunur adaptör.",
+    "S01E001 açılışını text-card storyboard props'una çevir (karakter görseli yok).",
+    "Bütçeyi 0 USD + onay kapılı çalıştır; pipeline budget_default_usd=2.00 değerini override et.",
+    "AGPLv3 lisans incelemesi tamamlanmadan ticari dağıtım yok."
+  ],
+  "blockers": [
+    "Remotion CLI yanıt vermiyor (render yok).",
+    "Aden/Kaan v2 görseli yok; 14 karakterde görsel kanon yok.",
+    "Hiçbir karakterde sahip onayı yok.",
+    "OpenMontage AGPLv3 lisansı ticari kullanım için hukuk incelemesi gerektiriyor."
+  ],
+  "first_output_candidate": {
+    "kind": "EPISODE-OPEN-30s text-card storyboard animatic",
+    "props": "studio/integration/openmontage-props/s01e001-opening-storyboard.json",
+    "status": "PROPS_READY_RENDER_BLOCKED",
+    "note": "Karakter görseli içermez; onaylı üretim değildir."
+  }
+}

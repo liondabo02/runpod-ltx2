@@ -1,0 +1,73 @@
+{
+  "theme": "studio-storyboard",
+  "status": "PLACEHOLDER_NOT_APPROVED",
+  "note": "S01E001 açılış storyboard animatiği; karakter görseli yok, final değil.",
+  "cuts": [
+    {
+      "id": "s01e001-open-01",
+      "source": "",
+      "type": "text_card",
+      "in_seconds": 0,
+      "out_seconds": 5,
+      "text": "0–5 sn · Rüzgâr kuyruk ucunu kaldırır; uç, Kaan'ın yanağını gıdıklar",
+      "fontSize": 46,
+      "color": "#F7F4EC",
+      "backgroundColor": "#243A5E"
+    },
+    {
+      "id": "s01e001-open-02",
+      "source": "",
+      "type": "text_card",
+      "in_seconds": 5,
+      "out_seconds": 10,
+      "text": "5–10 sn · Kaan kuyruğu yakalamaya çalışırken yana yalpalar; Aden elini uzatıp onu dengede tutar",
+      "fontSize": 46,
+      "color": "#F7F4EC",
+      "backgroundColor": "#243A5E"
+    },
+    {
+      "id": "s01e001-open-03",
+      "source": "",
+      "type": "text_card",
+      "in_seconds": 10,
+      "out_seconds": 15,
+      "text": "10–15 sn · Rüzgâr kuyruğu Kaan'ın başına bırakır; kuyruk renkli bir peruk gibi durur",
+      "fontSize": 46,
+      "color": "#F7F4EC",
+      "backgroundColor": "#243A5E"
+    },
+    {
+      "id": "s01e001-open-04",
+      "source": "",
+      "type": "text_card",
+      "in_seconds": 15,
+      "out_seconds": 20,
+      "text": "15–20 sn · Kaan başını sallar; kuyruk yana kayar",
+      "fontSize": 46,
+      "color": "#F7F4EC",
+      "backgroundColor": "#243A5E"
+    },
+    {
+      "id": "s01e001-open-05",
+      "source": "",
+      "type": "text_card",
+      "in_seconds": 20,
+      "out_seconds": 25,
+      "text": "20–25 sn · Aden kuyruğu Kaan'ın omzundan alır",
+      "fontSize": 46,
+      "color": "#F7F4EC",
+      "backgroundColor": "#243A5E"
+    },
+    {
+      "id": "s01e001-open-06",
+      "source": "",
+      "type": "text_card",
+      "in_seconds": 25,
+      "out_seconds": 30,
+      "text": "25–30 sn · Aden kuyruğu bağlamaya başlar; Kaan mavi panele dokunur",
+      "fontSize": 46,
+      "color": "#F7F4EC",
+      "backgroundColor": "#243A5E"
+    }
+  ]
+}
