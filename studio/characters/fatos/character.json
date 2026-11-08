@@ -1,0 +1,30 @@
+{
+  "schema": "ahos.studio.character.v1",
+  "character_id": "fatos",
+  "display_name": "Fatoş",
+  "age_years": 30.0,
+  "age_stage": "adult",
+  "gender_presentation": "woman",
+  "role": "family friend",
+  "family_group": "davut ailesi",
+  "lead": false,
+  "hijab": false,
+  "long_hair": false,
+  "height_cm": null,
+  "height_status": "MISSING",
+  "proportions": {
+    "status": "MISSING"
+  },
+  "status": {
+    "canon": "READY",
+    "visual_dna": "MISSING",
+    "palette": "MISSING",
+    "motion": "SPEC_READY",
+    "voice": "READY_FOR_QA",
+    "model_3d": "MISSING",
+    "owner_approval": "NONE"
+  },
+  "source_refs": [
+    "studio/canon/cast-manifest.json"
+  ]
+}

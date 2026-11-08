@@ -1,0 +1,34 @@
+{
+  "schema": "ahos.studio.character.v1",
+  "character_id": "kaan",
+  "display_name": "Kaan",
+  "age_years": 1.0,
+  "age_stage": "toddler",
+  "gender_presentation": "boy",
+  "role": "lead child",
+  "family_group": "merkez aile",
+  "lead": true,
+  "hijab": false,
+  "long_hair": false,
+  "height_cm": 76,
+  "height_status": "READY_FOR_QA",
+  "proportions": {
+    "heads_tall": 3.0,
+    "head_width_ratio": 0.37,
+    "limb_style": "çok yuvarlak, kısa kol-bacak, büyük kafa; gövde bebeksi ve tombul",
+    "hands": "dört parmak + başparmak, minik",
+    "feet": "yumuşak tabanlı bebek ayakkabısı"
+  },
+  "status": {
+    "canon": "READY",
+    "visual_dna": "READY_FOR_QA",
+    "palette": "READY_FOR_QA",
+    "motion": "SPEC_READY",
+    "voice": "READY_FOR_QA",
+    "model_3d": "MISSING",
+    "owner_approval": "NONE"
+  },
+  "source_refs": [
+    "studio/canon/cast-manifest.json"
+  ]
+}

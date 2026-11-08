@@ -1,0 +1,19 @@
+{
+  "schema": "ahos.voice.v1",
+  "character_id": "aras",
+  "age_stage": "toddler",
+  "engine_voice_direction": "softer calmer twin, short phrases",
+  "gender_presentation": "boy",
+  "reference_wav": "C:\\actions-runner\\_work\\runpod-ltx2\\runpod-ltx2\\control_plane_v2\\runtime\\private\\animation-studio\\audio\\core-voices\\aras\\tr.wav",
+  "reference_status": "READY_FOR_QA",
+  "languages": {
+    "tr": "TEXT_READY",
+    "de": "TEXT_PLANNED",
+    "ar": "TEXT_PLANNED",
+    "fr": "TEXT_PLANNED",
+    "es": "TEXT_PLANNED",
+    "ku": "TEXT_PLANNED"
+  },
+  "viseme_map": "PLANNED",
+  "qa": "NOT_EVALUATED"
+}

@@ -1,0 +1,30 @@
+{
+  "schema": "ahos.studio.character.v1",
+  "character_id": "ramin",
+  "display_name": "Ramin",
+  "age_years": 0.08,
+  "age_stage": "infant",
+  "gender_presentation": "boy",
+  "role": "baby",
+  "family_group": "davut ailesi",
+  "lead": false,
+  "hijab": false,
+  "long_hair": false,
+  "height_cm": null,
+  "height_status": "MISSING",
+  "proportions": {
+    "status": "MISSING"
+  },
+  "status": {
+    "canon": "READY",
+    "visual_dna": "MISSING",
+    "palette": "MISSING",
+    "motion": "SPEC_READY",
+    "voice": "MISSING",
+    "model_3d": "MISSING",
+    "owner_approval": "NONE"
+  },
+  "source_refs": [
+    "studio/canon/cast-manifest.json"
+  ]
+}

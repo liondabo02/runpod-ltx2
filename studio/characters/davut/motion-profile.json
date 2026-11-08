@@ -1,0 +1,21 @@
+{
+  "schema": "ahos.motion.v1",
+  "character_id": "davut",
+  "age_stage": "adult",
+  "allowed": [
+    "yürüme",
+    "koşma",
+    "eğilme",
+    "oturma",
+    "kucaklama",
+    "işaret etme",
+    "baş sallama"
+  ],
+  "forbidden": [
+    "çocuk oranı",
+    "aşırı abartılı mimik",
+    "gençlik jestleri"
+  ],
+  "signature": "sakin ağırlık aktarımı; sıcak duruş",
+  "status": "SPEC_READY"
+}

@@ -1,0 +1,19 @@
+{
+  "schema": "ahos.voice.v1",
+  "character_id": "medine",
+  "age_stage": "infant",
+  "engine_voice_direction": "infant coos and tiny laughs; no speech",
+  "gender_presentation": "girl",
+  "reference_wav": null,
+  "reference_status": "MISSING",
+  "languages": {
+    "tr": "TEXT_READY",
+    "de": "TEXT_PLANNED",
+    "ar": "TEXT_PLANNED",
+    "fr": "TEXT_PLANNED",
+    "es": "TEXT_PLANNED",
+    "ku": "TEXT_PLANNED"
+  },
+  "viseme_map": "PLANNED",
+  "qa": "NOT_EVALUATED"
+}

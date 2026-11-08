@@ -1,0 +1,439 @@
+{
+  "schema": "ahos.studio.work-orders.v1",
+  "count": 48,
+  "orders": [
+    {
+      "work_order_id": "WO-aden-visual",
+      "character_id": "aden",
+      "owner_role": "Character Art",
+      "output": "studio/characters/aden/model-sheets/",
+      "status": "READY_FOR_QA",
+      "blocker": null,
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-aden-3d",
+      "character_id": "aden",
+      "owner_role": "3D Modeling & Rigging",
+      "output": "studio/characters/aden/3d/",
+      "status": "PLANNED",
+      "blocker": "Blender kurulu değil; model spec hazır",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-aden-voice",
+      "character_id": "aden",
+      "owner_role": "Voice & Localization",
+      "output": "studio/characters/aden/voice/",
+      "status": "READY_FOR_QA",
+      "blocker": null,
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-kaan-visual",
+      "character_id": "kaan",
+      "owner_role": "Character Art",
+      "output": "studio/characters/kaan/model-sheets/",
+      "status": "READY_FOR_QA",
+      "blocker": null,
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-kaan-3d",
+      "character_id": "kaan",
+      "owner_role": "3D Modeling & Rigging",
+      "output": "studio/characters/kaan/3d/",
+      "status": "PLANNED",
+      "blocker": "Blender kurulu değil; model spec hazır",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-kaan-voice",
+      "character_id": "kaan",
+      "owner_role": "Voice & Localization",
+      "output": "studio/characters/kaan/voice/",
+      "status": "READY_FOR_QA",
+      "blocker": null,
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-esra-visual",
+      "character_id": "esra",
+      "owner_role": "Character Art",
+      "output": "studio/characters/esra/model-sheets/",
+      "status": "BLOCKED",
+      "blocker": "kanonik görsel referans yok; ücretsiz üretim yolu kapalı",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-esra-3d",
+      "character_id": "esra",
+      "owner_role": "3D Modeling & Rigging",
+      "output": "studio/characters/esra/3d/",
+      "status": "PLANNED",
+      "blocker": "Blender kurulu değil; model spec hazır",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-esra-voice",
+      "character_id": "esra",
+      "owner_role": "Voice & Localization",
+      "output": "studio/characters/esra/voice/",
+      "status": "READY_FOR_QA",
+      "blocker": null,
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-ahmet-visual",
+      "character_id": "ahmet",
+      "owner_role": "Character Art",
+      "output": "studio/characters/ahmet/model-sheets/",
+      "status": "BLOCKED",
+      "blocker": "kanonik görsel referans yok; ücretsiz üretim yolu kapalı",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-ahmet-3d",
+      "character_id": "ahmet",
+      "owner_role": "3D Modeling & Rigging",
+      "output": "studio/characters/ahmet/3d/",
+      "status": "PLANNED",
+      "blocker": "Blender kurulu değil; model spec hazır",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-ahmet-voice",
+      "character_id": "ahmet",
+      "owner_role": "Voice & Localization",
+      "output": "studio/characters/ahmet/voice/",
+      "status": "READY_FOR_QA",
+      "blocker": null,
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-esma-visual",
+      "character_id": "esma",
+      "owner_role": "Character Art",
+      "output": "studio/characters/esma/model-sheets/",
+      "status": "BLOCKED",
+      "blocker": "kanonik görsel referans yok; ücretsiz üretim yolu kapalı",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-esma-3d",
+      "character_id": "esma",
+      "owner_role": "3D Modeling & Rigging",
+      "output": "studio/characters/esma/3d/",
+      "status": "PLANNED",
+      "blocker": "Blender kurulu değil; model spec hazır",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-esma-voice",
+      "character_id": "esma",
+      "owner_role": "Voice & Localization",
+      "output": "studio/characters/esma/voice/",
+      "status": "READY_FOR_QA",
+      "blocker": null,
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-harun-visual",
+      "character_id": "harun",
+      "owner_role": "Character Art",
+      "output": "studio/characters/harun/model-sheets/",
+      "status": "BLOCKED",
+      "blocker": "kanonik görsel referans yok; ücretsiz üretim yolu kapalı",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-harun-3d",
+      "character_id": "harun",
+      "owner_role": "3D Modeling & Rigging",
+      "output": "studio/characters/harun/3d/",
+      "status": "PLANNED",
+      "blocker": "Blender kurulu değil; model spec hazır",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-harun-voice",
+      "character_id": "harun",
+      "owner_role": "Voice & Localization",
+      "output": "studio/characters/harun/voice/",
+      "status": "READY_FOR_QA",
+      "blocker": null,
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-veysel-visual",
+      "character_id": "veysel",
+      "owner_role": "Character Art",
+      "output": "studio/characters/veysel/model-sheets/",
+      "status": "BLOCKED",
+      "blocker": "kanonik görsel referans yok; ücretsiz üretim yolu kapalı",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-veysel-3d",
+      "character_id": "veysel",
+      "owner_role": "3D Modeling & Rigging",
+      "output": "studio/characters/veysel/3d/",
+      "status": "PLANNED",
+      "blocker": "Blender kurulu değil; model spec hazır",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-veysel-voice",
+      "character_id": "veysel",
+      "owner_role": "Voice & Localization",
+      "output": "studio/characters/veysel/voice/",
+      "status": "READY_FOR_QA",
+      "blocker": null,
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-oznur-visual",
+      "character_id": "oznur",
+      "owner_role": "Character Art",
+      "output": "studio/characters/oznur/model-sheets/",
+      "status": "BLOCKED",
+      "blocker": "kanonik görsel referans yok; ücretsiz üretim yolu kapalı",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-oznur-3d",
+      "character_id": "oznur",
+      "owner_role": "3D Modeling & Rigging",
+      "output": "studio/characters/oznur/3d/",
+      "status": "PLANNED",
+      "blocker": "Blender kurulu değil; model spec hazır",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-oznur-voice",
+      "character_id": "oznur",
+      "owner_role": "Voice & Localization",
+      "output": "studio/characters/oznur/voice/",
+      "status": "READY_FOR_QA",
+      "blocker": null,
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-salih-visual",
+      "character_id": "salih",
+      "owner_role": "Character Art",
+      "output": "studio/characters/salih/model-sheets/",
+      "status": "BLOCKED",
+      "blocker": "kanonik görsel referans yok; ücretsiz üretim yolu kapalı",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-salih-3d",
+      "character_id": "salih",
+      "owner_role": "3D Modeling & Rigging",
+      "output": "studio/characters/salih/3d/",
+      "status": "PLANNED",
+      "blocker": "Blender kurulu değil; model spec hazır",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-salih-voice",
+      "character_id": "salih",
+      "owner_role": "Voice & Localization",
+      "output": "studio/characters/salih/voice/",
+      "status": "READY_FOR_QA",
+      "blocker": null,
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-medine-visual",
+      "character_id": "medine",
+      "owner_role": "Character Art",
+      "output": "studio/characters/medine/model-sheets/",
+      "status": "BLOCKED",
+      "blocker": "kanonik görsel referans yok; ücretsiz üretim yolu kapalı",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-medine-3d",
+      "character_id": "medine",
+      "owner_role": "3D Modeling & Rigging",
+      "output": "studio/characters/medine/3d/",
+      "status": "PLANNED",
+      "blocker": "Blender kurulu değil; model spec hazır",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-medine-voice",
+      "character_id": "medine",
+      "owner_role": "Voice & Localization",
+      "output": "studio/characters/medine/voice/",
+      "status": "MISSING",
+      "blocker": "referans ses yok",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-davut-visual",
+      "character_id": "davut",
+      "owner_role": "Character Art",
+      "output": "studio/characters/davut/model-sheets/",
+      "status": "BLOCKED",
+      "blocker": "kanonik görsel referans yok; ücretsiz üretim yolu kapalı",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-davut-3d",
+      "character_id": "davut",
+      "owner_role": "3D Modeling & Rigging",
+      "output": "studio/characters/davut/3d/",
+      "status": "PLANNED",
+      "blocker": "Blender kurulu değil; model spec hazır",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-davut-voice",
+      "character_id": "davut",
+      "owner_role": "Voice & Localization",
+      "output": "studio/characters/davut/voice/",
+      "status": "READY_FOR_QA",
+      "blocker": null,
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-fatos-visual",
+      "character_id": "fatos",
+      "owner_role": "Character Art",
+      "output": "studio/characters/fatos/model-sheets/",
+      "status": "BLOCKED",
+      "blocker": "kanonik görsel referans yok; ücretsiz üretim yolu kapalı",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-fatos-3d",
+      "character_id": "fatos",
+      "owner_role": "3D Modeling & Rigging",
+      "output": "studio/characters/fatos/3d/",
+      "status": "PLANNED",
+      "blocker": "Blender kurulu değil; model spec hazır",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-fatos-voice",
+      "character_id": "fatos",
+      "owner_role": "Voice & Localization",
+      "output": "studio/characters/fatos/voice/",
+      "status": "READY_FOR_QA",
+      "blocker": null,
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-emos-visual",
+      "character_id": "emos",
+      "owner_role": "Character Art",
+      "output": "studio/characters/emos/model-sheets/",
+      "status": "BLOCKED",
+      "blocker": "kanonik görsel referans yok; ücretsiz üretim yolu kapalı",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-emos-3d",
+      "character_id": "emos",
+      "owner_role": "3D Modeling & Rigging",
+      "output": "studio/characters/emos/3d/",
+      "status": "PLANNED",
+      "blocker": "Blender kurulu değil; model spec hazır",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-emos-voice",
+      "character_id": "emos",
+      "owner_role": "Voice & Localization",
+      "output": "studio/characters/emos/voice/",
+      "status": "READY_FOR_QA",
+      "blocker": null,
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-berzan-visual",
+      "character_id": "berzan",
+      "owner_role": "Character Art",
+      "output": "studio/characters/berzan/model-sheets/",
+      "status": "BLOCKED",
+      "blocker": "kanonik görsel referans yok; ücretsiz üretim yolu kapalı",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-berzan-3d",
+      "character_id": "berzan",
+      "owner_role": "3D Modeling & Rigging",
+      "output": "studio/characters/berzan/3d/",
+      "status": "PLANNED",
+      "blocker": "Blender kurulu değil; model spec hazır",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-berzan-voice",
+      "character_id": "berzan",
+      "owner_role": "Voice & Localization",
+      "output": "studio/characters/berzan/voice/",
+      "status": "READY_FOR_QA",
+      "blocker": null,
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-aras-visual",
+      "character_id": "aras",
+      "owner_role": "Character Art",
+      "output": "studio/characters/aras/model-sheets/",
+      "status": "BLOCKED",
+      "blocker": "kanonik görsel referans yok; ücretsiz üretim yolu kapalı",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-aras-3d",
+      "character_id": "aras",
+      "owner_role": "3D Modeling & Rigging",
+      "output": "studio/characters/aras/3d/",
+      "status": "PLANNED",
+      "blocker": "Blender kurulu değil; model spec hazır",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-aras-voice",
+      "character_id": "aras",
+      "owner_role": "Voice & Localization",
+      "output": "studio/characters/aras/voice/",
+      "status": "READY_FOR_QA",
+      "blocker": null,
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-ramin-visual",
+      "character_id": "ramin",
+      "owner_role": "Character Art",
+      "output": "studio/characters/ramin/model-sheets/",
+      "status": "BLOCKED",
+      "blocker": "kanonik görsel referans yok; ücretsiz üretim yolu kapalı",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-ramin-3d",
+      "character_id": "ramin",
+      "owner_role": "3D Modeling & Rigging",
+      "output": "studio/characters/ramin/3d/",
+      "status": "PLANNED",
+      "blocker": "Blender kurulu değil; model spec hazır",
+      "cost_eur": 0
+    },
+    {
+      "work_order_id": "WO-ramin-voice",
+      "character_id": "ramin",
+      "owner_role": "Voice & Localization",
+      "output": "studio/characters/ramin/voice/",
+      "status": "MISSING",
+      "blocker": "referans ses yok",
+      "cost_eur": 0
+    }
+  ],
+  "note": "Sahip onayı gerektiren üretimler BLOCKED."
+}

@@ -1,0 +1,14 @@
+{
+  "schema": "ahos.model-spec.v1",
+  "character_id": "veysel",
+  "age_stage": "adult",
+  "target": "Blender + glTF/GLB, reusable rig",
+  "mesh": "MISSING",
+  "rig": "MISSING",
+  "materials": "PLANNED",
+  "face_rig": "PLANNED",
+  "viseme_rig": "PLANNED",
+  "blend_file": null,
+  "glb_file": null,
+  "note": "Gerçek .blend/.glb yok; PNG 3D model sayılmaz."
+}
