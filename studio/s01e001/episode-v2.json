@@ -1,0 +1,967 @@
+{
+  "schema": "ahos.episode-script.v2",
+  "episode_id": "S01E001",
+  "title": "Uçurtmanın Kayıp Kuyruğu",
+  "version": 2,
+  "status": "DRAFT_FOR_OWNER_APPROVAL",
+  "not_final": true,
+  "supersedes_draft": "studio/s01e001/episode.json (v1 korunur, final değil)",
+  "language": "tr",
+  "target_audience": "2-5 yaş",
+  "target_duration_seconds": 480,
+  "learning_goals": [
+    "sabır",
+    "paylaşma",
+    "yardımlaşma"
+  ],
+  "cast": [
+    {
+      "character_id": "aden",
+      "age_years": 3,
+      "gender": "female",
+      "role": "abla"
+    },
+    {
+      "character_id": "kaan",
+      "age_years": 1,
+      "gender": "male",
+      "role": "kardeş"
+    },
+    {
+      "character_id": "esra",
+      "age_years": 33,
+      "gender": "female",
+      "role": "anne"
+    }
+  ],
+  "location_plan": {
+    "locations": [
+      "park"
+    ],
+    "time_of_day": "sabah",
+    "light": "sol arka üstten 5200K; gölge yönü bölüm boyunca sabit",
+    "transition_note": "Ev sahneleri kaldırıldı; kumaş çantası piknik örtüsüne gelir. Park–ev–park geçişi yok.",
+    "efficiency": "v1: 12 sahne / 2 mekân; v2: 11 sahne / 1 mekân"
+  },
+  "continuity": {
+    "kite": "Dört panelli elmas uçurtma; kuyruk 6 büyük kumaş şerit",
+    "aden": "3 yaş kız; tek sarı yıldız toka; kobalt tişört; lacivert şort",
+    "kaan": "1 yaş erkek; 3,0 kafa; mercan tişört; lacivert şort",
+    "rules": [
+      "Kaan ipi tek başına tutmaz; ip boyun/el/bileğe dolanmaz",
+      "Küçük kumaş parçası yok; şeritler büyük ve yetişkin denetiminde",
+      "Kaan yalnız bakar, işaret eder, güler, büyük şeridi iter",
+      "Ek çocuk, ikinci uçurtma, logo, yazı yok"
+    ]
+  },
+  "camera_rules": {
+    "eye_height": "çocuk göz hizası 0,95 m",
+    "axis": "180 derece kuralı; ışık soldan",
+    "shot_length": "5-10 sn eylem vuruşu; sabit kadrajla süre doldurma yok"
+  },
+  "voice_policy": {
+    "kaan_lexicon": [
+      "Kuş!",
+      "Aa!",
+      "Mavi!",
+      "Ya!"
+    ],
+    "note": "Kaan yalnız bu dört kısa sesi kullanır; cümle kurmaz.",
+    "recording": "Henüz ses üretilmedi; her replik için duygu/süre/zaman kodu kayıtlı."
+  },
+  "harun": {
+    "canon_role": "uncle_of (dayı)",
+    "verified_from": "character-memory.db relationships: harun-uncle_of-aden, harun-uncle_of-kaan",
+    "v2_decision": "İlk bölümden çıkarıldı (QA P1: anlamlı tanıtım veya çıkarma). Sonraki bölümde tanıtılacak.",
+    "visual_canon": "yok"
+  },
+  "poc_note": "Bağımsız POC-30s ayrı iştir (workflows/S01E001-pilot-30s-plan.json); v2 bunu değiştirmez.",
+  "events": [
+    {
+      "event": "tail_attach_start",
+      "scene_id": "V2-S01"
+    },
+    {
+      "event": "tail_attached",
+      "scene_id": "V2-S02"
+    },
+    {
+      "event": "launch_1",
+      "scene_id": "V2-S03"
+    },
+    {
+      "event": "tail_snaps",
+      "scene_id": "V2-S04"
+    },
+    {
+      "event": "search_tail",
+      "scene_id": "V2-S05"
+    },
+    {
+      "event": "repair_try_1",
+      "scene_id": "V2-S07"
+    },
+    {
+      "event": "repair_done",
+      "scene_id": "V2-S08"
+    },
+    {
+      "event": "launch_2",
+      "scene_id": "V2-S10"
+    }
+  ],
+  "scenes": [
+    {
+      "scene_id": "V2-S01",
+      "title": "Kuyruk uyanıyor",
+      "start_seconds": 0,
+      "duration_seconds": 45,
+      "setting": "Park, piknik örtüsünün yanı; sabah",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "objective": "İlk 30 saniyede merak ve gülüş; kuyruğu bağlama hedefi",
+      "action": "Uçurtma yerde, kuyruk gevşek. Rüzgâr kuyruğu canlı gibi kıpırdatır; Kaan'ın yanağını gıdıklar, sonra başına düşer. Aden güler, Esra kadraj dışından seslenir.",
+      "beats": [
+        {
+          "start_seconds": 0,
+          "duration_seconds": 10,
+          "action": "Rüzgâr kuyruk ucunu kaldırır, Kaan'ın yanağını gıdıklar; Kaan gözlerini kırpıştırır.",
+          "focus": "kuyruk + Kaan yüzü",
+          "kaan_action": "blinks",
+          "event": "tail_tickle"
+        },
+        {
+          "start_seconds": 10,
+          "duration_seconds": 10,
+          "action": "Kaan kuyruğu yakalamaya çalışırken yana yalpalar; Aden elini uzatıp dengede tutar. Kuyruk başına düşer.",
+          "focus": "iki çocuk ayakta",
+          "kaan_action": "wobbles",
+          "event": "tail_on_head"
+        },
+        {
+          "start_seconds": 20,
+          "duration_seconds": 10,
+          "action": "Aden kuyruğu Kaan'ın başından alır; Kaan 'Aa!' der, ikisi birlikte güler. Esra kadraj dışından seslenir.",
+          "focus": "ikili plan",
+          "kaan_action": "laughs",
+          "event": "adult_call"
+        },
+        {
+          "start_seconds": 30,
+          "duration_seconds": 8,
+          "action": "Aden çömelir, kuyruğu uçurtmaya bağlamaya başlar; Kaan mavi panele dokunur.",
+          "focus": "eller + Kaan",
+          "kaan_action": "touches"
+        },
+        {
+          "start_seconds": 38,
+          "duration_seconds": 7,
+          "action": "Düğüm yarım kalır; rüzgâr uçurtmanın köşesini kaldırır. Aden 'Şimdi bekle' der.",
+          "focus": "uçurtma + Aden",
+          "kaan_action": "watches"
+        }
+      ],
+      "dialogue": [
+        {
+          "speaker": "kaan",
+          "text": "Aa!",
+          "emotion": "şaşkın gülüş",
+          "voice_duration_seconds": 1.0,
+          "start_seconds": 18.0
+        },
+        {
+          "speaker": "aden",
+          "text": "Kuyruk seninle oynuyor!",
+          "emotion": "gülerek",
+          "voice_duration_seconds": 2.0,
+          "start_seconds": 20.5
+        },
+        {
+          "speaker": "esra",
+          "text": "Kuyruğu birlikte bağlayın.",
+          "emotion": "sıcak, kadraj dışı",
+          "voice_duration_seconds": 2.4,
+          "start_seconds": 24.0
+        },
+        {
+          "speaker": "kaan",
+          "text": "Mavi!",
+          "emotion": "işaret ederek",
+          "voice_duration_seconds": 1.0,
+          "start_seconds": 26.5
+        }
+      ]
+    },
+    {
+      "scene_id": "V2-S02",
+      "title": "Düğüm ve ilk deneme",
+      "start_seconds": 45,
+      "duration_seconds": 45,
+      "setting": "Park, piknik örtüsü yanı; sabah",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "objective": "Sabır: düğümü tamamla, ilk denemenin başarısız olmasını kabul et",
+      "action": "Aden düğümü tamamlar; Esra ipi yerden alır. İlk kaldırma denemesinde rüzgâr yetmez, uçurtma yana devrilir. Kaan kıkırdar; Aden yeniden dener.",
+      "beats": [
+        {
+          "start_seconds": 45,
+          "duration_seconds": 9,
+          "action": "Aden düğümü sıkılaştırır; Esra ipi çözer ve yere serer.",
+          "focus": "eller",
+          "kaan_action": "watches"
+        },
+        {
+          "start_seconds": 54,
+          "duration_seconds": 9,
+          "action": "Aden ipi iki eliyle tutar, geriye yürür; Esra uçurtmayı kaldırır.",
+          "focus": "geniş ikili",
+          "kaan_action": "claps"
+        },
+        {
+          "start_seconds": 63,
+          "duration_seconds": 9,
+          "action": "Rüzgâr kesilir; uçurtma yana devrilir, kuyruk çimene yayılır.",
+          "focus": "uçurtma",
+          "kaan_action": "giggles"
+        },
+        {
+          "start_seconds": 72,
+          "duration_seconds": 9,
+          "action": "Kaan kıkırdayınca Aden de güler; Esra 'Bir daha' der.",
+          "focus": "üçlü",
+          "kaan_action": "laughs"
+        },
+        {
+          "start_seconds": 81,
+          "duration_seconds": 9,
+          "action": "Aden ipi toplar, duruşunu düzeltir; ikinci deneme için hazırlanır.",
+          "focus": "Aden",
+          "kaan_action": "watches"
+        }
+      ],
+      "dialogue": [
+        {
+          "speaker": "aden",
+          "text": "Önce düğüm.",
+          "emotion": "odaklanmış",
+          "voice_duration_seconds": 1.4,
+          "start_seconds": 48.0
+        },
+        {
+          "speaker": "esra",
+          "text": "İpi yerde tut, ben kaldırayım.",
+          "emotion": "yönlendiren",
+          "voice_duration_seconds": 2.4,
+          "start_seconds": 57.0
+        },
+        {
+          "speaker": "kaan",
+          "text": "Ya!",
+          "emotion": "kıkırdayarak",
+          "voice_duration_seconds": 0.9,
+          "start_seconds": 72.0
+        },
+        {
+          "speaker": "aden",
+          "text": "Bir daha deneyelim.",
+          "emotion": "kararlı",
+          "voice_duration_seconds": 1.8,
+          "start_seconds": 78.0
+        }
+      ]
+    },
+    {
+      "scene_id": "V2-S03",
+      "title": "İlk uçuş",
+      "start_seconds": 90,
+      "duration_seconds": 40,
+      "setting": "Park, açık çimenlik; sabah",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "objective": "Neşe ve birlikte başarma",
+      "action": "Rüzgâr gelir; uçurtma yükselir. Kuyruk dalgalanır, Kaan kollarını açar ve kuşlara işaret eder. Esra ipin ucunu yakından izler.",
+      "beats": [
+        {
+          "start_seconds": 90,
+          "duration_seconds": 8,
+          "action": "Rüzgâr çimeni dalgalandırır; Esra uçurtmayı bırakır, Aden ipi çeker.",
+          "focus": "geniş",
+          "kaan_action": "watches"
+        },
+        {
+          "start_seconds": 98,
+          "duration_seconds": 8,
+          "action": "Uçurtma yükselir; kuyruk havada S çizer.",
+          "focus": "gökyüzü",
+          "kaan_action": "points"
+        },
+        {
+          "start_seconds": 106,
+          "duration_seconds": 8,
+          "action": "Kaan kollarını açar, 'Kuş!' der; Aden güler.",
+          "focus": "ikili plan",
+          "kaan_action": "points"
+        },
+        {
+          "start_seconds": 114,
+          "duration_seconds": 8,
+          "action": "Esra ipin ucunu Aden'in elinin altında tutar; ikisi birlikte dengeler.",
+          "focus": "eller",
+          "kaan_action": "claps"
+        },
+        {
+          "start_seconds": 122,
+          "duration_seconds": 8,
+          "action": "Uçurtma tepe noktaya ulaşır; üçü de yukarı bakar.",
+          "focus": "alçak açı",
+          "kaan_action": "looks_up"
+        }
+      ],
+      "dialogue": [
+        {
+          "speaker": "aden",
+          "text": "Uçtu!",
+          "emotion": "sevinçli",
+          "voice_duration_seconds": 1.2,
+          "start_seconds": 110.0
+        },
+        {
+          "speaker": "kaan",
+          "text": "Kuş!",
+          "emotion": "heyecanlı",
+          "voice_duration_seconds": 1.0,
+          "start_seconds": 114.0
+        },
+        {
+          "speaker": "esra",
+          "text": "Yavaşça, ipi bırakma.",
+          "emotion": "sakin",
+          "voice_duration_seconds": 2.2,
+          "start_seconds": 120.0
+        }
+      ]
+    },
+    {
+      "scene_id": "V2-S04",
+      "title": "Rüzgâr kaprisi",
+      "start_seconds": 130,
+      "duration_seconds": 35,
+      "setting": "Park, açık çimenlik; sabah",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "objective": "Küçük ve güvenli sorun: kuyruk kopar",
+      "action": "Sert rüzgâr uçurtmayı sarsar; düğüm kayar, kuyruk kopar ve havada savrulur. Kite alçalır; Esra ipi kontrollü çeker.",
+      "beats": [
+        {
+          "start_seconds": 130,
+          "duration_seconds": 7,
+          "action": "Rüzgâr sertleşir; uçurtma yana yatar, kuyruk gerilir.",
+          "focus": "gökyüzü",
+          "kaan_action": "looks_up"
+        },
+        {
+          "start_seconds": 137,
+          "duration_seconds": 7,
+          "action": "Düğüm kayar; kuyruk uçurtmadan ayrılır ve havada döner.",
+          "focus": "yakın plan düğüm",
+          "kaan_action": "gasps"
+        },
+        {
+          "start_seconds": 144,
+          "duration_seconds": 7,
+          "action": "Kuyruk çimene doğru süzülür; Kaan arkasından bakar.",
+          "focus": "takip",
+          "kaan_action": "points"
+        },
+        {
+          "start_seconds": 151,
+          "duration_seconds": 7,
+          "action": "Uçurtma alçalır; Esra ipi yavaşça çeker, Aden yanına koşar.",
+          "focus": "geniş",
+          "kaan_action": "watches"
+        },
+        {
+          "start_seconds": 158,
+          "duration_seconds": 7,
+          "action": "Kuyruk piknik örtüsünün üstüne düşer; Kaan 'Aa!' der.",
+          "focus": "örtü",
+          "kaan_action": "surprised"
+        }
+      ],
+      "dialogue": [
+        {
+          "speaker": "kaan",
+          "text": "Aa!",
+          "emotion": "şaşkın",
+          "voice_duration_seconds": 1.0,
+          "start_seconds": 138.0
+        },
+        {
+          "speaker": "aden",
+          "text": "Kuyruk kaçtı!",
+          "emotion": "heyecanlı",
+          "voice_duration_seconds": 1.4,
+          "start_seconds": 144.0
+        },
+        {
+          "speaker": "esra",
+          "text": "Sakin ol, peşinden gidelim.",
+          "emotion": "güven veren",
+          "voice_duration_seconds": 2.4,
+          "start_seconds": 154.0
+        }
+      ]
+    },
+    {
+      "scene_id": "V2-S05",
+      "title": "Kuyruk parçaları",
+      "start_seconds": 165,
+      "duration_seconds": 40,
+      "setting": "Park, piknik örtüsü ve çalı kenarı; sabah",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "objective": "Yardımlaşma: parçaları birlikte toplama",
+      "action": "Üçü çimen ve örtü çevresinde kuyruk parçalarını arar. Aden kırmızı şeridi, Kaan mavi şeridi bulur; Esra parçaları büyük bir kaba koyar.",
+      "beats": [
+        {
+          "start_seconds": 165,
+          "duration_seconds": 8,
+          "action": "Aden örtünün altına bakar; Kaan çalı kenarına yürür.",
+          "focus": "ikili",
+          "kaan_action": "waddles"
+        },
+        {
+          "start_seconds": 173,
+          "duration_seconds": 8,
+          "action": "Kaan mavi şeridi gösterir; Aden yanına gelir.",
+          "focus": "Kaan + şerit",
+          "kaan_action": "points"
+        },
+        {
+          "start_seconds": 181,
+          "duration_seconds": 8,
+          "action": "Aden kırmızı şeridi papatyaların arasından alır.",
+          "focus": "yakın plan",
+          "kaan_action": "watches"
+        },
+        {
+          "start_seconds": 189,
+          "duration_seconds": 8,
+          "action": "Esra parçaları büyük kaba koyar; Kaan kapağı kapatmaya yardım eder.",
+          "focus": "eller",
+          "kaan_action": "helps_lid"
+        },
+        {
+          "start_seconds": 197,
+          "duration_seconds": 8,
+          "action": "Kalan parçaları sayarlar; bir parça eksik kalır, Aden etrafa bakar.",
+          "focus": "üçlü",
+          "kaan_action": "looks_around"
+        }
+      ],
+      "dialogue": [
+        {
+          "speaker": "aden",
+          "text": "Burada mı?",
+          "emotion": "meraklı",
+          "voice_duration_seconds": 1.2,
+          "start_seconds": 169.0
+        },
+        {
+          "speaker": "kaan",
+          "text": "Mavi!",
+          "emotion": "bulmuş",
+          "voice_duration_seconds": 1.0,
+          "start_seconds": 179.0
+        },
+        {
+          "speaker": "aden",
+          "text": "Buldun!",
+          "emotion": "sevinçli",
+          "voice_duration_seconds": 1.0,
+          "start_seconds": 182.0
+        },
+        {
+          "speaker": "esra",
+          "text": "Bir parça daha olmalı.",
+          "emotion": "sakin",
+          "voice_duration_seconds": 2.0,
+          "start_seconds": 195.0
+        }
+      ]
+    },
+    {
+      "scene_id": "V2-S06",
+      "title": "Kumaş çantası",
+      "start_seconds": 205,
+      "duration_seconds": 45,
+      "setting": "Park, piknik örtüsü; sabah",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "objective": "Paylaşma: Kaan önce seçer, renkler paylaşılır",
+      "action": "Esra piknik çantasından büyük kumaş şeritleri çıkarır. Aden uzanır ama durur, Kaan'a öncelik verir. Kaan mavi şeridi seçer; Aden kırmızıyı alır.",
+      "beats": [
+        {
+          "start_seconds": 205,
+          "duration_seconds": 9,
+          "action": "Esra çantayı açar; renkli büyük şeritler görünür.",
+          "focus": "çanta",
+          "kaan_action": "looks"
+        },
+        {
+          "start_seconds": 214,
+          "duration_seconds": 9,
+          "action": "Aden elini uzatır, sonra geri çeker: 'Kaan önce seçsin.'",
+          "focus": "Aden",
+          "kaan_action": "watches"
+        },
+        {
+          "start_seconds": 223,
+          "duration_seconds": 9,
+          "action": "Kaan mavi şeridi iki eliyle çeker; Aden gülümser.",
+          "focus": "Kaan",
+          "kaan_action": "pulls"
+        },
+        {
+          "start_seconds": 232,
+          "duration_seconds": 9,
+          "action": "Aden kırmızı şeridi alır; ikisi şeritleri yan yana koyar.",
+          "focus": "eller",
+          "kaan_action": "places"
+        },
+        {
+          "start_seconds": 241,
+          "duration_seconds": 9,
+          "action": "Esra şeritleri örtüye serer; üçü renk sırasına bakar.",
+          "focus": "üçlü",
+          "kaan_action": "looks"
+        }
+      ],
+      "dialogue": [
+        {
+          "speaker": "esra",
+          "text": "Kumaş çantası burada.",
+          "emotion": "davet eden",
+          "voice_duration_seconds": 2.0,
+          "start_seconds": 207.0
+        },
+        {
+          "speaker": "aden",
+          "text": "Kaan önce seçsin.",
+          "emotion": "paylaşan",
+          "voice_duration_seconds": 1.6,
+          "start_seconds": 217.0
+        },
+        {
+          "speaker": "kaan",
+          "text": "Mavi!",
+          "emotion": "seçen",
+          "voice_duration_seconds": 1.0,
+          "start_seconds": 223.0
+        },
+        {
+          "speaker": "aden",
+          "text": "Ben kırmızı.",
+          "emotion": "sıcak",
+          "voice_duration_seconds": 1.2,
+          "start_seconds": 229.0
+        }
+      ]
+    },
+    {
+      "scene_id": "V2-S07",
+      "title": "Kısa kuyruk",
+      "start_seconds": 250,
+      "duration_seconds": 45,
+      "setting": "Park, piknik örtüsü; sabah",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "objective": "Sabır: ilk onarım gülünç biçimde başarısız olur",
+      "action": "Aden şeritleri bağlar; kuyruk kısa kalır. Uçurtmayı kaldırdıklarında kuyruk dönerek uçurtmayı sallar ve yere indirir. Kaan kıkırdar.",
+      "beats": [
+        {
+          "start_seconds": 250,
+          "duration_seconds": 9,
+          "action": "Aden üç şeridi uç uca bağlar; kuyruk kısa kalır.",
+          "focus": "eller",
+          "kaan_action": "watches"
+        },
+        {
+          "start_seconds": 259,
+          "duration_seconds": 9,
+          "action": "Esra uçurtmayı kaldırır; kısa kuyruk hızla döner.",
+          "focus": "uçurtma",
+          "kaan_action": "claps"
+        },
+        {
+          "start_seconds": 268,
+          "duration_seconds": 9,
+          "action": "Uçurtma sallanıp yana devrilir; Kaan kıkırdayarak elleriyle yüzünü kapatır.",
+          "focus": "üçlü",
+          "kaan_action": "giggles"
+        },
+        {
+          "start_seconds": 277,
+          "duration_seconds": 9,
+          "action": "Aden kuyruğu ölçer; bir şerit daha gerektiğini görür.",
+          "focus": "yakın plan",
+          "kaan_action": "watches"
+        },
+        {
+          "start_seconds": 286,
+          "duration_seconds": 9,
+          "action": "Kaan sarı şeridi uzatır; Aden 'Biraz daha uzun' der.",
+          "focus": "eller",
+          "kaan_action": "hands_strip"
+        }
+      ],
+      "dialogue": [
+        {
+          "speaker": "aden",
+          "text": "Biraz kısa oldu.",
+          "emotion": "düşünen",
+          "voice_duration_seconds": 1.6,
+          "start_seconds": 253.0
+        },
+        {
+          "speaker": "kaan",
+          "text": "Ya!",
+          "emotion": "kıkırdayan",
+          "voice_duration_seconds": 0.9,
+          "start_seconds": 272.0
+        },
+        {
+          "speaker": "esra",
+          "text": "Bir daha deneyelim.",
+          "emotion": "cesaret veren",
+          "voice_duration_seconds": 1.8,
+          "start_seconds": 278.0
+        },
+        {
+          "speaker": "aden",
+          "text": "Biraz daha uzun olsun.",
+          "emotion": "kararlı",
+          "voice_duration_seconds": 2.0,
+          "start_seconds": 286.0
+        }
+      ]
+    },
+    {
+      "scene_id": "V2-S08",
+      "title": "Birlikte düğüm",
+      "start_seconds": 295,
+      "duration_seconds": 45,
+      "setting": "Park, piknik örtüsü; sabah",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "objective": "Yardımlaşma: güvenli rollerle kuyruğu tamamla",
+      "action": "Esra uçurtmayı yerde tutar, Aden düğümleri atar, Kaan büyük şeritleri yakınına iter. Son düğüm sıkılaşır; kuyruk yere serilir.",
+      "beats": [
+        {
+          "start_seconds": 295,
+          "duration_seconds": 9,
+          "action": "Esra uçurtmayı yerde tutar; Aden şeritleri dizer.",
+          "focus": "üçlü",
+          "kaan_action": "watches"
+        },
+        {
+          "start_seconds": 304,
+          "duration_seconds": 9,
+          "action": "Aden ilk düğümü atar; Kaan büyük mavi şeridi yakına iter.",
+          "focus": "eller",
+          "kaan_action": "pushes"
+        },
+        {
+          "start_seconds": 313,
+          "duration_seconds": 9,
+          "action": "İkinci düğüm zorlanır; Aden bekler, parmaklarını gevşetir.",
+          "focus": "yakın plan",
+          "kaan_action": "watches"
+        },
+        {
+          "start_seconds": 322,
+          "duration_seconds": 9,
+          "action": "Aden son düğümü sıkar; Esra 'Oldu' der, Kaan el çırpar.",
+          "focus": "eller + yüzler",
+          "kaan_action": "claps"
+        },
+        {
+          "start_seconds": 331,
+          "duration_seconds": 9,
+          "action": "Kuyruk yere serilir; üçü uzunluğuna bakar.",
+          "focus": "geniş",
+          "kaan_action": "looks"
+        }
+      ],
+      "dialogue": [
+        {
+          "speaker": "aden",
+          "text": "Sen tut, ben bağlarım.",
+          "emotion": "görev paylaşan",
+          "voice_duration_seconds": 2.0,
+          "start_seconds": 299.0
+        },
+        {
+          "speaker": "esra",
+          "text": "İpin ucunu bana ver.",
+          "emotion": "güvenli yönlendirme",
+          "voice_duration_seconds": 2.0,
+          "start_seconds": 311.0
+        },
+        {
+          "speaker": "kaan",
+          "text": "Ya!",
+          "emotion": "sevinçli",
+          "voice_duration_seconds": 0.9,
+          "start_seconds": 327.0
+        },
+        {
+          "speaker": "aden",
+          "text": "Düğüm oldu!",
+          "emotion": "başaran",
+          "voice_duration_seconds": 1.2,
+          "start_seconds": 333.0
+        }
+      ]
+    },
+    {
+      "scene_id": "V2-S09",
+      "title": "Rüzgâr oyunu",
+      "start_seconds": 340,
+      "duration_seconds": 45,
+      "setting": "Park, piknik örtüsü; sabah",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "objective": "Sabır: beklemeyi oyuna çevir",
+      "action": "Rüzgâr durgundur. Aden 'bir-iki-üç' diye sayar; Kaan parmağıyla sayar. Yaprak Kaan'ın burnuna konar, hapşırır; hepsi güler. Rüzgâr gelir.",
+      "beats": [
+        {
+          "start_seconds": 340,
+          "duration_seconds": 9,
+          "action": "Aden elini havaya kaldırır; yapraklar kıpırdamaz.",
+          "focus": "gökyüzü",
+          "kaan_action": "looks_up"
+        },
+        {
+          "start_seconds": 349,
+          "duration_seconds": 9,
+          "action": "Aden sayar; Kaan parmağıyla ritme katılır.",
+          "focus": "ikili",
+          "kaan_action": "counts"
+        },
+        {
+          "start_seconds": 358,
+          "duration_seconds": 9,
+          "action": "Yaprak Kaan'ın burnuna konar; Kaan hapşırır, şaşkın bakar.",
+          "focus": "yakın plan",
+          "kaan_action": "sneezes"
+        },
+        {
+          "start_seconds": 367,
+          "duration_seconds": 9,
+          "action": "Aden ve Esra güler; Kaan da güler, yaprağı üfler.",
+          "focus": "üçlü",
+          "kaan_action": "blows"
+        },
+        {
+          "start_seconds": 376,
+          "duration_seconds": 9,
+          "action": "Rüzgâr yaprakları kaldırır; Esra uçurtmayı işaret eder.",
+          "focus": "geniş",
+          "kaan_action": "points"
+        }
+      ],
+      "dialogue": [
+        {
+          "speaker": "aden",
+          "text": "Bir, iki, üç!",
+          "emotion": "oyunlu",
+          "voice_duration_seconds": 1.4,
+          "start_seconds": 350.0
+        },
+        {
+          "speaker": "esra",
+          "text": "Rüzgâr geldi.",
+          "emotion": "fısıldayan",
+          "voice_duration_seconds": 1.6,
+          "start_seconds": 380.0
+        }
+      ]
+    },
+    {
+      "scene_id": "V2-S10",
+      "title": "Yeniden uçuş",
+      "start_seconds": 385,
+      "duration_seconds": 50,
+      "setting": "Park, açık çimenlik; sabah",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "objective": "Birlikte başarmanın ödülü",
+      "action": "Esra uçurtmayı kaldırır, Aden ipi çeker. Uzun kuyruk havada dalgalanır. Kaan kuşlara ve uçurtmaya işaret eder; Esra ipi yakından izler.",
+      "beats": [
+        {
+          "start_seconds": 385,
+          "duration_seconds": 10,
+          "action": "Esra uçurtmayı kaldırır; Aden ipi iki eliyle çeker.",
+          "focus": "geniş",
+          "kaan_action": "watches"
+        },
+        {
+          "start_seconds": 395,
+          "duration_seconds": 10,
+          "action": "Uçurtma yükselir; uzun kuyruk düzgün dalgalanır.",
+          "focus": "gökyüzü",
+          "kaan_action": "points"
+        },
+        {
+          "start_seconds": 405,
+          "duration_seconds": 10,
+          "action": "Kaan 'Kuş!' der; gökyüzündeki kuşları gösterir.",
+          "focus": "Kaan",
+          "kaan_action": "points"
+        },
+        {
+          "start_seconds": 415,
+          "duration_seconds": 10,
+          "action": "Aden ipi Esra'nın gözetiminde tutar; omuzları gevşer.",
+          "focus": "eller",
+          "kaan_action": "claps"
+        },
+        {
+          "start_seconds": 425,
+          "duration_seconds": 10,
+          "action": "Uçurtma tepe noktada süzülür; üçü birlikte güler.",
+          "focus": "alçak açı",
+          "kaan_action": "laughs"
+        }
+      ],
+      "dialogue": [
+        {
+          "speaker": "aden",
+          "text": "Uçtu!",
+          "emotion": "coşkulu",
+          "voice_duration_seconds": 1.2,
+          "start_seconds": 403.0
+        },
+        {
+          "speaker": "kaan",
+          "text": "Kuş!",
+          "emotion": "heyecanlı",
+          "voice_duration_seconds": 1.0,
+          "start_seconds": 409.0
+        },
+        {
+          "speaker": "esra",
+          "text": "Kuyruk dayanıyor.",
+          "emotion": "gururlu",
+          "voice_duration_seconds": 1.8,
+          "start_seconds": 419.0
+        }
+      ]
+    },
+    {
+      "scene_id": "V2-S11",
+      "title": "Piknik",
+      "start_seconds": 435,
+      "duration_seconds": 45,
+      "setting": "Park, piknik örtüsü; sabah",
+      "cast_ids": [
+        "aden",
+        "kaan",
+        "esra"
+      ],
+      "objective": "Davranışla kapanış: paylaşma ve birlikte başarma",
+      "action": "Uçurtma gökyüzünde, ip Esra'nın elinde. Aden kurabiyeleri paylaşır; Kaan birini Aden'e uzatır. Kuyruk rüzgârda dans eder; hepsi yukarı bakar.",
+      "beats": [
+        {
+          "start_seconds": 435,
+          "duration_seconds": 9,
+          "action": "Esra ipi tutar; Aden örtüye oturur, Kaan yanına yuvarlanır.",
+          "focus": "geniş",
+          "kaan_action": "sits"
+        },
+        {
+          "start_seconds": 444,
+          "duration_seconds": 9,
+          "action": "Aden kurabiye kutusunu açar; önce Kaan'a uzatır.",
+          "focus": "eller",
+          "kaan_action": "reaches"
+        },
+        {
+          "start_seconds": 453,
+          "duration_seconds": 9,
+          "action": "Kaan bir kurabiyeyi Aden'e geri uzatır; Aden güler.",
+          "focus": "ikili",
+          "kaan_action": "offers"
+        },
+        {
+          "start_seconds": 462,
+          "duration_seconds": 9,
+          "action": "Esra kuyruğu işaret eder; üçü gökyüzüne bakar.",
+          "focus": "gökyüzü",
+          "kaan_action": "looks_up"
+        },
+        {
+          "start_seconds": 471,
+          "duration_seconds": 9,
+          "action": "Kuyruk rüzgârda dalgalanır; yavaş fade.",
+          "focus": "geniş",
+          "kaan_action": "laughs"
+        }
+      ],
+      "dialogue": [
+        {
+          "speaker": "aden",
+          "text": "Kurabiye paylaşalım.",
+          "emotion": "paylaşan",
+          "voice_duration_seconds": 1.8,
+          "start_seconds": 441.0
+        },
+        {
+          "speaker": "kaan",
+          "text": "Ya!",
+          "emotion": "mutlu",
+          "voice_duration_seconds": 0.9,
+          "start_seconds": 459.0
+        },
+        {
+          "speaker": "esra",
+          "text": "Kuyruğa bakın, dans ediyor.",
+          "emotion": "sıcak",
+          "voice_duration_seconds": 2.2,
+          "start_seconds": 467.0
+        }
+      ]
+    }
+  ]
+}
