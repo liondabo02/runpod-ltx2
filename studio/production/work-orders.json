@@ -7,8 +7,8 @@
       "character_id": "aden",
       "owner_role": "Character Art",
       "output": "studio/characters/aden/model-sheets/",
-      "status": "READY_FOR_QA",
-      "blocker": null,
+      "status": "BLOCKED",
+      "blocker": "v1 görsel var ama v2 model sheet ve sahip onayı yok",
       "cost_eur": 0
     },
     {
@@ -34,8 +34,8 @@
       "character_id": "kaan",
       "owner_role": "Character Art",
       "output": "studio/characters/kaan/model-sheets/",
-      "status": "READY_FOR_QA",
-      "blocker": null,
+      "status": "BLOCKED",
+      "blocker": "v1 görsel var ama v2 model sheet ve sahip onayı yok",
       "cost_eur": 0
     },
     {

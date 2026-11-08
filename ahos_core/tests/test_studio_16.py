@@ -39,7 +39,7 @@ def test_ages_and_genders_match_canon():
 
 def test_hijab_and_long_hair_flags():
     rows = {row["character_id"]: row for row in load("canon", "cast-manifest.json")["characters"]}
-    assert {cid for cid, row in rows.items() if row["hijab"]} == {"esra", "oznur"}
+    assert {cid for cid, row in rows.items() if row["hijab"]} == {"esra", "esma", "oznur"}
     assert {cid for cid, row in rows.items() if row["long_hair"]} == {"harun", "davut"}
 
 
@@ -115,3 +115,42 @@ def test_style_bibles_and_work_orders_exist():
     orders = load("production", "work-orders.json")
     assert orders["count"] == 48
     assert all(order["cost_eur"] == 0 for order in orders["orders"])
+
+
+def test_esma_hijab_matches_character_file_and_brief():
+    manifest = {row["character_id"]: row for row in load("canon", "cast-manifest.json")["characters"]}
+    esma = load("characters", "esma", "character.json")
+    brief = load("characters", "esma", "visual-dna.json")["owner_brief"]
+    assert esma["hijab"] is True
+    assert manifest["esma"]["hijab"] is True
+    assert "başörtülü" in brief
+
+
+def test_visual_work_orders_are_blocked_without_approved_v2_assets():
+    orders = load("production", "work-orders.json")["orders"]
+    visual = [item for item in orders if item["work_order_id"].endswith("-visual")]
+    assert len(visual) == 16
+    assert all(item["status"] == "BLOCKED" for item in visual)
+    assert "v2 model sheet" in next(item["blocker"] for item in visual
+                                    if item["character_id"] == "aden")
+
+
+def test_generated_files_fail_closed_when_owner_approval_changes(tmp_path):
+    import pytest
+    from tools.build_studio_cast import write, write_text_safely
+
+    target = tmp_path / "approvals.json"
+    approved = {"approvals": [{"character_id": "aden", "approved": True}]}
+    write(target, approved)
+    before = target.read_bytes()
+    # Idempotent rerun must not rewrite the file.
+    write(target, approved)
+    assert target.read_bytes() == before
+    # The generator must never reset an approved asset to an empty list.
+    with pytest.raises(FileExistsError, match="refusing to overwrite"):
+        write(target, {"approvals": []})
+    assert target.read_bytes() == before
+    note = tmp_path / "owner-review.md"
+    write_text_safely(note, "approved: no\\n")
+    with pytest.raises(FileExistsError):
+        write_text_safely(note, "approved: yes\\n")

@@ -68,7 +68,7 @@ STAGES = {"aden": "preschool", "kaan": "toddler", "esra": "adult", "ahmet": "adu
           "davut": "adult", "fatos": "adult", "emos": "preschool", "berzan": "toddler", "aras": "toddler",
           "ramin": "infant"}
 
-HIJAB = {"esra", "oznur"}
+HIJAB = {"esra", "esma", "oznur"}
 LONG_HAIR = {"harun", "davut"}
 LEAD = {"aden", "kaan"}
 
@@ -77,9 +77,23 @@ def load(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def write(path: Path, payload) -> None:
+def write_text_safely(path: Path, content: str) -> None:
+    """Idempotent by default; protect owner edits and approval records on reruns."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    if path.exists():
+        previous = path.read_text(encoding="utf-8")
+        if previous != content:
+            raise FileExistsError(
+                f"Existing file differs; refusing to overwrite: {path}. "
+                "Review and merge the change explicitly."
+            )
+        return
+    path.write_text(content, encoding="utf-8")
+
+
+def write(path: Path, payload) -> None:
+    content = json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
+    write_text_safely(path, content)
 
 
 def motion_for(stage: str) -> dict:
@@ -250,7 +264,7 @@ def build() -> None:
     for shot in shots:
         lines.append(f"| {shot['shot_id']} | {shot['scene_id']} | {shot['start_seconds']} | "
                      f"{shot['duration_seconds']} | {shot['action']} |")
-    (OUT / "s01e001" / "storyboard" / "storyboard.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    write_text_safely(OUT / "s01e001" / "storyboard" / "storyboard.md", "\n".join(lines) + "\n")
 
     work_orders = []
     for row in cast_rows:
@@ -258,8 +272,10 @@ def build() -> None:
         work_orders.append({
             "work_order_id": f"WO-{cid}-visual", "character_id": cid,
             "owner_role": "Character Art", "output": f"studio/characters/{cid}/model-sheets/",
-            "status": "READY_FOR_QA" if cid in {"aden", "kaan"} else "BLOCKED",
-            "blocker": None if cid in {"aden", "kaan"} else "kanonik görsel referans yok; ücretsiz üretim yolu kapalı",
+            "status": "BLOCKED",
+            "blocker": ("v1 görsel var ama v2 model sheet ve sahip onayı yok"
+                        if cid in {"aden", "kaan"} else
+                        "kanonik görsel referans yok; ücretsiz üretim yolu kapalı"),
             "cost_eur": 0})
         work_orders.append({
             "work_order_id": f"WO-{cid}-3d", "character_id": cid,
@@ -313,7 +329,7 @@ Durum: **SPEC_READY** · sahip onayı yok · harcama **0 EUR**
 - 14 karakterde görsel kanon yok; model sheet üretilemez.
 - **Kanıt:** `studio/production/cast-readiness.json`, `asset-registry.json`.
 """
-    (OUT / "README.md").write_text(readme, encoding="utf-8")
+    write_text_safely(OUT / "README.md", readme)
 
     print(json.dumps({"characters": len(cast_rows), "relations": len(RELATIONS),
                       "shots": len(shots), "out": str(OUT)}, ensure_ascii=False))
