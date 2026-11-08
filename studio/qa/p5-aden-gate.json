@@ -2,7 +2,9 @@
   "schema": "ahos.studio.p5-gate.v1",
   "generated_at": "2026-11-08",
   "character_id": "aden",
-  "status": "BLOCKED",
+  "status": "CANDIDATE_ALLOWED_FINAL_BLOCKED",
+  "candidate_generation_allowed": true,
+  "final_lock_allowed": false,
   "canon_markers": {
     "star_clip": true,
     "three_freckles": true,
@@ -28,12 +30,10 @@
   "image_candidate_produced": false,
   "animation_produced": false,
   "reasons": [
-    "Aden için onaylı kanonik görsel referans yok (0/16 APPROVED).",
-    "Mevcut keyframe NEEDS_REVISION: yıldız toka ve çiller görünmüyor.",
-    "ZeroGPU kotası kapalı; ücretsiz Kontext üretimi yapılamıyor.",
-    "Yerel CUDA/Blender/SDXL/IP-Adapter yok; indirme veya ücret yasak.",
-    "Pollinations yalnız metin istemli 'sana' sunuyor; kimlik koruması yok.",
-    "3D mesh/rig yok; gerçek 3D animasyon üretilemez."
+    "Aday görsel/import onay gerektirmez; bu kapı aday üretimini engellemez.",
+    "Nihai kilitleme, kalıcı animasyon ve ticari kullanım sahip onayı ister (0/16).",
+    "Mevcut keyframe NEEDS_REVISION; aday için referans olarak kullanılmaz.",
+    "Ücretsiz üretim yolu bulunamadı; candidate-import bekleniyor."
   ],
-  "next_action": "Sahip onaylı Aden v2 referansı veya kimlik koruyan ücretsiz üretici sağlanmadan P5 üretimi başlatılmaz."
+  "next_action": "PNG/JPEG adayı studio/candidates/aden/inbox/ içine koyup tools/candidate_import.py ile içe aktar; onay verme."
 }

@@ -1,5 +1,8 @@
 # P5 — Aden görsel adayı ve 5 sn animasyon: BLOCKED
 
+> **P6 güncellemesi:** Aday üretimi artık onay gerektirmiyor; kapı durumu
+> `CANDIDATE_ALLOWED_FINAL_BLOCKED`. Aşağıdaki engeller **final/animasyon** içindir.
+
 Durum: **BLOCKED** · görsel adayı **üretilmedi** · animasyon **üretilmedi** · harcama 0 EUR
 
 ## Neden?

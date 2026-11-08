@@ -41,7 +41,9 @@ def main() -> int:
         "schema": "ahos.studio.p5-gate.v1",
         "generated_at": "2026-11-08",
         "character_id": "aden",
-        "status": "BLOCKED",
+        "status": "CANDIDATE_ALLOWED_FINAL_BLOCKED",
+        "candidate_generation_allowed": True,
+        "final_lock_allowed": False,
         "canon_markers": markers,
         "canon_markers_complete": all(markers.values()),
         "approved_reference": False,
@@ -58,13 +60,18 @@ def main() -> int:
         },
         "image_candidate_produced": False,
         "animation_produced": False,
-        "reasons": reasons,
-        "next_action": "Sahip onaylı Aden v2 referansı veya kimlik koruyan ücretsiz üretici sağlanmadan P5 üretimi başlatılmaz.",
+        "reasons": [
+            "Aday görsel/import onay gerektirmez; bu kapı aday üretimini engellemez.",
+            "Nihai kilitleme, kalıcı animasyon ve ticari kullanım sahip onayı ister (0/16).",
+            "Mevcut keyframe NEEDS_REVISION; aday için referans olarak kullanılmaz.",
+            "Ücretsiz üretim yolu bulunamadı; candidate-import bekleniyor.",
+        ],
+        "next_action": "PNG/JPEG adayı studio/candidates/aden/inbox/ içine koyup tools/candidate_import.py ile içe aktar; onay verme.",
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({"status": payload["status"], "markers": markers,
-                      "approved_reference": False, "out": str(OUT)}, ensure_ascii=False))
+    print(json.dumps({"status": payload["status"], "candidate_allowed": True,
+                      "final_lock_allowed": False, "out": str(OUT)}, ensure_ascii=False))
     return 0
 
 

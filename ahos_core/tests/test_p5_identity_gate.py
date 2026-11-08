@@ -9,8 +9,10 @@ STUDIO = ROOT / "studio"
 GATE = json.loads((STUDIO / "qa" / "p5-aden-gate.json").read_text(encoding="utf-8"))
 
 
-def test_gate_blocks_without_approved_reference():
-    assert GATE["status"] == "BLOCKED"
+def test_gate_allows_candidate_but_blocks_final():
+    assert GATE["status"] == "CANDIDATE_ALLOWED_FINAL_BLOCKED"
+    assert GATE["candidate_generation_allowed"] is True
+    assert GATE["final_lock_allowed"] is False
     assert GATE["approved_reference"] is False
     assert GATE["image_candidate_produced"] is False
     assert GATE["animation_produced"] is False
