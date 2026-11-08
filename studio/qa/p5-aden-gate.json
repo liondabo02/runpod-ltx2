@@ -1,0 +1,39 @@
+{
+  "schema": "ahos.studio.p5-gate.v1",
+  "generated_at": "2026-11-08",
+  "character_id": "aden",
+  "status": "BLOCKED",
+  "canon_markers": {
+    "star_clip": true,
+    "three_freckles": true,
+    "wavy_brown_hair": true,
+    "cobalt_blue_outfit": true
+  },
+  "canon_markers_complete": true,
+  "approved_reference": false,
+  "model_sheet_status": "NEEDS_REVISION",
+  "owner_approval": "NONE",
+  "source_keyframe": {
+    "path": "deliverables\\S01-PARK-KITE-001\\keyframes\\keyframe-girl-seed-77.png",
+    "sha256": "b62eb34a9278eb863acbc84ef8e90147e1fdafc2f0c2fe837ccdc60498cbafb0",
+    "status": "NEEDS_REVISION"
+  },
+  "generator": {
+    "zero_gpu": "BLOCKED (quota)",
+    "local_image_model": false,
+    "local_gpu": false,
+    "blender": false,
+    "commercial_license": "UNVERIFIED"
+  },
+  "image_candidate_produced": false,
+  "animation_produced": false,
+  "reasons": [
+    "Aden için onaylı kanonik görsel referans yok (0/16 APPROVED).",
+    "Mevcut keyframe NEEDS_REVISION: yıldız toka ve çiller görünmüyor.",
+    "ZeroGPU kotası kapalı; ücretsiz Kontext üretimi yapılamıyor.",
+    "Yerel CUDA/Blender/SDXL/IP-Adapter yok; indirme veya ücret yasak.",
+    "Pollinations yalnız metin istemli 'sana' sunuyor; kimlik koruması yok.",
+    "3D mesh/rig yok; gerçek 3D animasyon üretilemez."
+  ],
+  "next_action": "Sahip onaylı Aden v2 referansı veya kimlik koruyan ücretsiz üretici sağlanmadan P5 üretimi başlatılmaz."
+}
