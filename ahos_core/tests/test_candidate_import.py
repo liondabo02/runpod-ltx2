@@ -70,14 +70,19 @@ def test_rejects_non_image_and_small_image(tmp_path):
         candidate_import.import_candidate("aden", small, root=root)
 
 
-def test_real_repo_has_no_unreviewed_candidate_media():
+def test_real_repo_candidate_media_is_only_pending_model_sheet():
     registry = json.loads((ROOT / "studio" / "candidates" / "aden" / "registry.json")
                           .read_text(encoding="utf-8"))
     assert registry["candidates"] == []
     assert registry["awaiting_import"] is True
     media = [path for path in (ROOT / "studio" / "candidates" / "aden").rglob("*")
              if path.suffix.lower() in {".png", ".jpg", ".jpeg"}]
-    assert media == []
+    assert media
+    assert all("model-sheet" in path.parts for path in media)
+    manifest = json.loads((ROOT / "studio" / "candidates" / "aden" / "model-sheet"
+                           / "model-sheet-manifest.json").read_text(encoding="utf-8"))
+    assert manifest["status"] == "CANDIDATE_PENDING_REVIEW"
+    assert manifest["owner_approval"] == "NONE"
 
 
 def test_gate_allows_candidate_but_not_final():

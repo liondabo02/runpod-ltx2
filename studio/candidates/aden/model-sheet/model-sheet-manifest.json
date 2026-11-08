@@ -1,0 +1,49 @@
+{
+  "schema": "ahos.studio.candidate-model-sheet.v1",
+  "character_id": "aden",
+  "status": "CANDIDATE_PENDING_REVIEW",
+  "owner_approval": "NONE",
+  "final_use_allowed": false,
+  "identity_lock_modified": false,
+  "model": "black-forest-labs/FLUX.1-Kontext-Dev",
+  "model_license": "FLUX.1-Kontext-Dev NON-COMMERCIAL; commercial use not verified",
+  "seed_turnaround": 1001,
+  "seed_profile": 1102,
+  "seed_expressions": 1203,
+  "views": 5,
+  "expression_panels": 15,
+  "identity_markers": {
+    "single_star_clip": true,
+    "three_freckles": true,
+    "wavy_dark_brown_hair": true,
+    "cobalt_tee_kite": true,
+    "navy_shorts": true
+  },
+  "identity_note": "Yüz tutarlılığı görsel incelemede; sahip onayı ve ticari lisans doğrulanmadı.",
+  "source_reference": {
+    "path": "studio/reference/owner_accepted_roster_v1/characters/01_aden.png",
+    "sha256": "7c26afc668a9e9e352918ed618a1ae3b20da7b9e08e76a395a7e4c4ba2c14b7e"
+  },
+  "assets": [
+    {
+      "path": "studio\\candidates\\aden\\model-sheet\\aden-turnaround-kontext-seed-1001.png",
+      "sha256": "2dac962880bf42f04dbae91fcb5137a06b4abc8170e733179691d0296cd73d4b"
+    },
+    {
+      "path": "studio\\candidates\\aden\\model-sheet\\aden-left-profile-kontext-seed-1102.png",
+      "sha256": "e3c17178744fcb2b86025fa23f3d277c5f515dfddf2293c68fd5ad1a98a62284"
+    },
+    {
+      "path": "studio\\candidates\\aden\\model-sheet\\aden-expressions-kontext-seed-1203.png",
+      "sha256": "71e53cc71a9d8c7fa046cde8c372f3bac22c267e745397f20750e40de357c42e"
+    },
+    {
+      "path": "studio\\candidates\\aden\\model-sheet\\ADEN-model-sheet-candidate-v1.png",
+      "sha256": "171f86865226b23572dcaaf9b0d8e7347698826c0593b01898c197df294ffd11"
+    },
+    {
+      "path": "studio\\candidates\\aden\\model-sheet\\ADEN-expressions-candidate-v1.png",
+      "sha256": "b79cc51018dcef8e1fdaabbcffe6b144c2ebc4e0e108d53bf6298443a36850f8"
+    }
+  ]
+}
