@@ -1,0 +1,212 @@
+{
+  "results": [
+    {
+      "id": "01_aden",
+      "width": 223,
+      "height": 225,
+      "alpha_percent_below_250": 47.68,
+      "alpha_zero_percent": 42.27,
+      "bbox": [
+        6,
+        0,
+        217,
+        219
+      ]
+    },
+    {
+      "id": "02_kaan",
+      "width": 298,
+      "height": 255,
+      "alpha_percent_below_250": 67.44,
+      "alpha_zero_percent": 55.3,
+      "bbox": [
+        3,
+        0,
+        298,
+        254
+      ]
+    },
+    {
+      "id": "03_esra",
+      "width": 333,
+      "height": 255,
+      "alpha_percent_below_250": 53.73,
+      "alpha_zero_percent": 47.52,
+      "bbox": [
+        7,
+        0,
+        330,
+        255
+      ]
+    },
+    {
+      "id": "04_ahmet",
+      "width": 339,
+      "height": 255,
+      "alpha_percent_below_250": 55.41,
+      "alpha_zero_percent": 53.71,
+      "bbox": [
+        7,
+        0,
+        339,
+        255
+      ]
+    },
+    {
+      "id": "05_esma",
+      "width": 298,
+      "height": 260,
+      "alpha_percent_below_250": 52.01,
+      "alpha_zero_percent": 50.01,
+      "bbox": [
+        6,
+        5,
+        292,
+        260
+      ]
+    },
+    {
+      "id": "06_harun",
+      "width": 335,
+      "height": 260,
+      "alpha_percent_below_250": 49.7,
+      "alpha_zero_percent": 47.54,
+      "bbox": [
+        6,
+        0,
+        329,
+        260
+      ]
+    },
+    {
+      "id": "07_veysel",
+      "width": 336,
+      "height": 260,
+      "alpha_percent_below_250": 52.82,
+      "alpha_zero_percent": 48.36,
+      "bbox": [
+        0,
+        0,
+        336,
+        260
+      ]
+    },
+    {
+      "id": "08_oznur",
+      "width": 337,
+      "height": 260,
+      "alpha_percent_below_250": 55.55,
+      "alpha_zero_percent": 53.88,
+      "bbox": [
+        8,
+        1,
+        337,
+        260
+      ]
+    },
+    {
+      "id": "09_salih",
+      "width": 255,
+      "height": 219,
+      "alpha_percent_below_250": 59.64,
+      "alpha_zero_percent": 54.84,
+      "bbox": [
+        6,
+        6,
+        249,
+        219
+      ]
+    },
+    {
+      "id": "10_medine",
+      "width": 320,
+      "height": 185,
+      "alpha_percent_below_250": 99.72,
+      "alpha_zero_percent": 55.59,
+      "bbox": [
+        5,
+        0,
+        319,
+        185
+      ]
+    },
+    {
+      "id": "11_davut",
+      "width": 336,
+      "height": 222,
+      "alpha_percent_below_250": 18.15,
+      "alpha_zero_percent": 9.68,
+      "bbox": [
+        0,
+        0,
+        336,
+        222
+      ]
+    },
+    {
+      "id": "12_fatos",
+      "width": 349,
+      "height": 222,
+      "alpha_percent_below_250": 54.62,
+      "alpha_zero_percent": 46.91,
+      "bbox": [
+        0,
+        0,
+        349,
+        222
+      ]
+    },
+    {
+      "id": "13_emos",
+      "width": 348,
+      "height": 228,
+      "alpha_percent_below_250": 46.66,
+      "alpha_zero_percent": 44.01,
+      "bbox": [
+        0,
+        0,
+        348,
+        228
+      ]
+    },
+    {
+      "id": "14_berzan",
+      "width": 311,
+      "height": 221,
+      "alpha_percent_below_250": 56.46,
+      "alpha_zero_percent": 53.87,
+      "bbox": [
+        5,
+        6,
+        306,
+        221
+      ]
+    },
+    {
+      "id": "15_aras",
+      "width": 336,
+      "height": 228,
+      "alpha_percent_below_250": 60.05,
+      "alpha_zero_percent": 53.45,
+      "bbox": [
+        0,
+        0,
+        336,
+        228
+      ]
+    },
+    {
+      "id": "16_ramin",
+      "width": 349,
+      "height": 228,
+      "alpha_percent_below_250": 100.0,
+      "alpha_zero_percent": 99.92,
+      "bbox": [
+        0,
+        0,
+        349,
+        228
+      ]
+    }
+  ]
+}

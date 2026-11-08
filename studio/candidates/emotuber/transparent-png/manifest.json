@@ -1,0 +1,239 @@
+{
+  "schema": "ahos.studio.emotuber-cutout.v1",
+  "status": "CANDIDATE_NOT_RIGGED_NOT_OWNER_APPROVED",
+  "origin": "https://app.emotuber.com/",
+  "operation": "Remove BG (AI), free in-browser base image edit",
+  "count": 16,
+  "source": "studio/reference/owner_accepted_roster_v1/characters/*.png",
+  "commercial_rights": "PENDING_SOURCE_PROVENANCE_REVIEW",
+  "is_model_sheet": false,
+  "is_expression_sheet": false,
+  "is_rig": false,
+  "is_3d": false,
+  "files": [
+    {
+      "id": "01_aden",
+      "filename": "01_aden-emotuber-bgcut-v1.png",
+      "bytes": 129056,
+      "sha256": "d1711177ccd1f9575d9e269bd1a3a219fd207dbd778a7e0d5edae0b172373225",
+      "dimensions": {
+        "width": 223,
+        "height": 225
+      },
+      "png_color_type": 6,
+      "site_variant_label": "Remove BG (AI)",
+      "site_variant_kind": "deterministic",
+      "source_sha256": "7c26afc668a9e9e352918ed618a1ae3b20da7b9e08e76a395a7e4c4ba2c14b7e"
+    },
+    {
+      "id": "02_kaan",
+      "filename": "02_kaan-emotuber-bgcut-v1.png",
+      "bytes": 177854,
+      "sha256": "c42c0a5a74a10ceaea3e4bbb43b69fb3ea425486b3e528bb08257cf9fb83dd92",
+      "dimensions": {
+        "width": 298,
+        "height": 255
+      },
+      "png_color_type": 6,
+      "site_variant_label": "Remove BG (AI)",
+      "site_variant_kind": "deterministic",
+      "source_sha256": "d6b4ca5190c8bd007416fb270fa45da7186ae34841e0a13c9b12b05cbafe6318"
+    },
+    {
+      "id": "03_esra",
+      "filename": "03_esra-emotuber-bgcut-v1.png",
+      "bytes": 193313,
+      "sha256": "88d237c8ee26f6828f9038778668464deea7dc5a41aa128c2abe438f17961ce6",
+      "dimensions": {
+        "width": 333,
+        "height": 255
+      },
+      "png_color_type": 6,
+      "site_variant_label": "Remove BG (AI)",
+      "site_variant_kind": "deterministic",
+      "source_sha256": "d7c01050f2670989d7a869cb7942c51265f5fbf71b0d201f4c3a25b3615eb98e"
+    },
+    {
+      "id": "04_ahmet",
+      "filename": "04_ahmet-emotuber-bgcut-v1.png",
+      "bytes": 179219,
+      "sha256": "3d134beff8185bbcc6444d78662975f6fb6dd7201db848972dcf7f5ae20c7f64",
+      "dimensions": {
+        "width": 339,
+        "height": 255
+      },
+      "png_color_type": 6,
+      "site_variant_label": "Remove BG (AI)",
+      "site_variant_kind": "deterministic",
+      "source_sha256": "09d62dcd86d473b3281ef39f7585745aa2da41537765b63becede3b1b819aa65"
+    },
+    {
+      "id": "05_esma",
+      "filename": "05_esma-emotuber-bgcut-v1.png",
+      "bytes": 169841,
+      "sha256": "3fbeb274c0ebc4cf26521c62b439c2997bb3fe1edd28d9c3952179d9ed256c28",
+      "dimensions": {
+        "width": 298,
+        "height": 260
+      },
+      "png_color_type": 6,
+      "site_variant_label": "Remove BG (AI)",
+      "site_variant_kind": "deterministic",
+      "source_sha256": "8d0ab1f19b5f5ab688eed62bc77bba8eef86dc243d6313774386fb6762c33b9b"
+    },
+    {
+      "id": "06_harun",
+      "filename": "06_harun-emotuber-bgcut-v1.png",
+      "bytes": 189277,
+      "sha256": "2dba26bf987b821faf995034f26c1b6bb3865e46b78774161cac3dd2f521b0f2",
+      "dimensions": {
+        "width": 335,
+        "height": 260
+      },
+      "png_color_type": 6,
+      "site_variant_label": "Remove BG (AI)",
+      "site_variant_kind": "deterministic",
+      "source_sha256": "08f0eadeea76663c7a953d612898d5eae3f227da0f8b4b37a4c330b60c9096ff"
+    },
+    {
+      "id": "07_veysel",
+      "filename": "07_veysel-emotuber-bgcut-v1.png",
+      "bytes": 192658,
+      "sha256": "a14f1dc8416badfbe2db7c0130658ab3cc7e2595ecef394c77bb2a45ce90ca92",
+      "dimensions": {
+        "width": 336,
+        "height": 260
+      },
+      "png_color_type": 6,
+      "site_variant_label": "Remove BG (AI)",
+      "site_variant_kind": "deterministic",
+      "source_sha256": "cc177bb3d491931e1e748be1f864bc3bd2f07d968d3f708fbec7447c18d3e4a1"
+    },
+    {
+      "id": "08_oznur",
+      "filename": "08_oznur-emotuber-bgcut-v1.png",
+      "bytes": 190749,
+      "sha256": "f72e6f9a27e35438ba71a62e9deeade44d63514f665d6a114e6aede4a4040033",
+      "dimensions": {
+        "width": 337,
+        "height": 260
+      },
+      "png_color_type": 6,
+      "site_variant_label": "Remove BG (AI)",
+      "site_variant_kind": "deterministic",
+      "source_sha256": "838779a23b61249ab98700d328047f2f6755488ad5a84b89ed53ae74ef770b6d"
+    },
+    {
+      "id": "09_salih",
+      "filename": "09_salih-emotuber-bgcut-v1.png",
+      "bytes": 128018,
+      "sha256": "fa5b8852d6959f25bb39d884efe4369c1d157730fc9ceb9614f8d549efa19650",
+      "dimensions": {
+        "width": 255,
+        "height": 219
+      },
+      "png_color_type": 6,
+      "site_variant_label": "Remove BG (AI)",
+      "site_variant_kind": "deterministic",
+      "source_sha256": "52c71a82380c11e6475e659812a31a75fd901f49ca86bc87cdf79db480f60926"
+    },
+    {
+      "id": "10_medine",
+      "filename": "10_medine-emotuber-bgcut-v1.png",
+      "bytes": 181513,
+      "sha256": "3213cf7bc50d8e729341771bd98c8731782ea2d2bef66bec8487ed36f8dbc473",
+      "dimensions": {
+        "width": 320,
+        "height": 185
+      },
+      "png_color_type": 6,
+      "site_variant_label": "Remove BG (AI)",
+      "site_variant_kind": "deterministic",
+      "source_sha256": "7600e2c813030bd096ea753754dffd6af038afaa2145c36e057112eb581d4c72"
+    },
+    {
+      "id": "11_davut",
+      "filename": "11_davut-emotuber-bgcut-v1.png",
+      "bytes": 196849,
+      "sha256": "2a7d3a89919130f42fab411f93151384853ba8f13141603348fc3d8f3babdf8e",
+      "dimensions": {
+        "width": 336,
+        "height": 222
+      },
+      "png_color_type": 6,
+      "site_variant_label": "Remove BG (AI)",
+      "site_variant_kind": "deterministic",
+      "source_sha256": "ad76352aff8d78a1b3b7592b1c7bf0c0d9f2f2382adf923b87d409e9ebd65481"
+    },
+    {
+      "id": "12_fatos",
+      "filename": "12_fatos-emotuber-bgcut-v1.png",
+      "bytes": 184465,
+      "sha256": "87b1b43ed0f5a198f7bbe0c51d97c15e7fefe077beced7f79aaa792783a12515",
+      "dimensions": {
+        "width": 349,
+        "height": 222
+      },
+      "png_color_type": 6,
+      "site_variant_label": "Remove BG (AI)",
+      "site_variant_kind": "deterministic",
+      "source_sha256": "0f51de9eaad04c74301b8357a0bee13ab3a019f13b10aee8b86f72a6ecab2576"
+    },
+    {
+      "id": "13_emos",
+      "filename": "13_emos-emotuber-bgcut-v1.png",
+      "bytes": 177035,
+      "sha256": "c4f15dc5b819c2c7922bf7c9d925228b84ff114f18940522fb98aacbc74033f3",
+      "dimensions": {
+        "width": 348,
+        "height": 228
+      },
+      "png_color_type": 6,
+      "site_variant_label": "Remove BG (AI)",
+      "site_variant_kind": "deterministic",
+      "source_sha256": "9c43485766da553e7740819cda04d420f2bad0d2c983bd754248eb6a8e8529e1"
+    },
+    {
+      "id": "14_berzan",
+      "filename": "14_berzan-emotuber-bgcut-v1.png",
+      "bytes": 149643,
+      "sha256": "d5b2dfd05d96d06f3c071879b44c606fa6d6d44c927a79dac79a4b1cbafdb607",
+      "dimensions": {
+        "width": 311,
+        "height": 221
+      },
+      "png_color_type": 6,
+      "site_variant_label": "Remove BG (AI)",
+      "site_variant_kind": "deterministic",
+      "source_sha256": "948525013ea77d19a00f36d946943c6e702dfbaa8d5247a4c9f91f33d23b3ddd"
+    },
+    {
+      "id": "15_aras",
+      "filename": "15_aras-emotuber-bgcut-v1.png",
+      "bytes": 171262,
+      "sha256": "022ba201d978d9b45ddb2b6e4f694e52fe19d0004da18413f70eb29329325ce3",
+      "dimensions": {
+        "width": 336,
+        "height": 228
+      },
+      "png_color_type": 6,
+      "site_variant_label": "Remove BG (AI)",
+      "site_variant_kind": "deterministic",
+      "source_sha256": "4a9e93d4932c28957d05444b422742c28bbfee5d809b12f550d052b2c07469e2"
+    },
+    {
+      "id": "16_ramin",
+      "filename": "16_ramin-emotuber-bgcut-v1.png",
+      "bytes": 191667,
+      "sha256": "d4300fe5ee61c481a7f8ee887a07104d28dedab035417d8a7b1aad9b2306ccd4",
+      "dimensions": {
+        "width": 349,
+        "height": 228
+      },
+      "png_color_type": 6,
+      "site_variant_label": "Remove BG (AI)",
+      "site_variant_kind": "deterministic",
+      "source_sha256": "998859b541e3b3f6739bfe982394139c9f9560ba0d4a6fa73e15f14141af9aec"
+    }
+  ]
+}

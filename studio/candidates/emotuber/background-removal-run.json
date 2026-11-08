@@ -1,0 +1,85 @@
+{
+  "date": "2026-11-08T21:23:17.142Z",
+  "logs": [
+    {
+      "name": "01_aden",
+      "status": "already variant",
+      "count": "1"
+    },
+    {
+      "name": "02_kaan",
+      "status": "generated background-removal variant",
+      "count": "1"
+    },
+    {
+      "name": "03_esra",
+      "status": "generated background-removal variant",
+      "count": "1"
+    },
+    {
+      "name": "04_ahmet",
+      "status": "generated background-removal variant",
+      "count": "1"
+    },
+    {
+      "name": "05_esma",
+      "status": "generated background-removal variant",
+      "count": "1"
+    },
+    {
+      "name": "06_harun",
+      "status": "generated background-removal variant",
+      "count": "1"
+    },
+    {
+      "name": "07_veysel",
+      "status": "generated background-removal variant",
+      "count": "1"
+    },
+    {
+      "name": "08_oznur",
+      "status": "generated background-removal variant",
+      "count": "1"
+    },
+    {
+      "name": "09_salih",
+      "status": "generated background-removal variant",
+      "count": "1"
+    },
+    {
+      "name": "10_medine",
+      "status": "generated background-removal variant",
+      "count": "1"
+    },
+    {
+      "name": "11_davut",
+      "status": "generated background-removal variant",
+      "count": "1"
+    },
+    {
+      "name": "12_fatos",
+      "status": "generated background-removal variant",
+      "count": "1"
+    },
+    {
+      "name": "13_emos",
+      "status": "generated background-removal variant",
+      "count": "1"
+    },
+    {
+      "name": "14_berzan",
+      "status": "generated background-removal variant",
+      "count": "1"
+    },
+    {
+      "name": "15_aras",
+      "status": "generated background-removal variant",
+      "count": "1"
+    },
+    {
+      "name": "16_ramin",
+      "status": "generated background-removal variant",
+      "count": "1"
+    }
+  ]
+}
