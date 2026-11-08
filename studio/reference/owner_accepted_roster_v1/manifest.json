@@ -1,0 +1,222 @@
+{
+  "project": "AHOS Studio-16",
+  "source_file": "AHOS_Studio16_Approved_Poster.png",
+  "source_sha256": "2ebcfc4980eb70a3189ac4a165ce6b6e48c1afcf7813724f2f94e4221e36cb0b",
+  "approval_context": "User accepted revised poster and asked to continue; this is an approved 2D visual direction, not a 3D model or independent canonical character design.",
+  "status": "ROSTER_POSTER_OWNER_ACCEPTED",
+  "limitations": [
+    "Each crop is extracted from one composite poster; not a standalone multi-view identity asset.",
+    "No 3D meshes, rigs, animation, or lip sync.",
+    "Do not treat facial likeness as stable across new generations without references."
+  ],
+  "characters": [
+    {
+      "id": "aden",
+      "age": 3,
+      "file": "characters/01_aden.png",
+      "source_region": [
+        12,
+        64,
+        360,
+        319
+      ],
+      "sha256": "7c26afc668a9e9e352918ed618a1ae3b20da7b9e08e76a395a7e4c4ba2c14b7e",
+      "status": "POSTER_CROP_NOT_INDEPENDENT_MODEL"
+    },
+    {
+      "id": "kaan",
+      "age": 1,
+      "file": "characters/02_kaan.png",
+      "source_region": [
+        367,
+        64,
+        702,
+        319
+      ],
+      "sha256": "d6b4ca5190c8bd007416fb270fa45da7186ae34841e0a13c9b12b05cbafe6318",
+      "status": "POSTER_CROP_NOT_INDEPENDENT_MODEL"
+    },
+    {
+      "id": "esra",
+      "age": 33,
+      "file": "characters/03_esra.png",
+      "source_region": [
+        708,
+        64,
+        1044,
+        319
+      ],
+      "sha256": "d7c01050f2670989d7a869cb7942c51265f5fbf71b0d201f4c3a25b3615eb98e",
+      "status": "POSTER_CROP_NOT_INDEPENDENT_MODEL"
+    },
+    {
+      "id": "ahmet",
+      "age": 33,
+      "file": "characters/04_ahmet.png",
+      "source_region": [
+        1051,
+        64,
+        1400,
+        319
+      ],
+      "sha256": "09d62dcd86d473b3281ef39f7585745aa2da41537765b63becede3b1b819aa65",
+      "status": "POSTER_CROP_NOT_INDEPENDENT_MODEL"
+    },
+    {
+      "id": "esma",
+      "age": 29,
+      "file": "characters/05_esma.png",
+      "source_region": [
+        12,
+        325,
+        360,
+        585
+      ],
+      "sha256": "8d0ab1f19b5f5ab688eed62bc77bba8eef86dc243d6313774386fb6762c33b9b",
+      "status": "POSTER_CROP_NOT_INDEPENDENT_MODEL"
+    },
+    {
+      "id": "harun",
+      "age": 30,
+      "file": "characters/06_harun.png",
+      "source_region": [
+        367,
+        325,
+        702,
+        585
+      ],
+      "sha256": "08f0eadeea76663c7a953d612898d5eae3f227da0f8b4b37a4c330b60c9096ff",
+      "status": "POSTER_CROP_NOT_INDEPENDENT_MODEL"
+    },
+    {
+      "id": "veysel",
+      "age": 33,
+      "file": "characters/07_veysel.png",
+      "source_region": [
+        708,
+        325,
+        1044,
+        585
+      ],
+      "sha256": "cc177bb3d491931e1e748be1f864bc3bd2f07d968d3f708fbec7447c18d3e4a1",
+      "status": "POSTER_CROP_NOT_INDEPENDENT_MODEL"
+    },
+    {
+      "id": "oznur",
+      "age": 31,
+      "file": "characters/08_oznur.png",
+      "source_region": [
+        1051,
+        325,
+        1400,
+        585
+      ],
+      "sha256": "838779a23b61249ab98700d328047f2f6755488ad5a84b89ed53ae74ef770b6d",
+      "status": "POSTER_CROP_NOT_INDEPENDENT_MODEL"
+    },
+    {
+      "id": "salih",
+      "age": 2,
+      "file": "characters/09_salih.png",
+      "source_region": [
+        12,
+        593,
+        360,
+        815
+      ],
+      "sha256": "52c71a82380c11e6475e659812a31a75fd901f49ca86bc87cdf79db480f60926",
+      "status": "POSTER_CROP_NOT_INDEPENDENT_MODEL"
+    },
+    {
+      "id": "medine",
+      "age": "2 months",
+      "file": "characters/10_medine.png",
+      "source_region": [
+        367,
+        593,
+        702,
+        815
+      ],
+      "sha256": "7600e2c813030bd096ea753754dffd6af038afaa2145c36e057112eb581d4c72",
+      "status": "POSTER_CROP_NOT_INDEPENDENT_MODEL"
+    },
+    {
+      "id": "davut",
+      "age": 30,
+      "file": "characters/11_davut.png",
+      "source_region": [
+        708,
+        593,
+        1044,
+        815
+      ],
+      "sha256": "ad76352aff8d78a1b3b7592b1c7bf0c0d9f2f2382adf923b87d409e9ebd65481",
+      "status": "POSTER_CROP_NOT_INDEPENDENT_MODEL"
+    },
+    {
+      "id": "fatos",
+      "age": 30,
+      "file": "characters/12_fatos.png",
+      "source_region": [
+        1051,
+        593,
+        1400,
+        815
+      ],
+      "sha256": "0f51de9eaad04c74301b8357a0bee13ab3a019f13b10aee8b86f72a6ecab2576",
+      "status": "POSTER_CROP_NOT_INDEPENDENT_MODEL"
+    },
+    {
+      "id": "emos",
+      "age": 4,
+      "file": "characters/13_emos.png",
+      "source_region": [
+        12,
+        827,
+        360,
+        1055
+      ],
+      "sha256": "9c43485766da553e7740819cda04d420f2bad0d2c983bd754248eb6a8e8529e1",
+      "status": "POSTER_CROP_NOT_INDEPENDENT_MODEL"
+    },
+    {
+      "id": "berzan",
+      "age": 2,
+      "file": "characters/14_berzan.png",
+      "source_region": [
+        367,
+        827,
+        702,
+        1055
+      ],
+      "sha256": "948525013ea77d19a00f36d946943c6e702dfbaa8d5247a4c9f91f33d23b3ddd",
+      "status": "POSTER_CROP_NOT_INDEPENDENT_MODEL"
+    },
+    {
+      "id": "aras",
+      "age": 2,
+      "file": "characters/15_aras.png",
+      "source_region": [
+        708,
+        827,
+        1044,
+        1055
+      ],
+      "sha256": "4a9e93d4932c28957d05444b422742c28bbfee5d809b12f550d052b2c07469e2",
+      "status": "POSTER_CROP_NOT_INDEPENDENT_MODEL"
+    },
+    {
+      "id": "ramin",
+      "age": "1 month",
+      "file": "characters/16_ramin.png",
+      "source_region": [
+        1051,
+        827,
+        1400,
+        1055
+      ],
+      "sha256": "998859b541e3b3f6739bfe982394139c9f9560ba0d4a6fa73e15f14141af9aec",
+      "status": "POSTER_CROP_NOT_INDEPENDENT_MODEL"
+    }
+  ]
+}
