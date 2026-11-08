@@ -1,0 +1,30 @@
+{
+  "schema": "ahos.studio.animatic-qa.v1",
+  "path": "deliverables\\S01E001-OPEN-30s-ANIMATIC\\S01E001-OPEN-30s-ANIMATIC-1080p24.mp4",
+  "sha256": "363b9043721cea776072a51c27c9d8f74a6ed7bb7c42cfa46e1887a4e107e566",
+  "bytes": 726663,
+  "codec": "h264",
+  "width": 1920,
+  "height": 1080,
+  "fps": "24/1",
+  "frames": 720,
+  "duration_seconds": 30.0,
+  "audio": "SILENT",
+  "blank_frames": 12,
+  "blank_timestamps": [
+    0.0,
+    0.042,
+    5.0,
+    5.042,
+    10.0,
+    10.042,
+    15.0,
+    15.042,
+    20.0,
+    20.042,
+    25.0,
+    25.042
+  ],
+  "content_frames": 708,
+  "status": "VIDEO_READY"
+}

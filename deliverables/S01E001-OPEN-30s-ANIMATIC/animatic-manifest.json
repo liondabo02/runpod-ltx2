@@ -1,0 +1,28 @@
+{
+  "schema": "ahos.studio.animatic.v1",
+  "status": "VIDEO_READY",
+  "title": "S01E001 — EPISODE-OPEN-30s storyboard animatic",
+  "path": "deliverables/S01E001-OPEN-30s-ANIMATIC/S01E001-OPEN-30s-ANIMATIC-1080p24.mp4",
+  "sha256": "363b9043721cea776072a51c27c9d8f74a6ed7bb7c42cfa46e1887a4e107e566",
+  "bytes": 726663,
+  "codec": "h264",
+  "width": 1920,
+  "height": 1080,
+  "fps": "24/1",
+  "frames": 720,
+  "duration_seconds": 30.0,
+  "audio": "SILENT",
+  "source_props": "studio/integration/openmontage-props/s01e001-opening-storyboard.json",
+  "render": {
+    "runtime": "OpenMontage Remotion 4.0.484",
+    "composition": "Explainer",
+    "native_render": "1920x1080 30 fps 900 kare",
+    "conversion": "ffmpeg fps=24, libx264 crf18, faststart",
+    "characters_used": false
+  },
+  "qa": {"file": "deliverables/S01E001-OPEN-30s-ANIMATIC/qa.json",
+          "blank_frames": 12, "blank_note": "Her kart geçişinde 2 karelik spring fade; siyah video değil.",
+          "content_frames": 708},
+  "note": "Onaysız storyboard animatiği; karakter yüzü içermez, final bölüm değildir.",
+  "license": "UNVERIFIED"
+}
