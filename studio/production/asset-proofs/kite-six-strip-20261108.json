@@ -1,0 +1,30 @@
+{
+  "schema": "ahos.studio.asset-proof-link.v1",
+  "asset_id": "kite-six-strip-tail",
+  "status": "PROPOSED_3D_PROP_QA",
+  "owner_approved": false,
+  "asset_kind": "prop_3d",
+  "private_runtime_relative_dir": "control_plane_v2/runtime/private/animation-studio/assets/kite-six-strip-proof-20261108",
+  "proof_file": "prop-proof.json",
+  "blender_version": "5.2.3 LTS",
+  "mesh_nodes": 9,
+  "tail_strip_meshes": 6,
+  "outputs": [
+    {
+      "file": "kite-six-strip-PROPOSED.blend",
+      "size": 113738,
+      "sha256": "6db90dce99cec67fbd9ff39c764f7785f8f7e222340c9d256ecff8c0e6df05c2"
+    },
+    {
+      "file": "kite-six-strip-PROPOSED.glb",
+      "size": 32076,
+      "sha256": "3561bdfb9f86b67c7020825f0ab6c3c268efb8389f1af7abe4d24afdeee23c67"
+    },
+    {
+      "file": "kite-six-strip-preview.png",
+      "size": 254735,
+      "sha256": "5b1ce97bf32c28b28e03c00a7221f0c169a5bd9d99063be98721fe0267d2d6ed"
+    }
+  ],
+  "note": "Actual real mesh proof on authorized Kahta computer; metadata only in Git. NOT an approved final asset, no 16 character 3D models yet."
+}
