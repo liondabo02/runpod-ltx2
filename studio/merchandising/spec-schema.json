@@ -1,0 +1,28 @@
+{
+  "schema": "ahos.studio.merch-spec-schema.v1",
+  "required": [
+    "character_id",
+    "product_type",
+    "views",
+    "dimensions_mm",
+    "palette",
+    "materials",
+    "safety_notes",
+    "license_ref",
+    "approval_ref"
+  ],
+  "product_types": [
+    "plush",
+    "figure",
+    "book",
+    "apparel"
+  ],
+  "views": [
+    "front",
+    "back",
+    "left",
+    "right",
+    "three_quarter"
+  ],
+  "note": "Teknik çizim ve STL/GLB yoksa alanlar null bırakılır."
+}

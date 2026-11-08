@@ -1,0 +1,10 @@
+{
+  "schema": "ahos.studio.cost-policy.v1",
+  "max_tokens": 12000,
+  "max_cost_usd": 0.0,
+  "max_retries": 2,
+  "pending_cap": 300,
+  "require_paid_approval": true,
+  "cheap_first": true,
+  "note": "Değerler tahmin/sınır; gerçek API kullanımı kaydedilmedikçe harcama 0 kabul edilir."
+}

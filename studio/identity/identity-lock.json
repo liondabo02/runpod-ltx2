@@ -1,0 +1,440 @@
+{
+  "schema": "ahos.studio.identity-lock.v1",
+  "generated_at": "2026-11-08",
+  "character_count": 16,
+  "rule": "Kimlik kilidi onay değildir; APPROVED yalnız sahip kaydıyla verilir.",
+  "characters": [
+    {
+      "character_id": "aden",
+      "canon_version": "1.0.0",
+      "lock_status": "LOCKED_FOR_EDIT",
+      "approval_status": "NONE",
+      "approved_by": null,
+      "approved_at": null,
+      "locked_at": "2026-11-08",
+      "source_commit": "e77f7ef",
+      "identity_sha256": "49346176957b6d074a592673fec0ebcb210699065c12c8fb36063a30e0908605",
+      "files": {
+        "character.json": "2be2b7bae74b6c28c365c6ee2c4a2cba9dd3f91643375d8e9c6f11c53269295c",
+        "visual-dna.json": "3db18ea38e01310d118d01e3526819cb25397c0ca23e4ebd5262c13359f6d134",
+        "color-palette.json": "2c868bd75298d9a3836a921dfe931312e5752837259cfb2d1c4307792d17332d",
+        "motion-profile.json": "02783d03672324c41e04f9801064069eb82a7c63fcf8fae3f8f3dcea0b9f2d9a",
+        "voice-profile.json": "ec21027672d8be837b4d374dc6b4746309393c582e5548578372c4a903712af0",
+        "model-spec.json": "6dda780a77b51b62e45f3d634b036eabbc6bf86710c9d72d8bc9ac934e6808a8"
+      },
+      "history": [
+        {
+          "date": "2026-11-08",
+          "change": "ilk kimlik kilidi",
+          "from": null,
+          "to": "49346176957b6d074a592673fec0ebcb210699065c12c8fb36063a30e0908605"
+        }
+      ]
+    },
+    {
+      "character_id": "ahmet",
+      "canon_version": "1.0.0",
+      "lock_status": "LOCKED_FOR_EDIT",
+      "approval_status": "NONE",
+      "approved_by": null,
+      "approved_at": null,
+      "locked_at": "2026-11-08",
+      "source_commit": "e77f7ef",
+      "identity_sha256": "0119457eafc8028087f38ab089eb6df2983fbf39c38e7beb1e33a61454b1fdba",
+      "files": {
+        "character.json": "b4b9ac2eb100dd3466fab71b87afcc0f7bd0f8cb2cfe538793cd86525e425592",
+        "visual-dna.json": "a307585ae505fc2ac1ca7ddd199c35c44de09ed65d5ccd7955f64fa43b9cb34e",
+        "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
+        "motion-profile.json": "faf5931d4ce306b010ffb8ae50eac83731ea194d0f0cc2e4e4dcb5f410c8e6b9",
+        "voice-profile.json": "ce6e3adfb31b3e097654ca1daa9cb331a57e1b52a9b36ddfd3e3fc7ae7803141",
+        "model-spec.json": "7758d08f1765139ce4f365756e636ac7b85532e455696647f354f2b8641dd120"
+      },
+      "history": [
+        {
+          "date": "2026-11-08",
+          "change": "ilk kimlik kilidi",
+          "from": null,
+          "to": "0119457eafc8028087f38ab089eb6df2983fbf39c38e7beb1e33a61454b1fdba"
+        }
+      ]
+    },
+    {
+      "character_id": "aras",
+      "canon_version": "1.0.0",
+      "lock_status": "LOCKED_FOR_EDIT",
+      "approval_status": "NONE",
+      "approved_by": null,
+      "approved_at": null,
+      "locked_at": "2026-11-08",
+      "source_commit": "e77f7ef",
+      "identity_sha256": "ba9922627bf247a90c16b9a693168f16565b5a6155854f7e635cf0a51a1f0394",
+      "files": {
+        "character.json": "b13fc463bf10d08a92a001296d463ac89a2c91e384858c8f9f95ea0624d4b2e7",
+        "visual-dna.json": "435cadec72a6c1309ff9912dd168417e9a709df0fbe82a3d3fab723032236ed8",
+        "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
+        "motion-profile.json": "26855da26324e0fb93373c2bfade3ad1de7b5e02088a8b9a6bed52cb8ba01955",
+        "voice-profile.json": "71b12f011bc6bf5e0ec824596c9e7c8210ab90d24f5e98210a7d2be70ab72ebd",
+        "model-spec.json": "f677c83b34ee470d2e067f3631cdf54b1e0f8d209bd183a4c2944a9651d4ee04"
+      },
+      "history": [
+        {
+          "date": "2026-11-08",
+          "change": "ilk kimlik kilidi",
+          "from": null,
+          "to": "ba9922627bf247a90c16b9a693168f16565b5a6155854f7e635cf0a51a1f0394"
+        }
+      ]
+    },
+    {
+      "character_id": "berzan",
+      "canon_version": "1.0.0",
+      "lock_status": "LOCKED_FOR_EDIT",
+      "approval_status": "NONE",
+      "approved_by": null,
+      "approved_at": null,
+      "locked_at": "2026-11-08",
+      "source_commit": "e77f7ef",
+      "identity_sha256": "c06489fff2a65cda92faa863c823d03d74d65b7a70a77a85170bed7fb134fe65",
+      "files": {
+        "character.json": "7346c3e66c6b7eba95a555671edc8fc9900ed9ef90e5a9219b1d7a72756b9a99",
+        "visual-dna.json": "c1ffd0dd062a5c2cd3635478b695a756d7654ac6d1a3e2037317bf7aa82c5657",
+        "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
+        "motion-profile.json": "7103101f0ed0a7690ec988d95e7cd49699abec42ee2b26695a4805dbeab02bbc",
+        "voice-profile.json": "e133f607cfcdb7c81f2b975679a737e2c5ce6e97c08e53cb00a16bfea0e77d1e",
+        "model-spec.json": "b6df79e30c2aef5c5c93f0c6cfb7c4b236daf48c2c39c01f17b411f7b3cebfc3"
+      },
+      "history": [
+        {
+          "date": "2026-11-08",
+          "change": "ilk kimlik kilidi",
+          "from": null,
+          "to": "c06489fff2a65cda92faa863c823d03d74d65b7a70a77a85170bed7fb134fe65"
+        }
+      ]
+    },
+    {
+      "character_id": "davut",
+      "canon_version": "1.0.0",
+      "lock_status": "LOCKED_FOR_EDIT",
+      "approval_status": "NONE",
+      "approved_by": null,
+      "approved_at": null,
+      "locked_at": "2026-11-08",
+      "source_commit": "e77f7ef",
+      "identity_sha256": "46a3d6fd7a656b694f1915b2934aec7dfd096bd9be3da3d517f69c65bc74f4bd",
+      "files": {
+        "character.json": "8b23b90502b13c38600fdb0d59d07af19b1643531fcf0bb25a82e8334b966956",
+        "visual-dna.json": "51e1ded6ffaf6a1c64a98d3ce4f0cc90bccdb0b8868cefa1eb8b65174038dc90",
+        "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
+        "motion-profile.json": "fa1713e9744bbf170dcf195f905c55f97e2be21fa0810ad41b49ce8a660585fe",
+        "voice-profile.json": "250da54456facaba7bdefb1bbf9edbf6d7b336900b88b3922ad3fc1fa764ad4c",
+        "model-spec.json": "7b0d436f02e63c7d0677ddce4aa649f646f79ec867845da68d6b72c35be91e15"
+      },
+      "history": [
+        {
+          "date": "2026-11-08",
+          "change": "ilk kimlik kilidi",
+          "from": null,
+          "to": "46a3d6fd7a656b694f1915b2934aec7dfd096bd9be3da3d517f69c65bc74f4bd"
+        }
+      ]
+    },
+    {
+      "character_id": "emos",
+      "canon_version": "1.0.0",
+      "lock_status": "LOCKED_FOR_EDIT",
+      "approval_status": "NONE",
+      "approved_by": null,
+      "approved_at": null,
+      "locked_at": "2026-11-08",
+      "source_commit": "e77f7ef",
+      "identity_sha256": "a07de4c4483cdb9246f793f7d569d49787ea7b2bd9635dd9c166fa1a00f996ad",
+      "files": {
+        "character.json": "5f2ed1c4fb68bc8ffaaa9bc2a55c08fae146a27fede13805d9c2e2240784bb6a",
+        "visual-dna.json": "605dbd8aebf46099c0daee12ae4fc5cb3eedf02bc3d09c943c50d0d8ef786b77",
+        "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
+        "motion-profile.json": "dd269e4215e33b35924e9749e16b234b659cc6e0bdb1eea23cd7c6ed691b1eff",
+        "voice-profile.json": "348bf2c60bba7a97250f0504aa9fd4f40173239b9dd33e76e7819041af2060a0",
+        "model-spec.json": "a4c011afb36bbb8e427bb27d4711fe1d1b5629c4d7ff6785b1de6623f6a61f7a"
+      },
+      "history": [
+        {
+          "date": "2026-11-08",
+          "change": "ilk kimlik kilidi",
+          "from": null,
+          "to": "a07de4c4483cdb9246f793f7d569d49787ea7b2bd9635dd9c166fa1a00f996ad"
+        }
+      ]
+    },
+    {
+      "character_id": "esma",
+      "canon_version": "1.0.0",
+      "lock_status": "LOCKED_FOR_EDIT",
+      "approval_status": "NONE",
+      "approved_by": null,
+      "approved_at": null,
+      "locked_at": "2026-11-08",
+      "source_commit": "e77f7ef",
+      "identity_sha256": "4caa71dfe087d30d0c17c261fca4e922a4468560e782c787060bfcdb7ebfdb9f",
+      "files": {
+        "character.json": "2f4ad14327122aafe13044e0e1dd9d9f49162dd508d8041fe90f42d4c1b5bf24",
+        "visual-dna.json": "4c6e52abcaf88e7c0afb05c22df2029aac876b7e5cb614e7f48e4c90f8b0f577",
+        "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
+        "motion-profile.json": "1be63fb52898c212de0455bb37af49d2060c74ec1617884141b36d4af27fc68b",
+        "voice-profile.json": "e1f736356f0d4890874c74e3297290c90a56b31b84a0868c32dcddd64cf5dee5",
+        "model-spec.json": "5748fe05fd3a2c9d6faf3a4d68b3b19b80e90957cb68da4bf7c156aae8a90d72"
+      },
+      "history": [
+        {
+          "date": "2026-11-08",
+          "change": "ilk kimlik kilidi",
+          "from": null,
+          "to": "4caa71dfe087d30d0c17c261fca4e922a4468560e782c787060bfcdb7ebfdb9f"
+        }
+      ]
+    },
+    {
+      "character_id": "esra",
+      "canon_version": "1.0.0",
+      "lock_status": "LOCKED_FOR_EDIT",
+      "approval_status": "NONE",
+      "approved_by": null,
+      "approved_at": null,
+      "locked_at": "2026-11-08",
+      "source_commit": "e77f7ef",
+      "identity_sha256": "73b6730c06842750063c1069331819f04ded5bfc8124468c775a78d925911c58",
+      "files": {
+        "character.json": "6c7f0b86f1f1a683d47493bb72d7e5cd60ddc7ca4aa8f4198a54243932605258",
+        "visual-dna.json": "04c0e847966c0414a866e820059b027bd8e517d903eeaac43cb85e8ddd066045",
+        "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
+        "motion-profile.json": "ff85ec990b72213684b3c3f524d75d9d8ac85a95d224b18c5e7be26c5a9de5b9",
+        "voice-profile.json": "a37f501566c44bddb5a3959700ac11d1d7ad0ffe9f4d88ea46f003188facf556",
+        "model-spec.json": "4a215e4e306ffa60571a470eac830d18e31d8141d178f39e9ef654c9ecdd4e63"
+      },
+      "history": [
+        {
+          "date": "2026-11-08",
+          "change": "ilk kimlik kilidi",
+          "from": null,
+          "to": "73b6730c06842750063c1069331819f04ded5bfc8124468c775a78d925911c58"
+        }
+      ]
+    },
+    {
+      "character_id": "fatos",
+      "canon_version": "1.0.0",
+      "lock_status": "LOCKED_FOR_EDIT",
+      "approval_status": "NONE",
+      "approved_by": null,
+      "approved_at": null,
+      "locked_at": "2026-11-08",
+      "source_commit": "e77f7ef",
+      "identity_sha256": "caddfba8fe077d5a08322c75aa110fa3bdaf21c35cf261cd2ce00fe2757023a7",
+      "files": {
+        "character.json": "fc585aa4e4940a925a9a84a08c0774410d1e4eb9c574f79f10cf9af7244f5fd3",
+        "visual-dna.json": "2eec69d6deac65bfedd94972f8dee0e0679209736eabbe829a2a6fe62a880284",
+        "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
+        "motion-profile.json": "68d15b33998d8df90467d8fa11d0497825f227bbd9cb09f147b6cf1b1788620f",
+        "voice-profile.json": "9aca5f5037c73caffe9c613b299199fd80b1c5025935c169c99bc37fd46087a4",
+        "model-spec.json": "7d9ab4ac31b8039d84ca2c3aa02656c6a420dae69a1f83012560855eb509f480"
+      },
+      "history": [
+        {
+          "date": "2026-11-08",
+          "change": "ilk kimlik kilidi",
+          "from": null,
+          "to": "caddfba8fe077d5a08322c75aa110fa3bdaf21c35cf261cd2ce00fe2757023a7"
+        }
+      ]
+    },
+    {
+      "character_id": "harun",
+      "canon_version": "1.0.0",
+      "lock_status": "LOCKED_FOR_EDIT",
+      "approval_status": "NONE",
+      "approved_by": null,
+      "approved_at": null,
+      "locked_at": "2026-11-08",
+      "source_commit": "e77f7ef",
+      "identity_sha256": "19a9d57069ea43ca8f545da09863dec2e4d7530d9cf8e35426a1b30d3a3cc84d",
+      "files": {
+        "character.json": "1bfd8c2de2c3d3ccd25fcb8e2b99d72198550f2ae97499e87c33a78508fd83dc",
+        "visual-dna.json": "9633b25bc8d8e98d25752e1b55e599bcbac10fb9f38a72e19c8d6de5c217ad1e",
+        "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
+        "motion-profile.json": "09ff292ef4da88a4c81e993e9db307fa432d3c5a740b900e370ab6e1fe50d84e",
+        "voice-profile.json": "82c514296aeec6bd972e13756be8f218e730e857dd9fd6ee2937dee5981ade4c",
+        "model-spec.json": "5a0e029cf9e600d3d7d02de68953731a522de9a5b2c65b23e683281893169683"
+      },
+      "history": [
+        {
+          "date": "2026-11-08",
+          "change": "ilk kimlik kilidi",
+          "from": null,
+          "to": "19a9d57069ea43ca8f545da09863dec2e4d7530d9cf8e35426a1b30d3a3cc84d"
+        }
+      ]
+    },
+    {
+      "character_id": "kaan",
+      "canon_version": "1.0.0",
+      "lock_status": "LOCKED_FOR_EDIT",
+      "approval_status": "NONE",
+      "approved_by": null,
+      "approved_at": null,
+      "locked_at": "2026-11-08",
+      "source_commit": "e77f7ef",
+      "identity_sha256": "d0a8e9aaffb74d768bb4af419095f868be7237493f9a928f166ae484cfc14d32",
+      "files": {
+        "character.json": "419d4b77f985973797332ce96ff7cc84aff1536a1aaed01c40a126981fb0d625",
+        "visual-dna.json": "0f87a25a68ebe792681ef3c225877c60c1e5a9c1f7acc1aa6dd66b7b360d8d94",
+        "color-palette.json": "e009a4bfa4becf954cdf3b5520e54245c9765a5a11e9b943f39181ee4675c42e",
+        "motion-profile.json": "16af9e72504917504d66b883293b226b77eef9f571525c7068abfa2df1505301",
+        "voice-profile.json": "cc03bd134479b42e644229b8aba7e064cded52ee66595890296ec471b0dab265",
+        "model-spec.json": "063b35a01f877240f1ffa64c9b52f6214019a4e150ecedd3156ba9b1524a8faa"
+      },
+      "history": [
+        {
+          "date": "2026-11-08",
+          "change": "ilk kimlik kilidi",
+          "from": null,
+          "to": "d0a8e9aaffb74d768bb4af419095f868be7237493f9a928f166ae484cfc14d32"
+        }
+      ]
+    },
+    {
+      "character_id": "medine",
+      "canon_version": "1.0.0",
+      "lock_status": "LOCKED_FOR_EDIT",
+      "approval_status": "NONE",
+      "approved_by": null,
+      "approved_at": null,
+      "locked_at": "2026-11-08",
+      "source_commit": "e77f7ef",
+      "identity_sha256": "99e00b0dff0e62b6c7ded4cfb00b04f39ff5adf009801bde241bf0bf0eaec696",
+      "files": {
+        "character.json": "e24ae32b250cc40ee1527f9b53b91010436202635bcbb5d407a066adae4e217f",
+        "visual-dna.json": "16c9225eeb286c13083e886cba5c43648b08720be82b7bcfce37c27be795976d",
+        "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
+        "motion-profile.json": "735e1f2df4ae84411fe63032fc790252e3ad475a5889c23ed429e249de9d39bf",
+        "voice-profile.json": "00fe4217c56e54230759a34b8a8bac0883340269c87520599f63af09a71d0a50",
+        "model-spec.json": "f21191884925cbf9d99cb180a6182fceb9d39825cf66c36cf64ff34010bda44b"
+      },
+      "history": [
+        {
+          "date": "2026-11-08",
+          "change": "ilk kimlik kilidi",
+          "from": null,
+          "to": "99e00b0dff0e62b6c7ded4cfb00b04f39ff5adf009801bde241bf0bf0eaec696"
+        }
+      ]
+    },
+    {
+      "character_id": "oznur",
+      "canon_version": "1.0.0",
+      "lock_status": "LOCKED_FOR_EDIT",
+      "approval_status": "NONE",
+      "approved_by": null,
+      "approved_at": null,
+      "locked_at": "2026-11-08",
+      "source_commit": "e77f7ef",
+      "identity_sha256": "d093969e6af84dcac15ca8d7227bb4c559c1cb5ab18e094563b2796737d771df",
+      "files": {
+        "character.json": "7b9e1c438a36e4db357fe238df66110a08218506b467021e66f285a02e003c84",
+        "visual-dna.json": "3a7655306ef2e017a7a5ba96c27ae1bbd58ffabf8b7a5d103374185aba40de74",
+        "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
+        "motion-profile.json": "d94ccb5f03f3a6e08abd8e38d74ca94cb402e7b04eb70fbe1012c6b486e2da75",
+        "voice-profile.json": "3036d14146cf0182cc1539773bcaa27be33e92edd23e7a36e3c280cdba37a8eb",
+        "model-spec.json": "a492120349eb59a11d2f5cfb25ef168aa1b4869d70c0f038af7c9bcf5e03917e"
+      },
+      "history": [
+        {
+          "date": "2026-11-08",
+          "change": "ilk kimlik kilidi",
+          "from": null,
+          "to": "d093969e6af84dcac15ca8d7227bb4c559c1cb5ab18e094563b2796737d771df"
+        }
+      ]
+    },
+    {
+      "character_id": "ramin",
+      "canon_version": "1.0.0",
+      "lock_status": "LOCKED_FOR_EDIT",
+      "approval_status": "NONE",
+      "approved_by": null,
+      "approved_at": null,
+      "locked_at": "2026-11-08",
+      "source_commit": "e77f7ef",
+      "identity_sha256": "a4249c67cdf999086affd9f5339c58584eaa45b4bca60a294c36fffb0183858b",
+      "files": {
+        "character.json": "c3bd2d3283f4b73d512a402786a26d13bd2fc82886cac2ad7682bc42e657794f",
+        "visual-dna.json": "e6802bfd7b9e1e9f2e34bde5a5f135d7cbba5bc08fa2d1712bf0e1905ef324d6",
+        "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
+        "motion-profile.json": "4278366bf0452f4ced530c959281ce1a88deaad3d6bc5d5fbf157eb1957bfa6f",
+        "voice-profile.json": "3b95e1483853d3c66eb01fe5947a83d6d905ba73421e39127cde272fec9ec789",
+        "model-spec.json": "a0abe4a7a08850ee7bcbe5bb4607ba9d6ba3e5ef9ac0216d3e21607e6a03ad03"
+      },
+      "history": [
+        {
+          "date": "2026-11-08",
+          "change": "ilk kimlik kilidi",
+          "from": null,
+          "to": "a4249c67cdf999086affd9f5339c58584eaa45b4bca60a294c36fffb0183858b"
+        }
+      ]
+    },
+    {
+      "character_id": "salih",
+      "canon_version": "1.0.0",
+      "lock_status": "LOCKED_FOR_EDIT",
+      "approval_status": "NONE",
+      "approved_by": null,
+      "approved_at": null,
+      "locked_at": "2026-11-08",
+      "source_commit": "e77f7ef",
+      "identity_sha256": "48b3b0a8196822df7ef4864a2d5993ed78e6e15e8d797d3d6ba80fe9684e4426",
+      "files": {
+        "character.json": "1f333209acc9ebb6156017933db88beb45e630046f0fc1a8db74f06fa94e62e0",
+        "visual-dna.json": "4d0207e04afdf54549659d3d5b559e1e069b5bf2ad8b4efa051fd5a19ab26bc7",
+        "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
+        "motion-profile.json": "abb2e0fb86b0066d0f450dffc47a3036aaa19f4a977ebfb0f82aaf5ce7b77ab6",
+        "voice-profile.json": "028b6df4a4432e65f326e34b65cedc6aaba8d8ee417abd1007ca5acfb611b8f0",
+        "model-spec.json": "71a109c4be0d8b41f2fe76b6fdaa1f8a2fafe3821ec098460ab15b5742c32d00"
+      },
+      "history": [
+        {
+          "date": "2026-11-08",
+          "change": "ilk kimlik kilidi",
+          "from": null,
+          "to": "48b3b0a8196822df7ef4864a2d5993ed78e6e15e8d797d3d6ba80fe9684e4426"
+        }
+      ]
+    },
+    {
+      "character_id": "veysel",
+      "canon_version": "1.0.0",
+      "lock_status": "LOCKED_FOR_EDIT",
+      "approval_status": "NONE",
+      "approved_by": null,
+      "approved_at": null,
+      "locked_at": "2026-11-08",
+      "source_commit": "e77f7ef",
+      "identity_sha256": "92a099c0fb3f4582ca8b262ab691805ebbefeb12a92dbc2445f1c99bc188ee96",
+      "files": {
+        "character.json": "46013e95d216991266c903b1b50ae614d43d26946e8832b483af790bf20308d8",
+        "visual-dna.json": "1be5cff65ad056012957825341ed596f1d622daa868018c7f3079097f3dc77a0",
+        "color-palette.json": "a5b778f3664491e45dfe2ab5fa7700ea759e2ded8a10d352b97e5599e5b67d97",
+        "motion-profile.json": "e7cc78e9e4077f26b9ad76a21a1ed0e7505aa7f295d0075cbc7b1c38f9e20bf2",
+        "voice-profile.json": "92e64d6f90cfa3c96772caacbab97628de7bd2f4b41460d53817889c38349b6f",
+        "model-spec.json": "79064367cd7f40d68ffe764af53113309623f0ca0e6f5b3929055ddfdcfe220d"
+      },
+      "history": [
+        {
+          "date": "2026-11-08",
+          "change": "ilk kimlik kilidi",
+          "from": null,
+          "to": "92a099c0fb3f4582ca8b262ab691805ebbefeb12a92dbc2445f1c99bc188ee96"
+        }
+      ]
+    }
+  ]
+}

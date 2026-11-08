@@ -1,0 +1,5 @@
+{
+  "schema": "ahos.studio.task-cache.v1",
+  "entries": {},
+  "note": "Aynı araştırma/üretim anahtarı ikinci kez LLM'e gitmez; sonuç burada saklanır."
+}
