@@ -18,7 +18,7 @@ from PIL import Image, ImageDraw
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 ROOT = Path(__file__).resolve().parents[1]
-W, H, FPS, DURATION = 1920, 1080, 24, 10
+W, H, FPS, DURATION = 1920, 1080, 24, 12
 FRAMES = FPS * DURATION
 SKIN = "#F5CDAA"
 SKIN_SHADOW = "#E3AE86"
@@ -140,9 +140,11 @@ def aden(draw: ImageDraw.ImageDraw, x: float, ground: float, t: float, state: di
         draw.ellipse([head[0] + fx, head[1] + fy, head[0] + fx + 6, head[1] + fy + 6], fill="#B9784F")
     # mouth
     if state["talk"] > 0:
-        h = 6 + 16 * state["talk"]
-        draw.ellipse([head[0] - 20, head[1] + 48, head[0] + 20, head[1] + 48 + h], fill="#8A3B3B")
-        draw.ellipse([head[0] - 12, head[1] + 54, head[0] + 12, head[1] + 56 + h * 0.5], fill="#F09A9A")
+        shape = state.get("talk_shape", 0)
+        widths = {0: (14, 10), 1: (26, 20), 2: (10, 26), 3: (24, 14)}
+        w, h = widths.get(shape, (18, 16))
+        draw.ellipse([head[0] - w, head[1] + 48, head[0] + w, head[1] + 48 + h], fill="#8A3B3B")
+        draw.ellipse([head[0] - w * 0.5, head[1] + 54, head[0] + w * 0.5, head[1] + 54 + h * 0.5], fill="#F09A9A")
     else:
         draw.arc([head[0] - 26, head[1] + 38, head[0] + 26, head[1] + 78], 20, 160, fill="#8A3B3B", width=7)
 
@@ -192,21 +194,27 @@ def frame(t: float) -> Image.Image:
     image = Image.new("RGB", (W, H))
     draw = ImageDraw.Draw(image)
     background(draw, t)
-    # Aden: 0-4 walk, 4-6 stop/wave, 6-9 talk, 9-10 look up
+    # Aden: 0-4 walk, 4-6 stop/wave, 6-9 talk, 9-12 look at kite
     ax = lerp(380, 780, ease(t / 4)) if t < 4 else 780
     walk = 1.0 if t < 4 else 0.0
     wave = 1.0 if 4.2 <= t <= 6.2 else 0.0
     talk = max(0.0, min(1.0, math.sin((t - 6) * 12))) if 6 <= t <= 9 else 0.0
-    look = 1.0 if 4 <= t <= 9 else 0.0
+    talk_shape = int((t - 6) * 8) % 4 if 6 <= t <= 9 else 0
+    look = 1.0 if 4 <= t <= 9.5 else 0.0
     blink = 1 if (t % 3.2) < 0.12 else 0
-    aden_state = {"walk": walk, "wave": wave, "talk": talk, "look": look, "blink": blink,
-                  "head_dx": 18 if t >= 4 else 0}
+    aden_state = {"walk": walk, "wave": wave, "talk": talk, "talk_shape": talk_shape,
+                  "look": look, "blink": blink, "head_dx": 18 if t >= 4 else 0}
+    draw.ellipse([ax - 90, 930, ax + 90, 965], fill="#6E9E55")
     aden(draw, ax, 920, t, aden_state)
-    # Kaan: crawl toward Aden, look at her, then kite
+    # Kaan: crawl toward Aden (0-4), look (4-10), kite (10-12)
     kx = lerp(1180, 1000, ease(t / 3)) if t < 4 else 1000
     kaan_blink = 1 if (t % 2.8 + 0.4) < 0.12 else 0
+    draw.ellipse([kx - 10, 935, kx + 150, 965], fill="#6E9E55")
     kaan(draw, kx, 930, t, {"crawl": 1, "blink": kaan_blink})
-    return image
+    # kontrollü yavaş push-in
+    zoom = 1.0 + 0.04 * ease(t / DURATION)
+    box = ((W - W / zoom) / 2, (H - H / zoom) / 2, (W + W / zoom) / 2, (H + H / zoom) / 2)
+    return image.crop(box).resize((W, H), Image.LANCZOS)
 
 
 def main(argv: list[str] | None = None) -> int:

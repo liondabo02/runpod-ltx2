@@ -5,8 +5,8 @@
   "is_3d": false,
   "video": "deliverables/S01E001-SCENE01-2D-RIG/S01E001-SCENE01-2D-RIG-1080p24.mp4",
   "fps": 24,
-  "duration_seconds": 10,
-  "frames": 240,
+  "duration_seconds": 12,
+  "frames": 288,
   "resolution": [
     1920,
     1080
@@ -33,6 +33,6 @@
   "professional_quality": "NOT_ACHIEVED",
   "qa_file": "deliverables/S01E001-SCENE01-2D-RIG/qa.json",
   "license": "UNVERIFIED",
-  "interaction": "Aden yürür, durur, Kaan'a bakar ve el sallar; Kaan emekler, bakar ve gülümser.",
-  "sha256": "d8731bbfc0692505a7afdb98575781eaef78f35dad37ee8f51133b9fda380e24"
+  "interaction": "Aden yürür, durur, Kaan'a bakar ve el sallar; Kaan emekler, bakar ve gülümser; 6-9 sn konuşma ağzı, 9-12 sn uçurtmaya bakış.",
+  "sha256": "4c429506c222b7cb9a4ec9b1d9871448346731f873b79172ba0c1a91030b46f1"
 }

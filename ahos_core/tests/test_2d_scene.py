@@ -18,7 +18,7 @@ import identity_lock  # noqa: E402
 import studio_production_gate as gate  # noqa: E402
 
 
-def test_video_is_real_1080p24_ten_seconds_silent():
+def test_video_is_real_1080p24_twelve_seconds_silent():
     probe = subprocess.run(
         ["ffprobe", "-v", "error", "-show_streams", "-show_format", "-of", "json", str(VIDEO)],
         capture_output=True, text=True, check=True)
@@ -26,8 +26,8 @@ def test_video_is_real_1080p24_ten_seconds_silent():
     video = next(s for s in meta["streams"] if s["codec_type"] == "video")
     assert video["codec_name"] == "h264"
     assert (video["width"], video["height"]) == (1920, 1080)
-    assert video["r_frame_rate"] == "24/1" and video["nb_frames"] == "240"
-    assert abs(float(meta["format"]["duration"]) - 10.0) < 0.05
+    assert video["r_frame_rate"] == "24/1" and video["nb_frames"] == "288"
+    assert abs(float(meta["format"]["duration"]) - 12.0) < 0.05
     assert not any(s["codec_type"] == "audio" for s in meta["streams"])
     assert hashlib.sha256(VIDEO.read_bytes()).hexdigest() == MANIFEST["sha256"] == QA["sha256"]
 
@@ -48,7 +48,7 @@ def test_qa_shows_motion_and_no_blank_video():
 
 
 def test_evidence_keyframes_exist():
-    for name in ("frame-0000.png", "frame-0120.png", "frame-0239.png"):
+    for name in ("frame-0000.png", "frame-0144.png", "frame-0287.png"):
         assert (DIR / "evidence" / name).is_file()
 
 
