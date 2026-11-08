@@ -1,0 +1,102 @@
+{
+  "schema": "ahos.episode-open.v2",
+  "episode_id": "S01E001",
+  "kind": "EPISODE-OPEN-30s",
+  "distinct_from": "POC-30s (workflows/S01E001-pilot-30s-plan.json) — bağımsız kısa öykü, değiştirilmedi",
+  "scope": "480 saniyelik v2 bölümünün gerçek ilk 30 saniyesi (V2-S01, beat 1-3)",
+  "target_duration_seconds": 30,
+  "fps": 24,
+  "aspect_ratio": "16:9",
+  "status": "DRAFT_FOR_OWNER_APPROVAL",
+  "not_final": true,
+  "opening_rule": "Yalnız Aden ve Kaan kadrajda; Esra kadraj dışı ses. İlk kalite pilotu iki karakterlidir.",
+  "shots": [
+    {
+      "shot_id": "OPEN-SH01", "start_seconds": 0, "duration_seconds": 5,
+      "source_scene": "V2-S01", "source_beat": 0, "event": "tail_tickle",
+      "camera": {"lens": "85 mm makro", "height": "çocuk yüz hizası", "angle": "yakın, hafif alttan",
+                 "movement": "sabit; odak kuyruk ucundan Kaan'ın yanağına kayar"},
+      "positions": {"aden": "kadraj sol kenarda, elleri uçurtmada", "kaan": "sağda, yüzü merkeze yakın", "esra": "kadraj dışı"},
+      "action": "Rüzgâr kuyruk ucunu kaldırır; uç, Kaan'ın yanağını gıdıklar. Kaan gözlerini kırpıştırır.",
+      "dialogue": [],
+      "emotion": "merak",
+      "sound": "hafif rüzgâr, kumaş hışırtısı, tek marimba notası",
+      "lighting": "sol arka üstten 5200K; yumuşak gölge",
+      "continuity": "Kuyruk henüz uçurtmaya bağlı değil; Aden kobalt tişört, Kaan mercan tişört",
+      "safety": "Kuyruk yüzü sıyırır, baskı yok"
+    },
+    {
+      "shot_id": "OPEN-SH02", "start_seconds": 5, "duration_seconds": 5,
+      "source_scene": "V2-S01", "source_beat": 0, "event": "tail_tickle",
+      "camera": {"lens": "50 mm", "height": "çocuk göz hizası", "angle": "ikili orta plan",
+                 "movement": "sabit; Kaan'a doğru hafif pan"},
+      "positions": {"aden": "solda, elleri aşağıda", "kaan": "sağda, kuyruğa uzanır", "esra": "kadraj dışı"},
+      "action": "Kaan kuyruğu yakalamaya çalışırken yana yalpalar; Aden elini uzatıp onu dengede tutar. Kaan kıkırdar.",
+      "dialogue": [],
+      "emotion": "neşe",
+      "sound": "çocuk kıkırtısı, çimen hışırtısı",
+      "lighting": "aynı yön; iki yüzde eşit key",
+      "continuity": "Kaan'ın elleri kuyruğa yakın ama ip yok",
+      "safety": "Aden desteği belden, sert çekme yok"
+    },
+    {
+      "shot_id": "OPEN-SH03", "start_seconds": 10, "duration_seconds": 5,
+      "source_scene": "V2-S01", "source_beat": 1, "event": "tail_on_head",
+      "camera": {"lens": "50 mm", "height": "çocuk göz hizası", "angle": "ikili plan",
+                 "movement": "sabit"},
+      "positions": {"aden": "solda", "kaan": "ortada", "esra": "kadraj dışı"},
+      "action": "Rüzgâr kuyruğu Kaan'ın başına bırakır; kuyruk renkli bir peruk gibi durur. Kaan donar.",
+      "dialogue": [],
+      "emotion": "şaşkınlık",
+      "sound": "rüzgâr vurgusu; müzik kısa duraklar",
+      "lighting": "aynı",
+      "continuity": "Kuyruk başta; Kaan'ın saçı görünür",
+      "safety": "Kumaş başı örtmez, nefes yolu kapalı değil"
+    },
+    {
+      "shot_id": "OPEN-SH04", "start_seconds": 15, "duration_seconds": 5,
+      "source_scene": "V2-S01", "source_beat": 1, "event": "tail_on_head",
+      "camera": {"lens": "50 mm", "height": "çocuk göz hizası", "angle": "ikili plan",
+                 "movement": "hafif push-in"},
+      "positions": {"aden": "solda, gülüyor", "kaan": "ortada, başını sallıyor", "esra": "kadraj dışı"},
+      "action": "Kaan başını sallar; kuyruk yana kayar. Kaan 'Aa!' der; Aden gülüşünü tutamaz.",
+      "dialogue": [{"speaker": "kaan", "text": "Aa!", "start_seconds": 18.0, "emotion": "şaşkın gülüş"}],
+      "emotion": "sıcak mizah",
+      "sound": "kıkırtı, yumuşak yaylı motif",
+      "lighting": "aynı",
+      "continuity": "Kuyruk Kaan'ın omzuna kayar",
+      "safety": "Yok"
+    },
+    {
+      "shot_id": "OPEN-SH05", "start_seconds": 20, "duration_seconds": 5,
+      "source_scene": "V2-S01", "source_beat": 2, "event": "adult_call",
+      "camera": {"lens": "35 mm", "height": "çocuk göz hizası", "angle": "ikili plan",
+                 "movement": "sabit"},
+      "positions": {"aden": "solda, kuyruğu alır", "kaan": "sağda", "esra": "kadraj dışı, ses sağdan"},
+      "action": "Aden kuyruğu Kaan'ın omzundan alır. Esra kadraj dışından seslenir; Aden başını kaldırır.",
+      "dialogue": [
+        {"speaker": "aden", "text": "Kuyruk seninle oynuyor!", "start_seconds": 20.5, "emotion": "gülerek"},
+        {"speaker": "esra", "text": "Kuyruğu birlikte bağlayın.", "start_seconds": 24.0, "emotion": "sıcak, kadraj dışı"}
+      ],
+      "emotion": "güven",
+      "sound": "Esra'nın sesi sağdan; kuşlar",
+      "lighting": "aynı",
+      "continuity": "Esra görünmez; yalnız ses",
+      "safety": "Yetişkin gözetimi sesle belirtilir"
+    },
+    {
+      "shot_id": "OPEN-SH06", "start_seconds": 25, "duration_seconds": 5,
+      "source_scene": "V2-S01", "source_beat": 2, "event": "adult_call",
+      "camera": {"lens": "85 mm makro", "height": "el hizası", "angle": "üstten 45°",
+                 "movement": "sabit; odak düğümde"},
+      "positions": {"aden": "çömelmiş, elleri merkezde", "kaan": "sağda, mavi panele dokunur", "esra": "kadraj dışı"},
+      "action": "Aden kuyruğu bağlamaya başlar; Kaan mavi panele dokunur. Rüzgâr uçurtmanın köşesini kaldırır.",
+      "dialogue": [{"speaker": "kaan", "text": "Mavi!", "start_seconds": 26.5, "emotion": "işaret ederek"}],
+      "emotion": "odaklanma",
+      "sound": "düğüm sesi; rüzgâr hafif yükselir",
+      "lighting": "aynı",
+      "continuity": "Düğüm yarım; 30. saniyede S01 beat 3'e bağlanır",
+      "safety": "Kaan'ın elinde küçük parça yok; yalnız panele dokunur"
+    }
+  ]
+}

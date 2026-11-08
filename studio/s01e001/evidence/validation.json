@@ -1,0 +1,9 @@
+﻿{
+  "episode": "C:\\actions-runner\\_work\\AHOS-S01E001\\studio\\s01e001\\episode.json",
+  "shots": "C:\\actions-runner\\_work\\AHOS-S01E001\\studio\\s01e001\\shotlist-30s.json",
+  "scenes": 12,
+  "episode_seconds": 480,
+  "shot_seconds": 30,
+  "problems": [],
+  "ok": true
+}

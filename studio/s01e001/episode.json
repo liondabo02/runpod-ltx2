@@ -1,0 +1,229 @@
+{
+  "schema": "ahos.episode-script.v1",
+  "episode_id": "S01E001",
+  "season": 1,
+  "episode": 1,
+  "title": "Uçurtmanın Kayıp Kuyruğu",
+  "language": "tr",
+  "target_audience": "2-5 yaş",
+  "target_duration_seconds": 480,
+  "status": "DRAFT_FOR_OWNER_APPROVAL",
+  "not_final": true,
+  "note": "Bu bir taslaktır; sahip onayı olmadan final senaryo sayılmaz. Süreler toplamı 480 saniyedir.",
+  "learning_goals": ["sabır", "paylaşma", "yardımlaşma"],
+  "behaviors": [
+    {"id": "sabır", "shown_in": ["S02", "S06", "S08", "S10"],
+     "observable": "Sıra bekleme, rüzgârı bekleme, 'bir-iki-üç' sayma, acele etmeden düğüm atma"},
+    {"id": "paylaşma", "shown_in": ["S05", "S07", "S08", "S12"],
+     "observable": "Kumaşları paylaşma, Kaan'ın önce seçmesine izin verme, kuyruğu birlikte kullanma"},
+    {"id": "yardımlaşma", "shown_in": ["S05", "S09", "S11", "S12"],
+     "observable": "Kuyruk arama, ip tutma, kumaş uzatma, uçurtmayı birlikte uçurma"}
+  ],
+  "cast": [
+    {"character_id": "aden", "display_name": "Aden", "age_years": 3, "gender": "female",
+     "speech_style": "kısa, sıcak, 3 yaş çocuk cümleleri (en fazla 7 kelime)"},
+    {"character_id": "kaan", "display_name": "Kaan", "age_years": 1, "gender": "male",
+     "speech_style": "tek/iki hece; cümle yok ('Kuş!', 'Aa!', 'Mavi!')"},
+    {"character_id": "esra", "display_name": "Esra", "age_years": 33, "gender": "female",
+     "speech_style": "sakin, kısa, yönlendiren anne cümleleri"},
+    {"character_id": "harun", "display_name": "Harun", "age_years": 30, "gender": "male",
+     "speech_style": "sıcak, kısa, destekleyici yetişkin"}
+  ],
+  "visual_continuity": {
+    "location": "Kanonik bahar sabahı parkı; yumuşak çimen, papatyalar, uzak tepeler",
+    "light": "Sol arka üstten 5200K sabah güneşi; yumuşak gölge; ışık yönü sahneler boyunca değişmez",
+    "kite": "Elmas uçurtma; paneller #FFD65A, #E64860, #4084DC, #6EBE78; uzun gökkuşağı kuyruk",
+    "aden": "3 yaş kız; omuz hizası dalgalı koyu kahve saç; TEK sarı yıldız toka; kobalt mavi tişört; lacivert şort; krem spor ayakkabı",
+    "kaan": "1 yaş erkek; bebeksi oranlar (3,0 kafa); kısa kıvırcık siyah saç; mercan kırmızı tişört; lacivert şort; krem bebek ayakkabısı",
+    "ratio": "Aden 98 cm / Kaan 76 cm; oran 0,776 (±%5) her sahnede korunur",
+    "rules": [
+      "Kaan'ın boynuna/eline/ayağına ip dolanmaz; makarayı tek başına taşımaz",
+      "Ek çocuk, ikinci uçurtma, logo ve metin yok",
+      "Kesme yönü ve 180 derece kuralı korunur; ışık sağdan gelir"
+    ]
+  },
+  "scenes": [
+    {
+      "scene_id": "S01", "start_seconds": 0, "duration_seconds": 40,
+      "title": "Park sabahı", "setting": "Park girişi, çimenlik alan",
+      "cast_ids": ["aden", "kaan", "esra"],
+      "objective": "Karakterleri ve mekânı tanıt; uçurtmayı göster",
+      "action": "Aden elinde katlanmış uçurtmayla koşar, Kaan kısa adımlarla yanında yürür. Esra arkadan gelir. Uçurtma açılır, renkli paneller görünür. Kaan kuşlara işaret eder.",
+      "dialogue": [
+        {"speaker": "aden", "text": "Parka geldik!", "intent": "heyecan"},
+        {"speaker": "kaan", "text": "Kuş!", "intent": "dikkat"},
+        {"speaker": "esra", "text": "Yavaş, ikiniz de.", "intent": "güvenli yönlendirme"}
+      ],
+      "behavior_tags": ["sabır"],
+      "camera": "Çocuk göz hizasından geniş açılış; yavaş ileri kaydırma; 35 mm",
+      "continuity": "Sabah ışığı soldan; Aden'in tişörtü kobalt, Kaan'ınki mercan"
+    },
+    {
+      "scene_id": "S02", "start_seconds": 40, "duration_seconds": 40,
+      "title": "Kuyruğu hazırlama", "setting": "Çimenlik, uçurtma yerde",
+      "cast_ids": ["aden", "kaan", "esra"],
+      "objective": "Sabrı göster: acele etmeden hazırlık",
+      "action": "Aden kuyruğu uçurtmaya bağlar; Kaan ipe uzanır, Esra nazikçe elini yönlendirir. Aden düğümü yavaşça atar, 'bir-iki-üç' diye sayar.",
+      "dialogue": [
+        {"speaker": "aden", "text": "Kuyruğu bağlıyorum.", "intent": "açıklama"},
+        {"speaker": "kaan", "text": "İp!", "intent": "katılım"},
+        {"speaker": "esra", "text": "Rüzgârı bekleyelim.", "intent": "sabır"}
+      ],
+      "behavior_tags": ["sabır", "yardımlaşma"],
+      "camera": "Yakın plan eller ve düğüm; ardından çocukların yüzüne yukarı tilt",
+      "continuity": "Kuyruk henüz sağlam; uçurtma yerde; gölge solda"
+    },
+    {
+      "scene_id": "S03", "start_seconds": 80, "duration_seconds": 42,
+      "title": "İlk uçuş", "setting": "Açık çimenlik, gökyüzü",
+      "cast_ids": ["aden", "kaan", "esra"],
+      "objective": "Neşe ve birlikte başarma duygusu",
+      "action": "Esra uçurtmayı kaldırır, Aden ipi çeker, Kaan kollarını açar. Uçurtma yükselir, kuyruk dalgalanır. İki çocuk birlikte zıplar.",
+      "dialogue": [
+        {"speaker": "aden", "text": "Uçtu!", "intent": "sevinç"},
+        {"speaker": "kaan", "text": "Ya!", "intent": "sevinç"},
+        {"speaker": "esra", "text": "Harika!", "intent": "onay"}
+      ],
+      "behavior_tags": ["yardımlaşma"],
+      "camera": "Alçak açı, uçurtmayla birlikte yukarı tilt; çocuklar kadrajın altında kalır",
+      "continuity": "Kuyruk sağlam; uçurtma sağ üstte; rüzgâr yönü soldan sağa"
+    },
+    {
+      "scene_id": "S04", "start_seconds": 122, "duration_seconds": 36,
+      "title": "Rüzgâr sertleşir", "setting": "Aynı çimenlik",
+      "cast_ids": ["aden", "kaan", "esra"],
+      "objective": "Küçük ve güvenli sorunu kur",
+      "action": "Rüzgâr sertleşir; uçurtma sarsılır, kuyruk dikişinden kopar ve çimene doğru savrulur. Aden ipi sıkı tutar, Kaan şaşkın bakar.",
+      "dialogue": [
+        {"speaker": "kaan", "text": "Aa!", "intent": "şaşkınlık"},
+        {"speaker": "aden", "text": "Kuyruk koptu!", "intent": "sorunu adlandırma"},
+        {"speaker": "esra", "text": "Rüzgâr sertleşti.", "intent": "açıklama"}
+      ],
+      "behavior_tags": ["sabır"],
+      "camera": "Sabit orta plan; kuyruğun kopuşu yavaş çekimde; gökyüzüne kısa kesme",
+      "continuity": "Kuyruk kopar; kumaş parçaları uzağa değil, sol tarafa düşer"
+    },
+    {
+      "scene_id": "S05", "start_seconds": 158, "duration_seconds": 40,
+      "title": "Kuyruğu arama", "setting": "Çimenlik, papatyalar",
+      "cast_ids": ["aden", "kaan", "esra"],
+      "objective": "Yardımlaşmayı göster: birlikte arama",
+      "action": "Üçü çimende kuyruğu arar. Aden papatyaların arasında kırmızı bir kumaş parçası bulur; Kaan mavi parçayı gösterir. Parçaları bir sepete koyarlar.",
+      "dialogue": [
+        {"speaker": "aden", "text": "Kuyruğu arayalım.", "intent": "çözüm önerisi"},
+        {"speaker": "kaan", "text": "Nerde?", "intent": "soru"},
+        {"speaker": "esra", "text": "Birlikte bakalım.", "intent": "yardım"}
+      ],
+      "behavior_tags": ["yardımlaşma", "paylaşma"],
+      "camera": "Yer seviyesinde takip; ellerin buluşu; parçaların renkleri vurgulanır",
+      "continuity": "Bulunan parçalar kuyruğun renkleriyle aynı; başka çöp/tehlike yok"
+    },
+    {
+      "scene_id": "S06", "start_seconds": 198, "duration_seconds": 34,
+      "title": "Kaan üzülür", "setting": "Çimenlik, bank yanı",
+      "cast_ids": ["aden", "kaan", "esra"],
+      "objective": "Duyguyu tanı; sabır ve teselli",
+      "action": "Kaan dudağını büzer, uçurtmaya bakar. Aden yanına çömelir, elini tutar. Esra yeni bir kuyruk yapmayı önerir; Kaan başını kaldırır.",
+      "dialogue": [
+        {"speaker": "kaan", "text": "Üh...", "intent": "üzüntü"},
+        {"speaker": "aden", "text": "Üzülme, yenisini yaparız.", "intent": "teselli"},
+        {"speaker": "esra", "text": "Sabırla olur.", "intent": "güven"}
+      ],
+      "behavior_tags": ["sabır", "yardımlaşma"],
+      "camera": "Yakın iki çekim; Kaan'ın yüzü, Aden'in eli; sıcak ışık",
+      "continuity": "Kaan'ın gözleri nemli ama ağlamıyor; müzik yumuşak"
+    },
+    {
+      "scene_id": "S07", "start_seconds": 232, "duration_seconds": 46,
+      "title": "Kumaş sepeti", "setting": "Ev, aydınlık salon",
+      "cast_ids": ["aden", "kaan", "esra"],
+      "objective": "Paylaşmayı göster: seçimi Kaan'a bırakma",
+      "action": "Esra renkli kumaş sepetini açar. Aden elini Sepete uzatır ama durur: 'Kaan önce seçsin.' Kaan mavi kumaşı seçer, Aden gülümser.",
+      "dialogue": [
+        {"speaker": "esra", "text": "Kumaşlar burada.", "intent": "davet"},
+        {"speaker": "aden", "text": "Kaan önce seçsin.", "intent": "paylaşma"},
+        {"speaker": "kaan", "text": "Mavi!", "intent": "seçim"}
+      ],
+      "behavior_tags": ["paylaşma", "sabır"],
+      "camera": "Sepet üstü tepe çekim; çocukların elleri; yüz tepkileri",
+      "continuity": "Ev ışığı sıcak; kumaş renkleri uçurtma paletiyle uyumlu"
+    },
+    {
+      "scene_id": "S08", "start_seconds": 278, "duration_seconds": 36,
+      "title": "Sıra ve renkler", "setting": "Ev, masa",
+      "cast_ids": ["aden", "kaan", "esra"],
+      "objective": "Sıra beklemeyi göster",
+      "action": "Kumaşlar masaya dizilir. Aden kırmızıyı, Kaan maviyi alır. Kaan sarıya uzanır; Aden bekler, sonra sarıyı ona verir.",
+      "dialogue": [
+        {"speaker": "aden", "text": "Sırayla.", "intent": "kural"},
+        {"speaker": "kaan", "text": "Mavi!", "intent": "seçim"},
+        {"speaker": "aden", "text": "Ben kırmızı.", "intent": "paylaşım"}
+      ],
+      "behavior_tags": ["paylaşma", "sabır"],
+      "camera": "Masa hizası, yumuşak odak; renklerin dizilişi",
+      "continuity": "Kumaş sayısı 6; hepsi yumuşak, keskin alet yok"
+    },
+    {
+      "scene_id": "S09", "start_seconds": 314, "duration_seconds": 46,
+      "title": "Kuyruğu birlikte yapma", "setting": "Ev, masa",
+      "cast_ids": ["aden", "kaan", "esra"],
+      "objective": "Yardımlaşmayı göster: tut, uzat, bağla",
+      "action": "Esra kumaşları tutar, Aden düğüm atar, Kaan şeritleri uzatır. Düğüm zorlanınca Aden bekler, yeniden dener. Sonunda renkli kuyruk hazır olur.",
+      "dialogue": [
+        {"speaker": "aden", "text": "Tut bakalım.", "intent": "yardım isteme"},
+        {"speaker": "kaan", "text": "Tut!", "intent": "katılım"},
+        {"speaker": "esra", "text": "Yavaşça.", "intent": "sabır"},
+        {"speaker": "aden", "text": "Düğüm oldu!", "intent": "başarı"}
+      ],
+      "behavior_tags": ["yardımlaşma", "sabır", "paylaşma"],
+      "camera": "Yakın plan eller; düğümün tamamlanışı; üç yüzün tepkisi",
+      "continuity": "Kuyruk 6 renkli şerit; düğüm sağlam; Kaan'a iğne/makas verilmez"
+    },
+    {
+      "scene_id": "S10", "start_seconds": 360, "duration_seconds": 34,
+      "title": "Rüzgârı bekleme", "setting": "Park, açık çimenlik",
+      "cast_ids": ["aden", "kaan", "esra"],
+      "objective": "Sabrı göstermeye devam: beklemek ve saymak",
+      "action": "Parka dönerler. Rüzgâr durgundur. Aden 'bir-iki-üç' diye sayar; Kaan parmağıyla sayar. Üçüncüde rüzgâr gelir, yapraklar kıpırdar.",
+      "dialogue": [
+        {"speaker": "esra", "text": "Rüzgârı bekleyelim.", "intent": "sabır"},
+        {"speaker": "aden", "text": "Bir, iki, üç!", "intent": "ritim"},
+        {"speaker": "kaan", "text": "Üç!", "intent": "katılım"}
+      ],
+      "behavior_tags": ["sabır"],
+      "camera": "Geniş plan; yaprakların kıpırdaması; çocukların bekleyişi",
+      "continuity": "Yeni kuyruk takılı; gökyüzü aynı; ışık yönü sabit"
+    },
+    {
+      "scene_id": "S11", "start_seconds": 394, "duration_seconds": 42,
+      "title": "Yeniden uçuyor", "setting": "Park, gökyüzü",
+      "cast_ids": ["aden", "kaan", "esra"],
+      "objective": "Birlikte başarmanın ödülü",
+      "action": "Uçurtma yeni kuyruğuyla yükselir. Aden ipi tutar, Kaan elini üstüne koyar. Renkli kuyruk gökyüzünde dalgalanır; ikisi birlikte güler.",
+      "dialogue": [
+        {"speaker": "aden", "text": "Uçtu!", "intent": "sevinç"},
+        {"speaker": "kaan", "text": "Uçtu!", "intent": "sevinç"},
+        {"speaker": "esra", "text": "Birlikte başardınız.", "intent": "onay"}
+      ],
+      "behavior_tags": ["yardımlaşma", "paylaşma"],
+      "camera": "Alçak açı; uçurtma ve çocuklar aynı kadrajda; yavaş yukarı tilt",
+      "continuity": "Yeni kuyruk renkleri öncekiyle aynı; uçurtma sağ üstte"
+    },
+    {
+      "scene_id": "S12", "start_seconds": 436, "duration_seconds": 44,
+      "title": "Kapanış", "setting": "Park, gün batımına yakın",
+      "cast_ids": ["aden", "kaan", "esra", "harun"],
+      "objective": "Öğrenimi doğal biçimde pekiştir; sıcak kapanış",
+      "action": "Harun elinde küçük bir kurdeleyle gelir. Aden 'Kaan seçti' der, Kaan kurdelesini gösterir. Dördü birlikte gökyüzüne bakar; uçurtma kuyruğu rüzgârda dalgalanır.",
+      "dialogue": [
+        {"speaker": "harun", "text": "Yeni kuyruk çok güzel.", "intent": "takdir"},
+        {"speaker": "aden", "text": "Kaan seçti.", "intent": "paylaşma"},
+        {"speaker": "kaan", "text": "Ya!", "intent": "onay"},
+        {"speaker": "esra", "text": "Paylaştınız, yardım ettiniz.", "intent": "pekiştirme"}
+      ],
+      "behavior_tags": ["paylaşma", "yardımlaşma", "sabır"],
+      "camera": "Geniş kapanış; gökyüzüne tilt; sıcak ışık; yavaş fade",
+      "continuity": "Tüm kıyafetler aynı; yeni kuyruk sağlam; ek karakter yok"
+    }
+  ]
+}
