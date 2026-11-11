@@ -1,0 +1,33 @@
+{
+  "status": "TECHNICAL_PREVIEW_NOT_PROFESSIONAL",
+  "video": "deliverables\\AHOS-TEXT-TO-CARTOON-DEMO\\technical-preview.mp4",
+  "sha256": "e6e34d9c3fbcb4f582c662c9cf0c73c0dd8295059362de8fb62fd8e322bdfe32",
+  "frames": 48,
+  "fps": 12,
+  "duration_s": 4,
+  "motion_verified": true,
+  "probe": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 540,
+        "r_frame_rate": "12/1",
+        "tags": {}
+      }
+    ],
+    "format": {
+      "duration": "4.000000",
+      "tags": {}
+    }
+  },
+  "audio": "NONE",
+  "is_3d": false,
+  "approved_character_identity": false,
+  "production_ready": false,
+  "blockers": [
+    "Doğrulanmış Türkçe karakter sesi ve fonem bazlı lip-sync yok; önizleme sessiz.",
+    "Yüksek kaliteli 3D mesh/rig, karakter sesleri ve sesli lip-sync henüz yok."
+  ]
+}

@@ -43,3 +43,7 @@ deliverables/S01-PARK-KITE-001/*.png
 deliverables/S01-PARK-KITE-001/*.wav
 deliverables/S01-PARK-KITE-001/keyframes/
 
+
+# AHOS text-to-cartoon locally generated jobs
+/deliverables/AHOS-TEXT-TO-CARTOON/
+/deliverables/AHOS-TEXT-TO-CARTOON-DEMO/

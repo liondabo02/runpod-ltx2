@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AHOS Studio-16 | Hikâyeden Çizgi Filme</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,Segoe UI,Arial,sans-serif}*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 88% 7%,#18213f 0,transparent 46%),#090c13;color:#e9eefa}
+header{border-bottom:1px solid #27314b;padding:23px max(calc((100vw - 1024px)/2),24px);display:flex;justify-content:space-between;gap:12px;align-items:center}
+.brand{font-weight:800;letter-spacing:.09em;color:#edf4ff}.tag{background:#1b2e33;color:#93edd8;padding:7px 12px;border-radius:18px;font-size:12px}
+main{max-width:1024px;margin:38px auto;padding:0 22px}h1{font-size:clamp(28px,4vw,43px);margin:0 0 12px;letter-spacing:-.04em}
+.sub{color:#9ba7bc;line-height:1.6;max-width:700px}section{border:1px solid #29334a;background:#111726;border-radius:20px;padding:26px;margin:27px 0}
+label{display:block;color:#a8b7cf;font-size:13px;letter-spacing:.02em;margin-bottom:10px}textarea{width:100%;min-height:160px;border-radius:13px;background:#090f1b;border:1px solid #354460;color:#fafcff;padding:18px;resize:vertical;outline:none;font-size:16px;line-height:1.55}textarea:focus{border-color:#61c5d8}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:17px}button{border:0;border-radius:11px;padding:13px 21px;background:#54c9be;color:#07151d;font-size:14px;font-weight:800;cursor:pointer}button.secondary{background:#2c3549;color:#e6ebf3}button:disabled{opacity:.6;cursor:wait}select{background:#1b2435;border:1px solid #3a4962;color:#e5edfa;padding:10px;border-radius:9px}
+h2{font-size:20px;margin:0 0 14px}#jobState{font-weight:750}#result{display:none}#result.show{display:block}
+#video{display:none;width:100%;max-width:960px;aspect-ratio:16/9;border-radius:14px;background:#05070c;margin:14px 0}
+pre{background:#080d18;color:#bfcee3;border:1px solid #29344c;border-radius:12px;padding:16px;overflow:auto;white-space:pre-wrap;word-break:break-word}
+a{color:#80dfe0}small,.note{color:#97a4b9;line-height:1.5}ul{line-height:1.8;color:#aebbd0}
+.status{margin:12px 0;color:#e2edff}
+</style></head><body>
+<header><div class="brand">AHOS <span style="color:#77d9e2">STUDIO-16</span></div><div class="tag">0 € yeni harcama · Yerel çalışma</div></header>
+<main>
+<h1>Hikâyeni yaz. Üretimi başlat.</h1>
+<p class="sub">AHOS Holding'in çizgi film üretim giriş noktası. Mevcut sürüm senaryo planını otomatik oluşturur; Aden ve Kaan için çalışabilen vektör hareket altyapısıyla <b>teknik önizleme</b> üretir. Profesyonel 3D, çocuk sesi ve lip-sync henüz hazır değildir.</p>
+<section>
+<label for="prompt">Çizgi film fikri</label>
+<textarea id="prompt" maxlength="2000" placeholder='Örnek: Aden ve Kaan bahçede uçurtmaya bakıyor. Aden yürüyor, Kaan emekliyor. Aden el sallıyor. "Kaan, bak! Uçurtmamız!"'></textarea>
+<div class="actions">
+  <button id="produce">Teknik önizleme üret</button>
+  <button id="plan" class="secondary">Yalnızca hikâye planı</button>
+  <label style="margin:0">Süre <select id="duration"><option value="4">4 saniye</option><option value="6" selected>6 saniye</option><option value="8">8 saniye</option><option value="12">12 saniye</option></select></label>
+</div>
+</section>
+<section id="result" aria-live="polite"><h2>Üretim durumu</h2><div class="status" id="jobState">Başlatılıyor...</div>
+<video id="video" controls playsinline></video>
+<p><a id="planLink" href="#" hidden target="_blank">Hikâye planını görüntüle (JSON)</a></p>
+<p><a id="qaLink" href="#" hidden target="_blank">Teknik kalite raporu (JSON)</a></p>
+<h3>Gerçek engeller ve sınırlamalar</h3><pre id="details"></pre></section>
+<section><h2>Üretim motorunun mevcut yetenekleri</h2>
+<ul><li><b>Planlama:</b> Yazdığın hikâyedeki karakterleri, eylemleri ve mekânı tanır.</li>
+<li><b>Animasyon:</b> Aden/Kaan için mevcut eklem tabanlı teknik vektör sistemi.</li>
+<li><b>Güvenlik:</b> 16 karakter kanonu korunur; başka karaktere hazır olmayan rig uydurulmaz.</li>
+<li><b>Kontrol:</b> Çıktıda MP4, SHA-256, hikâye planı ve doğrulama bilgisi saklanır.</li>
+<li><b>Eksik:</b> Onaylı görsel karakter rig'i, profesyonel 3D, doğal çocuk sesi, fonem lip-sync, tam bölüm.</li></ul>
+<p class="note">Bu bir teknik pilot arayüzüdür. Nihai profesyonel çizgi film kalitesi olarak sunulamaz. Kullanım yalnızca bu bilgisayarda 127.0.0.1 adresiyle sınırlıdır.</p></section></main>
+<script>
+const $=id=>document.getElementById(id);
+let busy=false;
+const setBusy=b=>{busy=b;$('produce').disabled=b;$('plan').disabled=b}
+async function submit(mode){
+ if(busy)return;let prompt=$('prompt').value.trim();if(!prompt){alert('Önce hikâye yaz.');return}
+ setBusy(true);$('result').classList.add('show');$('jobState').textContent='Üretim kuyruğuna gönderiliyor...';$('details').textContent='';$('video').style.display='none';$('planLink').hidden=true;$('qaLink').hidden=true;
+ try{
+  let response=await fetch('/api/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,mode,duration:Number($('duration').value)})});
+  let job=await response.json();if(!response.ok)throw Error(job.error||'İş gönderilemedi');
+  const id=job.job_id;
+  for(let i=0;i<180;i++){
+   await new Promise(r=>setTimeout(r,1300));
+   let state=await (await fetch('/api/jobs/'+id)).json();
+   $('jobState').textContent=({'queued':'Sırada','running':'Animasyon hazırlanıyor','completed':'Tamamlandı (teknik önizleme)','blocked':'Teknik engel: gerçek üretim yapılamadı','failed':'Hata'}[state.status]||state.status);
+   if(['completed','blocked','failed'].includes(state.status)){
+    const r=state.result||{};
+    if(r.plan){$('planLink').href='/api/jobs/'+id+'/'+r.plan;$('planLink').hidden=false}
+    if(r.preview){$('video').src='/api/jobs/'+id+'/'+r.preview;$('video').style.display='block';$('qaLink').href='/api/jobs/'+id+'/technical-qa.json';$('qaLink').hidden=false}
+    $('details').textContent=(state.error?'Hata: '+state.error+'\n':'')+(r.blockers||[]).map(x=>'• '+x).join('\n')+'\n\nPRODUCTION_READY = FALSE';
+    setBusy(false);return
+   }
+  }
+  throw Error('Zaman sınırı aşıldı; iş kaydını kontrol et.');
+ }catch(e){$('jobState').textContent='İşlem başarısız';$('details').textContent=String(e);setBusy(false)}
+}
+$('produce').addEventListener('click',()=>submit('preview'));
+$('plan').addEventListener('click',()=>submit('plan'));
+$('prompt').value='Aden ve Kaan bahçede uçurtmaya bakıyor. Aden yürüyor, Kaan emekliyor. Aden el sallıyor. "Kaan, bak! Uçurtmamız!"';
+</script>
+</body></html>
