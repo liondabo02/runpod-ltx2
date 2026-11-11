@@ -1,6 +1,11 @@
 {
   "schema": "ahos.production.adapters.v1",
   "zero_new_euro_spend": true,
-  "description": "Each stage must have a real reviewed zero-cost executable backend script. No backend is currently registered.",
-  "stages": {}
+  "description": "One real zero-cost backend is registered: render (technical 1080p24 MP4 with synthetic ambience). Character/rig/animation/voice/lipsync/scene/qa remain unregistered; full dispatch stays BLOCKED at character_model.",
+  "stages": {
+    "render": {
+      "script": "tools/studio_backends/render_backend.py",
+      "cost_eur": 0
+    }
+  }
 }

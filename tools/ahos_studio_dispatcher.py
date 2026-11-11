@@ -146,6 +146,68 @@ def _verified_artifact(job_dir: Path, stage: str, item: dict) -> dict:
     return {"path": rel, "sha256": sha, "bytes": path.stat().st_size}
 
 
+def dispatch_stage(plan: dict, job_dir: Path, stage: str, root: Path = ROOT,
+                   timeout_seconds: int = 180) -> dict:
+    """Run exactly one registered stage (P12-A standalone backend proof)."""
+    if stage not in STAGES:
+        raise ValueError(f"unknown stage: {stage}")
+    if not 5 <= timeout_seconds <= 1800:
+        raise ValueError("Backend timeout must be 5-1800 seconds")
+    job_dir = job_dir.resolve()
+    job_dir.mkdir(parents=True, exist_ok=True)
+    config = load_backends(root)
+    report = {
+        "schema": "ahos.production.dispatch-stage.v1",
+        "status": "BLOCKED",
+        "production_ready": False,
+        "cost_eur": 0,
+        "cast": plan.get("cast", []),
+        "stages": [],
+        "blockers": [],
+    }
+    plan_path = job_dir / "story-plan.json"
+    if not plan_path.is_file():
+        plan_path.write_text(json.dumps(plan, ensure_ascii=False, indent=2), encoding="utf-8")
+    setup = config["stages"].get(stage)
+    caps = capabilities(root)["stages"][stage]
+    if not caps["installed"]:
+        report["stages"].append({"stage": stage, "status": "BLOCKED", "reason": caps["reason"]})
+        report["blockers"].append(f"{stage}: {caps['reason']}")
+        (job_dir / f"production-dispatch-{stage}.json").write_text(
+            json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+        return report
+    script = (root / setup["script"]).resolve()
+    evidence = job_dir / f"{stage}-evidence.json"
+    args = [sys.executable, str(script), "--plan", str(plan_path),
+            "--job-dir", str(job_dir), "--evidence", str(evidence)]
+    try:
+        run = subprocess.run(args, cwd=root, capture_output=True, text=True,
+                             timeout=timeout_seconds, check=False)
+        if run.returncode:
+            raise ValueError(f"backend exit={run.returncode}: {run.stderr[-450:]}")
+        if not evidence.is_file():
+            raise ValueError("backend produced no evidence")
+        data = json.loads(evidence.read_text(encoding="utf-8"))
+        if data.get("stage") != stage or data.get("status") != "PASSED":
+            raise ValueError("backend did not certify this exact stage")
+        if data.get("cost_eur") != 0 or data.get("commercial_license_verified") is not True:
+            raise ValueError("zero-cost and commercial license proof required")
+        artifacts = data.get("artifacts")
+        if not isinstance(artifacts, list) or not artifacts:
+            raise ValueError("no real artifacts")
+        verified = [_verified_artifact(job_dir, stage, x) for x in artifacts]
+        report["stages"].append({"stage": stage, "status": "VERIFIED_TECHNICAL",
+                                 "artifacts": verified})
+        report["status"] = "VERIFIED_TECHNICAL"
+    except (ValueError, OSError, TimeoutError, subprocess.TimeoutExpired,
+            subprocess.CalledProcessError, json.JSONDecodeError) as exc:
+        report["stages"].append({"stage": stage, "status": "BLOCKED", "reason": str(exc)[:600]})
+        report["blockers"].append(f"{stage}: {str(exc)[:240]}")
+    (job_dir / f"production-dispatch-{stage}.json").write_text(
+        json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    return report
+
+
 def dispatch(plan: dict, job_dir: Path, root: Path = ROOT, timeout_seconds: int = 180) -> dict:
     """Attempt every registered stage in order, stop truthfully at first blocker."""
     if not 5 <= timeout_seconds <= 1800:
@@ -221,9 +283,14 @@ def main():
     p.add_argument("--plan", type=Path, required=True)
     p.add_argument("--job-dir", type=Path, required=True)
     p.add_argument("--root", type=Path, default=ROOT)
+    p.add_argument("--stage", choices=STAGES)
     args = p.parse_args()
-    result = dispatch(json.loads(args.plan.read_text(encoding="utf-8")),
-                      args.job_dir, args.root)
+    plan = json.loads(args.plan.read_text(encoding="utf-8"))
+    if args.stage:
+        result = dispatch_stage(plan, args.job_dir, args.stage, args.root)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result["status"] == "VERIFIED_TECHNICAL" else 2
+    result = dispatch(plan, args.job_dir, args.root)
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0 if result["status"] == "READY_FOR_OWNER_FINAL_REVIEW" else 2
 

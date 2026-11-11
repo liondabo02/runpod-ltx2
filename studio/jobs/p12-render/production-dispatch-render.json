@@ -1,0 +1,24 @@
+{
+  "schema": "ahos.production.dispatch-stage.v1",
+  "status": "VERIFIED_TECHNICAL",
+  "production_ready": false,
+  "cost_eur": 0,
+  "cast": [
+    "aden",
+    "kaan"
+  ],
+  "stages": [
+    {
+      "stage": "render",
+      "status": "VERIFIED_TECHNICAL",
+      "artifacts": [
+        {
+          "path": "render-technical-5s.mp4",
+          "sha256": "d287e6588be4130cda7465db435059ab51264e92d38845aec6e9d7ef23c8b4d4",
+          "bytes": 228414
+        }
+      ]
+    }
+  ],
+  "blockers": []
+}
