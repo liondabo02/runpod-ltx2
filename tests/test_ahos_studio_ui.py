@@ -105,7 +105,9 @@ def test_production_mode_returns_real_blocker_not_fake_success(tmp_path,monkeypa
         assert not (tmp_path / sent["job_id"] / "technical-preview.mp4").exists()
         _, report = call(url+"/api/jobs/"+sent["job_id"]+"/production-dispatch.json")
         assert report["stages"][0]["stage"] == "character_model"
-        assert report["stages"][0]["status"] == "BLOCKED"
+        assert report["stages"][0]["status"] == "VERIFIED_TECHNICAL"
+        assert report["stages"][1]["stage"] == "rig"
+        assert report["stages"][1]["status"] == "BLOCKED"
     finally:
         server.shutdown()
         server.server_close()

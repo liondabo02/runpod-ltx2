@@ -1,0 +1,509 @@
+{
+  "objects": [
+    {
+      "name": "Head",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Skin_Aden"
+      ]
+    },
+    {
+      "name": "Neck",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Skin_Aden"
+      ]
+    },
+    {
+      "name": "Torso_Shirt",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Shirt_Aden_Cobalt"
+      ]
+    },
+    {
+      "name": "Shirt_Hem",
+      "vertices": 48,
+      "faces": 26,
+      "materials": [
+        "Shirt_Aden_Cobalt"
+      ]
+    },
+    {
+      "name": "Hips_Shorts",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Shorts_Aden_Navy"
+      ]
+    },
+    {
+      "name": "Shorts_Left",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Shorts_Aden_Navy"
+      ]
+    },
+    {
+      "name": "Shorts_Right",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Shorts_Aden_Navy"
+      ]
+    },
+    {
+      "name": "Sleeve_L",
+      "vertices": 48,
+      "faces": 26,
+      "materials": [
+        "Shirt_Aden_Cobalt"
+      ]
+    },
+    {
+      "name": "Sleeve_R",
+      "vertices": 48,
+      "faces": 26,
+      "materials": [
+        "Shirt_Aden_Cobalt"
+      ]
+    },
+    {
+      "name": "Arm_L",
+      "vertices": 48,
+      "faces": 26,
+      "materials": [
+        "Skin_Aden"
+      ]
+    },
+    {
+      "name": "Arm_R",
+      "vertices": 48,
+      "faces": 26,
+      "materials": [
+        "Skin_Aden"
+      ]
+    },
+    {
+      "name": "Hand_L",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Skin_Aden"
+      ]
+    },
+    {
+      "name": "Hand_R",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Skin_Aden"
+      ]
+    },
+    {
+      "name": "Thigh_L",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Skin_Aden"
+      ]
+    },
+    {
+      "name": "Thigh_R",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Skin_Aden"
+      ]
+    },
+    {
+      "name": "Shin_L",
+      "vertices": 48,
+      "faces": 26,
+      "materials": [
+        "Skin_Aden"
+      ]
+    },
+    {
+      "name": "Shin_R",
+      "vertices": 48,
+      "faces": 26,
+      "materials": [
+        "Skin_Aden"
+      ]
+    },
+    {
+      "name": "Shoe_Upper_L",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Shirt_Aden_Cobalt"
+      ]
+    },
+    {
+      "name": "Sole_L",
+      "vertices": 8,
+      "faces": 6,
+      "materials": [
+        "Shoe_Cream"
+      ]
+    },
+    {
+      "name": "Shoe_Star_L",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Clip_Kite_Yellow"
+      ]
+    },
+    {
+      "name": "Shoe_Upper_R",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Shirt_Aden_Cobalt"
+      ]
+    },
+    {
+      "name": "Sole_R",
+      "vertices": 8,
+      "faces": 6,
+      "materials": [
+        "Shoe_Cream"
+      ]
+    },
+    {
+      "name": "Shoe_Star_R",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Clip_Kite_Yellow"
+      ]
+    },
+    {
+      "name": "Eye_White_L",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Eye_White"
+      ]
+    },
+    {
+      "name": "Eye_Iris_L",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Iris_Brown"
+      ]
+    },
+    {
+      "name": "Eye_Pupil_L",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Pupil_Black"
+      ]
+    },
+    {
+      "name": "Eye_Glint_L",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Eye_White"
+      ]
+    },
+    {
+      "name": "Eyelid_L",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Skin_Shadow"
+      ]
+    },
+    {
+      "name": "Brow_L",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Hair_Aden_DarkBrown"
+      ]
+    },
+    {
+      "name": "Eye_White_R",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Eye_White"
+      ]
+    },
+    {
+      "name": "Eye_Iris_R",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Iris_Brown"
+      ]
+    },
+    {
+      "name": "Eye_Pupil_R",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Pupil_Black"
+      ]
+    },
+    {
+      "name": "Eye_Glint_R",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Eye_White"
+      ]
+    },
+    {
+      "name": "Eyelid_R",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Skin_Shadow"
+      ]
+    },
+    {
+      "name": "Brow_R",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Hair_Aden_DarkBrown"
+      ]
+    },
+    {
+      "name": "Ear_L",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Skin_Aden"
+      ]
+    },
+    {
+      "name": "Ear_R",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Skin_Aden"
+      ]
+    },
+    {
+      "name": "Nose",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Skin_Shadow"
+      ]
+    },
+    {
+      "name": "Mouth",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Mouth_Rose"
+      ]
+    },
+    {
+      "name": "Tongue",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Tongue"
+      ]
+    },
+    {
+      "name": "Freckle_1",
+      "vertices": 86,
+      "faces": 96,
+      "materials": [
+        "Freckle_Brown"
+      ]
+    },
+    {
+      "name": "Freckle_2",
+      "vertices": 86,
+      "faces": 96,
+      "materials": [
+        "Freckle_Brown"
+      ]
+    },
+    {
+      "name": "Freckle_3",
+      "vertices": 86,
+      "faces": 96,
+      "materials": [
+        "Freckle_Brown"
+      ]
+    },
+    {
+      "name": "Hair_Cap",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Hair_Aden_DarkBrown"
+      ]
+    },
+    {
+      "name": "Hair_Clump_1",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Hair_Aden_DarkBrown"
+      ]
+    },
+    {
+      "name": "Hair_Clump_2",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Hair_Aden_DarkBrown"
+      ]
+    },
+    {
+      "name": "Hair_Clump_3",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Hair_Aden_DarkBrown"
+      ]
+    },
+    {
+      "name": "Hair_Clump_4",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Hair_Aden_DarkBrown"
+      ]
+    },
+    {
+      "name": "Hair_Clump_5",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Hair_Aden_DarkBrown"
+      ]
+    },
+    {
+      "name": "Hair_Clump_6",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Hair_Aden_DarkBrown"
+      ]
+    },
+    {
+      "name": "Hair_Clump_7",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Hair_Aden_DarkBrown"
+      ]
+    },
+    {
+      "name": "Hair_Clump_8",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Hair_Aden_DarkBrown"
+      ]
+    },
+    {
+      "name": "Hair_Clump_9",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Hair_Aden_DarkBrown"
+      ]
+    },
+    {
+      "name": "Hair_Clump_10",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Hair_Aden_DarkBrown"
+      ]
+    },
+    {
+      "name": "Hair_Clump_11",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Hair_Aden_DarkBrown"
+      ]
+    },
+    {
+      "name": "Hair_Clump_12",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Hair_Aden_DarkBrown"
+      ]
+    },
+    {
+      "name": "Hair_Clump_13",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Hair_Aden_DarkBrown"
+      ]
+    },
+    {
+      "name": "Star_Clip",
+      "vertices": 20,
+      "faces": 12,
+      "materials": [
+        "Clip_Kite_Yellow"
+      ]
+    },
+    {
+      "name": "Teeth",
+      "vertices": 610,
+      "faces": 640,
+      "materials": [
+        "Eye_White"
+      ]
+    },
+    {
+      "name": "Shirt_Kite_Print",
+      "vertices": 4,
+      "faces": 1,
+      "materials": [
+        "Clip_Kite_Yellow"
+      ]
+    }
+  ],
+  "totals": {
+    "objects": 60,
+    "vertices": 28694,
+    "faces": 29935
+  },
+  "materials": [
+    "Clip_Kite_Yellow",
+    "Eye_White",
+    "Freckle_Brown",
+    "Hair_Aden_DarkBrown",
+    "Iris_Brown",
+    "Mouth_Rose",
+    "Pupil_Black",
+    "Shirt_Aden_Cobalt",
+    "Shoe_Cream",
+    "Shorts_Aden_Navy",
+    "Skin_Aden",
+    "Skin_Shadow",
+    "Tongue"
+  ],
+  "dimensions_m": [
+    0.11,
+    0.0,
+    0.1
+  ]
+}

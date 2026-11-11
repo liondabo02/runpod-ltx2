@@ -1,8 +1,12 @@
 {
   "schema": "ahos.production.adapters.v1",
   "zero_new_euro_spend": true,
-  "description": "One real zero-cost backend is registered: render (technical 1080p24 MP4 with synthetic ambience). Character/rig/animation/voice/lipsync/scene/qa remain unregistered; full dispatch stays BLOCKED at character_model.",
+  "description": "Real zero-cost backends: character_model (Blender 4.5 procedural Aden, PENDING_IDENTITY_REVIEW) and render (technical MP4). Rig/animation/voice/lipsync/scene/qa remain unregistered; full dispatch stops at rig.",
   "stages": {
+    "character_model": {
+      "script": "tools/studio_backends/character_model_backend.py",
+      "cost_eur": 0
+    },
     "render": {
       "script": "tools/studio_backends/render_backend.py",
       "cost_eur": 0
