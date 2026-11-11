@@ -79,3 +79,33 @@ def test_unsupported_cast_job_is_blocked(tmp_path,monkeypatch):
     finally:
         server.shutdown()
         server.server_close()
+
+
+def test_production_mode_returns_real_blocker_not_fake_success(tmp_path,monkeypatch):
+    monkeypatch.setattr(ui, "OUTPUT", tmp_path)
+    with ui.GUARD:
+        ui.STATE.clear()
+    server = ThreadingHTTPServer(("127.0.0.1", 0), ui.Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        url = f"http://127.0.0.1:{server.server_port}"
+        _, sent = call(url+"/api/jobs", {
+            "prompt": "Aden ve Kaan bahçede uçurtmaya bakıyor",
+            "mode": "production",
+            "duration": 6,
+        })
+        for _ in range(50):
+            _, job = call(url+"/api/jobs/"+sent["job_id"])
+            if job["status"] in ("blocked", "completed", "failed"):
+                break
+            time.sleep(.05)
+        assert job["status"] == "blocked"
+        assert job["result"]["state"] == "PRODUCTION_BLOCKED"
+        assert job["result"]["production_ready"] is False
+        assert not (tmp_path / sent["job_id"] / "technical-preview.mp4").exists()
+        _, report = call(url+"/api/jobs/"+sent["job_id"]+"/production-dispatch.json")
+        assert report["stages"][0]["stage"] == "character_model"
+        assert report["stages"][0]["status"] == "BLOCKED"
+    finally:
+        server.shutdown()
+        server.server_close()

@@ -1,0 +1,6 @@
+{
+  "schema": "ahos.production.adapters.v1",
+  "zero_new_euro_spend": true,
+  "description": "Each stage must have a real reviewed zero-cost executable backend script. No backend is currently registered.",
+  "stages": {}
+}

@@ -24,7 +24,8 @@ a{color:#80dfe0}small,.note{color:#97a4b9;line-height:1.5}ul{line-height:1.8;col
 <label for="prompt">Çizgi film fikri</label>
 <textarea id="prompt" maxlength="2000" placeholder='Örnek: Aden ve Kaan bahçede uçurtmaya bakıyor. Aden yürüyor, Kaan emekliyor. Aden el sallıyor. "Kaan, bak! Uçurtmamız!"'></textarea>
 <div class="actions">
-  <button id="produce">Teknik önizleme üret</button>
+  <button id="production">Profesyonel üretimi dene</button>
+  <button id="produce" class="secondary">Teknik önizleme üret</button>
   <button id="plan" class="secondary">Yalnızca hikâye planı</button>
   <label style="margin:0">Süre <select id="duration"><option value="4">4 saniye</option><option value="6" selected>6 saniye</option><option value="8">8 saniye</option><option value="12">12 saniye</option></select></label>
 </div>
@@ -33,21 +34,23 @@ a{color:#80dfe0}small,.note{color:#97a4b9;line-height:1.5}ul{line-height:1.8;col
 <video id="video" controls playsinline></video>
 <p><a id="planLink" href="#" hidden target="_blank">Hikâye planını görüntüle (JSON)</a></p>
 <p><a id="qaLink" href="#" hidden target="_blank">Teknik kalite raporu (JSON)</a></p>
+<p><a id="prodLink" href="#" hidden target="_blank">Üretim aşamaları ve engeller (JSON)</a></p>
 <h3>Gerçek engeller ve sınırlamalar</h3><pre id="details"></pre></section>
 <section><h2>Üretim motorunun mevcut yetenekleri</h2>
 <ul><li><b>Planlama:</b> Yazdığın hikâyedeki karakterleri, eylemleri ve mekânı tanır.</li>
 <li><b>Animasyon:</b> Aden/Kaan için mevcut eklem tabanlı teknik vektör sistemi.</li>
 <li><b>Güvenlik:</b> 16 karakter kanonu korunur; başka karaktere hazır olmayan rig uydurulmaz.</li>
 <li><b>Kontrol:</b> Çıktıda MP4, SHA-256, hikâye planı ve doğrulama bilgisi saklanır.</li>
+<li><b>Üretim yönlendiricisi:</b> Gerçek, ticari lisanslı ve ücretsiz araçları aşama aşama çalıştırır. Eksik aracı gizlemez; son kullanılan aşamayı gösterir.</li>
 <li><b>Eksik:</b> Onaylı görsel karakter rig'i, profesyonel 3D, doğal çocuk sesi, fonem lip-sync, tam bölüm.</li></ul>
 <p class="note">Bu bir teknik pilot arayüzüdür. Nihai profesyonel çizgi film kalitesi olarak sunulamaz. Kullanım yalnızca bu bilgisayarda 127.0.0.1 adresiyle sınırlıdır.</p></section></main>
 <script>
 const $=id=>document.getElementById(id);
 let busy=false;
-const setBusy=b=>{busy=b;$('produce').disabled=b;$('plan').disabled=b}
+const setBusy=b=>{busy=b;$('produce').disabled=b;$('plan').disabled=b;$('production').disabled=b}
 async function submit(mode){
  if(busy)return;let prompt=$('prompt').value.trim();if(!prompt){alert('Önce hikâye yaz.');return}
- setBusy(true);$('result').classList.add('show');$('jobState').textContent='Üretim kuyruğuna gönderiliyor...';$('details').textContent='';$('video').style.display='none';$('planLink').hidden=true;$('qaLink').hidden=true;
+ setBusy(true);$('result').classList.add('show');$('jobState').textContent='Üretim kuyruğuna gönderiliyor...';$('details').textContent='';$('video').style.display='none';$('planLink').hidden=true;$('qaLink').hidden=true;$('prodLink').hidden=true;
  try{
   let response=await fetch('/api/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,mode,duration:Number($('duration').value)})});
   let job=await response.json();if(!response.ok)throw Error(job.error||'İş gönderilemedi');
@@ -55,11 +58,12 @@ async function submit(mode){
   for(let i=0;i<180;i++){
    await new Promise(r=>setTimeout(r,1300));
    let state=await (await fetch('/api/jobs/'+id)).json();
-   $('jobState').textContent=({'queued':'Sırada','running':'Animasyon hazırlanıyor','completed':'Tamamlandı (teknik önizleme)','blocked':'Teknik engel: gerçek üretim yapılamadı','failed':'Hata'}[state.status]||state.status);
+   $('jobState').textContent=({'queued':'Sırada','running':'Animasyon hazırlanıyor','completed':'Tamamlandı (teknik önizleme)','blocked':'Üretim engellendi: gerekli gerçek üretim aracı eksik','failed':'Hata'}[state.status]||state.status);
    if(['completed','blocked','failed'].includes(state.status)){
     const r=state.result||{};
     if(r.plan){$('planLink').href='/api/jobs/'+id+'/'+r.plan;$('planLink').hidden=false}
     if(r.preview){$('video').src='/api/jobs/'+id+'/'+r.preview;$('video').style.display='block';$('qaLink').href='/api/jobs/'+id+'/technical-qa.json';$('qaLink').hidden=false}
+    if(r.dispatch){$('prodLink').href='/api/jobs/'+id+'/'+r.dispatch;$('prodLink').hidden=false}
     $('details').textContent=(state.error?'Hata: '+state.error+'\n':'')+(r.blockers||[]).map(x=>'• '+x).join('\n')+'\n\nPRODUCTION_READY = FALSE';
     setBusy(false);return
    }
@@ -67,6 +71,7 @@ async function submit(mode){
   throw Error('Zaman sınırı aşıldı; iş kaydını kontrol et.');
  }catch(e){$('jobState').textContent='İşlem başarısız';$('details').textContent=String(e);setBusy(false)}
 }
+$('production').addEventListener('click',()=>submit('production'));
 $('produce').addEventListener('click',()=>submit('preview'));
 $('plan').addEventListener('click',()=>submit('plan'));
 $('prompt').value='Aden ve Kaan bahçede uçurtmaya bakıyor. Aden yürüyor, Kaan emekliyor. Aden el sallıyor. "Kaan, bak! Uçurtmamız!"';

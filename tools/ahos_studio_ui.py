@@ -8,7 +8,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from ahos_text_to_cartoon import ROOT, run_pipeline
+from ahos_text_to_cartoon import ROOT, run_pipeline, parse_story
+from ahos_studio_dispatcher import capabilities, dispatch
 
 OUTPUT = ROOT / "deliverables" / "AHOS-TEXT-TO-CARTOON"
 UI = ROOT / "studio" / "text-to-cartoon" / "index.html"
@@ -37,6 +38,9 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(body)
             return
+        if route == "/api/capabilities":
+            self.reply(200, capabilities(ROOT))
+            return
         if route == "/api/health":
             self.reply(200, {"service": "AHOS Text-to-Cartoon",
                              "bound_to": "127.0.0.1", "cost_eur": 0,
@@ -62,7 +66,7 @@ class Handler(BaseHTTPRequestHandler):
             if len(parts) == 3:
                 self.reply(200, value)
                 return
-            if len(parts) == 4 and parts[3] in {"technical-preview.mp4","story-plan.json","result.json","technical-qa.json"}:
+            if len(parts) == 4 and parts[3] in {"technical-preview.mp4","story-plan.json","result.json","technical-qa.json","production-dispatch.json"}:
                 file = OUTPUT/job/parts[3]
                 if not file.is_file():
                     self.reply(404, {"error": "asset not found"})
@@ -96,7 +100,7 @@ class Handler(BaseHTTPRequestHandler):
             if not 3 <= duration <= 20:
                 raise ValueError("Süre 3–20 saniye olmalı")
             mode = data.get("mode", "preview")
-            if mode not in ("preview", "plan"):
+            if mode not in ("preview", "plan", "production"):
                 raise ValueError("Invalid mode")
         except (KeyError, ValueError, TypeError, json.JSONDecodeError) as exc:
             self.reply(400, {"error": str(exc)})
@@ -132,10 +136,20 @@ def _worker(job):
         output = OUTPUT/job
         (output/"job.json").write_text(json.dumps(state,ensure_ascii=False,indent=2),encoding="utf-8")
         try:
-            result=run_pipeline(state["prompt"],output,
-                                state["duration"],plan_only=(state["mode"]=="plan"))
-            state["status"]="completed" if result["state"] != "BLOCKED" else "blocked"
-            state["result"]=result
+            if state["mode"] == "production":
+                draft = run_pipeline(state["prompt"], output, state["duration"], plan_only=True)
+                plan = json.loads((output / "story-plan.json").read_text(encoding="utf-8"))
+                dispatch_result = dispatch(plan, output)
+                result = {"state": "PRODUCTION_BLOCKED" if dispatch_result["status"] == "BLOCKED" else "REVIEW_REQUIRED",
+                          "plan": "story-plan.json", "dispatch": "production-dispatch.json",
+                          "preview": None, "production_ready": False,
+                          "blockers": dispatch_result["blockers"]}
+                (output / "result.json").write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding="utf-8")
+            else:
+                result = run_pipeline(state["prompt"], output, state["duration"],
+                                      plan_only=(state["mode"] == "plan"))
+            state["status"] = "completed" if result["state"] not in ("BLOCKED", "PRODUCTION_BLOCKED") else "blocked"
+            state["result"] = result
         except Exception as exc:
             state["status"]="failed"
             state["error"]=str(exc)[:800]
