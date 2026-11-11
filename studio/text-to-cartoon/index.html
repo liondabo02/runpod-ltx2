@@ -24,6 +24,7 @@ a{color:#80dfe0}small,.note{color:#97a4b9;line-height:1.5}ul{line-height:1.8;col
 <label for="prompt">Çizgi film fikri</label>
 <textarea id="prompt" maxlength="2000" placeholder='Örnek: Aden ve Kaan bahçede uçurtmaya bakıyor. Aden yürüyor, Kaan emekliyor. Aden el sallıyor. "Kaan, bak! Uçurtmamız!"'></textarea>
 <div class="actions">
+  <button id="studioos">STUDIO OS · 8 dakikalık bölümü yönet</button>
   <button id="production">Profesyonel üretimi dene</button>
   <button id="produce" class="secondary">Teknik önizleme üret</button>
   <button id="plan" class="secondary">Yalnızca hikâye planı</button>
@@ -35,6 +36,7 @@ a{color:#80dfe0}small,.note{color:#97a4b9;line-height:1.5}ul{line-height:1.8;col
 <p><a id="planLink" href="#" hidden target="_blank">Hikâye planını görüntüle (JSON)</a></p>
 <p><a id="qaLink" href="#" hidden target="_blank">Teknik kalite raporu (JSON)</a></p>
 <p><a id="prodLink" href="#" hidden target="_blank">Üretim aşamaları ve engeller (JSON)</a></p>
+<p><a id="studioOSLink" href="#" hidden target="_blank">STUDIO OS bölüm, görevler ve durum (JSON)</a></p>
 <h3>Gerçek engeller ve sınırlamalar</h3><pre id="details"></pre></section>
 <section><h2>Üretim motorunun mevcut yetenekleri</h2>
 <ul><li><b>Planlama:</b> Yazdığın hikâyedeki karakterleri, eylemleri ve mekânı tanır.</li>
@@ -47,7 +49,7 @@ a{color:#80dfe0}small,.note{color:#97a4b9;line-height:1.5}ul{line-height:1.8;col
 <script>
 const $=id=>document.getElementById(id);
 let busy=false;
-const setBusy=b=>{busy=b;$('produce').disabled=b;$('plan').disabled=b;$('production').disabled=b}
+const setBusy=b=>{busy=b;$('produce').disabled=b;$('plan').disabled=b;$('production').disabled=b;$('studioos').disabled=b}
 async function submit(mode){
  if(busy)return;let prompt=$('prompt').value.trim();if(!prompt){alert('Önce hikâye yaz.');return}
  setBusy(true);$('result').classList.add('show');$('jobState').textContent='Üretim kuyruğuna gönderiliyor...';$('details').textContent='';$('video').style.display='none';$('planLink').hidden=true;$('qaLink').hidden=true;$('prodLink').hidden=true;
@@ -71,6 +73,37 @@ async function submit(mode){
   throw Error('Zaman sınırı aşıldı; iş kaydını kontrol et.');
  }catch(e){$('jobState').textContent='İşlem başarısız';$('details').textContent=String(e);setBusy(false)}
 }
+async function submitStudioOS(){
+ if(busy)return;
+ const prompt=$('prompt').value.trim();
+ if(!prompt){alert('Bir hikâye fikri yaz.');return}
+ setBusy(true);$('result').classList.add('show');
+ $('jobState').textContent='AHOS Studio OS bölümü planlıyor ve departmanlara ayırıyor...';
+ $('details').textContent='';$('video').style.display='none';
+ $('planLink').hidden=true;$('qaLink').hidden=true;$('prodLink').hidden=true;$('studioOSLink').hidden=true;
+ try{
+  const res=await fetch('/api/studio/episodes',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({prompt,minutes:8,languages:['tr']})});
+  const job=await res.json();if(!res.ok)throw Error(job.error||'Episode başlatılamadı');
+  $('studioOSLink').href=job.status_url;$('studioOSLink').hidden=false;
+  for(let i=0;i<180;i++){
+   await new Promise(r=>setTimeout(r,2000));
+   const status=await (await fetch(job.status_url)).json();
+   const c=status.counts||{};
+   $('jobState').textContent='Studio OS: '+status.status+' — '+(c.DONE_VERIFIED||0)+' doğrulama, '+(c.DONE_DRAFT||0)+' taslak, '+(c.WAITING_PROVIDER||0)+' eksik yetenek';
+   if(status.status==='WAITING_CAPABILITIES'){
+     const problems=status.tasks.filter(x=>x.state==='WAITING_PROVIDER');
+     $('details').textContent='Üretim görev ağı kaydedildi. Eksik üretim yetenekleri:\n'+
+       problems.map(x=>'• '+x.capability+' ('+x.task_id+')').join('\n')+
+       '\n\nHenüz tamamlanmış film yok. Bu görevler bağlı çalışan motorlar eklendikçe devam ettirilecek.';
+     setBusy(false);return;
+   }
+  }
+  $('details').textContent='İş veritabanına kaydedildi. Güncel durumu yukarıdaki bağlantıdan görebilirsin.';
+ }catch(e){$('jobState').textContent='Sistem hatası';$('details').textContent=String(e)}
+ setBusy(false);
+}
+$('studioos').addEventListener('click',submitStudioOS);
 $('production').addEventListener('click',()=>submit('production'));
 $('produce').addEventListener('click',()=>submit('preview'));
 $('plan').addEventListener('click',()=>submit('plan'));

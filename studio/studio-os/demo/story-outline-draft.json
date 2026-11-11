@@ -1,0 +1,57 @@
+{
+  "schema": "ahos.studio-os.outline.v1",
+  "source": "existing Oracle VM, Ollama over authenticated SSH",
+  "model": "qwen2.5-coder:3b",
+  "new_paid_api_calls": 0,
+  "status": "DRAFT_UNREVIEWED",
+  "original_prompt_sha256": "ef5dc544a6d15f2d735d9b21f7c579f4236fbde35c635d79182bd42d5325c2ff",
+  "cast": [
+    "aden",
+    "kaan"
+  ],
+  "guest_characters_pending_assets": [
+    "Başka Arkadaşlar"
+  ],
+  "outline": {
+    "title": "Uçurtmayı Bulup Paylaş",
+    "premise": "Aden ve Kaan, bahçede kaybolan uçurtmayı bulup birlikte paylaşmayı öğreniyor.",
+    "learning_goal": "Uçurtmayı bulmak ve paylaşmak için birlikte çalışmanın önemini öğrenirler.",
+    "scenes": [
+      {
+        "number": 1,
+        "location": "Bahçe",
+        "summary": "Aden ve Kaan, bahçede bir uçurtmayı bulurlar.",
+        "characters": [
+          "Aden",
+          "Kaan"
+        ],
+        "emotional_beat": "Kaan, Adenin uçurtmasını bulmasıyla mutlu olur."
+      },
+      {
+        "number": 2,
+        "location": "Bahçe",
+        "summary": "Aden ve Kaan, uçurtmayı paylaşır ve birlikte oyun yaparlar.",
+        "characters": [
+          "Aden",
+          "Kaan"
+        ],
+        "emotional_beat": "Aden ve Kaan, uçurtmayı paylaşarak arkadaşlık kururlar."
+      },
+      {
+        "number": 3,
+        "location": "Bahçe",
+        "summary": "Aden ve Kaan, uçurtmayı paylaşan diğer arkadaşları bulur ve onlarla oyun yaparlar.",
+        "characters": [
+          "Aden",
+          "Kaan",
+          "Başka Arkadaşlar"
+        ],
+        "emotional_beat": "Aden ve Kaan, arkadaşlıklarını genişletir ve yeni arkadaşlar bulur."
+      }
+    ]
+  },
+  "generated_tokens": 338,
+  "creative_approved": false,
+  "identity_approved": false,
+  "production_ready": false
+}

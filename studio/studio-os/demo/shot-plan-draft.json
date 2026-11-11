@@ -1,0 +1,50 @@
+{
+  "schema": "ahos.studio-os.shotplan.v1",
+  "status": "DRAFT_UNREVIEWED",
+  "creative_approved": false,
+  "scenes": [
+    {
+      "scene_id": "scene01",
+      "plot_beat": {
+        "number": 1,
+        "location": "Bahçe",
+        "summary": "Aden ve Kaan, bahçede bir uçurtmayı bulurlar.",
+        "characters": [
+          "Aden",
+          "Kaan"
+        ],
+        "emotional_beat": "Kaan, Adenin uçurtmasını bulmasıyla mutlu olur."
+      },
+      "planned_seconds": 60
+    },
+    {
+      "scene_id": "scene02",
+      "plot_beat": {
+        "number": 2,
+        "location": "Bahçe",
+        "summary": "Aden ve Kaan, uçurtmayı paylaşır ve birlikte oyun yaparlar.",
+        "characters": [
+          "Aden",
+          "Kaan"
+        ],
+        "emotional_beat": "Aden ve Kaan, uçurtmayı paylaşarak arkadaşlık kururlar."
+      },
+      "planned_seconds": 60
+    },
+    {
+      "scene_id": "scene03",
+      "plot_beat": {
+        "number": 3,
+        "location": "Bahçe",
+        "summary": "Aden ve Kaan, uçurtmayı paylaşan diğer arkadaşları bulur ve onlarla oyun yaparlar.",
+        "characters": [
+          "Aden",
+          "Kaan",
+          "Başka Arkadaşlar"
+        ],
+        "emotional_beat": "Aden ve Kaan, arkadaşlıklarını genişletir ve yeni arkadaşlar bulur."
+      },
+      "planned_seconds": 60
+    }
+  ]
+}

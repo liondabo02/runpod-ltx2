@@ -1,0 +1,54 @@
+{
+  "schema": "ahos.studio-os.outline.v1",
+  "source": "existing Oracle VM, Ollama over authenticated SSH",
+  "model": "qwen2.5-coder:3b",
+  "new_paid_api_calls": 0,
+  "status": "DRAFT_UNREVIEWED",
+  "original_prompt_sha256": "b5fc330d31bf3fb2a9701e8e1b1c8410d81b9912623c7ab444d8a32ba314105f",
+  "cast": [
+    "aden",
+    "kaan"
+  ],
+  "guest_characters_pending_assets": [],
+  "outline": {
+    "title": "Uçurtmayı Bulup Paylaş",
+    "premise": "Aden ve Kaan, bahçede kaybolan uçurtmayı bulup paylaşmayı öğreniyor.",
+    "learning_goal": "Aden ve Kaan, arkadaşlık, araştırma ve yardım bulma konusunu öğreniyor.",
+    "scenes": [
+      {
+        "number": 1,
+        "location": "Bahçe",
+        "summary": "Aden ve Kaan, bahçede bir uçurtmayı buluyorlar.",
+        "characters": [
+          "Aden",
+          "Kaan"
+        ],
+        "emotional_beat": "Aden ve Kaan, bahçede bir uçurtmayı bulup, bu konuda bir anlaşma yapıyorlar."
+      },
+      {
+        "number": 2,
+        "location": "Ev",
+        "summary": "Aden ve Kaan, uçurtmayı paylaşıyorlar ve arkadaşlık kuruyorlar.",
+        "characters": [
+          "Aden",
+          "Kaan"
+        ],
+        "emotional_beat": "Aden ve Kaan, uçurtmayı paylaşarak arkadaşlık kuruyorlar ve bu konuda bir anlaşma yapıyorlar."
+      },
+      {
+        "number": 3,
+        "location": "Bahçe",
+        "summary": "Aden ve Kaan, bahçede daha fazla uçurtmayı buluyorlar ve arkadaşlık devam ediyor.",
+        "characters": [
+          "Aden",
+          "Kaan"
+        ],
+        "emotional_beat": "Aden ve Kaan, bahçede daha fazla uçurtmayı buluyorlar ve arkadaşlık devam ediyor."
+      }
+    ]
+  },
+  "generated_tokens": 351,
+  "creative_approved": false,
+  "identity_approved": false,
+  "production_ready": false
+}

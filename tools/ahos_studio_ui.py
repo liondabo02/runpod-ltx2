@@ -10,6 +10,7 @@ from urllib.parse import urlsplit
 
 from ahos_text_to_cartoon import ROOT, run_pipeline, parse_story
 from ahos_studio_dispatcher import capabilities, dispatch
+from ahos_studio_os import StudioOS, DEFAULT_DB
 
 OUTPUT = ROOT / "deliverables" / "AHOS-TEXT-TO-CARTOON"
 UI = ROOT / "studio" / "text-to-cartoon" / "index.html"
@@ -30,6 +31,20 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         route = urlsplit(self.path).path
+        if route.startswith("/api/studio/episodes/"):
+            try:
+                eid=str(uuid.UUID(route.rsplit("/",1)[-1]))
+                data=StudioOS(DEFAULT_DB).episode(eid)
+                counts={}
+                for task in data["tasks"]:
+                    counts[task["state"]]=counts.get(task["state"],0)+1
+                self.reply(200,{"episode_id":eid,"status":data["status"],
+                                "cast":data["cast"],"minutes":data["minutes"],
+                                "languages":data["languages"],"counts":counts,
+                                "production_ready":False,"tasks":data["tasks"]})
+            except (ValueError,KeyError):
+                self.reply(404,{"error":"unknown episode"})
+            return
         if route == "/":
             body = UI.read_bytes()
             self.send_response(200)
@@ -85,6 +100,28 @@ class Handler(BaseHTTPRequestHandler):
         self.reply(404, {"error": "not found"})
 
     def do_POST(self):
+        if self.path == "/api/studio/episodes":
+            try:
+                length=int(self.headers.get("Content-Length","0"))
+                if length<1 or length>65536:
+                    raise ValueError("invalid request size")
+                data=json.loads(self.rfile.read(length))
+                prompt=data["prompt"]
+                minutes=int(data.get("minutes",8))
+                languages=data.get("languages",["tr"])
+                if not isinstance(languages,list):
+                    raise ValueError("languages should be a list")
+                engine=StudioOS(DEFAULT_DB)
+                created=engine.submit(prompt,minutes=minutes,languages=tuple(languages))
+            except (ValueError,TypeError,KeyError,RuntimeError) as exc:
+                self.reply(400,{"error":str(exc)})
+                return
+            threading.Thread(target=_studio_os_worker,args=(created["episode_id"],),daemon=True).start()
+            self.reply(202,{"episode_id":created["episode_id"],"status":"PLANNED",
+                            "task_count":created["task_count"],"scene_count":created["scene_count"],
+                            "status_url":"/api/studio/episodes/"+created["episode_id"],
+                            "production_ready":False})
+            return
         if self.path != "/api/jobs":
             self.reply(404, {"error": "not found"})
             return
@@ -156,6 +193,20 @@ def _worker(job):
         state["production_ready"] = False
         (output/"job.json").write_text(json.dumps(state,ensure_ascii=False,indent=2),encoding="utf-8")
         with GUARD: STATE[job]=state
+
+
+def _studio_os_worker(episode_id):
+    """Advance episode departments; remote AI calls use only existing Oracle VM."""
+    with BUSY:
+        engine=StudioOS(DEFAULT_DB)
+        for _ in range(6):
+            try:
+                result=engine.tick(episode_id,max_steps=50,use_existing_oracle=True)
+                if not result["steps"]:
+                    break
+            except Exception as exc:
+                print("[studio-os] job error "+type(exc).__name__,flush=True)
+                break
 
 
 def main():

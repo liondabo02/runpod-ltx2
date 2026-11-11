@@ -1,0 +1,116 @@
+{
+  "sample_created": {
+    "episode_id": "2d41d088-25e1-4997-a925-4392970f0710",
+    "status": "PLANNED",
+    "task_count": 45,
+    "scene_count": 3,
+    "cast": [
+      "aden",
+      "kaan"
+    ],
+    "languages": [
+      "tr",
+      "de"
+    ],
+    "production_ready": false
+  },
+  "dispatch_result": {
+    "episode_id": "2d41d088-25e1-4997-a925-4392970f0710",
+    "status": "WAITING_CAPABILITIES",
+    "steps": [
+      {
+        "task": "intake",
+        "state": "DONE_VERIFIED"
+      },
+      {
+        "task": "canon",
+        "state": "DONE_VERIFIED"
+      },
+      {
+        "task": "story",
+        "state": "DONE_DRAFT"
+      },
+      {
+        "task": "storyboard",
+        "state": "DONE_DRAFT"
+      },
+      {
+        "task": "asset_inventory",
+        "state": "DONE_VERIFIED"
+      },
+      {
+        "task": "model:aden",
+        "state": "WAITING_PROVIDER"
+      },
+      {
+        "task": "model:kaan",
+        "state": "WAITING_PROVIDER"
+      },
+      {
+        "task": "scene01:set",
+        "state": "WAITING_PROVIDER"
+      },
+      {
+        "task": "scene01:tr:voice",
+        "state": "WAITING_PROVIDER"
+      },
+      {
+        "task": "scene01:de:voice",
+        "state": "WAITING_PROVIDER"
+      },
+      {
+        "task": "scene02:set",
+        "state": "WAITING_PROVIDER"
+      },
+      {
+        "task": "scene02:tr:voice",
+        "state": "WAITING_PROVIDER"
+      },
+      {
+        "task": "scene02:de:voice",
+        "state": "WAITING_PROVIDER"
+      },
+      {
+        "task": "scene03:set",
+        "state": "WAITING_PROVIDER"
+      },
+      {
+        "task": "scene03:tr:voice",
+        "state": "WAITING_PROVIDER"
+      },
+      {
+        "task": "scene03:de:voice",
+        "state": "WAITING_PROVIDER"
+      }
+    ],
+    "capability_gaps": {
+      "character_model": {
+        "reason": "production-qualified provider not yet verified",
+        "capability": "character_model",
+        "technical_adapter_present": true,
+        "next_action": "verify provider capabilities, rights, creative QA, then run"
+      },
+      "scene": {
+        "reason": "production-qualified provider not yet verified",
+        "capability": "scene",
+        "technical_adapter_present": false,
+        "next_action": "verify provider capabilities, rights, creative QA, then run"
+      },
+      "voice": {
+        "reason": "production-qualified provider not yet verified",
+        "capability": "voice",
+        "technical_adapter_present": false,
+        "next_action": "verify provider capabilities, rights, creative QA, then run"
+      }
+    },
+    "production_ready": false
+  },
+  "task_counts": {
+    "DONE_VERIFIED": 3,
+    "DONE_DRAFT": 2,
+    "WAITING_PROVIDER": 11,
+    "PENDING": 31
+  },
+  "production_ready": false,
+  "note": "Story/shotlist draft; no approved character animation, film or cinematic QA"
+}
