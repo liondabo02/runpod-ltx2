@@ -1,0 +1,65 @@
+{
+  "schema": "ahos.studio.cinematic-providers.v1",
+  "updated": "2026-11-14",
+  "principle": "Only real workers with rights-reviewed evidence can be promoted to VERIFIED_RUNTIME. Never assume a model install proves a film.",
+  "new_spend_limit_eur": 0,
+  "owner_region": "EU",
+  "owner_approval_required_for_new_billable_gpu": true,
+  "provider_profiles": {
+    "blender_rig": "Actor identity, stable body/facial rig and precise dialogue closeups",
+    "wan22_animate": "Reference-guided acting and motion transfer; Apache-2.0 Wan2.2 terms",
+    "ltx25_ingredients": "Reference-guided cinematic short clips; LTX-2.x Community License must be reviewed",
+    "ltx25_dfr": "Cinematic lighting, scenery and shot fidelity where identity gates pass"
+  },
+  "providers": {
+    "blender_rig": {
+      "status": "NOT_PROVISIONED",
+      "license_status": "NOT_AUDITED",
+      "allowed_regions": [
+        "EU"
+      ],
+      "new_spend_eur": 0,
+      "runtime_proof_sha256": null,
+      "notes": "P12B procedural Aden mesh does not yet have approved identity, deforming rig, or quality evidence"
+    },
+    "wan22_animate": {
+      "status": "NOT_PROVISIONED",
+      "license_status": "NOT_AUDITED",
+      "allowed_regions": [
+        "EU"
+      ],
+      "new_spend_eur": 0,
+      "runtime_proof_sha256": null,
+      "notes": "Official Wan2.2-Animate-14B model and driving video not yet run on authorized GPU"
+    },
+    "ltx25_ingredients": {
+      "status": "NOT_PROVISIONED",
+      "license_status": "NOT_AUDITED",
+      "allowed_regions": [
+        "EU"
+      ],
+      "new_spend_eur": 0,
+      "runtime_proof_sha256": null,
+      "notes": "LTX2.5 worker source exists, but no confirmed GPU render or creative review"
+    },
+    "ltx25_dfr": {
+      "status": "NOT_PROVISIONED",
+      "license_status": "NOT_AUDITED",
+      "allowed_regions": [
+        "EU"
+      ],
+      "new_spend_eur": 0,
+      "runtime_proof_sha256": null,
+      "notes": "Official DFR model and GPU worker not installed/verified"
+    }
+  },
+  "compliance": {
+    "excluded_model_families": [
+      "HunyuanVideo 1.5 (license excludes EU)",
+      "MiniMax H3 (community license restrictions on EU)"
+    ],
+    "no_unapproved_spending": true,
+    "same_immutable_character_assets_across_episodes": true,
+    "independent_qa_required": true
+  }
+}
