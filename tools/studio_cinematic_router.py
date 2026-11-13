@@ -212,7 +212,6 @@ def evaluate_shot(shot:dict,bible:dict,artifact:Path,report:dict, *,
     expected=_sha(report.get("artifact_sha256"),"Rendered artifact")
     if _hash_file(artifact)!=expected:
         raise ProductionBlocked("Rendered artifact hash differs")
-    media=media_probe(artifact,dialogue=shot["kind"]=="dialogue")
     if report.get("shot_id")!=shot["shot_id"]:
         raise ProductionBlocked("Wrong shot in evaluation")
     reviewer=report.get("reviewer")
@@ -228,6 +227,7 @@ def evaluate_shot(shot:dict,bible:dict,artifact:Path,report:dict, *,
         raise ProductionBlocked("Reviewer evidence must be part of this shot job")
     if not review_path.is_file() or _hash_file(review_path)!=ref:
         raise ProductionBlocked("Reviewer proof file/hash invalid")
+    media=media_probe(artifact,dialogue=shot["kind"]=="dialogue")
     locks=report.get("identity_locks")
     if locks!={cid:{k:bible["cast"][cid][k] for k in LOCKED} for cid in validated["cast"]}:
         raise ProductionBlocked("QA examined mismatched series assets")
@@ -282,10 +282,11 @@ def main(argv=None):
     ap.add_argument("--providers",type=Path,required=True)
     ap.add_argument("--region",default="EU")
     args=ap.parse_args(argv)
+    registry=json.loads(args.providers.read_text(encoding="utf-8"))
+    providers=registry.get("providers",registry)
     result=route_shot(json.loads(args.shot.read_text(encoding="utf-8")),
                       json.loads(args.bible.read_text(encoding="utf-8")),
-                      json.loads(args.providers.read_text(encoding="utf-8")),
-                      region=args.region)
+                      providers,region=args.region)
     print(json.dumps(result,ensure_ascii=False,indent=2))
     return 0 if result["status"]=="READY_FOR_TECHNICAL_RENDER" else 2
 
