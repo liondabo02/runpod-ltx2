@@ -68,3 +68,17 @@ https://github.com/Lightricks/LTX-2
 https://github.com/Lightricks/ComfyUI-LTXVideo/blob/master/example_workflows/2.5/README.md
 https://github.com/Wan-Video/Wan2.2
 https://github.com/Tencent-Hunyuan/HunyuanVideo-1.5/blob/main/LICENSE
+
+## New image-to-3D and auto-rig technology assessment (14 November 2026)
+
+**Microsoft TRELLIS.2 — CONDITIONALLY SHORTLISTED**. Official image-to-3D 4B model exports high-detail meshes/PBR texture material, potentially far superior as an asset-factory candidate to AHOS's hand-coded Blender sphere geometry. The upstream repo states model/code are MIT, but nvdiffrast/nvdiffrec and third-party preprocessing have their own terms; verify complete dependency graph and the rights of the input poster before commercial operation. Output is an *asset candidate*, not already rigged/visually accepted series identity. https://github.com/microsoft/TRELLIS.2
+
+**AniGen (SIGGRAPH 2026) — RESEARCH-ONLY UNTIL RIGHTS VERIFIED**. An attractive image->mesh+skeleton+skinning candidate for automated actor rigs, but the official project explicitly says bundled extensions/CUBVH are derived from noncommercial/research-only code. Do not deploy the unmodified distribution for a commercial cartoon without resolving those dependency rights. https://github.com/VAST-AI-Research/AniGen
+
+**Wan2.2 Animate-14B — CONDITIONAL MOTION PROVIDER**. The official Apache-2.0 Wan2.2 implementation can drive a reference actor using a source-motion video. It must be tested for the exact stylized face, acting and costume continuity; identity passing is not implied by model support. https://github.com/Wan-Video/Wan2.2
+
+**Voice and lip sync**. Piper has a Turkish tr_TR voice in its official list, but voice naturalness, commercial rights of that specific voice, child-role timbre and 2–5-year-old suitability must be independently evaluated; it is not production-approved. Final dubbing must preserve approved per-character voices and phoneme/viseme timing. https://github.com/rhasspy/piper
+
+**Automatic asset-factory target:** snapshot owner-approved face+wardrobe -> legally clear multiview generation -> image-to-3D candidate mesh and PBR materials -> deformation-friendly topology/retopology -> verified rig/skinning and facial controls -> same-identity multiview QA -> immutable approved GLB/BLEND + rig/voice hash -> reused by Studio OS in every episode. Missing components must generate jobs automatically. The first verified system-wide acceptance is *any* two recurring cast members in multiple distinct scenes with the same genuine reusable assets; do not accept poster crops/spheres as production rigs.
+
+No model downloads, unknown dependencies, paid GPUs, accounts or additional resource rentals were started as part of this research.
