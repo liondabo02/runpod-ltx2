@@ -10,6 +10,8 @@ import argparse
 import hashlib
 import json
 import re
+import shutil
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -128,6 +130,8 @@ def route_shot(shot:dict,bible:dict,providers:dict, *,
         reason=None
         if engine not in ENGINE_FEATURES or not isinstance(cfg,dict):
             reason="unknown engine or invalid record"
+        elif engine not in PREFERENCE[shot["kind"]]:
+            reason="engine not qualified for this shot type"
         elif cfg.get("status")!="VERIFIED_RUNTIME":
             reason="not proven with a real executable worker"
         elif cfg.get("license_status")!="COMMERCIAL_REVIEWED":
@@ -162,6 +166,34 @@ def route_shot(shot:dict,bible:dict,providers:dict, *,
             "rejections":rejects}
 
 
+def media_probe(path: Path, *, dialogue: bool=False) -> dict:
+    """Inspect *actual* media with ffprobe rather than trusting a JSON report."""
+    binary=shutil.which("ffprobe")
+    if binary is None:
+        raise ProductionBlocked("ffprobe unavailable; rendered media not verified")
+    try:
+        output=subprocess.run(
+            [binary,"-v","error","-show_entries",
+             "format=duration:stream=codec_type,width,height,r_frame_rate",
+             "-of","json",str(path)],
+            capture_output=True,text=True,timeout=20,check=True)
+        data=json.loads(output.stdout)
+    except (subprocess.CalledProcessError,subprocess.TimeoutExpired,ValueError) as exc:
+        raise ProductionBlocked("Real media probe failed") from exc
+    videos=[x for x in data.get("streams",[]) if x.get("codec_type")=="video"]
+    audios=[x for x in data.get("streams",[]) if x.get("codec_type")=="audio"]
+    seconds=float(data.get("format",{}).get("duration") or 0)
+    if not videos or seconds<1:
+        raise ProductionBlocked("No meaningful motion-video stream")
+    v=videos[0]
+    if v.get("width",0)<1280 or v.get("height",0)<720:
+        raise ProductionBlocked("Below minimum 720p review resolution")
+    if dialogue and not audios:
+        raise ProductionBlocked("Dialogue shot is missing an audio stream")
+    return {"duration_s":seconds,"width":v["width"],"height":v["height"],
+            "has_audio":bool(audios),"media_verified":True}
+
+
 def evaluate_shot(shot:dict,bible:dict,artifact:Path,report:dict, *,
                   generator:str) -> dict:
     """Independent QA evidence is required; metadata alone is not an AI quality judge.
@@ -180,6 +212,7 @@ def evaluate_shot(shot:dict,bible:dict,artifact:Path,report:dict, *,
     expected=_sha(report.get("artifact_sha256"),"Rendered artifact")
     if _hash_file(artifact)!=expected:
         raise ProductionBlocked("Rendered artifact hash differs")
+    media=media_probe(artifact,dialogue=shot["kind"]=="dialogue")
     if report.get("shot_id")!=shot["shot_id"]:
         raise ProductionBlocked("Wrong shot in evaluation")
     reviewer=report.get("reviewer")
@@ -190,7 +223,9 @@ def evaluate_shot(shot:dict,bible:dict,artifact:Path,report:dict, *,
     ref=_sha(report.get("review_evidence_sha256"),"Reviewer evidence")
     if not isinstance(report.get("review_evidence_path"),str) or not ref:
         raise ProductionBlocked("Reviewer proof path absent")
-    review_path=Path(report["review_evidence_path"])
+    review_path=Path(report["review_evidence_path"]).resolve()
+    if review_path.parent!=artifact.resolve().parent:
+        raise ProductionBlocked("Reviewer evidence must be part of this shot job")
     if not review_path.is_file() or _hash_file(review_path)!=ref:
         raise ProductionBlocked("Reviewer proof file/hash invalid")
     locks=report.get("identity_locks")
@@ -207,7 +242,7 @@ def evaluate_shot(shot:dict,bible:dict,artifact:Path,report:dict, *,
     return {"shot_id":shot["shot_id"],"status":"QA_PASS" if not fails else "REPAIR_REQUIRED",
             "passes_thresholds":not fails,"production_ready":False,
             "failures":fails,"artifact_sha256":expected,
-            "reviewer":reviewer}
+            "reviewer":reviewer,"media":media}
 
 
 REPAIR_BY_FAILURE={
