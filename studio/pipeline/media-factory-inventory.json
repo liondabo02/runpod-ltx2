@@ -1,0 +1,43 @@
+{
+  "schema": "ahos.media-factory.inventory.v1",
+  "host": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.12.7",
+    "ram_gb": 16.5
+  },
+  "disk_free_gb": 44.6,
+  "gpu": {
+    "nvidia_smi": false,
+    "devices": [],
+    "cuda_available": false
+  },
+  "blender": {
+    "installed": true,
+    "path": "C:\\actions-runner\\_work\\blender-4.5.16-windows-x64\\blender.exe",
+    "version": "Blender 4.5.16 LTS (hash 3f6797307da5 built 2026-11-10 01:34:06)"
+  },
+  "comfyui_dirs": [],
+  "ollama": {
+    "running": true,
+    "models": [
+      "qwen2.5-coder:1.5b",
+      "nomic-embed-text:latest",
+      "qwen2.5-coder:7b"
+    ]
+  },
+  "video_model_cache_hits": [],
+  "engines": {
+    "blender_actor_render": "AVAILABLE_CPU_ONLY",
+    "trellis_image_to_3d": "BLOCKED_GPU_AND_MODEL",
+    "ltx25_video": "BLOCKED_GPU_AND_MODEL",
+    "wan22_animate": "BLOCKED_GPU_AND_MODEL",
+    "comfyui": "BLOCKED_NOT_INSTALLED",
+    "tts": "PARTIAL_ADULT_VOICES_ONLY",
+    "ffmpeg": "AVAILABLE"
+  },
+  "blockers": [
+    "no NVIDIA CUDA GPU detected (nvidia-smi missing/failed)",
+    "no ComfyUI installation found",
+    "no LTX/Wan/TRELLIS model cache found"
+  ]
+}
