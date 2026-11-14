@@ -651,17 +651,31 @@ CREATE TABLE IF NOT EXISTS media_artifact_history (
                 cast=parent_payload.get("cast") or []
                 if isinstance(cast,list) and cast and isinstance(cast[0],dict):
                     cast=[item.get("id") for item in cast]
-                result.extend({
-                    "task_id":task_id,"filename":item["filename"],
-                    "sha256":item["sha256"],"bytes":item["bytes"],
-                    # proven downstream routing data - never guessed from the file name
-                    "kind":parent_payload.get("capability") or "character_model",
-                    "character_id":parent_payload.get("character_id") or (
-                        (cast[0] if cast else None)),
-                    "license_status":parent_payload.get("license_status")
-                                     or parent_payload.get("license") or "unknown",
-                    "source_sha256":parent_payload.get("canonical_reference_sha256"),
-                } for item in media)
+                cast=[c for c in cast if isinstance(c,str)]
+                per_artifact=parent_payload.get("artifact_characters") or {}
+                for item in media:
+                    # per-file character identity: explicit metadata, then an
+                    # unambiguous single-cast job, then an explicit name match.
+                    cid=per_artifact.get(item["filename"]) if isinstance(per_artifact,dict) else None
+                    if not cid and len(cast)==1:
+                        cid=cast[0]
+                    if not cid:
+                        cid=next((c for c in cast
+                                  if c and c.lower() in item["filename"].lower()),None)
+                    source_sha=parent_payload.get("canonical_reference_sha256")
+                    if isinstance(source_sha,dict):
+                        source_sha=source_sha.get(cid) if cid else None
+                    if not isinstance(source_sha,str) or not re.fullmatch(r"[0-9a-f]{64}",source_sha):
+                        source_sha=None
+                    licence=parent_payload.get("license_status") or parent_payload.get("license")
+                    result.append({
+                        "task_id":task_id,"filename":item["filename"],
+                        "sha256":item["sha256"],"bytes":item["bytes"],
+                        "kind":parent_payload.get("capability") or "character_model",
+                        "character_id":cid,
+                        "license_status":licence if isinstance(licence,str) else None,
+                        "source_sha256":source_sha,
+                    })
         return result
 
     def dependency_for_worker(self, worker, job_id, dependency_task_id, filename):
