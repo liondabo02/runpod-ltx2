@@ -49,8 +49,9 @@ jobs:
         run: |
           python -m pip install --disable-pip-version-check pytest
           sudo apt-get update -qq
-          sudo apt-get install -y blender
+          sudo apt-get install -y blender python3-numpy
           blender --version | head -n 2
+          blender -b --factory-startup -noaudio --python-expr "import numpy; print('BLENDER_NUMPY_READY', numpy.__version__)"
       - name: Real Blender -> rig -> HTTP upload -> awaiting independent QA
         run: |
           python -m pytest -q -s tests/test_studio_rig_http_integration.py -k real_blender
