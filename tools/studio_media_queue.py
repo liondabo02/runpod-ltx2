@@ -17,6 +17,7 @@ import sqlite3
 import time
 import uuid
 from pathlib import Path
+from ahos_studio_os import CANON
 
 MEDIA_KINDS = frozenset(("model", "rig", "set", "animation", "voice",
                          "lipsync", "render", "scene_qa", "edit", "episode_qa"))
@@ -238,10 +239,26 @@ CREATE TABLE IF NOT EXISTS media_artifact_history (
                     if len(found) != len(deps) or any(x["state"] not in DONE_DEPS for x in found):
                         continue
                 p = json.loads(t["plan_json"])
+                # Media work must be attached to immutable accepted reference bytes,
+                # not just character names. If the owner canon is missing, no work.
+                canon = db.execute(
+                    "SELECT state,result_json FROM tasks WHERE episode_id=? AND task_id='canon'",
+                    (t["episode_id"],)).fetchone()
+                if not canon or canon["state"]!="DONE_VERIFIED":
+                    continue
+                locks = json.loads(canon["result_json"]).get("locked_characters",{})
+                cast = p.get("cast",[])
+                if not isinstance(locks,dict) or not isinstance(cast,list) or not cast:
+                    continue
+                if any(c not in CANON or not isinstance(locks.get(c),str) or
+                       not SHA.fullmatch(locks[c]) for c in cast):
+                    continue
                 job = {"schema": "ahos.media.job.v1", "episode_id": t["episode_id"],
                        "task_id": t["task_id"], "capability": t["capability"],
                        "kind": t["kind"], "series_id": p["series_id"],
                        "cast": p["cast"], "languages": p["languages"],
+                       "canonical_reference_sha256": {c:locks[c] for c in cast},
+                       "canonical_source": "owner_accepted_roster_v1",
                        "story_direction": p["owner_prompt"],
                        "dependencies": deps, "cost_policy": p["cost_policy"],
                        "production_ready": False}
@@ -506,6 +523,33 @@ CREATE TABLE IF NOT EXISTS media_artifact_history (
             db.execute("INSERT INTO media_events VALUES(?,?,?,?,?)",
                        (time.time(),job_id,"FAILED",worker["worker_id"],reason))
         return {"status":state,"production_ready":False}
+
+    def reference_for_worker(self, worker, episode_id, character):
+        """Serve only an active worker's exact accepted canonical frame.
+
+        Its SHA must match the immutable canon result recorded at intake.
+        """
+        if worker["role"]!="worker" or character not in CANON:
+            raise QueueError("Valid production worker and canonical character required")
+        with self.connect() as db:
+            lease=db.execute(
+                "SELECT 1 FROM media_jobs WHERE episode_id=? AND worker_id=? "
+                "AND state='LEASED' AND lease_until>?",
+                (episode_id,worker["worker_id"],time.time())).fetchone()
+            if not lease:
+                raise QueueError("Active lease for this episode required")
+            row=db.execute(
+                "SELECT result_json,state FROM tasks WHERE episode_id=? AND task_id='canon'",
+                (episode_id,)).fetchone()
+            if not row or row["state"]!="DONE_VERIFIED":
+                raise QueueError("Canon not verified for this episode")
+            expected=json.loads(row["result_json"]).get("locked_characters",{}).get(character)
+            require_hash(expected,"Canonical reference")
+        source=self.os.root/"studio/reference/owner_accepted_roster_v1/characters"/(
+            f"{CANON.index(character)+1:02}_{character}.png")
+        if not source.is_file() or source.stat().st_size>20*1024*1024 or checksum(source)!=expected:
+            raise QueueError("Immutable canonical reference is missing or has changed")
+        return source,expected,source.stat().st_size
 
     def artifact_for_review(self, reviewer, job_id, filename):
         if reviewer["role"] != "reviewer":
