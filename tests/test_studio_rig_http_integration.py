@@ -230,6 +230,13 @@ def test_real_blender_rig_over_http_stops_at_awaiting_qa(tmp_path):
             base, rig_token, tmp_path / "worker-jobs",
             repo_root=ROOT, max_seconds=1200,
         )
+        if outcome["status"] != "AWAITING_QA":
+            failing_dir = tmp_path / "worker-jobs" / outcome.get("job_id", "unknown")
+            for name in ("backend-evidence.json", "backend-run.log"):
+                source = failing_dir / name
+                if source.is_file():
+                    print("RIG_FAILURE_" + name + ": " +
+                          source.read_text(encoding="utf-8", errors="replace")[-9000:])
         assert outcome["status"] == "AWAITING_QA", outcome
         with coordinator.media_queue.connect() as db:
             row = db.execute(
