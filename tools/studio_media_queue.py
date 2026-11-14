@@ -671,8 +671,15 @@ CREATE TABLE IF NOT EXISTS media_artifact_history (
                     # StudioOS plans contain no license_status; an upstream
                     # independently reviewed result is the authoritative gate.
                     parent_result=json.loads(parent["result"] or "{}")
-                    reviewed=(parent_result.get("license_status")=="COMMERCIAL_REVIEWED"
-                              and parent_result.get("technical_status")=="PASSED"
+                    # review() envelopes the producer result under "production".
+                    # Read that persisted, reviewed record, never a raw task claim.
+                    production=parent_result.get("production")
+                    review=parent_result.get("review")
+                    reviewed=(isinstance(production,dict)
+                              and isinstance(review,dict)
+                              and production.get("license_status")=="COMMERCIAL_REVIEWED"
+                              and production.get("technical_status")=="PASSED"
+                              and review.get("schema")=="ahos.media.review.v1"
                               and parent["state"]=="QA_PASS")
                     licence="verified" if reviewed else None
                     result.append({
