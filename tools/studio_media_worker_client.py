@@ -192,6 +192,18 @@ def download_dependencies(server, token, payload, job_id, job_dir):
             or not isinstance(expected,str) or not re.fullmatch(r"[0-9a-f]{64}",expected)
             or type(size) is not int or size<1 or size>MAX_FILE_BYTES):
             raise WorkerError("Unsafe or invalid upstream artifact metadata")
+        kind=item.get("kind")
+        character_id=item.get("character_id")
+        licence=item.get("license_status")
+        source_sha=item.get("source_sha256")
+        if kind is not None and not re.fullmatch(r"[a-z_]{1,40}",str(kind)):
+            raise WorkerError("Invalid dependency kind")
+        if character_id is not None and not re.fullmatch(r"[A-Za-z0-9_-]{1,64}",str(character_id)):
+            raise WorkerError("Invalid dependency character id")
+        if licence is not None and not re.fullmatch(r"[A-Za-z0-9_.-]{1,40}",str(licence)):
+            raise WorkerError("Invalid dependency licence status")
+        if source_sha is not None and not re.fullmatch(r"[0-9a-f]{64}",str(source_sha)):
+            raise WorkerError("Invalid dependency source sha256")
         uri=server+"/api/media/dependency?"+urlencode(
             {"job_id":job_id,"task_id":task_id,"filename":name})
         req=Request(uri,headers={"Authorization":"Bearer "+token},method="GET")
@@ -223,8 +235,10 @@ def download_dependencies(server, token, payload, job_id, job_dir):
             raise WorkerError("Upstream media transfer failed") from exc
         finally:
             tmp.unlink(missing_ok=True)
-        output.append({"source_task_id":task_id,"filename":name,
-                       "path":str(path),"sha256":expected,"bytes":size})
+        output.append({"source_task_id":task_id,"task_id":task_id,"filename":name,
+                       "path":str(path),"sha256":expected,"bytes":size,
+                       "kind":kind,"character_id":character_id,
+                       "license_status":licence,"source_sha256":source_sha})
     return output
 
 
