@@ -252,6 +252,29 @@ def test_real_blender_rig_over_http_stops_at_awaiting_qa(tmp_path):
         }
         for item in files:
             assert sha(Path(item["local_path"]).read_bytes()) == item["sha256"]
+        # Preserve the genuine Blender outputs as an inspectable CI artifact.
+        # The manifest labels the upstream QA fixture, and does NOT certify
+        # character identity or independent creative approval.
+        artifact_dir = os.environ.get("AHOS_RIG_CI_ARTIFACT_DIR")
+        if artifact_dir:
+            dest = Path(artifact_dir).resolve()
+            dest.mkdir(parents=True, exist_ok=True)
+            artifacts = []
+            for item in files:
+                target = dest / item["filename"]
+                shutil.copy2(item["local_path"], target)
+                assert sha(target.read_bytes()) == item["sha256"]
+                artifacts.append({"filename": target.name, "sha256": item["sha256"],
+                                  "size_bytes": target.stat().st_size})
+            (dest / "proof.json").write_text(json.dumps({
+                "schema": "ahos.rig.real-http-e2e.proof.v1",
+                "technical_result": "AWAITING_QA",
+                "real_blender": True,
+                "qa_upstream": "TEST_FIXTURE_ONLY",
+                "rig_creative_qa_approved": False,
+                "production_ready": False,
+                "artifacts": artifacts,
+            }, indent=2), encoding="utf-8")
         assert coordinator.media_queue.status()["production_ready"] is False
         print("REAL_BLENDER_RIG_HTTP_AWAITING_QA: true")
         print("CREATIVE_QA_APPROVED: false")
