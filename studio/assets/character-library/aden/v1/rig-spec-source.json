@@ -1,0 +1,650 @@
+{
+  "schema": "ahos.character-rig.v2",
+  "character_id": "aden",
+  "version": "v2",
+  "created_at": "2026-11-14T04:18:41",
+  "technical_only": true,
+  "identity_status": "PENDING_IDENTITY_REVIEW",
+  "identity_claim": "none - technical rig test only",
+  "blender": "4.5.16 LTS",
+  "render_engine": "BLENDER_WORKBENCH",
+  "previous_version": {
+    "blend": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\aden-character-rigged.blend",
+    "sha256": "8e65940bb8327dea0c575b43c46cd3cd2b36eebfc718543295d0541d93099920"
+  },
+  "outputs": {
+    "blend": {
+      "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test-v2\\aden-character-rigged.blend",
+      "exists": true,
+      "bytes": 5717684,
+      "sha256": "c55e958278642dacfc4b4c199c27bc2e80915884110ee8d63537fd3f63998fa5"
+    },
+    "glb": {
+      "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test-v2\\aden-character-rigged.glb",
+      "exists": true,
+      "bytes": 2150796,
+      "sha256": "466f8c04c405d81d2ac89a17fafbcab8c78673a76977e083a093e43a7522b261"
+    }
+  },
+  "rig": {
+    "armature": "AdenRig",
+    "bone_count": 24,
+    "deform_bone_count": 23,
+    "bones": [
+      {
+        "name": "root",
+        "head": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "tail": [
+          0.0,
+          -0.15,
+          0.0
+        ],
+        "parent": null,
+        "deform": false
+      },
+      {
+        "name": "hips",
+        "head": [
+          0.0,
+          0.0,
+          0.38
+        ],
+        "tail": [
+          0.0,
+          0.0,
+          0.46
+        ],
+        "parent": "root",
+        "deform": true
+      },
+      {
+        "name": "spine",
+        "head": [
+          0.0,
+          0.0,
+          0.46
+        ],
+        "tail": [
+          0.0,
+          0.0,
+          0.64
+        ],
+        "parent": "hips",
+        "deform": true
+      },
+      {
+        "name": "neck",
+        "head": [
+          0.0,
+          0.0,
+          0.64
+        ],
+        "tail": [
+          0.0,
+          0.0,
+          0.78
+        ],
+        "parent": "spine",
+        "deform": true
+      },
+      {
+        "name": "head",
+        "head": [
+          0.0,
+          0.0,
+          0.78
+        ],
+        "tail": [
+          0.0,
+          0.0,
+          1.08
+        ],
+        "parent": "neck",
+        "deform": true
+      },
+      {
+        "name": "jaw",
+        "head": [
+          0.0,
+          -0.02,
+          0.85
+        ],
+        "tail": [
+          0.0,
+          -0.19,
+          0.8
+        ],
+        "parent": "head",
+        "deform": true
+      },
+      {
+        "name": "eye.L",
+        "head": [
+          -0.078,
+          -0.18,
+          0.925
+        ],
+        "tail": [
+          -0.078,
+          -0.27,
+          0.925
+        ],
+        "parent": "head",
+        "deform": true
+      },
+      {
+        "name": "eyelid.L",
+        "head": [
+          -0.078,
+          -0.174,
+          0.978
+        ],
+        "tail": [
+          -0.078,
+          -0.174,
+          0.93
+        ],
+        "parent": "head",
+        "deform": true
+      },
+      {
+        "name": "eye.R",
+        "head": [
+          0.078,
+          -0.18,
+          0.925
+        ],
+        "tail": [
+          0.078,
+          -0.27,
+          0.925
+        ],
+        "parent": "head",
+        "deform": true
+      },
+      {
+        "name": "eyelid.R",
+        "head": [
+          0.078,
+          -0.174,
+          0.978
+        ],
+        "tail": [
+          0.078,
+          -0.174,
+          0.93
+        ],
+        "parent": "head",
+        "deform": true
+      },
+      {
+        "name": "shoulder.L",
+        "head": [
+          -0.05,
+          0.0,
+          0.6
+        ],
+        "tail": [
+          -0.155,
+          0.0,
+          0.6
+        ],
+        "parent": "spine",
+        "deform": true
+      },
+      {
+        "name": "upper_arm.L",
+        "head": [
+          -0.195,
+          0.0,
+          0.6
+        ],
+        "tail": [
+          -0.195,
+          0.0,
+          0.49
+        ],
+        "parent": "shoulder.L",
+        "deform": true
+      },
+      {
+        "name": "forearm.L",
+        "head": [
+          -0.195,
+          0.0,
+          0.49
+        ],
+        "tail": [
+          -0.195,
+          0.0,
+          0.4
+        ],
+        "parent": "upper_arm.L",
+        "deform": true
+      },
+      {
+        "name": "hand.L",
+        "head": [
+          -0.195,
+          0.0,
+          0.4
+        ],
+        "tail": [
+          -0.195,
+          0.0,
+          0.28
+        ],
+        "parent": "forearm.L",
+        "deform": true
+      },
+      {
+        "name": "shoulder.R",
+        "head": [
+          0.05,
+          0.0,
+          0.6
+        ],
+        "tail": [
+          0.155,
+          0.0,
+          0.6
+        ],
+        "parent": "spine",
+        "deform": true
+      },
+      {
+        "name": "upper_arm.R",
+        "head": [
+          0.195,
+          0.0,
+          0.6
+        ],
+        "tail": [
+          0.195,
+          0.0,
+          0.49
+        ],
+        "parent": "shoulder.R",
+        "deform": true
+      },
+      {
+        "name": "forearm.R",
+        "head": [
+          0.195,
+          0.0,
+          0.49
+        ],
+        "tail": [
+          0.195,
+          0.0,
+          0.4
+        ],
+        "parent": "upper_arm.R",
+        "deform": true
+      },
+      {
+        "name": "hand.R",
+        "head": [
+          0.195,
+          0.0,
+          0.4
+        ],
+        "tail": [
+          0.195,
+          0.0,
+          0.28
+        ],
+        "parent": "forearm.R",
+        "deform": true
+      },
+      {
+        "name": "thigh.L",
+        "head": [
+          -0.078,
+          0.0,
+          0.34
+        ],
+        "tail": [
+          -0.078,
+          0.0,
+          0.19
+        ],
+        "parent": "hips",
+        "deform": true
+      },
+      {
+        "name": "shin.L",
+        "head": [
+          -0.078,
+          0.0,
+          0.19
+        ],
+        "tail": [
+          -0.078,
+          0.0,
+          0.055
+        ],
+        "parent": "thigh.L",
+        "deform": true
+      },
+      {
+        "name": "foot.L",
+        "head": [
+          -0.078,
+          0.0,
+          0.055
+        ],
+        "tail": [
+          -0.078,
+          -0.13,
+          0.02
+        ],
+        "parent": "shin.L",
+        "deform": true
+      },
+      {
+        "name": "thigh.R",
+        "head": [
+          0.078,
+          0.0,
+          0.34
+        ],
+        "tail": [
+          0.078,
+          0.0,
+          0.19
+        ],
+        "parent": "hips",
+        "deform": true
+      },
+      {
+        "name": "shin.R",
+        "head": [
+          0.078,
+          0.0,
+          0.19
+        ],
+        "tail": [
+          0.078,
+          0.0,
+          0.055
+        ],
+        "parent": "thigh.R",
+        "deform": true
+      },
+      {
+        "name": "foot.R",
+        "head": [
+          0.078,
+          0.0,
+          0.055
+        ],
+        "tail": [
+          0.078,
+          -0.13,
+          0.02
+        ],
+        "parent": "shin.R",
+        "deform": true
+      }
+    ],
+    "side_convention": "L = -X, R = +X (source naming, character faces -Y)",
+    "unchanged_from_v1": true
+  },
+  "mesh_stats": {
+    "objects": 60,
+    "vertices": 28694,
+    "faces": 29935
+  },
+  "shape_keys": [
+    {
+      "name": "brow_up",
+      "object": "Brow_L"
+    },
+    {
+      "name": "brow_up",
+      "object": "Brow_R"
+    },
+    {
+      "name": "blink.L",
+      "object": "Eyelid_L"
+    },
+    {
+      "name": "blink.R",
+      "object": "Eyelid_R"
+    },
+    {
+      "name": "smile",
+      "object": "Mouth"
+    },
+    {
+      "name": "mouth_open",
+      "object": "Mouth"
+    }
+  ],
+  "shape_key_names": [
+    "blink.L",
+    "blink.R",
+    "brow_up",
+    "mouth_open",
+    "smile"
+  ],
+  "blink_fix": {
+    "method": "thin flush eyelid shape key + eye.L/eye.R bone scale (world Z 0.12, Y 0.45) that squashes sclera, iris, pupil and glint",
+    "eyelid_keys": {
+      "Eyelid_L": {
+        "key": "blink.L",
+        "z_factor": 3.111,
+        "y_shift_mm": -15.5,
+        "target_front_y": -0.2095,
+        "target_bottom_z": 0.864
+      },
+      "Eyelid_R": {
+        "key": "blink.R",
+        "z_factor": 3.111,
+        "y_shift_mm": -15.5,
+        "target_front_y": -0.2095,
+        "target_bottom_z": 0.864
+      }
+    },
+    "eye_scale_world_xyz": [
+      1.0,
+      0.45,
+      0.12
+    ],
+    "before_v1_frames": {
+      "1": {
+        "lid_height": 0.036,
+        "lid_width": 0.108,
+        "lid_front_y": -0.194,
+        "lid_depth": 0.04,
+        "eye_height": 0.116,
+        "eye_front_y": -0.228,
+        "head_front_y": -0.2011,
+        "lid_protrusion_mm": -7.06,
+        "visible_eye_vertices": 2327,
+        "eye_vertices": 2440
+      },
+      "8": {
+        "lid_height": 0.1293,
+        "lid_width": 0.1025,
+        "lid_front_y": -0.2396,
+        "lid_depth": 0.0407,
+        "eye_height": 0.1158,
+        "eye_front_y": -0.2165,
+        "head_front_y": -0.1904,
+        "lid_protrusion_mm": 49.17,
+        "visible_eye_vertices": 74,
+        "eye_vertices": 2440
+      }
+    },
+    "after_v2_frames": {
+      "1": {
+        "lid_height": 0.036,
+        "lid_width": 0.108,
+        "lid_front_y": -0.194,
+        "lid_depth": 0.04,
+        "eye_height": 0.116,
+        "eye_front_y": -0.228,
+        "head_front_y": -0.2011,
+        "lid_protrusion_mm": -7.06,
+        "visible_eye_vertices": 2327,
+        "eye_vertices": 2440
+      },
+      "8": {
+        "lid_height": 0.1118,
+        "lid_width": 0.1144,
+        "lid_front_y": -0.1991,
+        "lid_depth": 0.0405,
+        "eye_height": 0.014,
+        "eye_front_y": -0.1908,
+        "head_front_y": -0.1904,
+        "lid_protrusion_mm": 8.64,
+        "visible_eye_vertices": 0,
+        "eye_vertices": 2440
+      }
+    },
+    "comparison": {
+      "lid_protrusion_mm": {
+        "v1": 49.17,
+        "v2": 8.64
+      },
+      "lid_height_m": {
+        "v1": 0.1293,
+        "v2": 0.1118
+      },
+      "eye_height_at_blink_m": {
+        "v1": 0.1158,
+        "v2": 0.014
+      },
+      "visible_eye_vertices": {
+        "v1": 74,
+        "v2": 0
+      },
+      "eye_fully_closed_v2": true,
+      "lid_flush_v2": true
+    }
+  },
+  "walk_fix": {
+    "problem": "v1 IK used thigh = psi + alpha, so the knee hyper-extended, the shin flipped forward and the planted foot floated 0-14 mm",
+    "fix": "thigh = psi - alpha (knee bends backwards); legs re-keyed per frame",
+    "details": {
+      "frames": [
+        1,
+        32
+      ],
+      "reach_m": 0.06,
+      "root_motion_m": 0.24,
+      "pelvis_yaw_deg": 5.0
+    },
+    "foot_contact_report": "foot-contact-report.json"
+  },
+  "actions": [
+    {
+      "name": "blink_smile",
+      "frame_start": 1.0,
+      "frame_end": 24.0,
+      "fcurves": 1
+    },
+    {
+      "name": "idle_wave",
+      "frame_start": 1.0,
+      "frame_end": 48.0,
+      "fcurves": 49
+    },
+    {
+      "name": "walk_cycle",
+      "frame_start": 1.0,
+      "frame_end": 32.0,
+      "fcurves": 68
+    }
+  ],
+  "renders": {
+    "stills": [
+      {
+        "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test-v2\\previews\\blink_f08_after_v2.png",
+        "exists": true,
+        "bytes": 426591,
+        "sha256": "496f1a9ea678a0d5cd33842727ec5fda41419420cf0cc997868e71593cd9928f",
+        "frame": 8,
+        "camera": "RIGTEST_FaceCamV2"
+      },
+      {
+        "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test-v2\\previews\\blink_f01_rest_after_v2.png",
+        "exists": true,
+        "bytes": 429685,
+        "sha256": "b7f7c13d6d7a4da6e7b28f8efff07966b9eddd59b4f059353a00e90cfcb4947a",
+        "frame": 1,
+        "camera": "RIGTEST_FaceCamV2"
+      },
+      {
+        "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test-v2\\previews\\blink_f12_after_v2.png",
+        "exists": true,
+        "bytes": 431043,
+        "sha256": "3c3b904e57e09e2c6c4aa99246e8f4e55506999d6490b1bf77b9d62c44c6d5ce",
+        "frame": 12,
+        "camera": "RIGTEST_FaceCamV2"
+      },
+      {
+        "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test-v2\\previews\\smile_f18_after_v2.png",
+        "exists": true,
+        "bytes": 429562,
+        "sha256": "358d304c34709f32d9e3d98708967f69bc112a73a03574b9d4ebdbdbd1218c94",
+        "frame": 18,
+        "camera": "RIGTEST_FaceCamV2"
+      },
+      {
+        "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test-v2\\previews\\blink_f08_fullbody_v2.png",
+        "exists": true,
+        "bytes": 389300,
+        "sha256": "63e1bb2e21ad3e1a99a02b9602df62f9ef3dc67788c0ff539103fe737f7df73a",
+        "frame": 8,
+        "camera": "RigTestCamera"
+      }
+    ],
+    "videos": [
+      {
+        "action": "blink_smile",
+        "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test-v2\\previews\\blink_smile0001-0024.mp4",
+        "bytes": 71208,
+        "sha256": "b8f74eb50efd0d650bff9e20b17ccac37e06bef23a798086098f2ab2bc8c2d84",
+        "frame_start": 1.0,
+        "frame_end": 24.0,
+        "fps": 24,
+        "resolution": "640x640"
+      },
+      {
+        "action": "idle_wave",
+        "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test-v2\\previews\\idle_wave0001-0048.mp4",
+        "bytes": 166976,
+        "sha256": "8ed99ff8e34cf66be634eb522f277174815da62624275fdcca3da8b3d59d4168",
+        "frame_start": 1.0,
+        "frame_end": 48.0,
+        "fps": 24,
+        "resolution": "640x640"
+      },
+      {
+        "action": "walk_cycle",
+        "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test-v2\\previews\\walk_cycle0001-0032.mp4",
+        "bytes": 109473,
+        "sha256": "467988638ec987bd1d99b22601c59d52edd234f30aa75872552ee82f08870969",
+        "frame_start": 1.0,
+        "frame_end": 32.0,
+        "fps": 24,
+        "resolution": "640x640"
+      }
+    ],
+    "before_v1_reference": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\previews\\blink_f08_before_v1.png"
+  },
+  "warnings": [],
+  "notes": [
+    "Bones, actions and shape key names are identical to v1.",
+    "No new shape keys were added, so the GLB still exports 5 morph targets.",
+    "walk_cycle keeps 0.24 m root motion (-Y) per cycle; see foot-contact-report.json."
+  ],
+  "media_reconciled_at": "2026-11-14T04:18:46"
+}

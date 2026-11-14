@@ -24,10 +24,10 @@ ROOT = Path(__file__).resolve().parents[2]
 FACTORY = ROOT / "tools" / "studio_backends" / "rig_factory.py"
 VERIFY = ROOT / "tools" / "studio_backends" / "verify_rig.py"
 LIBRARY = ROOT / "studio" / "assets" / "character-library"
-EXTERNAL_MODELS = {
-    "aden": Path(r"C:\actions-runner\_work\AHOS-P12B\studio\assets\character-library"
-                 r"\aden\v1\aden-character-v1.blend"),
-}
+# No hard-coded workspace paths: an approved library root may be provided by
+# configuration, otherwise only the repository library is used.
+MODEL_LIBRARY = Path(os.environ.get("AHOS_MODEL_LIBRARY", str(LIBRARY)))
+EXTERNAL_MODELS = {}
 BLENDER_CANDIDATES = [
     os.environ.get("BLENDER_EXE", ""),
     r"C:\actions-runner\_work\blender-4.5.16-windows-x64\blender.exe",
@@ -66,21 +66,27 @@ def resolve_model(cid, plan):
     for art in plan.get("dependency_artifacts") or []:
         if not isinstance(art, dict):
             continue
+        # the coordinator ships {task_id, filename, sha256, bytes}; accept every
+        # documented shape but never guess a model from a bare name
         kind = str(art.get("kind") or "").lower()
-        if kind not in ("character_model", "model", "mesh"):
+        if kind and kind not in ("character_model", "model", "mesh", "rig_source"):
             continue
-        art_cast = str(art.get("cast") or "").lower()
-        raw = str(art.get("path") or "")
+        art_cast = str(art.get("cast") or art.get("character_id") or "").lower()
+        raw = str(art.get("path") or art.get("filename") or "")
+        task_id = str(art.get("task_id") or "")
         if art_cast and art_cast != cid.lower():
             continue
-        if not art_cast and cid.lower() not in raw.lower():
+        if not art_cast and not kind and cid.lower() not in (raw + task_id).lower():
             continue
-        candidate = Path(raw)
-        if candidate.is_absolute():
-            candidates = [candidate]
+        if not raw:
+            continue
+        path = Path(raw)
+        if path.is_absolute():
+            candidates = [path]
         else:
             candidates = [(Path(plan.get("_job_dir", ".")) / raw).resolve(),
-                          (ROOT / raw).resolve()]
+                          (ROOT / raw).resolve(),
+                          (MODEL_LIBRARY / raw).resolve()]
         found = next((path for path in candidates if path.is_file()), None)
         if found is None:
             return None, "dependency", "DEPENDENCY_MISSING"
@@ -96,12 +102,9 @@ def resolve_model(cid, plan):
     env = os.environ.get("AHOS_MODEL_%s" % cid.upper(), "")
     if env and Path(env).is_file():
         return Path(env), "env", None
-    repo = LIBRARY / cid / "v1" / ("%s-character-v1.blend" % cid)
+    repo = MODEL_LIBRARY / cid / "v1" / ("%s-character-v1.blend" % cid)
     if repo.is_file():
         return repo, "library", None
-    external = EXTERNAL_MODELS.get(cid)
-    if external and external.is_file():
-        return external, "external", None
     return None, "missing", "MODEL_MISSING"
 
 
@@ -244,7 +247,7 @@ def main(argv=None):
                        "meshes": reopen["meshes"], "vertices": reopen["vertices"],
                        "unweighted": reopen["unweighted_vertices"]},
         }
-        for path in (blend, glb):
+        for path in (blend, glb, contract_path):
             artifacts.append({"kind": "rig", "cast": cid,
                               "path": str(path.relative_to(job)).replace("\\", "/"),
                               "bytes": path.stat().st_size, "sha256": sha(path)})
