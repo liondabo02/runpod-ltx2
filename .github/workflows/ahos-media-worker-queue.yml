@@ -11,6 +11,8 @@ on:
       - tests/test_studio_media_http.py
       - tests/test_studio_media_worker_client.py
       - tools/studio_media_worker_client.py
+      - ops/oracle/deploy-media-worker-queue.sh
+      - ops/oracle/ahos-studio-os.service
       - tests/test_studio_oracle_service.py
       - .github/workflows/ahos-media-worker-queue.yml
   workflow_dispatch:
@@ -28,6 +30,8 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --disable-pip-version-check pytest
+      - name: Check reversible Oracle deploy script syntax
+        run: bash -n ops/oracle/deploy-media-worker-queue.sh
       - name: Compile worker queue and Oracle service
         run: python -m py_compile tools/studio_media_queue.py tools/studio_media_worker_client.py tools/studio_oracle_service.py tools/ahos_studio_os.py
       - name: Test worker protocol and existing Studio OS
