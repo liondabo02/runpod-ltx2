@@ -102,6 +102,17 @@ def validate_media_file(path, capability):
             raise QueueError("Real video + audio duration required")
         if video[0].get("width",0) < 1280 or video[0].get("height",0) < 720:
             raise QueueError("Video falls below initial review resolution")
+    if ext == ".mp4" and capability == "render":
+        # Stop technical transport from approving obviously frozen, dark or
+        # silent source material. This is still NOT an identity/creative check.
+        from studio_media_objective_qa import TechnicalMediaError, assess
+        try:
+            diagnostic = assess(path, dialogue=False)
+        except TechnicalMediaError as exc:
+            raise QueueError("Objective shot analysis blocked: "+str(exc)) from exc
+        if diagnostic["objective_technical_status"] != "PASSED":
+            raise QueueError("Objective video signals failed: "+
+                             ",".join(diagnostic["failures"]))
     if ext == ".json":
         try:
             obj = json.loads(path.read_text(encoding="utf-8"))
