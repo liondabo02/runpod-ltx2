@@ -96,3 +96,20 @@ New guest characters are candidate assets, not approved canonical actors; they n
 The retry system also keeps every earlier attempt's artifact files and metadata in media_artifact_history while permitting the next attempt to upload the SAME file name (e.g. model.glb). No old bytes are deleted on QA failure; filenames are unblocked for corrected renders, and attempts remain limited to three. Tests cover expired leases, stale keys and reusing filenames after failed QA.
 
 These guardrails protect the exact canonical source and queue provenance, but do not yet replace human/validated multimodal verification of every generated character and final episode.
+
+## 2026-11-14 objective media QA and large-file transport extension
+
+The initial 64 MiB single-request upload limit has a bounded multipart extension:
+- POST /api/media/uploads/start (worker bearer): job_id, lease_key, filename, sha256 (whole file), size_bytes.
+- PUT /api/media/uploads/{upload_id}: exact binary chunk (maximum 4 MiB), X-AHOS-Lease-Key and X-AHOS-Offset. Re-sending the same previous chunk is idempotent if bytes match; stale/reassigned leases cannot append.
+- POST /api/media/uploads/{upload_id}/finish: job_id and lease_key. Checks full size, streaming SHA-256, real media container validity, then inserts Oracle-owned artifact record.
+- Maximum complete file: 2 GiB; reserve at least 1 GiB local Oracle free space. All bytes remain private on Oracle disk. No Git commits of media and no paid object store.
+- The worker client automatically uses multipart if actual evidence file size is above 64 MiB. It streams approved upstream dependencies to disk, validates whole-file hashes and does not buffer an eight-minute MP4 in RAM.
+- The multipart protocol has independent real localhost HTTP and file-system/SQLite tests. This does NOT imply a true two-gigabyte video has already been transferred in production.
+
+Real video quality signal tester: tools/studio_media_objective_qa.py. The render stage is rejected if FFmpeg finds severe black, frozen or invalid footage. The standalone tool also reports excessive silence in dialogue clips:
+python tools/studio_media_objective_qa.py --video ACTUAL_SHOT.mp4 --dialogue --report ACTUAL_REPORT.json
+
+The tool uses FFmpeg decoding, real bytes and objective signal thresholds; it deliberately reports creative_quality_verified=false and production_ready=false. No character-identity or acting quality guarantee is implied by this tool.
+
+A real film worker / independent multimodal evaluator is still required to examine faces, hand deformities, props, emotional acting, dialogue and lip sync. RunPod previously lacked pods:read on the configured API key; the key/account permission needs an authorized correction before GPU deployment.
