@@ -1,0 +1,1008 @@
+{
+  "schema": "ahos.character-rig-validation.v1",
+  "validated_at": "2026-11-14T03:09:43",
+  "blend": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\aden-character-rigged.blend",
+  "reopen_ok": true,
+  "structure": {
+    "armature_found": true,
+    "armature_name": "AdenRig",
+    "bone_count": 24,
+    "missing_bones": [],
+    "extra_bones": [],
+    "mesh_objects": 60,
+    "meshes_parented": 60,
+    "meshes_with_armature_modifier": 60,
+    "meshes_without_vertex_groups": [],
+    "vertex_groups_without_bone": [],
+    "total_vertices": 28694,
+    "total_faces": 29935,
+    "unweighted_vertices": 0,
+    "shape_keys": {
+      "Brow_L": [
+        "brow_up"
+      ],
+      "Brow_R": [
+        "brow_up"
+      ],
+      "Eyelid_L": [
+        "blink.L"
+      ],
+      "Eyelid_R": [
+        "blink.R"
+      ],
+      "Mouth": [
+        "smile",
+        "mouth_open"
+      ]
+    },
+    "missing_shape_keys": [],
+    "actions": [
+      "blink_smile",
+      "idle_wave",
+      "walk_cycle"
+    ],
+    "missing_actions": [],
+    "action_ranges": {
+      "blink_smile": [
+        1.0,
+        24.0
+      ],
+      "idle_wave": [
+        1.0,
+        48.0
+      ],
+      "walk_cycle": [
+        1.0,
+        32.0
+      ]
+    }
+  },
+  "actions": {
+    "idle_wave": {
+      "action": "idle_wave",
+      "frames": [
+        1,
+        48
+      ],
+      "sampled_step": 2,
+      "motion": {
+        "Head": {
+          "center_range": [
+            0.0274,
+            0.0152,
+            0.0005
+          ],
+          "lowest_z": 0.6648,
+          "highest_z": 1.135,
+          "frames_sampled": 24
+        },
+        "Arm_L": {
+          "center_range": [
+            0.014,
+            0.0114,
+            0.0099
+          ],
+          "lowest_z": 0.3386,
+          "highest_z": 0.6012,
+          "frames_sampled": 24
+        },
+        "Arm_R": {
+          "center_range": [
+            0.1136,
+            0.0098,
+            0.2117
+          ],
+          "lowest_z": 0.3477,
+          "highest_z": 0.8082,
+          "frames_sampled": 24
+        },
+        "Hand_L": {
+          "center_range": [
+            0.038,
+            0.0186,
+            0.0131
+          ],
+          "lowest_z": 0.2724,
+          "highest_z": 0.4052,
+          "frames_sampled": 24
+        },
+        "Hand_R": {
+          "center_range": [
+            0.2025,
+            0.0136,
+            0.447
+          ],
+          "lowest_z": 0.2891,
+          "highest_z": 0.8526,
+          "frames_sampled": 24
+        },
+        "Thigh_L": {
+          "center_range": [
+            0.0071,
+            0.0,
+            0.0039
+          ],
+          "lowest_z": 0.1375,
+          "highest_z": 0.3413,
+          "frames_sampled": 24
+        },
+        "Thigh_R": {
+          "center_range": [
+            0.0071,
+            0.0,
+            0.004
+          ],
+          "lowest_z": 0.1388,
+          "highest_z": 0.3427,
+          "frames_sampled": 24
+        },
+        "Shin_L": {
+          "center_range": [
+            0.0127,
+            0.0,
+            0.0038
+          ],
+          "lowest_z": 0.0459,
+          "highest_z": 0.2121,
+          "frames_sampled": 24
+        },
+        "Shin_R": {
+          "center_range": [
+            0.0126,
+            0.0,
+            0.0041
+          ],
+          "lowest_z": 0.048,
+          "highest_z": 0.2144,
+          "frames_sampled": 24
+        },
+        "Sole_L": {
+          "center_range": [
+            0.0184,
+            0.0,
+            0.0038
+          ],
+          "lowest_z": 0.0015,
+          "highest_z": 0.0326,
+          "frames_sampled": 24
+        },
+        "Sole_R": {
+          "center_range": [
+            0.0183,
+            0.0,
+            0.0041
+          ],
+          "lowest_z": 0.0035,
+          "highest_z": 0.0349,
+          "frames_sampled": 24
+        },
+        "Mouth": {
+          "center_range": [
+            0.0369,
+            0.0084,
+            0.0206
+          ],
+          "lowest_z": 0.7653,
+          "highest_z": 0.8458,
+          "frames_sampled": 24
+        },
+        "Eyelid_L": {
+          "center_range": [
+            0.0333,
+            0.0155,
+            0.0146
+          ],
+          "lowest_z": 0.9317,
+          "highest_z": 0.9824,
+          "frames_sampled": 24
+        },
+        "Eyelid_R": {
+          "center_range": [
+            0.0314,
+            0.0299,
+            0.0205
+          ],
+          "lowest_z": 0.9309,
+          "highest_z": 0.9874,
+          "frames_sampled": 24
+        }
+      },
+      "stress": {
+        "Torso_Shirt": {
+          "max_ratio": 1.0,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Neck": {
+          "max_ratio": 1.0,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Hips_Shorts": {
+          "max_ratio": 1.0,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Shorts_Left": {
+          "max_ratio": 1.0,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Shorts_Right": {
+          "max_ratio": 1.0,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Sleeve_L": {
+          "max_ratio": 1.0000023311721165,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Sleeve_R": {
+          "max_ratio": 1.000004662338799,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Arm_L": {
+          "max_ratio": 1.0037908399841915,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Arm_R": {
+          "max_ratio": 1.0000043596183323,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Thigh_L": {
+          "max_ratio": 1.0,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Thigh_R": {
+          "max_ratio": 1.0,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Shin_L": {
+          "max_ratio": 1.0,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Shin_R": {
+          "max_ratio": 1.0,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Mouth": {
+          "max_ratio": 1.0,
+          "max_frame": 1,
+          "bad_edges": 0
+        }
+      },
+      "feet": {
+        "Sole_L": {
+          "lowest_z": 0.0015,
+          "contact_samples": 19,
+          "slide_x": 0.0122,
+          "slide_y": 0.0
+        },
+        "Sole_R": {
+          "lowest_z": 0.0035,
+          "contact_samples": 24,
+          "slide_x": 0.0183,
+          "slide_y": 0.0
+        }
+      },
+      "nonfinite_objects": 0
+    },
+    "blink_smile": {
+      "action": "blink_smile",
+      "frames": [
+        1,
+        24
+      ],
+      "sampled_step": 2,
+      "motion": {
+        "Head": {
+          "center_range": [
+            0.0,
+            0.0195,
+            0.0003
+          ],
+          "lowest_z": 0.665,
+          "highest_z": 1.135,
+          "frames_sampled": 12
+        },
+        "Arm_L": {
+          "center_range": [
+            0.0,
+            0.0002,
+            0.0
+          ],
+          "lowest_z": 0.3426,
+          "highest_z": 0.5972,
+          "frames_sampled": 12
+        },
+        "Arm_R": {
+          "center_range": [
+            0.0,
+            0.0004,
+            0.0
+          ],
+          "lowest_z": 0.3488,
+          "highest_z": 0.6051,
+          "frames_sampled": 12
+        },
+        "Hand_L": {
+          "center_range": [
+            0.0,
+            0.0025,
+            0.0001
+          ],
+          "lowest_z": 0.2808,
+          "highest_z": 0.4008,
+          "frames_sampled": 12
+        },
+        "Hand_R": {
+          "center_range": [
+            0.0,
+            0.0023,
+            0.0
+          ],
+          "lowest_z": 0.2922,
+          "highest_z": 0.4118,
+          "frames_sampled": 12
+        },
+        "Thigh_L": {
+          "center_range": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "lowest_z": 0.1399,
+          "highest_z": 0.3399,
+          "frames_sampled": 12
+        },
+        "Thigh_R": {
+          "center_range": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "lowest_z": 0.1401,
+          "highest_z": 0.3401,
+          "frames_sampled": 12
+        },
+        "Shin_L": {
+          "center_range": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "lowest_z": 0.0499,
+          "highest_z": 0.21,
+          "frames_sampled": 12
+        },
+        "Shin_R": {
+          "center_range": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "lowest_z": 0.05,
+          "highest_z": 0.2101,
+          "frames_sampled": 12
+        },
+        "Sole_L": {
+          "center_range": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "lowest_z": 0.0054,
+          "highest_z": 0.0305,
+          "frames_sampled": 12
+        },
+        "Sole_R": {
+          "center_range": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "lowest_z": 0.0055,
+          "highest_z": 0.0306,
+          "frames_sampled": 12
+        },
+        "Mouth": {
+          "center_range": [
+            0.014,
+            0.0111,
+            0.0174
+          ],
+          "lowest_z": 0.7442,
+          "highest_z": 0.8641,
+          "frames_sampled": 12
+        },
+        "Eyelid_L": {
+          "center_range": [
+            0.0137,
+            0.0495,
+            0.0369
+          ],
+          "lowest_z": 0.8594,
+          "highest_z": 0.9906,
+          "frames_sampled": 12
+        },
+        "Eyelid_R": {
+          "center_range": [
+            0.0137,
+            0.0484,
+            0.0369
+          ],
+          "lowest_z": 0.8592,
+          "highest_z": 0.9904,
+          "frames_sampled": 12
+        }
+      },
+      "stress": {
+        "Torso_Shirt": {
+          "max_ratio": 1.0008446252442544,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Neck": {
+          "max_ratio": 1.0002380189938933,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Hips_Shorts": {
+          "max_ratio": 1.00000184030978,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Shorts_Left": {
+          "max_ratio": 1.0000022605469125,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Shorts_Right": {
+          "max_ratio": 1.000002211710474,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Sleeve_L": {
+          "max_ratio": 1.0000013329975486,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Sleeve_R": {
+          "max_ratio": 1.0000037084012225,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Arm_L": {
+          "max_ratio": 1.0036540174448803,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Arm_R": {
+          "max_ratio": 1.002780156597503,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Thigh_L": {
+          "max_ratio": 1.000002088876506,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Thigh_R": {
+          "max_ratio": 1.0000020245447188,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Shin_L": {
+          "max_ratio": 1.0000002321569037,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Shin_R": {
+          "max_ratio": 1.0000002321569037,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Mouth": {
+          "max_ratio": 1.0000206059105876,
+          "max_frame": 1,
+          "bad_edges": 0
+        }
+      },
+      "feet": {
+        "Sole_L": {
+          "lowest_z": 0.0054,
+          "contact_samples": 12,
+          "slide_x": 0.0,
+          "slide_y": 0.0
+        },
+        "Sole_R": {
+          "lowest_z": 0.0055,
+          "contact_samples": 12,
+          "slide_x": 0.0,
+          "slide_y": 0.0
+        }
+      },
+      "nonfinite_objects": 0
+    },
+    "walk_cycle": {
+      "action": "walk_cycle",
+      "frames": [
+        1,
+        32
+      ],
+      "sampled_step": 2,
+      "motion": {
+        "Head": {
+          "center_range": [
+            0.0005,
+            0.225,
+            0.01
+          ],
+          "lowest_z": 0.6549,
+          "highest_z": 1.1346,
+          "frames_sampled": 16
+        },
+        "Arm_L": {
+          "center_range": [
+            0.0009,
+            0.2265,
+            0.005
+          ],
+          "lowest_z": 0.3377,
+          "highest_z": 0.5967,
+          "frames_sampled": 16
+        },
+        "Arm_R": {
+          "center_range": [
+            0.001,
+            0.2232,
+            0.0048
+          ],
+          "lowest_z": 0.3434,
+          "highest_z": 0.603,
+          "frames_sampled": 16
+        },
+        "Hand_L": {
+          "center_range": [
+            0.0019,
+            0.2948,
+            0.0122
+          ],
+          "lowest_z": 0.2773,
+          "highest_z": 0.4067,
+          "frames_sampled": 16
+        },
+        "Hand_R": {
+          "center_range": [
+            0.002,
+            0.2783,
+            0.0122
+          ],
+          "lowest_z": 0.284,
+          "highest_z": 0.4132,
+          "frames_sampled": 16
+        },
+        "Thigh_L": {
+          "center_range": [
+            0.0061,
+            0.2048,
+            0.0241
+          ],
+          "lowest_z": 0.1307,
+          "highest_z": 0.3444,
+          "frames_sampled": 16
+        },
+        "Thigh_R": {
+          "center_range": [
+            0.0061,
+            0.2336,
+            0.0241
+          ],
+          "lowest_z": 0.1307,
+          "highest_z": 0.3444,
+          "frames_sampled": 16
+        },
+        "Shin_L": {
+          "center_range": [
+            0.0165,
+            0.17,
+            0.0953
+          ],
+          "lowest_z": 0.0427,
+          "highest_z": 0.2549,
+          "frames_sampled": 16
+        },
+        "Shin_R": {
+          "center_range": [
+            0.0165,
+            0.303,
+            0.0953
+          ],
+          "lowest_z": 0.0427,
+          "highest_z": 0.2549,
+          "frames_sampled": 16
+        },
+        "Sole_L": {
+          "center_range": [
+            0.022,
+            0.1779,
+            0.1594
+          ],
+          "lowest_z": 0.0,
+          "highest_z": 0.1844,
+          "frames_sampled": 16
+        },
+        "Sole_R": {
+          "center_range": [
+            0.022,
+            0.3646,
+            0.1594
+          ],
+          "lowest_z": 0.0,
+          "highest_z": 0.1844,
+          "frames_sampled": 16
+        },
+        "Mouth": {
+          "center_range": [
+            0.0076,
+            0.225,
+            0.01
+          ],
+          "lowest_z": 0.7719,
+          "highest_z": 0.8419,
+          "frames_sampled": 16
+        },
+        "Eyelid_L": {
+          "center_range": [
+            0.0067,
+            0.2255,
+            0.0101
+          ],
+          "lowest_z": 0.9357,
+          "highest_z": 0.9818,
+          "frames_sampled": 16
+        },
+        "Eyelid_R": {
+          "center_range": [
+            0.0067,
+            0.2245,
+            0.0101
+          ],
+          "lowest_z": 0.9357,
+          "highest_z": 0.9818,
+          "frames_sampled": 16
+        }
+      },
+      "stress": {
+        "Torso_Shirt": {
+          "max_ratio": 1.0310562175239388,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Neck": {
+          "max_ratio": 1.0002391072682293,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Hips_Shorts": {
+          "max_ratio": 1.0008011531598204,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Shorts_Left": {
+          "max_ratio": 1.0000021518201543,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Shorts_Right": {
+          "max_ratio": 1.0000041553095438,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Sleeve_L": {
+          "max_ratio": 1.0000030150431203,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Sleeve_R": {
+          "max_ratio": 1.0000042869986239,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Arm_L": {
+          "max_ratio": 1.0355726769443103,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Arm_R": {
+          "max_ratio": 1.0093637105550821,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Thigh_L": {
+          "max_ratio": 1.2804653543598894,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Thigh_R": {
+          "max_ratio": 1.2804643880842492,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Shin_L": {
+          "max_ratio": 1.013393911725856,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Shin_R": {
+          "max_ratio": 1.047478026443183,
+          "max_frame": 1,
+          "bad_edges": 0
+        },
+        "Mouth": {
+          "max_ratio": 1.0278617425629235,
+          "max_frame": 1,
+          "bad_edges": 0
+        }
+      },
+      "feet": {
+        "Sole_L": {
+          "lowest_z": 0.0,
+          "contact_samples": 1,
+          "slide_x": 0.0,
+          "slide_y": 0.0
+        },
+        "Sole_R": {
+          "lowest_z": 0.0,
+          "contact_samples": 1,
+          "slide_x": 0.0,
+          "slide_y": 0.0
+        }
+      },
+      "nonfinite_objects": 0
+    }
+  },
+  "face_channels": {
+    "values_at_frames": {
+      "1": {
+        "Eyelid_L": {
+          "blink.L": 0.0
+        },
+        "Eyelid_R": {
+          "blink.R": 0.0
+        },
+        "Mouth": {
+          "smile": 0.0,
+          "mouth_open": 0.0
+        },
+        "Brow_L": {
+          "brow_up": 0.0
+        },
+        "Brow_R": {
+          "brow_up": 0.0
+        }
+      },
+      "8": {
+        "Eyelid_L": {
+          "blink.L": 1.0
+        },
+        "Eyelid_R": {
+          "blink.R": 1.0
+        },
+        "Mouth": {
+          "smile": 0.951,
+          "mouth_open": 0.519
+        },
+        "Brow_L": {
+          "brow_up": 0.35
+        },
+        "Brow_R": {
+          "brow_up": 0.35
+        }
+      },
+      "16": {
+        "Eyelid_L": {
+          "blink.L": 0.0
+        },
+        "Eyelid_R": {
+          "blink.R": 0.0
+        },
+        "Mouth": {
+          "smile": 1.0,
+          "mouth_open": 0.027
+        },
+        "Brow_L": {
+          "brow_up": 0.55
+        },
+        "Brow_R": {
+          "brow_up": 0.55
+        }
+      },
+      "24": {
+        "Eyelid_L": {
+          "blink.L": 0.0
+        },
+        "Eyelid_R": {
+          "blink.R": 0.0
+        },
+        "Mouth": {
+          "smile": 0.0,
+          "mouth_open": 0.0
+        },
+        "Brow_L": {
+          "brow_up": 0.0
+        },
+        "Brow_R": {
+          "brow_up": 0.0
+        }
+      }
+    },
+    "mouth_size_rest": [
+      0.1239,
+      0.0361,
+      0.06
+    ],
+    "mouth_size_smile": [
+      0.1606,
+      0.0374,
+      0.066
+    ],
+    "eyelid_size_open": [
+      0.1079,
+      0.04,
+      0.036
+    ],
+    "eyelid_size_closed": [
+      0.1026,
+      0.0407,
+      0.1293
+    ],
+    "eyelid_min_z_open": 0.9307,
+    "eyelid_min_z_closed": 0.8516
+  },
+  "glb": {
+    "exists": true,
+    "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\aden-character-rigged.glb",
+    "bytes": 2150260,
+    "animation_count": 3,
+    "animations": [
+      {
+        "name": "blink_smile",
+        "channels": 72,
+        "samplers": 72
+      },
+      {
+        "name": "idle_wave",
+        "channels": 72,
+        "samplers": 72
+      },
+      {
+        "name": "walk_cycle",
+        "channels": 72,
+        "samplers": 72
+      }
+    ],
+    "skin_count": 1,
+    "max_joints": 24,
+    "mesh_count": 60,
+    "morph_target_primitives": 5,
+    "node_count": 85,
+    "material_count": 13,
+    "generator": "Khronos glTF Blender I/O v4.5.51"
+  },
+  "media": {
+    "videos": [
+      {
+        "action": "idle_wave",
+        "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\idle_wave0001-0048.mp4",
+        "bytes": 187750,
+        "sha256": "b285d195a3364c4ce003857a6ae0dd0c58f0a8c4e2f8f807c087ade1ee76d44f",
+        "frame_start": 1,
+        "frame_end": 48,
+        "fps": 24,
+        "resolution": "640x640"
+      },
+      {
+        "action": "blink_smile",
+        "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\blink_smile0001-0024.mp4",
+        "bytes": 73759,
+        "sha256": "d7b3bd2e7f1949af7a54fbd697070c17150f9f10ac9c39e29656957ffd9edb19",
+        "frame_start": 1,
+        "frame_end": 24,
+        "fps": 24,
+        "resolution": "640x640"
+      },
+      {
+        "action": "walk_cycle",
+        "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\walk_cycle0001-0032.mp4",
+        "bytes": 117402,
+        "sha256": "0ef3dd7375598c4328e76b8a5f30bf714a6e6f1fa0533b6357e5d82843265f75",
+        "frame_start": 1,
+        "frame_end": 32,
+        "fps": 24,
+        "resolution": "640x640"
+      }
+    ],
+    "still_count": 9,
+    "manifest": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\rig-manifest.json"
+  },
+  "qa_stills": [
+    {
+      "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\qa\\qa_blink_peak_f08.png",
+      "action": "blink_smile",
+      "frame": 8,
+      "view": "main",
+      "bytes": 391011
+    },
+    {
+      "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\qa\\qa_smile_peak_f16.png",
+      "action": "blink_smile",
+      "frame": 16,
+      "view": "main",
+      "bytes": 391259
+    },
+    {
+      "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\qa\\qa_face_closeup_blink_f08.png",
+      "action": "blink_smile",
+      "frame": 8,
+      "view": "face",
+      "bytes": 432955
+    },
+    {
+      "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\qa\\qa_face_closeup_smile_f18.png",
+      "action": "blink_smile",
+      "frame": 18,
+      "view": "face",
+      "bytes": 429604
+    },
+    {
+      "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\qa\\qa_face_closeup_rest_f01.png",
+      "action": "blink_smile",
+      "frame": 1,
+      "view": "face",
+      "bytes": 431364
+    },
+    {
+      "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\qa\\qa_walk_contact_f05.png",
+      "action": "walk_cycle",
+      "frame": 5,
+      "view": "main",
+      "bytes": 386828
+    },
+    {
+      "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\qa\\qa_walk_passing_f09.png",
+      "action": "walk_cycle",
+      "frame": 9,
+      "view": "main",
+      "bytes": 389089
+    },
+    {
+      "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\qa\\qa_idle_wave_peak_f21.png",
+      "action": "idle_wave",
+      "frame": 21,
+      "view": "main",
+      "bytes": 390460
+    },
+    {
+      "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\qa\\qa_shoulder_closeup_f21.png",
+      "action": "idle_wave",
+      "frame": 21,
+      "view": "shoulder",
+      "bytes": 433401
+    }
+  ],
+  "worst_edge_stretch": {
+    "ratio": 1.28,
+    "where": "walk_cycle/Thigh_L"
+  },
+  "findings": [],
+  "warnings": []
+}

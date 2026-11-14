@@ -1,0 +1,817 @@
+{
+  "schema": "ahos.character-rig.v1",
+  "character_id": "aden",
+  "version": "v1",
+  "created_at": "2026-11-14T03:09:36",
+  "technical_only": true,
+  "identity_status": "PENDING_IDENTITY_REVIEW",
+  "blender": "4.5.16 LTS",
+  "render_engine": "BLENDER_WORKBENCH",
+  "render_mode": "full",
+  "source": {
+    "blend": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\aden-character-v1.blend",
+    "sha256": "288f2c8eb1b717080e8b614c4e60859a822e8f64d00342550416d9cc26c22f3d"
+  },
+  "outputs": {
+    "blend": {
+      "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\aden-character-rigged.blend",
+      "exists": true,
+      "bytes": 5710976,
+      "sha256": "8e65940bb8327dea0c575b43c46cd3cd2b36eebfc718543295d0541d93099920"
+    },
+    "glb": {
+      "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\aden-character-rigged.glb",
+      "exists": true,
+      "bytes": 2150260,
+      "sha256": "5669d28a83981eaca9783e4e2cd8c99ca1813482267d0ff6eecb3240787d01f0"
+    }
+  },
+  "rig": {
+    "armature": "AdenRig",
+    "bone_count": 24,
+    "deform_bone_count": 23,
+    "bones": [
+      {
+        "name": "root",
+        "head": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "tail": [
+          0.0,
+          -0.15,
+          0.0
+        ],
+        "parent": null,
+        "connected": false,
+        "deform": false,
+        "length": 0.15
+      },
+      {
+        "name": "hips",
+        "head": [
+          0.0,
+          0.0,
+          0.38
+        ],
+        "tail": [
+          0.0,
+          0.0,
+          0.46
+        ],
+        "parent": "root",
+        "connected": false,
+        "deform": true,
+        "length": 0.08
+      },
+      {
+        "name": "spine",
+        "head": [
+          0.0,
+          0.0,
+          0.46
+        ],
+        "tail": [
+          0.0,
+          0.0,
+          0.64
+        ],
+        "parent": "hips",
+        "connected": true,
+        "deform": true,
+        "length": 0.18
+      },
+      {
+        "name": "neck",
+        "head": [
+          0.0,
+          0.0,
+          0.64
+        ],
+        "tail": [
+          0.0,
+          0.0,
+          0.78
+        ],
+        "parent": "spine",
+        "connected": true,
+        "deform": true,
+        "length": 0.14
+      },
+      {
+        "name": "head",
+        "head": [
+          0.0,
+          0.0,
+          0.78
+        ],
+        "tail": [
+          0.0,
+          0.0,
+          1.08
+        ],
+        "parent": "neck",
+        "connected": true,
+        "deform": true,
+        "length": 0.3
+      },
+      {
+        "name": "jaw",
+        "head": [
+          0.0,
+          -0.02,
+          0.85
+        ],
+        "tail": [
+          0.0,
+          -0.19,
+          0.8
+        ],
+        "parent": "head",
+        "connected": false,
+        "deform": true,
+        "length": 0.1772
+      },
+      {
+        "name": "eye.L",
+        "head": [
+          -0.078,
+          -0.18,
+          0.925
+        ],
+        "tail": [
+          -0.078,
+          -0.27,
+          0.925
+        ],
+        "parent": "head",
+        "connected": false,
+        "deform": true,
+        "length": 0.09
+      },
+      {
+        "name": "eyelid.L",
+        "head": [
+          -0.078,
+          -0.174,
+          0.978
+        ],
+        "tail": [
+          -0.078,
+          -0.174,
+          0.93
+        ],
+        "parent": "head",
+        "connected": false,
+        "deform": true,
+        "length": 0.048
+      },
+      {
+        "name": "eye.R",
+        "head": [
+          0.078,
+          -0.18,
+          0.925
+        ],
+        "tail": [
+          0.078,
+          -0.27,
+          0.925
+        ],
+        "parent": "head",
+        "connected": false,
+        "deform": true,
+        "length": 0.09
+      },
+      {
+        "name": "eyelid.R",
+        "head": [
+          0.078,
+          -0.174,
+          0.978
+        ],
+        "tail": [
+          0.078,
+          -0.174,
+          0.93
+        ],
+        "parent": "head",
+        "connected": false,
+        "deform": true,
+        "length": 0.048
+      },
+      {
+        "name": "shoulder.L",
+        "head": [
+          -0.05,
+          0.0,
+          0.6
+        ],
+        "tail": [
+          -0.155,
+          0.0,
+          0.6
+        ],
+        "parent": "spine",
+        "connected": false,
+        "deform": true,
+        "length": 0.105
+      },
+      {
+        "name": "upper_arm.L",
+        "head": [
+          -0.195,
+          0.0,
+          0.6
+        ],
+        "tail": [
+          -0.195,
+          0.0,
+          0.49
+        ],
+        "parent": "shoulder.L",
+        "connected": false,
+        "deform": true,
+        "length": 0.11
+      },
+      {
+        "name": "forearm.L",
+        "head": [
+          -0.195,
+          0.0,
+          0.49
+        ],
+        "tail": [
+          -0.195,
+          0.0,
+          0.4
+        ],
+        "parent": "upper_arm.L",
+        "connected": true,
+        "deform": true,
+        "length": 0.09
+      },
+      {
+        "name": "hand.L",
+        "head": [
+          -0.195,
+          0.0,
+          0.4
+        ],
+        "tail": [
+          -0.195,
+          0.0,
+          0.28
+        ],
+        "parent": "forearm.L",
+        "connected": true,
+        "deform": true,
+        "length": 0.12
+      },
+      {
+        "name": "shoulder.R",
+        "head": [
+          0.05,
+          0.0,
+          0.6
+        ],
+        "tail": [
+          0.155,
+          0.0,
+          0.6
+        ],
+        "parent": "spine",
+        "connected": false,
+        "deform": true,
+        "length": 0.105
+      },
+      {
+        "name": "upper_arm.R",
+        "head": [
+          0.195,
+          0.0,
+          0.6
+        ],
+        "tail": [
+          0.195,
+          0.0,
+          0.49
+        ],
+        "parent": "shoulder.R",
+        "connected": false,
+        "deform": true,
+        "length": 0.11
+      },
+      {
+        "name": "forearm.R",
+        "head": [
+          0.195,
+          0.0,
+          0.49
+        ],
+        "tail": [
+          0.195,
+          0.0,
+          0.4
+        ],
+        "parent": "upper_arm.R",
+        "connected": true,
+        "deform": true,
+        "length": 0.09
+      },
+      {
+        "name": "hand.R",
+        "head": [
+          0.195,
+          0.0,
+          0.4
+        ],
+        "tail": [
+          0.195,
+          0.0,
+          0.28
+        ],
+        "parent": "forearm.R",
+        "connected": true,
+        "deform": true,
+        "length": 0.12
+      },
+      {
+        "name": "thigh.L",
+        "head": [
+          -0.078,
+          0.0,
+          0.34
+        ],
+        "tail": [
+          -0.078,
+          0.0,
+          0.19
+        ],
+        "parent": "hips",
+        "connected": false,
+        "deform": true,
+        "length": 0.15
+      },
+      {
+        "name": "shin.L",
+        "head": [
+          -0.078,
+          0.0,
+          0.19
+        ],
+        "tail": [
+          -0.078,
+          0.0,
+          0.055
+        ],
+        "parent": "thigh.L",
+        "connected": true,
+        "deform": true,
+        "length": 0.135
+      },
+      {
+        "name": "foot.L",
+        "head": [
+          -0.078,
+          0.0,
+          0.055
+        ],
+        "tail": [
+          -0.078,
+          -0.13,
+          0.02
+        ],
+        "parent": "shin.L",
+        "connected": true,
+        "deform": true,
+        "length": 0.1346
+      },
+      {
+        "name": "thigh.R",
+        "head": [
+          0.078,
+          0.0,
+          0.34
+        ],
+        "tail": [
+          0.078,
+          0.0,
+          0.19
+        ],
+        "parent": "hips",
+        "connected": false,
+        "deform": true,
+        "length": 0.15
+      },
+      {
+        "name": "shin.R",
+        "head": [
+          0.078,
+          0.0,
+          0.19
+        ],
+        "tail": [
+          0.078,
+          0.0,
+          0.055
+        ],
+        "parent": "thigh.R",
+        "connected": true,
+        "deform": true,
+        "length": 0.135
+      },
+      {
+        "name": "foot.R",
+        "head": [
+          0.078,
+          0.0,
+          0.055
+        ],
+        "tail": [
+          0.078,
+          -0.13,
+          0.02
+        ],
+        "parent": "shin.R",
+        "connected": true,
+        "deform": true,
+        "length": 0.1346
+      }
+    ],
+    "side_convention": "L = -X, R = +X (follows source object naming; character faces -Y)",
+    "skinning": {
+      "rigid_objects": {
+        "Brow_L": "head",
+        "Brow_R": "head",
+        "Ear_L": "head",
+        "Ear_R": "head",
+        "Eye_Glint_L": "eye.L",
+        "Eye_Glint_R": "eye.R",
+        "Eye_Iris_L": "eye.L",
+        "Eye_Iris_R": "eye.R",
+        "Eye_Pupil_L": "eye.L",
+        "Eye_Pupil_R": "eye.R",
+        "Eye_White_L": "eye.L",
+        "Eye_White_R": "eye.R",
+        "Eyelid_L": "eyelid.L",
+        "Eyelid_R": "eyelid.R",
+        "Freckle_1": "head",
+        "Freckle_2": "head",
+        "Freckle_3": "head",
+        "Hair_Cap": "head",
+        "Hair_Clump_1": "head",
+        "Hair_Clump_10": "head",
+        "Hair_Clump_11": "head",
+        "Hair_Clump_12": "head",
+        "Hair_Clump_13": "head",
+        "Hair_Clump_2": "head",
+        "Hair_Clump_3": "head",
+        "Hair_Clump_4": "head",
+        "Hair_Clump_5": "head",
+        "Hair_Clump_6": "head",
+        "Hair_Clump_7": "head",
+        "Hair_Clump_8": "head",
+        "Hair_Clump_9": "head",
+        "Hand_L": "hand.L",
+        "Hand_R": "hand.R",
+        "Head": "head",
+        "Nose": "head",
+        "Shirt_Kite_Print": "spine",
+        "Shoe_Star_L": "foot.L",
+        "Shoe_Star_R": "foot.R",
+        "Shoe_Upper_L": "foot.L",
+        "Shoe_Upper_R": "foot.R",
+        "Sleeve_L": "upper_arm.L",
+        "Sleeve_R": "upper_arm.R",
+        "Sole_L": "foot.L",
+        "Sole_R": "foot.R",
+        "Star_Clip": "head",
+        "Teeth": "jaw",
+        "Tongue": "jaw"
+      },
+      "automatic_weight_objects": {
+        "Arm_L": {
+          "bones": [
+            "upper_arm.L",
+            "forearm.L",
+            "hand.L"
+          ],
+          "unweighted_fixed": 0
+        },
+        "Arm_R": {
+          "bones": [
+            "upper_arm.R",
+            "forearm.R",
+            "hand.R"
+          ],
+          "unweighted_fixed": 0
+        },
+        "Hips_Shorts": {
+          "bones": [
+            "hips",
+            "spine"
+          ],
+          "unweighted_fixed": 24
+        },
+        "Neck": {
+          "bones": [
+            "spine",
+            "neck",
+            "head"
+          ],
+          "unweighted_fixed": 0
+        },
+        "Shin_L": {
+          "bones": [
+            "thigh.L",
+            "shin.L",
+            "foot.L"
+          ],
+          "unweighted_fixed": 0
+        },
+        "Shin_R": {
+          "bones": [
+            "thigh.R",
+            "shin.R",
+            "foot.R"
+          ],
+          "unweighted_fixed": 0
+        },
+        "Shirt_Hem": {
+          "bones": [
+            "hips",
+            "spine"
+          ],
+          "unweighted_fixed": 0
+        },
+        "Shorts_Left": {
+          "bones": [
+            "hips",
+            "thigh.L"
+          ],
+          "unweighted_fixed": 0
+        },
+        "Shorts_Right": {
+          "bones": [
+            "hips",
+            "thigh.R"
+          ],
+          "unweighted_fixed": 0
+        },
+        "Thigh_L": {
+          "bones": [
+            "hips",
+            "thigh.L",
+            "shin.L"
+          ],
+          "unweighted_fixed": 0
+        },
+        "Thigh_R": {
+          "bones": [
+            "hips",
+            "thigh.R",
+            "shin.R"
+          ],
+          "unweighted_fixed": 0
+        },
+        "Torso_Shirt": {
+          "bones": [
+            "hips",
+            "spine",
+            "neck"
+          ],
+          "unweighted_fixed": 12
+        }
+      },
+      "manual_gradient_objects": {
+        "Mouth": {
+          "bones": [
+            "head",
+            "jaw"
+          ],
+          "top_z": 0.838,
+          "bottom_z": 0.772
+        }
+      },
+      "fallback_objects": {},
+      "unweighted_vertices_fixed": 36
+    }
+  },
+  "mesh_stats": {
+    "objects": 60,
+    "vertices": 28694,
+    "faces": 29935
+  },
+  "shape_keys": [
+    {
+      "name": "brow_up",
+      "object": "Brow_L",
+      "vertices": 610
+    },
+    {
+      "name": "brow_up",
+      "object": "Brow_R",
+      "vertices": 610
+    },
+    {
+      "name": "blink.L",
+      "object": "Eyelid_L",
+      "vertices": 610
+    },
+    {
+      "name": "blink.R",
+      "object": "Eyelid_R",
+      "vertices": 610
+    },
+    {
+      "name": "smile",
+      "object": "Mouth",
+      "vertices": 610
+    },
+    {
+      "name": "mouth_open",
+      "object": "Mouth",
+      "vertices": 610
+    }
+  ],
+  "shape_key_names": [
+    "blink.L",
+    "blink.R",
+    "brow_up",
+    "mouth_open",
+    "smile"
+  ],
+  "shape_key_note": "blink.L/blink.R live on the eyelid meshes, smile/mouth_open on Mouth, brow_up on both brow meshes (Blender shape keys are per mesh datablock).",
+  "actions": [
+    {
+      "name": "idle_wave",
+      "slots": 1,
+      "fcurves": 43,
+      "frame_range": [
+        1.0,
+        48.0
+      ],
+      "frame_start": 1,
+      "frame_end": 48,
+      "seconds": 2.0
+    },
+    {
+      "name": "blink_smile",
+      "slots": 6,
+      "fcurves": 18,
+      "frame_range": [
+        1.0,
+        24.0
+      ],
+      "frame_start": 1,
+      "frame_end": 24,
+      "seconds": 1.0
+    },
+    {
+      "name": "walk_cycle",
+      "slots": 1,
+      "fcurves": 62,
+      "frame_range": [
+        1.0,
+        32.0
+      ],
+      "frame_start": 1,
+      "frame_end": 32,
+      "seconds": 1.333
+    }
+  ],
+  "renders": {
+    "rig_proof": {
+      "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\00-rig-test-pose.png",
+      "exists": true,
+      "bytes": 391518,
+      "sha256": "d4c7061cd16004863a24f413bf1c23f730415c06f28d771c4bfb6111d5ff7368"
+    },
+    "stills": [
+      {
+        "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\idle_wave_start_f01.png",
+        "exists": true,
+        "bytes": 389687,
+        "sha256": "e4d827a0c212d5103040c525deb2b8a622ed95c292742315edc5406a6b178986",
+        "action": "idle_wave",
+        "frame": 1,
+        "resolution": "640x640"
+      },
+      {
+        "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\idle_wave_mid_f24.png",
+        "exists": true,
+        "bytes": 391277,
+        "sha256": "4ccc8a651f4f210fb00590b91dc2661f44b63c7544c158a6575374c61ecf55ba",
+        "action": "idle_wave",
+        "frame": 24,
+        "resolution": "640x640"
+      },
+      {
+        "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\idle_wave_end_f48.png",
+        "exists": true,
+        "bytes": 389687,
+        "sha256": "be106ad8ea9080897bb2f20f0f026f7a135f514044c779b3bd9385b91dfb3e06",
+        "action": "idle_wave",
+        "frame": 48,
+        "resolution": "640x640"
+      },
+      {
+        "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\blink_smile_start_f01.png",
+        "exists": true,
+        "bytes": 389687,
+        "sha256": "8a5b23eadc4b44f79b74c0b795823b43a8f4188b94260cf435255ea9321bc117",
+        "action": "blink_smile",
+        "frame": 1,
+        "resolution": "640x640"
+      },
+      {
+        "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\blink_smile_mid_f12.png",
+        "exists": true,
+        "bytes": 391192,
+        "sha256": "f2ad2f8b1ed96fd8602199204393665d4475050fbd11708bbba1167a7d64ecd1",
+        "action": "blink_smile",
+        "frame": 12,
+        "resolution": "640x640"
+      },
+      {
+        "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\blink_smile_end_f24.png",
+        "exists": true,
+        "bytes": 389687,
+        "sha256": "40e5ca06ae0f55efbf6c876f0ce7586bba8fb38638c9cdf0880c5b8306608d12",
+        "action": "blink_smile",
+        "frame": 24,
+        "resolution": "640x640"
+      },
+      {
+        "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\walk_cycle_start_f01.png",
+        "exists": true,
+        "bytes": 387705,
+        "sha256": "00e17f16e089fc01b6dd1a43aa8d3d352d73e6fdd374237efc852ed4f5c4e6db",
+        "action": "walk_cycle",
+        "frame": 1,
+        "resolution": "640x640"
+      },
+      {
+        "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\walk_cycle_mid_f16.png",
+        "exists": true,
+        "bytes": 391768,
+        "sha256": "7decf1b03c40e09caa44204015902df6bd3a3343128d1004b391e4ad5563e0e5",
+        "action": "walk_cycle",
+        "frame": 16,
+        "resolution": "640x640"
+      },
+      {
+        "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\walk_cycle_end_f32.png",
+        "exists": true,
+        "bytes": 392898,
+        "sha256": "83fab9156516bc02e1059f27c0accdd67a96159025dcefa4575675ce5a75291d",
+        "action": "walk_cycle",
+        "frame": 32,
+        "resolution": "640x640"
+      }
+    ],
+    "videos": [
+      {
+        "action": "idle_wave",
+        "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\idle_wave0001-0048.mp4",
+        "bytes": 187750,
+        "sha256": "b285d195a3364c4ce003857a6ae0dd0c58f0a8c4e2f8f807c087ade1ee76d44f",
+        "frame_start": 1,
+        "frame_end": 48,
+        "fps": 24,
+        "resolution": "640x640"
+      },
+      {
+        "action": "blink_smile",
+        "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\blink_smile0001-0024.mp4",
+        "bytes": 73759,
+        "sha256": "d7b3bd2e7f1949af7a54fbd697070c17150f9f10ac9c39e29656957ffd9edb19",
+        "frame_start": 1,
+        "frame_end": 24,
+        "fps": 24,
+        "resolution": "640x640"
+      },
+      {
+        "action": "walk_cycle",
+        "path": "C:\\actions-runner\\_work\\AHOS-P12B\\studio\\assets\\character-library\\aden\\v1\\rig-test\\previews\\walk_cycle0001-0032.mp4",
+        "bytes": 117402,
+        "sha256": "0ef3dd7375598c4328e76b8a5f30bf714a6e6f1fa0533b6357e5d82843265f75",
+        "frame_start": 1,
+        "frame_end": 32,
+        "fps": 24,
+        "resolution": "640x640"
+      }
+    ]
+  },
+  "warnings": [
+    "Star_Clip has non-unit scale (1.25, 1.25, 1.25)"
+  ],
+  "notes": [
+    "Skinning: automatic weights (bone heat) for the deformable parts, rigid single-bone weights for the 60-object chibi parts, manual vertical gradient for the mouth (head -> jaw).",
+    "Shape keys are spread over the meshes that own the geometry.",
+    "All media is rendered with CPU Workbench (no GPU, no paid add-on)."
+  ],
+  "media_reconciled_at": "2026-11-14T03:09:43"
+}

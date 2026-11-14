@@ -8,7 +8,7 @@
   "source_reference": "studio\\reference\\owner_accepted_roster_v1\\characters\\01_aden.png",
   "source_sha256": "7c26afc668a9e9e352918ed618a1ae3b20da7b9e08e76a395a7e4c4ba2c14b7e",
   "blender": "4.5.16 LTS",
-  "built_at": "2026-11-11T21:13:17.864692+00:00",
+  "built_at": "2026-11-11T21:22:39.353353+00:00",
   "model_files": {
     "blend": {
       "path": "aden-character-v1.blend",
