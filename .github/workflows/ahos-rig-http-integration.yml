@@ -1,0 +1,38 @@
+name: AHOS Rig HTTP Integration
+
+on:
+  push:
+    branches:
+      - feature/ahos-rig-http-integration-20261114
+    paths:
+      - tools/studio_backends/rig.py
+      - tools/studio_media_queue.py
+      - tests/test_studio_rig_http_integration.py
+      - .github/workflows/ahos-rig-http-integration.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  http-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install test dependencies (no GPU or paid service)
+        run: python -m pip install --disable-pip-version-check pytest
+      - name: Compile queue, client, rig and HTTP tests
+        run: |
+          python -m py_compile tools/studio_media_queue.py tools/studio_media_worker_client.py tools/studio_backends/rig.py tests/test_studio_rig_http_integration.py
+      - name: Real localhost protocol and negative-contract tests
+        run: |
+          python -m pytest -q tests/test_studio_rig_http_integration.py tests/test_studio_media_http.py
+      - name: Report the limit of this CI
+        run: |
+          echo "HTTP/SQLite tests do not equal creative QA or full production."
+          echo "The actual Blender e2e test is skipped unless Blender is installed."
+          echo "RIG_PRODUCTION_READY=false"
