@@ -1,7 +1,7 @@
 {
   "schema": "ahos.production.adapters.v1",
   "zero_new_euro_spend": true,
-  "description": "Real zero-cost backends: character_model, rig (spec-driven Blender 4.5, aden+kaan, dependency sha + reopen verify) and render. animation/voice/lipsync/scene/qa remain unregistered.",
+  "description": "Real zero-cost backends: character_model, rig (aden+kaan), animation (beat-driven) and render. voice/lipsync/scene/qa remain unregistered.",
   "stages": {
     "character_model": {
       "script": "tools/studio_backends/character_model_backend.py",
@@ -13,6 +13,10 @@
     },
     "render": {
       "script": "tools/studio_backends/render_backend.py",
+      "cost_eur": 0
+    },
+    "animation": {
+      "script": "tools/studio_backends/animation.py",
       "cost_eur": 0
     }
   }
