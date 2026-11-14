@@ -22,6 +22,10 @@
     "voice": {
       "script": "tools/studio_backends/voice.py",
       "cost_eur": 0
+    },
+    "lipsync": {
+      "script": "tools/studio_backends/lipsync.py",
+      "cost_eur": 0
     }
   }
 }
