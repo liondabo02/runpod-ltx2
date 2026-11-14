@@ -15,6 +15,7 @@ import sys
 import time
 from pathlib import Path
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -68,6 +69,42 @@ def upload_file(server, token, job_id, lease_key, name, data):
     if ack.get("status")!="STORED" or ack.get("sha256")!=sha:
         raise WorkerError("Oracle did not acknowledge exact artifact SHA")
     return {"filename":name,"sha256":sha}
+
+
+def download_canon(server, token, payload, job_dir):
+    """Fetch the exact owner-approved PNG bytes through a job-scoped SSH API."""
+    locks=payload.get("canonical_reference_sha256")
+    cast=payload.get("cast")
+    if not isinstance(locks,dict) or not isinstance(cast,list) or not cast:
+        raise WorkerError("Media job lacks accepted canonical reference locks")
+    out_dir=Path(job_dir)/"references"
+    out_dir.mkdir(parents=True,exist_ok=True)
+    result={}
+    for name in cast:
+        if not isinstance(name,str) or not re.fullmatch(r"[a-z0-9_-]{1,64}",name):
+            raise WorkerError("Unsafe character identifier")
+        expected=locks.get(name)
+        if not isinstance(expected,str) or not re.fullmatch("[0-9a-f]{64}",expected):
+            raise WorkerError("Missing immutable canonical SHA for "+name)
+        query=urlencode({"episode_id":payload["episode_id"],"character":name})
+        req=Request(server+"/api/media/reference?"+query,
+                    headers={"Authorization":"Bearer "+token},method="GET")
+        try:
+            with urlopen(req,timeout=30) as response:
+                remote_hash=response.headers.get("X-Reference-SHA256")
+                if remote_hash!=expected:
+                    raise WorkerError("Oracle returned changed canon hash")
+                data=response.read(20*1024*1024+1)
+        except (HTTPError,URLError,TimeoutError) as exc:
+            raise WorkerError("Canon reference fetch failed: "+type(exc).__name__) from exc
+        if len(data)>20*1024*1024 or len(data)<16 or not data.startswith(b"\x89PNG\r\n\x1a\n"):
+            raise WorkerError("Canonical reference is not a valid PNG header or exceeds limit")
+        if digest(data)!=expected:
+            raise WorkerError("Canonical reference content does not match hash")
+        dest=out_dir/(name+".png")
+        dest.write_bytes(data)
+        result[name]={"path":str(dest),"sha256":expected}
+    return result
 
 
 def script_for_capability(capability, root):
@@ -142,8 +179,12 @@ def execute_one(server, token, job_root, repo_root=ROOT, *, max_seconds=1800):
         script=script_for_capability(capability,repo_root)
         dirname=Path(job_root)/jid
         dirname.mkdir(parents=True,exist_ok=True)
+        # Lock the worker to the actual immutable bytes, not just character names.
+        references=download_canon(server,token,payload,dirname)
         plan=dirname/"production-plan.json"
-        plan.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding="utf-8")
+        plan_payload=dict(payload)
+        plan_payload["approved_reference_files"]=references
+        plan.write_text(json.dumps(plan_payload,ensure_ascii=False,indent=2),encoding="utf-8")
         evidence=dirname/"backend-evidence.json"
         argv=[sys.executable,str(script),"--plan",str(plan),
               "--job-dir",str(dirname),"--evidence",str(evidence)]
