@@ -14,6 +14,7 @@ on:
       - tests/test_studio_media_http.py
       - tests/test_studio_media_worker_client.py
       - tools/studio_media_worker_client.py
+      - tools/deploy_media_queue_oracle.py
       - ops/oracle/deploy-media-worker-queue.sh
       - ops/oracle/ahos-studio-os.service
       - tests/test_studio_oracle_service.py
@@ -36,7 +37,9 @@ jobs:
       - name: Check reversible Oracle deploy script syntax
         run: bash -n ops/oracle/deploy-media-worker-queue.sh
       - name: Compile worker queue and Oracle service
-        run: python -m py_compile tools/studio_media_queue.py tools/studio_media_worker_client.py tools/studio_oracle_service.py tools/ahos_studio_os.py
+        run: python -m py_compile tools/studio_media_queue.py tools/studio_media_worker_client.py tools/deploy_media_queue_oracle.py tools/studio_oracle_service.py tools/ahos_studio_os.py
+      - name: Validate optional private deployment helper
+        run: python tools/deploy_media_queue_oracle.py --help
       - name: Test worker protocol and existing Studio OS
         run: python -m pytest -q tests/test_studio_media_queue.py tests/test_media_retry_history.py tests/test_studio_canon_transfer.py tests/test_media_dependency_transfer.py tests/test_studio_media_http.py tests/test_studio_media_worker_client.py tests/test_studio_oracle_service.py tests/test_ahos_studio_os.py tests/test_studio_cinematic_router.py tests/test_ltx25_shot_worker.py
       - name: Ensure production status remains honest
