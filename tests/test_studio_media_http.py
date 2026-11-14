@@ -59,6 +59,22 @@ def test_http_lease_upload_qa_and_auth(tmp_path):
         frame=(coordinator.engine.root/"studio/reference/owner_accepted_roster_v1/characters/01_aden.png").read_bytes()
         db.execute("UPDATE tasks SET result_json=? WHERE episode_id=? AND task_id='canon'",
                    (json.dumps({"locked_characters":{"aden":hashlib.sha256(frame).hexdigest()}}),eid))
+    folder=tmp_path/"oracle-state/episode-artifacts"/eid
+    folder.mkdir(parents=True,exist_ok=True)
+    shotplan=folder/"shot-plan.json"
+    shotplan.write_text(json.dumps({
+        "schema":"ahos.studio-os.shotplan.v1",
+        "status":"DRAFT_UNREVIEWED",
+        "scenes":[{"scene_id":"scene01",
+                   "plot_beat":{"summary":"Aden plays safely in the garden",
+                                "characters":["aden"],"location":"garden"},
+                   "planned_seconds":60}]}),encoding="utf-8")
+    with engine.connect() as db:
+        db.execute("UPDATE tasks SET state='DONE_DRAFT',result_json=? "
+                   "WHERE episode_id=? AND task_id='storyboard'",
+                   (json.dumps({"draft_path":str(shotplan),
+                                "sha256":hashlib.sha256(shotplan.read_bytes()).hexdigest()}),
+                    eid))
     server=ThreadingHTTPServer(("127.0.0.1",0),handler_factory(coordinator))
     thread=threading.Thread(target=server.serve_forever,daemon=True)
     thread.start()
