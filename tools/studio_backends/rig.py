@@ -18,7 +18,8 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 ROOT = Path(__file__).resolve().parents[2]
 FACTORY = ROOT / "tools" / "studio_backends" / "rig_factory.py"
@@ -75,14 +76,12 @@ def resolve_model(cid, plan):
         kind = str(art.get("kind") or "").lower()
         if kind and kind not in ("character_model", "model", "mesh", "rig_source"):
             continue
-        art_cast = str(art.get("cast") or art.get("character_id") or "").lower()
+        art_cast = str(art.get("character_id") or art.get("cast") or "").lower()
         raw = str(art.get("path") or art.get("filename") or "")
-        task_id = str(art.get("task_id") or "")
-        if art_cast and art_cast != cid.lower():
-            continue
-        if not art_cast and not kind and cid.lower() not in (raw + task_id).lower():
-            continue
-        if not raw:
+        # Multi-character tasks must use the coordinator's explicit identity.
+        # GLB is a preview/export; Blender rigging needs an editable .blend.
+        # Never accept the first matching artifact or infer identity from a name.
+        if art_cast != cid.lower() or not raw.lower().endswith(".blend"):
             continue
         path = Path(raw)
         if path.is_absolute():

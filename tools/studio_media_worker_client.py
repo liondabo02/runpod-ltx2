@@ -359,7 +359,22 @@ def execute_one(server, token, job_root, repo_root=ROOT, *, max_seconds=1800):
             with logs.open("rb") as fd:
                 fd.seek(max(0,logs.stat().st_size-1000))
                 tail=fd.read().decode("utf-8",errors="replace")
-            raise WorkerError("Backend exit="+str(process.returncode)+", "+tail[-400:])
+            # Surface explicit blocked codes. The backend evidence may contain
+            # paths or full logs, so only copy safe short machine-readable codes.
+            blocked_codes=[]
+            if evidence.is_file():
+                try:
+                    reported=json.loads(evidence.read_text(encoding="utf-8"))
+                    blocked_codes=[
+                        str(item.get("code","UNKNOWN"))[:60]
+                        for item in reported.get("blocked",[])
+                        if isinstance(item,dict)
+                    ][:5]
+                except (OSError,ValueError,TypeError):
+                    pass
+            suffix=(" blocked_codes="+",".join(blocked_codes)) if blocked_codes else ""
+            raise WorkerError("Backend exit="+str(process.returncode)+
+                              suffix+", "+tail[-300:])
         outputs=read_evidence(evidence,capability,dirname)
         submitted=[
             upload_large_file(server,token,jid,lease,name,raw)
