@@ -176,6 +176,36 @@ def handler_factory(coordinator: Coordinator):
                 else:
                     coordinator.media_queue.sync_ready()
                     self.reply(200,coordinator.media_queue.status())
+            elif route=="/api/media/dependencies":
+                try:
+                    worker=coordinator.media_queue.auth(self.bearer(),role="worker")
+                    job_id=parse_qs(urlsplit(self.path).query).get("job_id",[""])[0]
+                    artifacts=coordinator.media_queue.dependencies_for_worker(worker,job_id)
+                    self.reply(200,{"schema":"ahos.media.dependencies.v1","artifacts":artifacts})
+                except (QueueError,OSError) as exc:
+                    self.reply(403,{"error":str(exc)})
+            elif route=="/api/media/dependency":
+                try:
+                    worker=coordinator.media_queue.auth(self.bearer(),role="worker")
+                    query=parse_qs(urlsplit(self.path).query)
+                    job_id=query.get("job_id",[""])[0]
+                    task_id=query.get("task_id",[""])[0]
+                    filename=query.get("filename",[""])[0]
+                    path,sha,size=coordinator.media_queue.dependency_for_worker(
+                        worker,job_id,task_id,filename)
+                    self.send_response(200)
+                    self.send_header("Content-Type","application/octet-stream")
+                    self.send_header("Content-Length",str(size))
+                    self.send_header("X-Artifact-SHA256",sha)
+                    self.send_header("Cache-Control","no-store")
+                    self.end_headers()
+                    with path.open("rb") as stream:
+                        while True:
+                            data=stream.read(1024*1024)
+                            if not data:break
+                            self.wfile.write(data)
+                except (QueueError,OSError) as exc:
+                    self.reply(403,{"error":str(exc)})
             elif route=="/api/media/reference":
                 try:
                     worker=coordinator.media_queue.auth(self.bearer(),role="worker")
