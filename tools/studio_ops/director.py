@@ -111,9 +111,10 @@ def main(argv=None):
 
     payload, state = ask_ollama(PROMPT.format(story=ns.story, cast=", ".join(cast)))
     beats, problems = validate(payload)
+    llm_problems = list(problems)
     source = "ollama"
-    if not beats:
-        # never invent a different story: fall back to the studio's generic acting
+    if not beats or problems:
+        # the model returned schema-invalid beats: use the studio's generic acting
         # template and label it so nobody mistakes it for a model output
         beats, problems = validate({"beats": HEURISTIC_BEATS})
         source = "heuristic_fallback"
