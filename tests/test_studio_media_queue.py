@@ -115,7 +115,7 @@ def test_artifact_bytes_upload_and_independent_creative_qa(tmp_path):
     job=q.lease(maker)
     data=sample_glb()
     digest=hashlib.sha256(data).hexdigest()
-    with pytest.raises(QueueError,match="SHA"):
+    with pytest.raises(QueueError,match="hash mismatch"):
         q.upload(maker,job["job_id"],"mesh.glb","0"*64,data,job["lease_key"])
     with pytest.raises(QueueError,match="filename"):
         q.upload(maker,job["job_id"],"../mesh.glb",digest,data,job["lease_key"])
@@ -163,10 +163,11 @@ def test_self_review_or_missing_evidence_denied(tmp_path):
         q.review_claim(maker)
     with pytest.raises(QueueError,match="not leased"):
         q.upload({"role":"worker","worker_id":"other"},
-                 job["job_id"],"out.glb","0"*64,b"hello",job["lease_key"])
-    with pytest.raises(QueueError,match="proof"):
+                 job["job_id"],"out.glb",hashlib.sha256(b"hello").hexdigest(),b"hello",job["lease_key"])
+    with pytest.raises(QueueError,match="Review proof"):
         q.review({"role":"reviewer","worker_id":"other"},job["job_id"],
-                 {"schema":"ahos.media.review.v1","method":"human_frame_audio_review"})
+                 {"schema":"ahos.media.review.v1","method":"human_frame_audio_review",
+                  "scores":{k:1.0 for k in qmod_floors()}})
 
 
 def test_expired_third_lease_blocks_job(tmp_path):
