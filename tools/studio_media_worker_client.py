@@ -175,7 +175,7 @@ def download_dependencies(server, token, payload, job_id, job_dir):
     if not isinstance(items,list) or len(items)>100:
         raise WorkerError("Too many upstream media files")
     total=sum(x.get("bytes",0) for x in items if isinstance(x,dict))
-    if total>1024*1024*1024:
+    if not isinstance(total,int) or total>MAX_FILE_BYTES:
         raise WorkerError("Upstream media exceeds safe job budget")
     output=[]
     folder=Path(job_dir)/"dependencies"
@@ -190,24 +190,39 @@ def download_dependencies(server, token, payload, job_id, job_dir):
         if (not isinstance(task_id,str) or not re.fullmatch(r"[A-Za-z0-9:_-]{1,150}",task_id)
             or not isinstance(name,str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,99}",name)
             or not isinstance(expected,str) or not re.fullmatch(r"[0-9a-f]{64}",expected)
-            or not isinstance(size,int) or size<1 or size>MAX_FILE):
+            or type(size) is not int or size<1 or size>MAX_FILE_BYTES):
             raise WorkerError("Unsafe or invalid upstream artifact metadata")
         uri=server+"/api/media/dependency?"+urlencode(
             {"job_id":job_id,"task_id":task_id,"filename":name})
         req=Request(uri,headers={"Authorization":"Bearer "+token},method="GET")
-        try:
-            with urlopen(req,timeout=120) as response:
-                if response.headers.get("X-Artifact-SHA256")!=expected:
-                    raise WorkerError("Upstream server SHA header differs")
-                data=response.read(MAX_FILE+1)
-        except (HTTPError,URLError,TimeoutError) as exc:
-            raise WorkerError("Upstream media transfer failed") from exc
-        if len(data)!=size or digest(data)!=expected:
-            raise WorkerError("Upstream media content or size changed")
         sub=folder/(f"{i:03}-"+hashlib.sha256(task_id.encode()).hexdigest()[:12])
         sub.mkdir(parents=True,exist_ok=True)
         path=sub/name
-        path.write_bytes(data)
+        tmp=sub/(name+".incoming")
+        received=0
+        hasher=hashlib.sha256()
+        try:
+            with urlopen(req,timeout=300) as response:
+                if response.headers.get("X-Artifact-SHA256")!=expected:
+                    raise WorkerError("Upstream server SHA header differs")
+                with tmp.open("xb") as stream:
+                    while True:
+                        data=response.read(min(CHUNK_BYTES,size-received+1))
+                        if not data:break
+                        received+=len(data)
+                        if received>size:
+                            raise WorkerError("Upstream media exceeds advertised byte size")
+                        stream.write(data)
+                        hasher.update(data)
+            if received!=size or hasher.hexdigest()!=expected:
+                raise WorkerError("Upstream media content or size changed")
+            if path.exists():
+                raise WorkerError("Previous dependency file exists; never overwrite")
+            tmp.replace(path)
+        except (HTTPError,URLError,TimeoutError) as exc:
+            raise WorkerError("Upstream media transfer failed") from exc
+        finally:
+            tmp.unlink(missing_ok=True)
         output.append({"source_task_id":task_id,"filename":name,
                        "path":str(path),"sha256":expected,"bytes":size})
     return output
