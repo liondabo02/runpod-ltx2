@@ -78,3 +78,21 @@ Nine independent QA scores are required: identity, acting, motion, continuity, c
 5. The film is only ready when every stage, professional gate and owner final approval has actual evidence.
 
 No force push, no merge to main and no new billable GPU or API access as part of this protocol.
+
+
+## Canonical reference and retry-history hardening (14 November 2026)
+
+The production assignment now includes \`canonical_source=owner_accepted_roster_v1\` and \`canonical_reference_sha256\`, an immutable mapping for the characters in the episode. A media task is NOT placed in the runnable queue when the episode's 'canon' task lacks verified SHA values. This fixes the previous unsafe worker interface that only transmitted names such as "aden" and "kaan".
+
+A production worker with an active lease can call:
+- GET /api/media/reference?episode_id=<episode_id>&character=<canonical_character_id>
+- Authorization: Bearer <registered-worker-token>
+- Response: exact owner-approved PNG bytes, X-Reference-SHA256 header and Content-Length.
+
+The server verifies the original reference bytes against the SHA snapshot recorded at story intake. A request from a worker without an active lease for that episode, for an unknown character or for a changed source is rejected. The worker client fetches and checks SHA-256 again; it refuses to run a Blender/AI model if a canonical reference is missing, then supplies local reference file paths in the backend production plan as approved_reference_files.
+
+New guest characters are candidate assets, not approved canonical actors; they need source/rights review and a successful independent identity gate before future scenes reuse the guest.
+
+The retry system also keeps every earlier attempt's artifact files and metadata in media_artifact_history while permitting the next attempt to upload the SAME file name (e.g. model.glb). No old bytes are deleted on QA failure; filenames are unblocked for corrected renders, and attempts remain limited to three. Tests cover expired leases, stale keys and reusing filenames after failed QA.
+
+These guardrails protect the exact canonical source and queue provenance, but do not yet replace human/validated multimodal verification of every generated character and final episode.
