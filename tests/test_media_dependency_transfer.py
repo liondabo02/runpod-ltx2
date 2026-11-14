@@ -1,5 +1,6 @@
 """A rig worker must receive only QA-passed actor models and unchanged source SHA."""
 import hashlib
+import io
 import json
 import sys
 from pathlib import Path
@@ -66,10 +67,10 @@ def test_worker_dependency_download_checks_exact_bytes(tmp_path,monkeypatch):
          "sha256":actual_sha,"bytes":len(payload)}]}
     called=[]
     class FakeResponse:
-        def __init__(self,data,headers):self.data=data;self.headers=headers
+        def __init__(self,data,headers):self.stream=io.BytesIO(data);self.headers=headers
         def __enter__(self):return self
         def __exit__(self,*args):return False
-        def read(self,*args):return self.data
+        def read(self,*args):return self.stream.read(*args)
     def fake_urlopen(req,timeout=0):
         called.append(req.full_url)
         if "/dependencies?" in req.full_url:
