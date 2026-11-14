@@ -17,7 +17,7 @@ def test_http_chunked_artifact_roundtrip(tmp_path):
     owner=Coordinator(tmp_path/"state",root=make_root(tmp_path))
     owner.enqueue=lambda episode_id:None
     os=owner.engine
-    eid=os.submit("Aden saves a kite with help from Kaan.",minutes=1)["episode_id"]
+    eid=os.submit("Aden saves a kite.",minutes=1)["episode_id"]
     frame=(os.root/"studio/reference/owner_accepted_roster_v1/characters/01_aden.png").read_bytes()
     with os.connect() as db:
         for task_id in ("intake","canon","story","storyboard","asset_inventory"):
