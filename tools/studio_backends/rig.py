@@ -21,6 +21,7 @@ from pathlib import Path
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import growth  # noqa: E402  (holding growth engine bridge, advisory only)
+import memory  # noqa: E402  (append-only studio memory per worker)
 
 ROOT = Path(__file__).resolve().parents[2]
 FACTORY = ROOT / "tools" / "studio_backends" / "rig_factory.py"
@@ -297,6 +298,15 @@ def main(argv=None):
     }
     evidence_path = Path(ns.evidence)
     evidence_path.parent.mkdir(parents=True, exist_ok=True)
+    evidence["memory"] = memory.digest("rig")
+    memory.remember("rig", {
+        "status": status,
+        "cast": cast,
+        "artifacts": len(artifacts),
+        "blocked_codes": [item.get("code") for item in blocked],
+        "lessons": ["fix:%s" % item.get("code") for item in blocked if item.get("code")],
+    })
+    evidence["memory_after"] = memory.digest("rig")
     evidence_path.write_text(json.dumps(evidence, indent=2, ensure_ascii=False),
                              encoding="utf-8")
     print("RIG_BACKEND_%s cast=%s artifacts=%d blocked=%d"
