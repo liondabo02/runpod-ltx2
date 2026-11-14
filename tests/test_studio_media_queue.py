@@ -37,6 +37,23 @@ def system(tmp_path):
                    (json.dumps({"locked_characters":{"aden":hashlib.sha256(reference).hexdigest()},
                                 "identity_source":"owner_accepted_roster_v1"}),
                     episode["episode_id"]))
+    # In-memory, hash-verified director fixture, not a real storyboard.
+    folder=tmp_path/"cloud/episode-artifacts"/episode["episode_id"]
+    folder.mkdir(parents=True,exist_ok=True)
+    shotplan=folder/"shot-plan.json"
+    shotplan.write_text(json.dumps({
+        "schema":"ahos.studio-os.shotplan.v1",
+        "status":"DRAFT_UNREVIEWED",
+        "scenes":[{"scene_id":"scene01",
+                   "plot_beat":{"summary":"Aden helps a baby bird share a toy",
+                                "location":"garden","characters":["aden"]},
+                   "planned_seconds":60}]}),encoding="utf-8")
+    with os.connect() as db:
+        db.execute("UPDATE tasks SET state='DONE_DRAFT',result_json=? "
+                   "WHERE episode_id=? AND task_id='storyboard'",
+                   (json.dumps({"draft_path":str(shotplan),
+                                "sha256":hashlib.sha256(shotplan.read_bytes()).hexdigest()}),
+                    episode["episode_id"]))
     queue=MediaQueue(os,tmp_path/"cloud")
     return queue,os,episode["episode_id"]
 
