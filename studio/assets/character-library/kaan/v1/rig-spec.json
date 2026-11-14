@@ -1,0 +1,1097 @@
+{
+  "schema": "ahos.character-rig-spec.v1",
+  "character_id": "kaan",
+  "source_blend": "C:\\Users\\esmak\\Desktop\\dc-test\\ahos-mesh-factory\\out\\kaan\\kaan-model.blend",
+  "derived_at": "2026-11-14T12:22:32",
+  "derived_from": "mesh part bounds + naming convention",
+  "units": "meters",
+  "ground_z": 0.0,
+  "height_m": 0.7304,
+  "part_bounds": {
+    "head": {
+      "min": [
+        -0.14744,
+        -0.13984,
+        0.399
+      ],
+      "max": [
+        0.14744,
+        0.13984,
+        0.703
+      ],
+      "center": [
+        -0.0,
+        0.0,
+        0.551
+      ],
+      "size": [
+        0.29488,
+        0.27968,
+        0.304
+      ]
+    },
+    "neck": {
+      "min": [
+        -0.0418,
+        -0.0418,
+        0.3838
+      ],
+      "max": [
+        0.0418,
+        0.0418,
+        0.437
+      ],
+      "center": [
+        0.0,
+        0.0,
+        0.4104
+      ],
+      "size": [
+        0.0836,
+        0.0836,
+        0.0532
+      ]
+    },
+    "torso": {
+      "min": [
+        -0.1368,
+        -0.1064,
+        0.18164
+      ],
+      "max": [
+        0.1368,
+        0.1064,
+        0.41876
+      ],
+      "center": [
+        -0.0,
+        -0.0,
+        0.3002
+      ],
+      "size": [
+        0.2736,
+        0.2128,
+        0.23712
+      ]
+    },
+    "hips": {
+      "min": [
+        -0.12312,
+        -0.09576,
+        0.12236
+      ],
+      "max": [
+        0.12312,
+        0.09576,
+        0.25916
+      ],
+      "center": [
+        -0.0,
+        -0.0,
+        0.19076
+      ],
+      "size": [
+        0.24624,
+        0.19152,
+        0.1368
+      ]
+    },
+    "mouth": {
+      "min": [
+        -0.0228,
+        -0.13186,
+        0.48982
+      ],
+      "max": [
+        0.0228,
+        -0.11134,
+        0.5149
+      ],
+      "center": [
+        0.0,
+        -0.1216,
+        0.50236
+      ],
+      "size": [
+        0.0456,
+        0.02052,
+        0.02508
+      ]
+    },
+    "brow": {
+      "min": [
+        -0.07478,
+        -0.11856,
+        0.62669
+      ],
+      "max": [
+        0.07478,
+        -0.11248,
+        0.63034
+      ],
+      "center": [
+        0.0,
+        -0.11552,
+        0.62852
+      ],
+      "size": [
+        0.14957,
+        0.00608,
+        0.00365
+      ]
+    },
+    "sleeve_L": {
+      "min": [
+        -0.16644,
+        -0.03648,
+        0.323
+      ],
+      "max": [
+        -0.09348,
+        0.03648,
+        0.3838
+      ],
+      "center": [
+        -0.12996,
+        0.0,
+        0.3534
+      ],
+      "size": [
+        0.07296,
+        0.07296,
+        0.0608
+      ]
+    },
+    "arm_L": {
+      "min": [
+        -0.15428,
+        -0.02432,
+        0.22017
+      ],
+      "max": [
+        -0.10564,
+        0.02432,
+        0.35743
+      ],
+      "center": [
+        -0.12996,
+        0.0,
+        0.2888
+      ],
+      "size": [
+        0.04864,
+        0.04864,
+        0.13726
+      ]
+    },
+    "hand_L": {
+      "min": [
+        -0.16644,
+        -0.03283,
+        0.16127
+      ],
+      "max": [
+        -0.09348,
+        0.03283,
+        0.24153
+      ],
+      "center": [
+        -0.12996,
+        0.0,
+        0.2014
+      ],
+      "size": [
+        0.07296,
+        0.06566,
+        0.08026
+      ]
+    },
+    "thigh_L": {
+      "min": [
+        -0.08664,
+        -0.0418,
+        0.1133
+      ],
+      "max": [
+        -0.0076,
+        0.0418,
+        0.23744
+      ],
+      "center": [
+        -0.04712,
+        -0.0,
+        0.17537
+      ],
+      "size": [
+        0.07904,
+        0.0836,
+        0.12415
+      ]
+    },
+    "shin_L": {
+      "min": [
+        -0.07448,
+        -0.02736,
+        0.0266
+      ],
+      "max": [
+        -0.01976,
+        0.02736,
+        0.11894
+      ],
+      "center": [
+        -0.04712,
+        0.0,
+        0.07277
+      ],
+      "size": [
+        0.05472,
+        0.05472,
+        0.09234
+      ]
+    },
+    "foot_L": {
+      "min": [
+        -0.08892,
+        -0.0874,
+        0.0
+      ],
+      "max": [
+        -0.00532,
+        0.057,
+        0.03325
+      ],
+      "center": [
+        -0.04712,
+        -0.0152,
+        0.01663
+      ],
+      "size": [
+        0.0836,
+        0.1444,
+        0.03325
+      ]
+    },
+    "eye_L": {
+      "min": [
+        -0.09067,
+        -0.14371,
+        0.526
+      ],
+      "max": [
+        -0.01026,
+        -0.09949,
+        0.6064
+      ],
+      "center": [
+        -0.05046,
+        -0.1216,
+        0.5662
+      ],
+      "size": [
+        0.08041,
+        0.04422,
+        0.08041
+      ]
+    },
+    "eye_all_L": {
+      "min": [
+        -0.09067,
+        -0.14608,
+        0.526
+      ],
+      "max": [
+        -0.01026,
+        -0.09949,
+        0.6064
+      ],
+      "center": [
+        -0.05046,
+        -0.12278,
+        0.5662
+      ],
+      "size": [
+        0.08041,
+        0.04659,
+        0.08041
+      ]
+    },
+    "eyelid_L": {
+      "min": [
+        -0.0967,
+        -0.13699,
+        0.59149
+      ],
+      "max": [
+        -0.00423,
+        -0.10925,
+        0.62293
+      ],
+      "center": [
+        -0.05046,
+        -0.12312,
+        0.60721
+      ],
+      "size": [
+        0.09247,
+        0.02774,
+        0.03144
+      ]
+    },
+    "sleeve_R": {
+      "min": [
+        0.09348,
+        -0.03648,
+        0.323
+      ],
+      "max": [
+        0.16644,
+        0.03648,
+        0.3838
+      ],
+      "center": [
+        0.12996,
+        0.0,
+        0.3534
+      ],
+      "size": [
+        0.07296,
+        0.07296,
+        0.0608
+      ]
+    },
+    "arm_R": {
+      "min": [
+        0.10564,
+        -0.02432,
+        0.22017
+      ],
+      "max": [
+        0.15428,
+        0.02432,
+        0.35743
+      ],
+      "center": [
+        0.12996,
+        0.0,
+        0.2888
+      ],
+      "size": [
+        0.04864,
+        0.04864,
+        0.13726
+      ]
+    },
+    "hand_R": {
+      "min": [
+        0.09348,
+        -0.03283,
+        0.16127
+      ],
+      "max": [
+        0.16644,
+        0.03283,
+        0.24153
+      ],
+      "center": [
+        0.12996,
+        0.0,
+        0.2014
+      ],
+      "size": [
+        0.07296,
+        0.06566,
+        0.08026
+      ]
+    },
+    "thigh_R": {
+      "min": [
+        0.0076,
+        -0.0418,
+        0.1133
+      ],
+      "max": [
+        0.08664,
+        0.0418,
+        0.23744
+      ],
+      "center": [
+        0.04712,
+        -0.0,
+        0.17537
+      ],
+      "size": [
+        0.07904,
+        0.0836,
+        0.12415
+      ]
+    },
+    "shin_R": {
+      "min": [
+        0.01976,
+        -0.02736,
+        0.0266
+      ],
+      "max": [
+        0.07448,
+        0.02736,
+        0.11894
+      ],
+      "center": [
+        0.04712,
+        0.0,
+        0.07277
+      ],
+      "size": [
+        0.05472,
+        0.05472,
+        0.09234
+      ]
+    },
+    "foot_R": {
+      "min": [
+        0.00532,
+        -0.0874,
+        0.0
+      ],
+      "max": [
+        0.08892,
+        0.057,
+        0.03325
+      ],
+      "center": [
+        0.04712,
+        -0.0152,
+        0.01663
+      ],
+      "size": [
+        0.0836,
+        0.1444,
+        0.03325
+      ]
+    },
+    "eye_R": {
+      "min": [
+        0.01026,
+        -0.14371,
+        0.526
+      ],
+      "max": [
+        0.09067,
+        -0.09949,
+        0.6064
+      ],
+      "center": [
+        0.05046,
+        -0.1216,
+        0.5662
+      ],
+      "size": [
+        0.08041,
+        0.04422,
+        0.08041
+      ]
+    },
+    "eye_all_R": {
+      "min": [
+        0.01026,
+        -0.14608,
+        0.526
+      ],
+      "max": [
+        0.09067,
+        -0.09949,
+        0.6064
+      ],
+      "center": [
+        0.05046,
+        -0.12278,
+        0.5662
+      ],
+      "size": [
+        0.08041,
+        0.04659,
+        0.08041
+      ]
+    },
+    "eyelid_R": {
+      "min": [
+        0.00423,
+        -0.13699,
+        0.59149
+      ],
+      "max": [
+        0.0967,
+        -0.10925,
+        0.62293
+      ],
+      "center": [
+        0.05046,
+        -0.12312,
+        0.60721
+      ],
+      "size": [
+        0.09247,
+        0.02774,
+        0.03144
+      ]
+    }
+  },
+  "bones": [
+    {
+      "name": "root",
+      "head": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "tail": [
+        0.0,
+        -0.15,
+        0.0
+      ],
+      "parent": null,
+      "connected": false,
+      "deform": false
+    },
+    {
+      "name": "hips",
+      "head": [
+        0.0,
+        0.0,
+        0.1908
+      ],
+      "tail": [
+        0.0,
+        0.0,
+        0.2592
+      ],
+      "parent": "root",
+      "connected": false,
+      "deform": true
+    },
+    {
+      "name": "spine",
+      "head": [
+        0.0,
+        0.0,
+        0.2592
+      ],
+      "tail": [
+        0.0,
+        0.0,
+        0.3971
+      ],
+      "parent": "hips",
+      "connected": true,
+      "deform": true
+    },
+    {
+      "name": "neck",
+      "head": [
+        0.0,
+        0.0,
+        0.3971
+      ],
+      "tail": [
+        0.0,
+        0.0,
+        0.475
+      ],
+      "parent": "spine",
+      "connected": true,
+      "deform": true
+    },
+    {
+      "name": "head",
+      "head": [
+        0.0,
+        0.0,
+        0.475
+      ],
+      "tail": [
+        0.0,
+        0.0,
+        0.6756
+      ],
+      "parent": "neck",
+      "connected": true,
+      "deform": true
+    },
+    {
+      "name": "jaw",
+      "head": [
+        0.0,
+        -0.0122,
+        0.5212
+      ],
+      "tail": [
+        0.0,
+        -0.13186,
+        0.4999
+      ],
+      "parent": "head",
+      "connected": false,
+      "deform": true
+    },
+    {
+      "name": "eye.L",
+      "head": [
+        -0.0505,
+        -0.1216,
+        0.5662
+      ],
+      "tail": [
+        -0.0505,
+        -0.2116,
+        0.5662
+      ],
+      "parent": "head",
+      "connected": false,
+      "deform": true
+    },
+    {
+      "name": "eyelid.L",
+      "head": [
+        -0.0505,
+        -0.1231,
+        0.6229
+      ],
+      "tail": [
+        -0.0505,
+        -0.1231,
+        0.5749
+      ],
+      "parent": "head",
+      "connected": false,
+      "deform": true
+    },
+    {
+      "name": "shoulder.L",
+      "head": [
+        -0.0356,
+        0.0,
+        0.3534
+      ],
+      "tail": [
+        -0.13,
+        0.0,
+        0.3534
+      ],
+      "parent": "spine",
+      "connected": false,
+      "deform": true
+    },
+    {
+      "name": "upper_arm.L",
+      "head": [
+        -0.13,
+        0.0,
+        0.3574
+      ],
+      "tail": [
+        -0.13,
+        0.0,
+        0.2998
+      ],
+      "parent": "shoulder.L",
+      "connected": false,
+      "deform": true
+    },
+    {
+      "name": "forearm.L",
+      "head": [
+        -0.13,
+        0.0,
+        0.2998
+      ],
+      "tail": [
+        -0.13,
+        0.0,
+        0.2504
+      ],
+      "parent": "upper_arm.L",
+      "connected": true,
+      "deform": true
+    },
+    {
+      "name": "hand.L",
+      "head": [
+        -0.13,
+        0.0,
+        0.2504
+      ],
+      "tail": [
+        -0.13,
+        0.0,
+        0.1653
+      ],
+      "parent": "forearm.L",
+      "connected": true,
+      "deform": true
+    },
+    {
+      "name": "thigh.L",
+      "head": [
+        -0.0471,
+        0.0,
+        0.2374
+      ],
+      "tail": [
+        -0.0471,
+        0.0,
+        0.1051
+      ],
+      "parent": "hips",
+      "connected": false,
+      "deform": true
+    },
+    {
+      "name": "shin.L",
+      "head": [
+        -0.0471,
+        0.0,
+        0.1051
+      ],
+      "tail": [
+        -0.0471,
+        0.0,
+        0.0294
+      ],
+      "parent": "thigh.L",
+      "connected": true,
+      "deform": true
+    },
+    {
+      "name": "foot.L",
+      "head": [
+        -0.0471,
+        0.0,
+        0.0294
+      ],
+      "tail": [
+        -0.0471,
+        -0.0743,
+        0.0117
+      ],
+      "parent": "shin.L",
+      "connected": true,
+      "deform": true
+    },
+    {
+      "name": "eye.R",
+      "head": [
+        0.0505,
+        -0.1216,
+        0.5662
+      ],
+      "tail": [
+        0.0505,
+        -0.2116,
+        0.5662
+      ],
+      "parent": "head",
+      "connected": false,
+      "deform": true
+    },
+    {
+      "name": "eyelid.R",
+      "head": [
+        0.0505,
+        -0.1231,
+        0.6229
+      ],
+      "tail": [
+        0.0505,
+        -0.1231,
+        0.5749
+      ],
+      "parent": "head",
+      "connected": false,
+      "deform": true
+    },
+    {
+      "name": "shoulder.R",
+      "head": [
+        0.0356,
+        0.0,
+        0.3534
+      ],
+      "tail": [
+        0.13,
+        0.0,
+        0.3534
+      ],
+      "parent": "spine",
+      "connected": false,
+      "deform": true
+    },
+    {
+      "name": "upper_arm.R",
+      "head": [
+        0.13,
+        0.0,
+        0.3574
+      ],
+      "tail": [
+        0.13,
+        0.0,
+        0.2998
+      ],
+      "parent": "shoulder.R",
+      "connected": false,
+      "deform": true
+    },
+    {
+      "name": "forearm.R",
+      "head": [
+        0.13,
+        0.0,
+        0.2998
+      ],
+      "tail": [
+        0.13,
+        0.0,
+        0.2504
+      ],
+      "parent": "upper_arm.R",
+      "connected": true,
+      "deform": true
+    },
+    {
+      "name": "hand.R",
+      "head": [
+        0.13,
+        0.0,
+        0.2504
+      ],
+      "tail": [
+        0.13,
+        0.0,
+        0.1653
+      ],
+      "parent": "forearm.R",
+      "connected": true,
+      "deform": true
+    },
+    {
+      "name": "thigh.R",
+      "head": [
+        0.0471,
+        0.0,
+        0.2374
+      ],
+      "tail": [
+        0.0471,
+        0.0,
+        0.1051
+      ],
+      "parent": "hips",
+      "connected": false,
+      "deform": true
+    },
+    {
+      "name": "shin.R",
+      "head": [
+        0.0471,
+        0.0,
+        0.1051
+      ],
+      "tail": [
+        0.0471,
+        0.0,
+        0.0294
+      ],
+      "parent": "thigh.R",
+      "connected": true,
+      "deform": true
+    },
+    {
+      "name": "foot.R",
+      "head": [
+        0.0471,
+        0.0,
+        0.0294
+      ],
+      "tail": [
+        0.0471,
+        -0.0743,
+        0.0117
+      ],
+      "parent": "shin.R",
+      "connected": true,
+      "deform": true
+    }
+  ],
+  "skin": {
+    "rigid": {
+      "Head": "head",
+      "Hair_Cap": "head",
+      "Star_Clip": "head",
+      "Nose": "head",
+      "Ear_L": "head",
+      "Ear_R": "head",
+      "Brow_L": "head",
+      "Brow_R": "head",
+      "Teeth": "jaw",
+      "Tongue": "jaw",
+      "Shirt_Kite_Print": "spine",
+      "Hand_L": "hand.L",
+      "Shoe_Upper_L": "foot.L",
+      "Sole_L": "foot.L",
+      "Shoe_Star_L": "foot.L",
+      "Eyelid_L": "eyelid.L",
+      "Sleeve_L": "upper_arm.L",
+      "Eye_White_L": "eye.L",
+      "Eye_Iris_L": "eye.L",
+      "Eye_Pupil_L": "eye.L",
+      "Eye_Glint_L": "eye.L",
+      "Hand_R": "hand.R",
+      "Shoe_Upper_R": "foot.R",
+      "Sole_R": "foot.R",
+      "Shoe_Star_R": "foot.R",
+      "Eyelid_R": "eyelid.R",
+      "Sleeve_R": "upper_arm.R",
+      "Eye_White_R": "eye.R",
+      "Eye_Iris_R": "eye.R",
+      "Eye_Pupil_R": "eye.R",
+      "Eye_Glint_R": "eye.R"
+    },
+    "rigid_prefix": {
+      "Hair_Clump_": "head",
+      "Freckle_": "head",
+      "Hair_": "head"
+    },
+    "auto": {
+      "Neck": [
+        "spine",
+        "neck",
+        "head"
+      ],
+      "Torso_Shirt": [
+        "hips",
+        "spine",
+        "neck"
+      ],
+      "Shirt_Hem": [
+        "hips",
+        "spine"
+      ],
+      "Hips_Shorts": [
+        "hips",
+        "spine"
+      ],
+      "Shorts_Left": [
+        "hips",
+        "thigh.L"
+      ],
+      "Shorts_Right": [
+        "hips",
+        "thigh.R"
+      ],
+      "Arm_L": [
+        "upper_arm.L",
+        "forearm.L",
+        "hand.L"
+      ],
+      "Arm_R": [
+        "upper_arm.R",
+        "forearm.R",
+        "hand.R"
+      ],
+      "Thigh_L": [
+        "hips",
+        "thigh.L",
+        "shin.L"
+      ],
+      "Thigh_R": [
+        "hips",
+        "thigh.R",
+        "shin.R"
+      ],
+      "Shin_L": [
+        "thigh.L",
+        "shin.L",
+        "foot.L"
+      ],
+      "Shin_R": [
+        "thigh.R",
+        "shin.R",
+        "foot.R"
+      ]
+    },
+    "gradient": {
+      "Mouth": {
+        "bones": [
+          "head",
+          "jaw"
+        ],
+        "top_z": 0.5179,
+        "bottom_z": 0.4868
+      }
+    },
+    "mouth_bones": [
+      "head",
+      "jaw"
+    ]
+  },
+  "shape_keys": {
+    "blink.L": {
+      "type": "lid",
+      "bottom_z": 0.523,
+      "front_y": -0.1356,
+      "x_scale": 1.06,
+      "z_stretch": 3.1,
+      "object": "Eyelid_L"
+    },
+    "blink.R": {
+      "type": "lid",
+      "bottom_z": 0.523,
+      "front_y": -0.1356,
+      "x_scale": 1.06,
+      "z_stretch": 3.1,
+      "object": "Eyelid_R"
+    },
+    "smile": {
+      "object": "Mouth",
+      "type": "smile",
+      "x_scale": 1.3,
+      "corner_lift": 0.0093,
+      "forward": 0.0015
+    },
+    "mouth_open": {
+      "object": "Mouth",
+      "type": "mouth_open",
+      "z_scale": 1.8,
+      "x_scale": 0.9,
+      "forward": 0.0008
+    },
+    "brow_up": {
+      "objects": [
+        "Brow_L",
+        "Brow_R"
+      ],
+      "type": "raise",
+      "dz": 0.0109,
+      "dy": -0.0024
+    },
+    "mouth_width_m": 0.0456
+  },
+  "eye_scale": {
+    "bones": [
+      "eye.L",
+      "eye.R"
+    ],
+    "world": [
+      1.0,
+      0.45,
+      0.12
+    ]
+  },
+  "actions": {
+    "idle_wave": 48,
+    "blink_smile": 24,
+    "walk_cycle": 32
+  },
+  "warnings": []
+}
