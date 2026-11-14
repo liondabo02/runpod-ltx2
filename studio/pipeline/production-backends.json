@@ -26,6 +26,10 @@
     "lipsync": {
       "script": "tools/studio_backends/lipsync.py",
       "cost_eur": 0
+    },
+    "qa": {
+      "script": "tools/studio_backends/qa.py",
+      "cost_eur": 0
     }
   }
 }
