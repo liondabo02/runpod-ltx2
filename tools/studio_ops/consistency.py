@@ -34,9 +34,16 @@ def main(argv=None):
         print("CONSISTENCY_BLOCKED roster_or_registry_missing")
         return 2
     roster = json.loads(ROSTER.read_text(encoding="utf-8-sig"))
-    registry = json.loads(REGISTRY.read_text(encoding="utf-8-sig"))
+    studio_registry = ROOT / "studio" / "pipeline" / "studio-backends.json"
+    stages = {}
+    for path in (REGISTRY, studio_registry):
+        if not path.is_file():
+            continue
+        try:
+            stages.update(json.loads(path.read_text(encoding="utf-8-sig")).get("stages", {}))
+        except ValueError:
+            pass
     workers = {w["id"]: w for w in roster.get("workers", [])}
-    stages = registry.get("stages", {})
 
     for stage, spec in stages.items():
         script = ROOT / str(spec.get("script") or "")

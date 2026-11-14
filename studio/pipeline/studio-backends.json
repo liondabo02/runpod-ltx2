@@ -1,0 +1,13 @@
+{
+  "schema": "ahos.studio.adapters.v1",
+  "zero_new_euro_spend": true,
+  "description": "Studio-16 department backends (spec-driven). Separate from the holding registry so the legacy production-dispatch contract test stays untouched. Every stage is a real script under tools/studio_backends/.",
+  "stages": {
+    "rig": { "script": "tools/studio_backends/rig.py", "cost_eur": 0 },
+    "animation": { "script": "tools/studio_backends/animation.py", "cost_eur": 0 },
+    "voice": { "script": "tools/studio_backends/voice.py", "cost_eur": 0 },
+    "lipsync": { "script": "tools/studio_backends/lipsync.py", "cost_eur": 0 },
+    "scene": { "script": "tools/studio_backends/scene.py", "cost_eur": 0 },
+    "qa": { "script": "tools/studio_backends/qa.py", "cost_eur": 0 }
+  }
+}

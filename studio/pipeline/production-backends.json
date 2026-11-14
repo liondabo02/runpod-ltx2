@@ -1,38 +1,14 @@
 {
   "schema": "ahos.production.adapters.v1",
   "zero_new_euro_spend": true,
-  "description": "Real zero-cost backends: character_model, rig (aden+kaan), animation (beat-driven) and render. voice/lipsync/scene/qa remain unregistered.",
+  "description": "Real zero-cost backends: character_model (Blender 4.5 procedural Aden, PENDING_IDENTITY_REVIEW) and render (technical MP4). Rig/animation/voice/lipsync/scene/qa remain unregistered; full dispatch stops at rig.",
   "stages": {
     "character_model": {
-      "script": "tools/studio_backends/character_model_generic.py",
-      "cost_eur": 0
-    },
-    "rig": {
-      "script": "tools/studio_backends/rig.py",
+      "script": "tools/studio_backends/character_model_backend.py",
       "cost_eur": 0
     },
     "render": {
-      "script": "tools/studio_backends/render_av.py",
-      "cost_eur": 0
-    },
-    "animation": {
-      "script": "tools/studio_backends/animation.py",
-      "cost_eur": 0
-    },
-    "voice": {
-      "script": "tools/studio_backends/voice.py",
-      "cost_eur": 0
-    },
-    "lipsync": {
-      "script": "tools/studio_backends/lipsync.py",
-      "cost_eur": 0
-    },
-    "qa": {
-      "script": "tools/studio_backends/qa.py",
-      "cost_eur": 0
-    },
-    "scene": {
-      "script": "tools/studio_backends/scene.py",
+      "script": "tools/studio_backends/render_backend.py",
       "cost_eur": 0
     }
   }
