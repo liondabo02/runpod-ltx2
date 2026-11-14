@@ -84,6 +84,10 @@ def resolve_model(cid, plan):
         found = next((path for path in candidates if path.is_file()), None)
         if found is None:
             return None, "dependency", "DEPENDENCY_MISSING"
+        licence = str(art.get("license_status") or art.get("license") or "").lower()
+        if licence and licence not in ("approved", "own", "public-domain", "public_domain",
+                                      "gpl", "verified"):
+            return None, "dependency", "LICENSE_UNVERIFIED"
         expected = str(art.get("sha256") or "").lower()
         if expected and sha(found) != expected:
             return None, "dependency", "SHA_MISMATCH"
@@ -123,6 +127,7 @@ def main(argv=None):
     cast = cast_ids(plan)
     blender = find_blender()
     artifacts, checks, blocked, logs = [], {}, [], []
+    metadata = {}
     if blender is None:
         blocked.append({"code": "BLENDER_MISSING",
                         "remediation": "Install Blender 4.5 LTS or set BLENDER_EXE"})
@@ -239,23 +244,30 @@ def main(argv=None):
                        "meshes": reopen["meshes"], "vertices": reopen["vertices"],
                        "unweighted": reopen["unweighted_vertices"]},
         }
-        for path in (blend, glb, contract_path):
-            artifacts.append({"kind": "rig" if path.suffix != ".json" else "rig_contract",
-                              "cast": cid,
+        for path in (blend, glb):
+            artifacts.append({"kind": "rig", "cast": cid,
                               "path": str(path.relative_to(job)).replace("\\", "/"),
                               "bytes": path.stat().st_size, "sha256": sha(path)})
+        metadata.setdefault("rig_contracts", {})[cid] = {
+            "path": str(contract_path.relative_to(job)).replace("\\", "/"),
+            "sha256": sha(contract_path),
+            "schema": contract["schema"],
+        }
 
     status = "PASSED" if (not blocked and artifacts) else "BLOCKED"
+    commercial = bool(artifacts) and not blocked
     evidence = {
         "stage": "rig", "status": status, "cost_eur": 0,
-        "commercial_license_verified": True,
-        "license_basis": "Blender 4.5 LTS (GPL) + original procedural geometry",
+        "commercial_license_verified": commercial,
+        "license_basis": "Blender 4.5 LTS (GPL) + original procedural geometry; "
+                         "no third-party assets were used",
         "cast_ids": cast,
         "rigged_cast": sorted({a["cast"] for a in artifacts}),
         "provenance": {"source": "local", "generator": "ahos-rig-factory v0.1",
                        "blender": "4.5.16 LTS",
                        "identity_status": "TECHNICAL_ONLY / PENDING_IDENTITY_REVIEW"},
         "checks": checks, "artifacts": artifacts, "blocked": blocked, "logs": logs,
+        "metadata": metadata,
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
     evidence_path = Path(ns.evidence)
