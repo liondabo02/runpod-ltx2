@@ -667,13 +667,20 @@ CREATE TABLE IF NOT EXISTS media_artifact_history (
                         source_sha=source_sha.get(cid) if cid else None
                     if not isinstance(source_sha,str) or not re.fullmatch(r"[0-9a-f]{64}",source_sha):
                         source_sha=None
-                    licence=parent_payload.get("license_status") or parent_payload.get("license")
+                    # Provenance must survive the production worker boundary.
+                    # StudioOS plans contain no license_status; an upstream
+                    # independently reviewed result is the authoritative gate.
+                    parent_result=json.loads(parent["result"] or "{}")
+                    reviewed=(parent_result.get("license_status")=="COMMERCIAL_REVIEWED"
+                              and parent_result.get("technical_status")=="PASSED"
+                              and parent["state"]=="QA_PASS")
+                    licence="verified" if reviewed else None
                     result.append({
                         "task_id":task_id,"filename":item["filename"],
                         "sha256":item["sha256"],"bytes":item["bytes"],
-                        "kind":parent_payload.get("capability") or "character_model",
+                        "kind":parent["capability"],
                         "character_id":cid,
-                        "license_status":licence if isinstance(licence,str) else None,
+                        "license_status":licence,
                         "source_sha256":source_sha,
                     })
         return result
