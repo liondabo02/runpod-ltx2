@@ -114,7 +114,53 @@
       "thinking": ["technical probes", "identity drift", "lip drift", "verdict"],
       "quality_gates": ["never self-approved", "evidence grounded in files", "creative approval only by owner"],
       "status": "MISSING"
+    },
+    {
+      "id": "finance", "stage": "budget", "role": "Budget & Cost Control",
+      "engine": { "runtime": "python + evidence JSON", "cost_eur": 0, "status": "to_build" },
+      "inputs": ["all stage evidence", "cost policy"],
+      "outputs": ["budget-report.json (cost_eur per stage, cap 1.00)"],
+      "thinking": ["sum costs", "flag overruns", "block paid calls"],
+      "quality_gates": ["total <= 1.00 EUR", "every paid action has owner approval"],
+      "status": "MISSING"
+    },
+    {
+      "id": "security", "stage": "rights", "role": "Rights & Licence Gate",
+      "engine": { "runtime": "python + sha256 registry", "cost_eur": 0, "status": "to_build" },
+      "inputs": ["asset manifests", "voice profiles", "model licences"],
+      "outputs": ["rights-report.json"],
+      "thinking": ["trace provenance", "verify licences", "deny unknown"],
+      "quality_gates": ["no asset without licence_status", "no false commercial claim"],
+      "status": "MISSING"
+    },
+    {
+      "id": "research", "stage": "capability", "role": "Capability Scout",
+      "engine": { "runtime": "ollama + curated registry", "cost_eur": 0, "status": "to_build" },
+      "inputs": ["task failures", "engine inventory", "allowlisted sources"],
+      "outputs": ["capability-proposals.json"],
+      "thinking": ["find gaps", "compare engines", "propose without spending"],
+      "quality_gates": ["proposal cites real evidence", "no paid adoption without owner"],
+      "status": "MISSING"
+    },
+    {
+      "id": "data", "stage": "analytics", "role": "Production Analytics",
+      "engine": { "runtime": "sqlite read-only + python", "cost_eur": 0, "status": "to_build" },
+      "inputs": ["queue db", "worker memory jsonl"],
+      "outputs": ["analytics-report.json (pass rates, lead time, repair count)"],
+      "thinking": ["aggregate", "spot regressions", "feed growth engine"],
+      "quality_gates": ["read-only access", "no invented metrics"],
+      "status": "MISSING"
+    },
+    {
+      "id": "distribution", "stage": "delivery", "role": "Localisation & Delivery",
+      "engine": { "runtime": "ffmpeg + subtitles + metadata", "cost_eur": 0, "status": "to_build" },
+      "inputs": ["episode mp4", "languages", "metadata"],
+      "outputs": ["<episode>-<lang>.mp4", "<episode>.srt", "delivery-manifest.json"],
+      "thinking": ["mux audio per language", "write subtitles", "verify streams"],
+      "quality_gates": ["audio+video streams", "subtitle sync < 200 ms", "kurmancî track marked pending"],
+      "status": "MISSING"
     }
   ]
 }
+
 
