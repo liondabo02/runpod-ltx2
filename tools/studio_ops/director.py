@@ -35,24 +35,41 @@ Use 16-48 frames per beat. Start with walk_to and end with talk."""
 
 
 def extract_json(text):
-    match = re.search(r"\{.*\}", text, re.S)
-    if not match:
+    if not text:
+        return None
+    cleaned = re.sub(r"```(?:json)?", "", text).strip()
+    start, end = cleaned.find("{"), cleaned.rfind("}")
+    if start < 0 or end <= start:
         return None
     try:
-        return json.loads(match.group(0))
+        return json.loads(cleaned[start:end + 1])
     except ValueError:
         return None
+
+
+HEURISTIC_BEATS = [
+    {"action": "walk_to", "frames": 32, "emotion": "curious", "note": "establish"},
+    {"action": "look_at", "frames": 16, "emotion": "surprised", "note": "spot the problem"},
+    {"action": "pick_up", "frames": 26, "emotion": "curious", "note": "reach for it"},
+    {"action": "turn_to", "frames": 18, "emotion": "joy", "note": "turn to the partner"},
+    {"action": "talk", "frames": 32, "emotion": "joy", "note": "resolve together"},
+]
 
 
 def ask_ollama(prompt, timeout=600):
     exe = shutil.which("ollama")
     if not exe:
         return None, "OLLAMA_MISSING"
-    run = subprocess.run([exe, "run", MODEL, prompt], capture_output=True, text=True,
-                         timeout=timeout)
-    if run.returncode != 0:
-        return None, "OLLAMA_FAILED: " + (run.stderr or "")[-200:]
-    return extract_json(run.stdout), "OK"
+    for attempt in range(2):
+        run = subprocess.run([exe, "run", MODEL, prompt], capture_output=True, text=True,
+                             timeout=timeout)
+        if run.returncode != 0:
+            return None, "OLLAMA_FAILED: " + (run.stderr or "")[-200:]
+        payload = extract_json(run.stdout)
+        if payload:
+            return payload, "OK"
+        prompt = prompt + "\nReturn ONLY the JSON object, no markdown, no explanation."
+    return None, "INVALID_JSON"
 
 
 def validate(payload):
@@ -94,6 +111,12 @@ def main(argv=None):
 
     payload, state = ask_ollama(PROMPT.format(story=ns.story, cast=", ".join(cast)))
     beats, problems = validate(payload)
+    source = "ollama"
+    if not beats:
+        # never invent a different story: fall back to the studio's generic acting
+        # template and label it so nobody mistakes it for a model output
+        beats, problems = validate({"beats": HEURISTIC_BEATS})
+        source = "heuristic_fallback"
     status = "PASSED" if beats and not problems else "BLOCKED"
 
     curve, cursor = [], 1
