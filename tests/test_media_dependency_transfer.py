@@ -82,3 +82,30 @@ def test_worker_dependency_download_checks_exact_bytes(tmp_path,monkeypatch):
     assert result[0]["source_task_id"]=="model:aden"
     assert Path(result[0]["path"]).read_bytes()==payload
     assert "/api/media/dependency?" in called[-1]
+
+
+
+def test_large_approved_movie_dependency_streams_without_64mib_cap(tmp_path,monkeypatch):
+    """Transport fixture only: bytes and hashes, not a real cinematic movie."""
+    data=b"ftyp"+b"m"*(client.MAX_FILE+1024)
+    sha=hashlib.sha256(data).hexdigest()
+    listing={"schema":"ahos.media.dependencies.v1","artifacts":[{
+        "task_id":"episode01:edit","filename":"full-episode.mp4",
+        "sha256":sha,"bytes":len(data)}]}
+    class Reply:
+        def __init__(self,content,headers):
+            self.source=io.BytesIO(content)
+            self.headers=headers
+        def __enter__(self):return self
+        def __exit__(self,*args):return False
+        def read(self,n=-1):return self.source.read(n)
+    def opener(request,timeout=0):
+        if "/dependencies?" in request.full_url:
+            return Reply(json.dumps(listing).encode(),{})
+        return Reply(data,{"X-Artifact-SHA256":sha})
+    monkeypatch.setattr(client,"urlopen",opener)
+    result=client.download_dependencies("http://127.0.0.1:8801","token",
+                                        {"cast":["aden"]},"job-test",tmp_path/"out")
+    saved=Path(result[0]["path"])
+    assert saved.stat().st_size>client.MAX_FILE
+    assert hashlib.sha256(saved.read_bytes()).hexdigest()==sha
