@@ -151,9 +151,6 @@ CREATE TABLE IF NOT EXISTS media_events (
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
             rows = db.execute(
-                "SELECT t.*,e.plan_json FROM tasks t JOIN episodes e USING(episode_id) "
-                "WHERE t.state IN ('PENDING','WAITING_PROVIDER','READY')"
-            ).fetchall() if False else db.execute(
                 "SELECT t.*,e.plan_json FROM tasks t JOIN episodes e ON t.episode_id=e.id "
                 "WHERE t.state IN ('PENDING','WAITING_PROVIDER','READY')"
             ).fetchall()
@@ -420,6 +417,24 @@ CREATE TABLE IF NOT EXISTS media_events (
             db.execute("INSERT INTO media_events VALUES(?,?,?,?,?)",
                        (time.time(),job_id,"FAILED",worker["worker_id"],reason))
         return {"status":state,"production_ready":False}
+
+    def artifact_for_review(self, reviewer, job_id, filename):
+        if reviewer["role"] != "reviewer":
+            raise QueueError("Reviewer role required")
+        with self.connect() as db:
+            job = db.execute("SELECT * FROM media_jobs WHERE job_id=?", (job_id,)).fetchone()
+            if not job or job["state"] != "REVIEWING" or job["reviewer_id"] != reviewer["worker_id"]:
+                raise QueueError("Review claim required to read media artifact")
+            if job["review_until"] <= time.time():
+                raise QueueError("Review lease expired")
+            item = db.execute("SELECT * FROM media_artifacts WHERE job_id=? AND role='worker' "
+                              "AND filename=?", (job_id, filename)).fetchone()
+            if not item:
+                raise QueueError("Artifact not found")
+            path = Path(item["local_path"])
+            if not path.is_file() or path.stat().st_size != item["bytes"] or checksum(path) != item["sha256"]:
+                raise QueueError("Stored artifact changed or disappeared")
+            return path, item["sha256"], item["bytes"]
 
     def status(self):
         with self.connect() as db:
