@@ -1,0 +1,120 @@
+{
+  "schema": "ahos.studio.roster.v1",
+  "studio": "AHOS Cartoon Studio (holding department)",
+  "principle": "Each worker is a thinking loop (plan -> act -> verify -> repair) with typed contracts. Emotion is data (valence/arousal/intensity) driving animation and speech - never a claim of consciousness.",
+  "quality_policy": {
+    "self_approval": false,
+    "independent_qa_required": true,
+    "max_repair_rounds": 2,
+    "cost_ceiling_eur_per_episode": 1.0,
+    "paid_action_requires_owner": true
+  },
+  "emotion_model": {
+    "axes": { "valence": [-1.0, 1.0], "arousal": [0.0, 1.0], "intensity": [0.0, 1.0] },
+    "presets": {
+      "joy": { "valence": 0.8, "arousal": 0.6, "intensity": 0.7 },
+      "sad": { "valence": -0.7, "arousal": 0.25, "intensity": 0.6 },
+      "curious": { "valence": 0.3, "arousal": 0.55, "intensity": 0.5 },
+      "surprised": { "valence": 0.2, "arousal": 0.9, "intensity": 0.8 },
+      "calm": { "valence": 0.2, "arousal": 0.2, "intensity": 0.3 }
+    },
+    "mapping": {
+      "animation": "arousal -> tempo/gesture size, valence -> posture/brow, intensity -> amplitude",
+      "voice": "arousal -> rate/pitch, valence -> style tag, intensity -> pause length",
+      "camera": "intensity -> shot size, valence -> framing height"
+    }
+  },
+  "workers": [
+    {
+      "id": "director", "stage": null, "role": "Story Director",
+      "engine": { "runtime": "ollama:qwen2.5-coder:7b", "cost_eur": 0, "status": "available" },
+      "inputs": ["story_text", "language", "age_band", "cast"],
+      "outputs": ["beat_sheet.json", "shot_plan.json", "emotion_curve.json"],
+      "thinking": ["parse intent", "choose message", "draft beats", "self-critique", "emit plan"],
+      "quality_gates": ["intro-problem-resolution", "emotion per beat", "age-appropriate vocabulary"],
+      "status": "MISSING"
+    },
+    {
+      "id": "character_model", "stage": "character_model", "role": "Asset Factory",
+      "engine": { "runtime": "blender 4.5 CPU + mesh_factory.py", "cost_eur": 0, "status": "partial" },
+      "inputs": ["character_spec", "reference_png"],
+      "outputs": ["<id>-character-v1.blend", "<id>-character-v1.glb", "model-manifest.json"],
+      "thinking": ["measure reference", "build parts", "check silhouette", "repair 2x"],
+      "quality_gates": ["rig part names", "vertex budget", "identity hash recorded"],
+      "status": "PARTIAL"
+    },
+    {
+      "id": "rig", "stage": "rig", "role": "Rigging Engineer",
+      "engine": { "runtime": "blender 4.5 CPU + rig_factory.py", "cost_eur": 0, "status": "working" },
+      "inputs": ["model.blend", "rig-spec.json"],
+      "outputs": ["<id>-rigged.blend", "<id>-rigged.glb", "rig-contract.json"],
+      "thinking": ["derive joints", "skin", "reopen verify", "repair weights"],
+      "quality_gates": ["24 bones", "0 unweighted", "blink 0 visible verts", "foot slide < 5 mm"],
+      "status": "WORKING"
+    },
+    {
+      "id": "animation", "stage": "animation", "role": "Animation Director",
+      "engine": { "runtime": "blender 4.5 CPU + animation_factory.py", "cost_eur": 0, "status": "working" },
+      "inputs": ["rig-contract.json", "beat_sheet.json", "emotion_curve.json"],
+      "outputs": ["<id>-animated.blend", "<id>-animated.glb", "animation-manifest.json"],
+      "thinking": ["map beats", "apply emotion modifiers", "bake", "verify timing"],
+      "quality_gates": ["all beats present", "feet on ground", "no pop > 15 deg/frame"],
+      "status": "WORKING"
+    },
+    {
+      "id": "voice", "stage": "voice", "role": "Voice Director",
+      "engine": { "runtime": "edge-tts (free) + ffmpeg", "cost_eur": 0, "status": "working" },
+      "inputs": ["dialogue", "language", "voice-profiles.json", "emotion_curve.json"],
+      "outputs": ["<cast>-<lang>.wav", "voice-manifest.json"],
+      "thinking": ["resolve profile", "synthesize", "measure", "flag licence"],
+      "quality_gates": ["WAV 24k mono", "duration > 0.2 s", "licence recorded"],
+      "status": "WORKING"
+    },
+    {
+      "id": "lipsync", "stage": "lipsync", "role": "Lip-Sync Engineer",
+      "engine": { "runtime": "faster-whisper (free) + viseme map", "cost_eur": 0, "status": "to_install" },
+      "inputs": ["wav", "rig-contract.json", "language"],
+      "outputs": ["visemes.json", "<id>-lipsync.blend"],
+      "thinking": ["align phonemes", "map to 12 visemes", "blend curves", "verify drift"],
+      "quality_gates": ["visemes > 0", "max drift < 80 ms", "no silent gap > 1 s"],
+      "status": "MISSING"
+    },
+    {
+      "id": "scene", "stage": "scene", "role": "Environment & Camera",
+      "engine": { "runtime": "blender 4.5 CPU", "cost_eur": 0, "status": "missing" },
+      "inputs": ["shot_plan.json", "location_spec", "emotion_curve.json"],
+      "outputs": ["<scene>.blend", "scene-manifest.json"],
+      "thinking": ["build environment", "place props", "light", "frame shots"],
+      "quality_gates": ["framed per shot", "no ground intersection", "lighting continuity"],
+      "status": "MISSING"
+    },
+    {
+      "id": "render", "stage": "render", "role": "Render Engineer",
+      "engine": { "runtime": "blender workbench/eevee + ffmpeg", "cost_eur": 0, "status": "partial" },
+      "inputs": ["scene.blend", "shot_plan.json", "wav"],
+      "outputs": ["shot_<id>.mp4 (video+audio)"],
+      "thinking": ["render frames", "mux audio", "verify streams"],
+      "quality_gates": ["1920x1080 24fps", "audio stream present", "no frozen frame"],
+      "status": "PARTIAL"
+    },
+    {
+      "id": "edit", "stage": "editing", "role": "Editor",
+      "engine": { "runtime": "ffmpeg concat (+remotion optional)", "cost_eur": 0, "status": "partial" },
+      "inputs": ["shot mp4s", "subtitles", "music"],
+      "outputs": ["<episode>.mp4", "edit-manifest.json"],
+      "thinking": ["order shots", "normalize audio", "subtitles", "verify duration"],
+      "quality_gates": ["duration +-2 s", "loudness normalized", "captions correct"],
+      "status": "PARTIAL"
+    },
+    {
+      "id": "qa", "stage": "qa", "role": "Independent Quality Inspector",
+      "engine": { "runtime": "ffmpeg probes + local VLM (later) + rules", "cost_eur": 0, "status": "missing" },
+      "inputs": ["episode mp4", "rig/animation/voice evidence"],
+      "outputs": ["quality_report.json"],
+      "thinking": ["technical probes", "identity drift", "lip drift", "verdict"],
+      "quality_gates": ["never self-approved", "evidence grounded in files", "creative approval only by owner"],
+      "status": "MISSING"
+    }
+  ]
+}
+
