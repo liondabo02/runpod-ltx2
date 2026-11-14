@@ -19,6 +19,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import growth  # noqa: E402  (holding growth engine bridge, advisory only)
 
 ROOT = Path(__file__).resolve().parents[2]
 FACTORY = ROOT / "tools" / "studio_backends" / "rig_factory.py"
@@ -140,6 +142,9 @@ def main(argv=None):
     blender = find_blender()
     artifacts, checks, blocked, logs = [], {}, [], []
     metadata = {}
+    coach = growth.guidance("rig")
+    log_text = "growth coaching: %s" % (
+        "available" if coach["available"] else "unavailable (%s)" % coach.get("error", ""))
     if blender is None:
         blocked.append({"code": "BLENDER_MISSING",
                         "remediation": "Install Blender 4.5 LTS or set BLENDER_EXE"})
@@ -287,7 +292,7 @@ def main(argv=None):
                        "blender": "4.5.16 LTS",
                        "identity_status": "TECHNICAL_ONLY / PENDING_IDENTITY_REVIEW"},
         "checks": checks, "artifacts": artifacts, "blocked": blocked, "logs": logs,
-        "metadata": metadata,
+        "metadata": metadata, "growth": coach,
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
     evidence_path = Path(ns.evidence)
