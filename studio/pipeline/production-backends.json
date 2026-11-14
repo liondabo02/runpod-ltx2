@@ -4,7 +4,7 @@
   "description": "Real zero-cost backends: character_model, rig (aden+kaan), animation (beat-driven) and render. voice/lipsync/scene/qa remain unregistered.",
   "stages": {
     "character_model": {
-      "script": "tools/studio_backends/character_model_backend.py",
+      "script": "tools/studio_backends/character_model_generic.py",
       "cost_eur": 0
     },
     "rig": {

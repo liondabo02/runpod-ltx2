@@ -1,0 +1,17 @@
+{
+  "character_id": "esra",
+  "class": "adult",
+  "height_m": 1.62,
+  "eye_scale": 0.95,
+  "license_status": "own",
+  "palette": {
+    "skin": [0.86, 0.62, 0.47, 1.0],
+    "shirt": [0.42, 0.55, 0.68, 1.0],
+    "shorts": [0.10, 0.12, 0.18, 1.0],
+    "shoe": [0.10, 0.12, 0.18, 1.0],
+    "hair": [0.25, 0.15, 0.08, 1.0],
+    "star": [0.85, 0.85, 0.85, 1.0],
+    "accent": [0.42, 0.55, 0.68, 1.0]
+  },
+  "notes": "Esra (anne) teknik spec - TECHNICAL_ONLY, kimlik onayı yok"
+}
