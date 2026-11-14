@@ -85,6 +85,8 @@ def test_worker_runs_registered_backend_and_submits_only_technical_evidence(tmp_
         return {"filename":name,"sha256":hashlib.sha256(bytes_data).hexdigest()}
     monkeypatch.setattr(client,"request_json",request_json)
     monkeypatch.setattr(client,"upload_file",upload)
+    monkeypatch.setattr(client,"download_canon",lambda *args:{
+        "aden":{"path":"/fake/approved/aden.png","sha256":"a"*64}})
     result=client.execute_one("http://127.0.0.1:8801","fake-private-token",
                               tmp_path/"jobs",root,max_seconds=40)
     assert result["status"]=="AWAITING_QA"
