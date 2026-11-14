@@ -215,6 +215,25 @@ CREATE TABLE IF NOT EXISTS media_artifact_history (
         result.pop("token_sha")
         return result
 
+    def _scene_draft(self, db, episode_id):
+        """Read the exact hash-verified director draft for scene-specific work."""
+        row=db.execute(
+            "SELECT result_json,state FROM tasks WHERE episode_id=? AND task_id='storyboard'",
+            (episode_id,)).fetchone()
+        if not row or row["state"]!="DONE_DRAFT":
+            return None
+        info=json.loads(row["result_json"])
+        expected=info.get("sha256")
+        require_hash(expected,"Shot-plan")
+        path=Path(info.get("draft_path","")).resolve()
+        safe=(self.state_dir/"episode-artifacts"/episode_id).resolve()
+        if path.parent!=safe or not path.is_file() or checksum(path)!=expected:
+            raise QueueError("Shot-plan path or hash changed after approval")
+        plan=json.loads(path.read_text(encoding="utf-8"))
+        if plan.get("schema")!="ahos.studio-os.shotplan.v1":
+            raise QueueError("Unexpected Studio OS shot-plan schema")
+        return plan,expected
+
     def sync_ready(self):
         """Create only dependency-ready media jobs. No extra StudioOS tasks added."""
         count = 0
@@ -253,12 +272,31 @@ CREATE TABLE IF NOT EXISTS media_artifact_history (
                 if any(c not in CANON or not isinstance(locks.get(c),str) or
                        not SHA.fullmatch(locks[c]) for c in cast):
                     continue
+                # Use the actual director's scene beat, not one global prompt
+                # repeated for every shot. Ignore unverified/missing shot plans.
+                scene_match=re.match(r"^scene([0-9]{2,3}):",t["task_id"])
+                scene_plan=None
+                shotplan_sha=None
+                if scene_match:
+                    draft=self._scene_draft(db,t["episode_id"])
+                    if not draft:
+                        continue
+                    shotplan,shotplan_sha=draft
+                    scene_id="scene"+scene_match.group(1)
+                    scene_plan=next(
+                        (x for x in shotplan.get("scenes",[]) if x.get("scene_id")==scene_id),
+                        None)
+                    if not isinstance(scene_plan,dict) or not isinstance(scene_plan.get("plot_beat"),dict):
+                        continue
                 job = {"schema": "ahos.media.job.v1", "episode_id": t["episode_id"],
                        "task_id": t["task_id"], "capability": t["capability"],
                        "kind": t["kind"], "series_id": p["series_id"],
                        "cast": p["cast"], "languages": p["languages"],
                        "canonical_reference_sha256": {c:locks[c] for c in cast},
                        "canonical_source": "owner_accepted_roster_v1",
+                       "scene_plan": scene_plan,
+                       "shotplan_sha256": shotplan_sha,
+                       "creative_status": "DRAFT_UNREVIEWED",
                        "story_direction": p["owner_prompt"],
                        "dependencies": deps, "cost_policy": p["cost_policy"],
                        "production_ready": False}
