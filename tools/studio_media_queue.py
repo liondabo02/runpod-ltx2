@@ -161,6 +161,12 @@ CREATE TABLE IF NOT EXISTS media_events (
   at REAL NOT NULL, job_id TEXT NOT NULL, event TEXT NOT NULL,
   actor TEXT NOT NULL, details TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS media_artifact_history (
+  job_id TEXT NOT NULL, attempt INTEGER NOT NULL, role TEXT NOT NULL,
+  uploader_id TEXT NOT NULL, filename TEXT NOT NULL, sha256 TEXT NOT NULL,
+  bytes INTEGER NOT NULL, local_path TEXT NOT NULL, archived_at REAL NOT NULL,
+  PRIMARY KEY(job_id,attempt,role,filename)
+);
 """)
 
     def register(self, info):
@@ -250,6 +256,20 @@ CREATE TABLE IF NOT EXISTS media_events (
                 count += 1
         return count
 
+    def _archive_attempt(self, db, job_id, attempt, now):
+        """Keep prior bytes/metadata immutable, but free filenames for a retry.
+
+        Without this, retrying a failed shot with 'shot.mp4' or 'model.glb'
+        always fails on the first attempt's unique filename constraint.
+        """
+        db.execute(
+            "INSERT OR IGNORE INTO media_artifact_history "
+            "(job_id,attempt,role,uploader_id,filename,sha256,bytes,local_path,archived_at) "
+            "SELECT job_id,?,role,uploader_id,filename,sha256,bytes,local_path,? "
+            "FROM media_artifacts WHERE job_id=?",
+            (attempt, now, job_id))
+        db.execute("DELETE FROM media_artifacts WHERE job_id=?", (job_id,))
+
     def _recover(self, db, now):
         expired = db.execute(
             "SELECT * FROM media_jobs WHERE (state='LEASED' AND lease_until<?) "
@@ -260,6 +280,7 @@ CREATE TABLE IF NOT EXISTS media_events (
                            "review_until=NULL WHERE job_id=?", (job["job_id"],))
                 continue
             state = "BLOCKED" if job["attempts"] >= MAX_ATTEMPTS else "QUEUED"
+            self._archive_attempt(db,job["job_id"],job["attempts"],now)
             db.execute("UPDATE media_jobs SET state=?,worker_id=NULL,lease_key=NULL,"
                        "lease_until=NULL,updated=? WHERE job_id=?", (state,now,job["job_id"]))
             db.execute("UPDATE tasks SET state=? WHERE episode_id=? AND task_id=?",
@@ -454,6 +475,7 @@ CREATE TABLE IF NOT EXISTS media_events (
             if failures:
                 state="BLOCKED" if job["attempts"]>=MAX_ATTEMPTS else "QUEUED"
                 task_state="BLOCKED" if state=="BLOCKED" else "READY"
+                self._archive_attempt(db,job_id,job["attempts"],now)
             else:
                 state,task_state="QA_PASS","DONE_VERIFIED"
             db.execute("UPDATE media_jobs SET state=?,worker_id=NULL,lease_key=NULL,"
@@ -475,6 +497,7 @@ CREATE TABLE IF NOT EXISTS media_events (
             db.execute("BEGIN IMMEDIATE")
             job=self._valid_lease(db,worker,job_id,lease_key)
             state="BLOCKED" if job["attempts"]>=MAX_ATTEMPTS else "QUEUED"
+            self._archive_attempt(db,job_id,job["attempts"],time.time())
             db.execute("UPDATE media_jobs SET state=?,worker_id=NULL,lease_key=NULL,"
                        "lease_until=NULL WHERE job_id=?",(state,job_id))
             db.execute("UPDATE tasks SET state=? WHERE episode_id=? AND task_id=?",
