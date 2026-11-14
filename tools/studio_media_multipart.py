@@ -158,8 +158,6 @@ CREATE TABLE IF NOT EXISTS media_upload_sessions (
             # Do not call a dummy MP4 a successful render. For a long final film
             # the server probes container and streams, while per-shot render
             # requires separate whole-shot objective FFmpeg analysis.
-            validate_media_file(path.with_name(path.name+"-"+item["filename"]),
-                                job["capability"]) if False else None
             # The suffix matters for type checks, so use a non-public temporary
             # hard link for validation before atomically renaming the original.
             test_path=path.parent/(upload_id+"-verify-"+item["filename"])
