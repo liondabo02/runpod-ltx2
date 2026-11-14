@@ -16,7 +16,8 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, parse_qs
+from studio_media_queue import MediaQueue, QueueError, MAX_UPLOAD
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
@@ -72,6 +73,7 @@ class Coordinator:
         self.state_dir = Path(state_dir)
         self.state_dir.mkdir(parents=True, exist_ok=True)
         self.engine = StudioOS(self.state_dir / "episodes.sqlite3", root=root)
+        self.media_queue = MediaQueue(self.engine, self.state_dir)
         self.pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="studio-os")
         self._running = set()
         self._lock = threading.Lock()
@@ -117,7 +119,7 @@ class Coordinator:
                 "blockers":blockers,
                 "production_ready":False,
                 "cloud_director_ready":True,
-                "finished_movie":False}
+                "finished_movie":False,"media_jobs":self.media_queue.status()["jobs"]}
 
     def stories(self, limit=30) -> list:
         with self.engine.connect() as db:
@@ -128,6 +130,19 @@ class Coordinator:
 
 def handler_factory(coordinator: Coordinator):
     class Handler(BaseHTTPRequestHandler):
+        def bearer(self):
+            auth=self.headers.get("Authorization","")
+            return auth[7:] if auth.startswith("Bearer ") else ""
+
+        def body_json(self):
+            length=int(self.headers.get("Content-Length","0"))
+            if not 0<length<=MAX_CONTENT:
+                raise QueueError("Invalid JSON content length")
+            data=json.loads(self.rfile.read(length))
+            if not isinstance(data,dict):
+                raise QueueError("JSON object required")
+            return data
+
         def reply(self, status, value):
             body = json.dumps(value, ensure_ascii=False).encode("utf-8")
             self.send_response(status)
@@ -155,6 +170,33 @@ def handler_factory(coordinator: Coordinator):
                                 "cloud_director_ready":True,
                                 "gpu_film_ready":False,
                                 "production_ready":False})
+            elif route=="/api/media/status":
+                if not coordinator.media_queue.admin_authorized(self.bearer()):
+                    self.reply(403,{"error":"admin authorization required"})
+                else:
+                    coordinator.media_queue.sync_ready()
+                    self.reply(200,coordinator.media_queue.status())
+            elif route=="/api/media/artifact":
+                try:
+                    reviewer=coordinator.media_queue.auth(self.bearer(),role="reviewer")
+                    query=parse_qs(urlsplit(self.path).query)
+                    job_id=query.get("job_id",[""])[0]
+                    filename=query.get("filename",[""])[0]
+                    path,actual_sha,size=coordinator.media_queue.artifact_for_review(
+                        reviewer,job_id,filename)
+                    self.send_response(200)
+                    self.send_header("Content-Type","application/octet-stream")
+                    self.send_header("Content-Length",str(size))
+                    self.send_header("X-Artifact-SHA256",actual_sha)
+                    self.send_header("Cache-Control","no-store")
+                    self.end_headers()
+                    with path.open("rb") as stream:
+                        while True:
+                            chunk=stream.read(1024*1024)
+                            if not chunk:break
+                            self.wfile.write(chunk)
+                except (QueueError,OSError) as exc:
+                    self.reply(403,{"error":str(exc)})
             elif route=="/api/episodes":
                 self.reply(200,{"episodes":coordinator.stories()})
             elif route.startswith("/api/episodes/"):
@@ -166,7 +208,62 @@ def handler_factory(coordinator: Coordinator):
             else:
                 self.reply(404,{"error":"not found"})
 
+        def do_PUT(self):
+            if urlsplit(self.path).path!="/api/media/artifact":
+                self.reply(404,{"error":"unknown upload endpoint"})
+                return
+            try:
+                worker=coordinator.media_queue.auth(self.bearer())
+                size=int(self.headers.get("Content-Length","0"))
+                if not 0<size<=MAX_UPLOAD:
+                    raise QueueError("Upload size exceeds limit")
+                data=self.rfile.read(size)
+                result=coordinator.media_queue.upload(
+                    worker,self.headers.get("X-AHOS-Job-ID",""),
+                    self.headers.get("X-AHOS-Filename",""),
+                    self.headers.get("X-AHOS-SHA256",""),
+                    data,self.headers.get("X-AHOS-Lease-Key"))
+                self.reply(201,result)
+            except (QueueError,ValueError,TypeError) as exc:
+                self.reply(400,{"error":str(exc)})
+
         def do_POST(self):
+            if urlsplit(self.path).path.startswith("/api/media/"):
+                try:
+                    name=urlsplit(self.path).path
+                    data=self.body_json()
+                    if name=="/api/media/register":
+                        if not coordinator.media_queue.admin_authorized(self.bearer()):
+                            self.reply(403,{"error":"admin permission required"})
+                            return
+                        result=coordinator.media_queue.register(data)
+                    else:
+                        worker=coordinator.media_queue.auth(self.bearer())
+                        if name=="/api/media/lease":
+                            result=coordinator.media_queue.lease(
+                                worker,seconds=data.get("seconds",120))
+                        elif name=="/api/media/heartbeat":
+                            result=coordinator.media_queue.heartbeat(
+                                worker,data["job_id"],data["lease_key"],
+                                seconds=data.get("seconds",120))
+                        elif name=="/api/media/complete":
+                            result=coordinator.media_queue.complete(
+                                worker,data["job_id"],data["lease_key"],data["result"])
+                        elif name=="/api/media/fail":
+                            result=coordinator.media_queue.fail(
+                                worker,data["job_id"],data["lease_key"],data["reason"])
+                        elif name=="/api/media/review-claim":
+                            result=coordinator.media_queue.review_claim(worker)
+                        elif name=="/api/media/review":
+                            result=coordinator.media_queue.review(
+                                worker,data["job_id"],data["result"])
+                        else:
+                            self.reply(404,{"error":"unknown media operation"})
+                            return
+                    self.reply(200,result)
+                except (QueueError,ValueError,KeyError,TypeError) as exc:
+                    self.reply(400,{"error":str(exc)})
+                return
             if self.path!="/api/episodes":
                 self.reply(404,{"error":"not found"})
                 return
