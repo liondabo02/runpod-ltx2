@@ -18,6 +18,10 @@
     "animation": {
       "script": "tools/studio_backends/animation.py",
       "cost_eur": 0
+    },
+    "voice": {
+      "script": "tools/studio_backends/voice.py",
+      "cost_eur": 0
     }
   }
 }

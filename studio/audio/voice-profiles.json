@@ -1,0 +1,18 @@
+{
+  "schema": "ahos.voice-profiles.v1",
+  "provider": "edge-tts (free endpoint)",
+  "note": "license_status stays review_required until the owner confirms commercial use of the endpoint. edge-tts has no child voices; a licensed child voice (or a voice actor) is still required for Aden/Kaan.",
+  "languages": ["tr", "de", "en", "ar", "fr", "es"],
+  "profiles": {
+    "aden": {
+      "tr": { "voice_id": "tr-TR-EmelNeural", "license_status": "review_required" },
+      "de": { "voice_id": "de-DE-KatjaNeural", "license_status": "review_required" },
+      "en": { "voice_id": "en-US-AriaNeural", "license_status": "review_required" }
+    },
+    "kaan": {
+      "tr": { "voice_id": "tr-TR-EmelNeural", "license_status": "review_required" },
+      "de": { "voice_id": "de-DE-KatjaNeural", "license_status": "review_required" },
+      "en": { "voice_id": "en-US-AriaNeural", "license_status": "review_required" }
+    }
+  }
+}
