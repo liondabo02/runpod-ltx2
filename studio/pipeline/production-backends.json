@@ -12,7 +12,7 @@
       "cost_eur": 0
     },
     "render": {
-      "script": "tools/studio_backends/render_backend.py",
+      "script": "tools/studio_backends/render_av.py",
       "cost_eur": 0
     },
     "animation": {
