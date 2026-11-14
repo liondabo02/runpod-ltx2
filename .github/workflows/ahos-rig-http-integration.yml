@@ -53,8 +53,17 @@ jobs:
           blender --version | head -n 2
           blender -b --factory-startup -noaudio --python-expr "import numpy; print('BLENDER_NUMPY_READY', numpy.__version__)"
       - name: Real Blender -> rig -> HTTP upload -> awaiting independent QA
+        env:
+          AHOS_RIG_CI_ARTIFACT_DIR: out/rig-http-real-blender
         run: |
           python -m pytest -q -s tests/test_studio_rig_http_integration.py -k real_blender
+      - name: Preserve actual rig files and SHA manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: ahos-rig-http-real-blender
+          path: out/rig-http-real-blender/
+          if-no-files-found: error
+          retention-days: 7
       - name: Never mistake technical transport for creative review
         run: |
           echo "RIG_REAL_BLENDER_HTTP_SMOKE_ONLY=true"
