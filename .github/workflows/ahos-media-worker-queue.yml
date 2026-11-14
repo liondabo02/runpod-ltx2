@@ -20,6 +20,7 @@ on:
       - tools/studio_media_multipart.py
       - tests/test_studio_media_multipart.py
       - tests/test_studio_media_multipart_http.py
+      - tests/test_media_dependency_transfer.py
       - tests/test_studio_media_objective_qa.py
       - ops/oracle/deploy-media-worker-queue.sh
       - ops/oracle/ahos-studio-os.service
