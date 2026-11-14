@@ -17,6 +17,7 @@ from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
+from studio_media_multipart import CHUNK_BYTES,MAX_FILE_BYTES
 
 ROOT=Path(__file__).resolve().parents[1]
 STAGES={
@@ -69,6 +70,57 @@ def upload_file(server, token, job_id, lease_key, name, data):
     if ack.get("status")!="STORED" or ack.get("sha256")!=sha:
         raise WorkerError("Oracle did not acknowledge exact artifact SHA")
     return {"filename":name,"sha256":sha}
+
+
+def upload_large_file(server, token, job_id, lease_key, name, path):
+    """Bounded multipart upload for a real >64MiB artifact, no whole-file RAM load."""
+    path=Path(path)
+    total=path.stat().st_size
+    if not MAX_FILE<total<=MAX_FILE_BYTES:
+        raise WorkerError("Not a supported large artifact size")
+    h=hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda:stream.read(CHUNK_BYTES),b""):
+            h.update(chunk)
+    expected=h.hexdigest()
+    started=request_json(server,"/api/media/uploads/start",token,{
+        "job_id":job_id,"lease_key":lease_key,"filename":name,
+        "sha256":expected,"size_bytes":total})
+    upload_id=started.get("upload_id")
+    if not isinstance(upload_id,str) or not re.fullmatch(r"[a-f0-9-]{36}",upload_id):
+        raise WorkerError("Oracle did not return a valid upload session")
+    received=started.get("received")
+    if type(received) is not int or not 0<=received<=total:
+        raise WorkerError("Oracle returned an invalid resume offset")
+    last_heartbeat=time.monotonic()
+    with path.open("rb") as stream:
+        stream.seek(received)
+        while received<total:
+            chunk=stream.read(min(CHUNK_BYTES,total-received))
+            req=Request(server+"/api/media/uploads/"+upload_id,
+                        data=chunk,method="PUT",
+                        headers={"Authorization":"Bearer "+token,
+                                 "Content-Type":"application/octet-stream",
+                                 "X-AHOS-Lease-Key":lease_key,
+                                 "X-AHOS-Offset":str(received)})
+            try:
+                with urlopen(req,timeout=180) as response:
+                    acknowledgement=json.load(response)
+            except (HTTPError,URLError,TimeoutError,ValueError) as exc:
+                raise WorkerError("Multipart chunk upload failed: "+type(exc).__name__) from exc
+            next_offset=acknowledgement.get("received")
+            if next_offset!=received+len(chunk):
+                raise WorkerError("Oracle acknowledged an unexpected chunk offset")
+            received=next_offset
+            if time.monotonic()-last_heartbeat>=30:
+                request_json(server,"/api/media/heartbeat",token,{
+                    "job_id":job_id,"lease_key":lease_key,"seconds":120})
+                last_heartbeat=time.monotonic()
+    completed=request_json(server,"/api/media/uploads/"+upload_id+"/finish",token,{
+        "job_id":job_id,"lease_key":lease_key})
+    if completed.get("status")!="STORED" or completed.get("sha256")!=expected or completed.get("bytes")!=total:
+        raise WorkerError("Oracle did not confirm whole-file SHA/size")
+    return {"filename":name,"sha256":expected}
 
 
 def download_canon(server, token, payload, job_dir):
@@ -206,10 +258,20 @@ def read_evidence(path, capability, job_dir):
         output=(job_dir/p).resolve()
         if job_dir.resolve() not in output.parents or not output.is_file():
             raise WorkerError("Artifact outside the approved job directory")
-        if output.stat().st_size>MAX_FILE:
-            raise WorkerError("Artifact too large for current Oracle ingest limit")
-        raw=output.read_bytes()
-        if digest(raw)!=asset.get("sha256"):
+        size=output.stat().st_size
+        if not 1<=size<=MAX_FILE_BYTES:
+            raise WorkerError("Artifact exceeds the configured safe multipart limit")
+        if size>MAX_FILE:
+            hasher=hashlib.sha256()
+            with output.open("rb") as stream:
+                for chunk in iter(lambda:stream.read(CHUNK_BYTES),b""):
+                    hasher.update(chunk)
+            raw=output
+            actual_sha=hasher.hexdigest()
+        else:
+            raw=output.read_bytes()
+            actual_sha=digest(raw)
+        if actual_sha!=asset.get("sha256"):
             raise WorkerError("Local asset SHA does not match backend evidence")
         if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,99}",output.name):
             raise WorkerError("Artifact filename not suitable for versioned upload")
@@ -270,7 +332,12 @@ def execute_one(server, token, job_root, repo_root=ROOT, *, max_seconds=1800):
                 tail=fd.read().decode("utf-8",errors="replace")
             raise WorkerError("Backend exit="+str(process.returncode)+", "+tail[-400:])
         outputs=read_evidence(evidence,capability,dirname)
-        submitted=[upload_file(server,token,jid,lease,name,raw) for name,raw in outputs]
+        submitted=[
+            upload_large_file(server,token,jid,lease,name,raw)
+            if isinstance(raw,Path)
+            else upload_file(server,token,jid,lease,name,raw)
+            for name,raw in outputs
+        ]
         manifest={
             "schema":"ahos.media.result.v1",
             "capability":capability,
