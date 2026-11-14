@@ -10,6 +10,8 @@ import hmac
 import json
 import os
 import re
+import shutil
+import subprocess
 import secrets
 import sqlite3
 import time
@@ -45,6 +47,67 @@ def checksum(path):
 def require_hash(value, what):
     if not isinstance(value, str) or not SHA.fullmatch(value):
         raise QueueError(what + ": valid lowercase SHA-256 required")
+
+
+ARTIFACT_SUFFIXES = {
+    "character_model": (".blend", ".glb"),
+    "rig": (".blend", ".glb"),
+    "scene": (".blend", ".glb"),
+    "animation": (".blend", ".glb", ".fbx", ".mp4"),
+    "voice": (".wav",),
+    "lipsync": (".json",),
+    "render": (".mp4",),
+    "qa": (".json",),
+    "editing": (".mp4",),
+}
+
+
+def validate_media_file(path, capability):
+    """Validate actual media type and duration where codecs allow it."""
+    path = Path(path)
+    ext = path.suffix.lower()
+    if ext not in ARTIFACT_SUFFIXES.get(capability, ()):
+        raise QueueError("Wrong media artifact extension for capability")
+    if path.stat().st_size < (100000 if ext == ".mp4" else 100 if ext not in (".json",) else 15):
+        raise QueueError("Media file trivially small")
+    with path.open("rb") as f:
+        head = f.read(12)
+    if ext == ".blend" and not head.startswith(b"BLENDER"):
+        raise QueueError("Not an authentic Blender container")
+    if ext == ".glb" and not head.startswith(b"glTF"):
+        raise QueueError("Not a valid GLB container")
+    if ext == ".png" and not head.startswith(b"\x89PNG\r\n\x1a\n"):
+        raise QueueError("Not a PNG file")
+    if ext == ".wav" and not (head.startswith(b"RIFF") and head[8:12] == b"WAVE"):
+        raise QueueError("Not a WAV file")
+    if ext == ".mp4":
+        if head[4:8] != b"ftyp":
+            raise QueueError("Not an MP4 container")
+        ffprobe = shutil.which("ffprobe")
+        if not ffprobe:
+            raise QueueError("ffprobe must verify real audio/video before technical completion")
+        try:
+            output = subprocess.run(
+                [ffprobe,"-v","error","-show_entries",
+                 "format=duration:stream=codec_type,width,height,r_frame_rate",
+                 "-of","json",str(path)],
+                capture_output=True,text=True,timeout=30,check=True)
+            meta = json.loads(output.stdout)
+        except (subprocess.CalledProcessError,subprocess.TimeoutExpired,ValueError) as exc:
+            raise QueueError("MP4 codec integrity check failed") from exc
+        video = [x for x in meta.get("streams",[]) if x.get("codec_type")=="video"]
+        audio = [x for x in meta.get("streams",[]) if x.get("codec_type")=="audio"]
+        if not video or not audio or float(meta.get("format",{}).get("duration",0)) < 1:
+            raise QueueError("Real video + audio duration required")
+        if video[0].get("width",0) < 1280 or video[0].get("height",0) < 720:
+            raise QueueError("Video falls below initial review resolution")
+    if ext == ".json":
+        try:
+            obj = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError,ValueError) as exc:
+            raise QueueError("Malformed JSON evidence") from exc
+        if not isinstance(obj,(dict,list)):
+            raise QueueError("JSON evidence must have meaningful structure")
 
 
 class MediaQueue:
@@ -332,6 +395,8 @@ CREATE TABLE IF NOT EXISTS media_events (
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
             job=self._valid_lease(db,worker,job_id,lease_key)
+            if result.get("capability")!=job["capability"]:
+                raise QueueError("Media result capability does not match leased task")
             for item in files:
                 if not isinstance(item,dict):
                     raise QueueError("Invalid artifact")
@@ -346,6 +411,7 @@ CREATE TABLE IF NOT EXISTS media_events (
                 path=Path(match["local_path"])
                 if not path.is_file() or path.stat().st_size!=match["bytes"] or checksum(path)!=digest:
                     raise QueueError("Artifact is missing or modified")
+                validate_media_file(path,job["capability"])
             db.execute("UPDATE media_jobs SET state='AWAITING_QA',lease_key=NULL,"
                        "lease_until=NULL,result=?,updated=? WHERE job_id=?",
                        (json.dumps(result,ensure_ascii=False),now,job_id))
