@@ -147,22 +147,31 @@ def execute_one(server, token, job_root, repo_root=ROOT, *, max_seconds=1800):
         evidence=dirname/"backend-evidence.json"
         argv=[sys.executable,str(script),"--plan",str(plan),
               "--job-dir",str(dirname),"--evidence",str(evidence)]
-        process=subprocess.Popen(argv,cwd=repo_root,stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE,encoding="utf-8",
-                                 errors="replace")
-        deadline=time.monotonic()+max_seconds
-        while process.poll() is None:
-            if time.monotonic()>deadline:
-                process.kill()
-                raise WorkerError("Production stage time budget exceeded")
-            try:
-                process.wait(timeout=30)
-            except subprocess.TimeoutExpired:
-                request_json(server,"/api/media/heartbeat",token,
-                             {"job_id":jid,"lease_key":lease,"seconds":120})
-        stdout,stderr=process.communicate(timeout=15)
+        # Never use unconsumed PIPE streams: large Blender stdout could deadlock.
+        logs=dirname/"backend-run.log"
+        with logs.open("wb") as log:
+            process=subprocess.Popen(argv,cwd=repo_root,stdout=log,stderr=subprocess.STDOUT)
+            deadline=time.monotonic()+max_seconds
+            while process.poll() is None:
+                if time.monotonic()>deadline:
+                    process.kill()
+                    process.wait(timeout=15)
+                    raise WorkerError("Production stage time budget exceeded")
+                try:
+                    process.wait(timeout=30)
+                except subprocess.TimeoutExpired:
+                    try:
+                        request_json(server,"/api/media/heartbeat",token,
+                                     {"job_id":jid,"lease_key":lease,"seconds":120})
+                    except WorkerError:
+                        process.kill()
+                        process.wait(timeout=15)
+                        raise
         if process.returncode!=0:
-            raise WorkerError("Backend exit="+str(process.returncode)+", "+stderr[-400:])
+            with logs.open("rb") as fd:
+                fd.seek(max(0,logs.stat().st_size-1000))
+                tail=fd.read().decode("utf-8",errors="replace")
+            raise WorkerError("Backend exit="+str(process.returncode)+", "+tail[-400:])
         outputs=read_evidence(evidence,capability,dirname)
         submitted=[upload_file(server,token,jid,lease,name,raw) for name,raw in outputs]
         manifest={
