@@ -107,6 +107,60 @@ def download_canon(server, token, payload, job_dir):
     return result
 
 
+def download_dependencies(server, token, payload, job_id, job_dir):
+    """Download only independently QA-approved inputs for the leased stage."""
+    listing=Request(
+        server+"/api/media/dependencies?"+urlencode({"job_id":job_id}),
+        headers={"Authorization":"Bearer "+token},method="GET")
+    try:
+        with urlopen(listing,timeout=30) as response:
+            manifest=json.load(response)
+    except (HTTPError,URLError,TimeoutError,ValueError) as exc:
+        raise WorkerError("Cannot resolve approved upstream media") from exc
+    if manifest.get("schema")!="ahos.media.dependencies.v1":
+        raise WorkerError("Unknown upstream media manifest")
+    items=manifest.get("artifacts")
+    if not isinstance(items,list) or len(items)>100:
+        raise WorkerError("Too many upstream media files")
+    total=sum(x.get("bytes",0) for x in items if isinstance(x,dict))
+    if total>1024*1024*1024:
+        raise WorkerError("Upstream media exceeds safe job budget")
+    output=[]
+    folder=Path(job_dir)/"dependencies"
+    folder.mkdir(parents=True,exist_ok=True)
+    for i,item in enumerate(items):
+        if not isinstance(item,dict):
+            raise WorkerError("Malformed upstream artifact descriptor")
+        task_id=item.get("task_id")
+        name=item.get("filename")
+        expected=item.get("sha256")
+        size=item.get("bytes")
+        if (not isinstance(task_id,str) or not re.fullmatch(r"[A-Za-z0-9:_-]{1,150}",task_id)
+            or not isinstance(name,str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,99}",name)
+            or not isinstance(expected,str) or not re.fullmatch(r"[0-9a-f]{64}",expected)
+            or not isinstance(size,int) or size<1 or size>MAX_FILE):
+            raise WorkerError("Unsafe or invalid upstream artifact metadata")
+        uri=server+"/api/media/dependency?"+urlencode(
+            {"job_id":job_id,"task_id":task_id,"filename":name})
+        req=Request(uri,headers={"Authorization":"Bearer "+token},method="GET")
+        try:
+            with urlopen(req,timeout=120) as response:
+                if response.headers.get("X-Artifact-SHA256")!=expected:
+                    raise WorkerError("Upstream server SHA header differs")
+                data=response.read(MAX_FILE+1)
+        except (HTTPError,URLError,TimeoutError) as exc:
+            raise WorkerError("Upstream media transfer failed") from exc
+        if len(data)!=size or digest(data)!=expected:
+            raise WorkerError("Upstream media content or size changed")
+        sub=folder/(f"{i:03}-"+hashlib.sha256(task_id.encode()).hexdigest()[:12])
+        sub.mkdir(parents=True,exist_ok=True)
+        path=sub/name
+        path.write_bytes(data)
+        output.append({"source_task_id":task_id,"filename":name,
+                       "path":str(path),"sha256":expected,"bytes":size})
+    return output
+
+
 def script_for_capability(capability, root):
     if capability not in STAGES:
         raise WorkerError("No approved local backend for "+str(capability))
@@ -181,9 +235,11 @@ def execute_one(server, token, job_root, repo_root=ROOT, *, max_seconds=1800):
         dirname.mkdir(parents=True,exist_ok=True)
         # Lock the worker to the actual immutable bytes, not just character names.
         references=download_canon(server,token,payload,dirname)
+        dependencies=download_dependencies(server,token,payload,jid,dirname)
         plan=dirname/"production-plan.json"
         plan_payload=dict(payload)
         plan_payload["approved_reference_files"]=references
+        plan_payload["dependency_artifacts"]=dependencies
         plan.write_text(json.dumps(plan_payload,ensure_ascii=False,indent=2),encoding="utf-8")
         evidence=dirname/"backend-evidence.json"
         argv=[sys.executable,str(script),"--plan",str(plan),
