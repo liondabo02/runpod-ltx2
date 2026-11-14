@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sqlite3
 import sys
 import threading
@@ -18,6 +19,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit, parse_qs
 from studio_media_queue import MediaQueue, QueueError, MAX_UPLOAD
+from studio_media_multipart import MultipartStore, CHUNK_BYTES
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
@@ -74,6 +76,7 @@ class Coordinator:
         self.state_dir.mkdir(parents=True, exist_ok=True)
         self.engine = StudioOS(self.state_dir / "episodes.sqlite3", root=root)
         self.media_queue = MediaQueue(self.engine, self.state_dir)
+        self.media_uploads = MultipartStore(self.media_queue)
         self.pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="studio-os")
         self._running = set()
         self._lock = threading.Lock()
@@ -260,20 +263,32 @@ def handler_factory(coordinator: Coordinator):
                 self.reply(404,{"error":"not found"})
 
         def do_PUT(self):
-            if urlsplit(self.path).path!="/api/media/artifact":
+            route=urlsplit(self.path).path
+            if route!="/api/media/artifact" and not route.startswith("/api/media/uploads/"):
                 self.reply(404,{"error":"unknown upload endpoint"})
                 return
             try:
                 worker=coordinator.media_queue.auth(self.bearer())
                 size=int(self.headers.get("Content-Length","0"))
-                if not 0<size<=MAX_UPLOAD:
+                limit=CHUNK_BYTES if route.startswith("/api/media/uploads/") else MAX_UPLOAD
+                if not 0<size<=limit:
                     raise QueueError("Upload size exceeds limit")
                 data=self.rfile.read(size)
-                result=coordinator.media_queue.upload(
-                    worker,self.headers.get("X-AHOS-Job-ID",""),
-                    self.headers.get("X-AHOS-Filename",""),
-                    self.headers.get("X-AHOS-SHA256",""),
-                    data,self.headers.get("X-AHOS-Lease-Key"))
+                if len(data)!=size:
+                    raise QueueError("Truncated HTTP media upload")
+                if route.startswith("/api/media/uploads/"):
+                    ident=route.rsplit("/",1)[-1]
+                    if not re.fullmatch(r"[a-f0-9-]{36}",ident):
+                        raise QueueError("Invalid upload ID")
+                    result=coordinator.media_uploads.append(
+                        worker,ident,self.headers.get("X-AHOS-Lease-Key"),
+                        int(self.headers.get("X-AHOS-Offset","-1")),data)
+                else:
+                    result=coordinator.media_queue.upload(
+                        worker,self.headers.get("X-AHOS-Job-ID",""),
+                        self.headers.get("X-AHOS-Filename",""),
+                        self.headers.get("X-AHOS-SHA256",""),
+                        data,self.headers.get("X-AHOS-Lease-Key"))
                 self.reply(201,result)
             except (QueueError,ValueError,TypeError) as exc:
                 self.reply(400,{"error":str(exc)})
@@ -290,7 +305,17 @@ def handler_factory(coordinator: Coordinator):
                         result=coordinator.media_queue.register(data)
                     else:
                         worker=coordinator.media_queue.auth(self.bearer())
-                        if name=="/api/media/lease":
+                        if name=="/api/media/uploads/start":
+                            result=coordinator.media_uploads.start(
+                                worker,data["job_id"],data["lease_key"],
+                                data["filename"],data["sha256"],data["size_bytes"])
+                        elif name.startswith("/api/media/uploads/") and name.endswith("/finish"):
+                            ident=name.split("/")[-2]
+                            if not re.fullmatch(r"[a-f0-9-]{36}",ident):
+                                raise QueueError("Invalid upload ID")
+                            result=coordinator.media_uploads.finish(
+                                worker,ident,data["lease_key"])
+                        elif name=="/api/media/lease":
                             result=coordinator.media_queue.lease(
                                 worker,seconds=data.get("seconds",120))
                         elif name=="/api/media/heartbeat":
