@@ -57,12 +57,16 @@ def cast_ids(plan):
     return [c for c in out if c]
 
 
+APPROVED_LICENCES = {"approved", "own", "public-domain", "public_domain", "gpl", "verified"}
+
+
 def resolve_model(cid, plan):
     """returns (path | None, source, error_code).
 
-    Priority: (1) dependency artifact from the Oracle task, SHA verified,
-              (2) repo character library, (3) documented external model.
+    A task dependency must be sha-pinned AND licence-proven; there is no silent
+    fallback to a local model when the coordinator declared dependencies.
     """
+    declared = bool(plan.get("dependency_artifacts"))
     for art in plan.get("dependency_artifacts") or []:
         if not isinstance(art, dict):
             continue
@@ -90,14 +94,19 @@ def resolve_model(cid, plan):
         found = next((path for path in candidates if path.is_file()), None)
         if found is None:
             return None, "dependency", "DEPENDENCY_MISSING"
-        licence = str(art.get("license_status") or art.get("license") or "").lower()
-        if licence and licence not in ("approved", "own", "public-domain", "public_domain",
-                                      "gpl", "verified"):
-            return None, "dependency", "LICENSE_UNVERIFIED"
         expected = str(art.get("sha256") or "").lower()
-        if expected and sha(found) != expected:
+        if len(expected) != 64:
+            return None, "dependency", "SHA_MISSING"
+        licence = str(art.get("license_status") or art.get("license") or "").lower()
+        if licence not in APPROVED_LICENCES:
+            return None, "dependency", "LICENSE_UNVERIFIED"
+        if sha(found) != expected:
             return None, "dependency", "SHA_MISMATCH"
         return found, "dependency", None
+
+    if declared:
+        # never fall back to a convenience model when the coordinator expected one
+        return None, "dependency", "DEPENDENCY_UNMATCHED"
 
     env = os.environ.get("AHOS_MODEL_%s" % cid.upper(), "")
     if env and Path(env).is_file():
@@ -220,7 +229,8 @@ def main(argv=None):
             "origin": "feet on ground plane z=0",
             "model": {"path": str(model), "sha256": sha(model)},
             "rig": {"blend": str(blend), "blend_sha256": sha(blend),
-                    "glb": str(glb), "glb_sha256": sha(glb)},
+                    "glb": str(glb), "glb_sha256": sha(glb),
+                    "sha256": sha(blend)},
             "skeleton": {"bones": reopen["bone_names"],
                          "bone_count": reopen["bones"]},
             "facial_controls": {"shape_keys": reopen["shape_keys"],
@@ -246,6 +256,11 @@ def main(argv=None):
             "reopen": {"status": reopen["status"], "bones": reopen["bones"],
                        "meshes": reopen["meshes"], "vertices": reopen["vertices"],
                        "unweighted": reopen["unweighted_vertices"]},
+            "license_status": next(
+                (str(item.get("license_status") or item.get("license") or "").lower()
+                 for item in (plan.get("dependency_artifacts") or [])
+                 if str(item.get("sha256") or "").lower() == sha(model)),
+                "own" if source in ("library", "env") else "unknown"),
         }
         for path in (blend, glb, contract_path):
             artifacts.append({"kind": "rig", "cast": cid,
@@ -258,7 +273,9 @@ def main(argv=None):
         }
 
     status = "PASSED" if (not blocked and artifacts) else "BLOCKED"
-    commercial = bool(artifacts) and not blocked
+    commercial = bool(artifacts) and not blocked and all(
+        str(entry.get("license_status") or "").lower() in APPROVED_LICENCES
+        for entry in checks.values())
     evidence = {
         "stage": "rig", "status": status, "cost_eur": 0,
         "commercial_license_verified": commercial,

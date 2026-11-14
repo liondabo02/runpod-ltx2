@@ -52,7 +52,7 @@ def require_hash(value, what):
 
 ARTIFACT_SUFFIXES = {
     "character_model": (".blend", ".glb"),
-    "rig": (".blend", ".glb"),
+    "rig": (".blend", ".glb", ".json"),
     "scene": (".blend", ".glb"),
     "animation": (".blend", ".glb", ".fbx", ".mp4"),
     "voice": (".wav",),
@@ -61,6 +61,44 @@ ARTIFACT_SUFFIXES = {
     "qa": (".json",),
     "editing": (".mp4",),
 }
+
+RIG_CONTRACT_SCHEMA = "ahos.rig-contract.v1"
+RIG_CONTRACT_REQUIRED = ("schema", "character_id", "rig_version", "coordinate_system",
+                         "scale", "origin", "model", "rig", "skeleton",
+                         "facial_controls", "actions")
+MAX_JSON_ARTIFACT = 256 * 1024
+
+
+def validate_rig_contract(payload):
+    """Structural validation of the rig contract handed to the animation stage."""
+    if not isinstance(payload, dict):
+        raise QueueError("Rig contract is not a JSON object")
+    if payload.get("schema") != RIG_CONTRACT_SCHEMA:
+        raise QueueError("Rig contract schema mismatch")
+    missing = [key for key in RIG_CONTRACT_REQUIRED if key not in payload]
+    if missing:
+        raise QueueError("Rig contract missing fields: %s" % ",".join(missing))
+    skeleton = payload.get("skeleton") or {}
+    if not isinstance(skeleton.get("bones"), list) or len(skeleton["bones"]) < 10:
+        raise QueueError("Rig contract skeleton is incomplete")
+    if int(skeleton.get("bone_count") or 0) != len(skeleton["bones"]):
+        raise QueueError("Rig contract bone_count disagrees with the bone list")
+    actions = payload.get("actions")
+    if not isinstance(actions, list) or not actions:
+        raise QueueError("Rig contract has no actions")
+    for action in actions:
+        if not isinstance(action, dict) or not action.get("name") or not action.get("frames"):
+            raise QueueError("Rig contract action entry is invalid")
+    facial = payload.get("facial_controls") or {}
+    if not isinstance(facial.get("shape_keys"), list) or len(facial["shape_keys"]) < 1:
+        raise QueueError("Rig contract has no facial controls")
+    model = payload.get("model") or {}
+    rig = payload.get("rig") or {}
+    for record, label in ((model, "model"), (rig, "rig")):
+        value = str(record.get("sha256") or "")
+        if len(value) != 64:
+            raise QueueError("Rig contract %s sha256 is missing" % label)
+    return True
 
 
 def validate_media_file(path, capability):
@@ -73,6 +111,15 @@ def validate_media_file(path, capability):
         raise QueueError("Media file trivially small")
     with path.open("rb") as f:
         head = f.read(12)
+    if ext == ".json":
+        if path.stat().st_size > MAX_JSON_ARTIFACT:
+            raise QueueError("JSON artifact too large")
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            raise QueueError("Not a valid JSON artifact: %s" % exc)
+        if capability == "rig":
+            validate_rig_contract(payload)
     if ext == ".blend" and not head.startswith(b"BLENDER"):
         raise QueueError("Not an authentic Blender container")
     if ext == ".glb" and not head.startswith(b"glTF"):
@@ -600,9 +647,20 @@ CREATE TABLE IF NOT EXISTS media_artifact_history (
                     "WHERE job_id=? AND role='worker'",(parent["job_id"],)).fetchall()
                 if not media:
                     raise QueueError("Approved upstream job has no artifacts")
+                parent_payload=json.loads(parent["payload"] or "{}")
+                cast=parent_payload.get("cast") or []
+                if isinstance(cast,list) and cast and isinstance(cast[0],dict):
+                    cast=[item.get("id") for item in cast]
                 result.extend({
                     "task_id":task_id,"filename":item["filename"],
                     "sha256":item["sha256"],"bytes":item["bytes"],
+                    # proven downstream routing data - never guessed from the file name
+                    "kind":parent_payload.get("capability") or "character_model",
+                    "character_id":parent_payload.get("character_id") or (
+                        (cast[0] if cast else None)),
+                    "license_status":parent_payload.get("license_status")
+                                     or parent_payload.get("license") or "unknown",
+                    "source_sha256":parent_payload.get("canonical_reference_sha256"),
                 } for item in media)
         return result
 
