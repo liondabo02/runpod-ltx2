@@ -139,7 +139,8 @@ def test_http_lease_upload_qa_and_auth(tmp_path):
         assert reviewed["production_ready"] is False
         _,state=json_call(base,"/api/episodes/"+eid)
         assert state["production_ready"] is False
-        assert state["task_states"]["DONE_VERIFIED"]>=6
+        assert state["task_states"]["DONE_VERIFIED"]>=5
+        assert state["task_states"]["DONE_DRAFT"]>=1
     finally:
         server.shutdown()
         server.server_close()
