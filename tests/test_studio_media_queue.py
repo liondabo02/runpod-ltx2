@@ -2,11 +2,13 @@
 import hashlib
 import io
 import json
+import sys
 import time
 from pathlib import Path
 
 import pytest
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 from studio_media_queue import MediaQueue, QueueError, MAX_ATTEMPTS
 from ahos_studio_os import StudioOS
 
