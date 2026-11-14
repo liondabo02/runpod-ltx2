@@ -95,6 +95,7 @@ def register(base, admin, name, *, capability=None, role="worker"):
 def upload(base, token, job_id, filename, raw, *, lease_key=None):
     headers = {
         "Authorization": "Bearer " + token,
+        "Content-Type": "application/octet-stream",
         "X-AHOS-Job-ID": job_id,
         "X-AHOS-Filename": filename,
         "X-AHOS-SHA256": sha(raw),
@@ -247,3 +248,34 @@ def test_real_blender_rig_over_http_stops_at_awaiting_qa(tmp_path):
         assert coordinator.media_queue.status()["production_ready"] is False
         print("REAL_BLENDER_RIG_HTTP_AWAITING_QA: true")
         print("CREATIVE_QA_APPROVED: false")
+
+
+def test_rig_requires_explicit_identity_and_editable_blend(tmp_path):
+    """A GLB first in the upstream manifest must not be rigged as a BLEND."""
+    model = tmp_path / "aden-model.blend"
+    glb = tmp_path / "aden-model.glb"
+    model.write_bytes(b"BLENDER" + b"x" * 300)
+    glb.write_bytes(b"glTF" + b"x" * 300)
+    files = [
+        {"kind": "character_model", "character_id": "aden",
+         "path": str(glb), "sha256": sha(glb.read_bytes()),
+         "license_status": "verified"},
+        {"kind": "character_model", "character_id": "aden",
+         "path": str(model), "sha256": sha(model.read_bytes()),
+         "license_status": "verified"},
+    ]
+    chosen, source, error = resolve_model(
+        "aden", {"dependency_artifacts": files},
+    )
+    assert (chosen, source, error) == (model, "dependency", None)
+    no_identity = [{k: v for k, v in d.items() if k != "character_id"}
+                   for d in files]
+    chosen, _, error = resolve_model(
+        "aden", {"dependency_artifacts": no_identity},
+    )
+    assert chosen is None and error == "DEPENDENCY_UNMATCHED"
+    no_license = [dict(files[-1], license_status=None)]
+    chosen, _, error = resolve_model(
+        "aden", {"dependency_artifacts": no_license},
+    )
+    assert chosen is None and error == "LICENSE_UNVERIFIED"
