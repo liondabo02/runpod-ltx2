@@ -32,7 +32,7 @@ def test_multipart_real_file_bytes_resume_and_finish(tmp_path):
     assert store.append(producer,ident,job["lease_key"],0,first)["received"]==CHUNK_BYTES
     assert store.append(producer,ident,job["lease_key"],0,first)["status"]=="DUPLICATE"
     with pytest.raises(QueueError,match="Out-of-order"):
-        store.append(producer,ident,job["lease_key"],3,b"wrong")
+        store.append(producer,ident,job["lease_key"],CHUNK_BYTES+1,b"wrong")
     # Simulate process restart. This is the same persisted SQLite session.
     again=MultipartStore(q)
     resumed=again.start(producer,job["job_id"],job["lease_key"],
