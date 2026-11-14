@@ -47,3 +47,7 @@ deliverables/S01-PARK-KITE-001/keyframes/
 # AHOS text-to-cartoon locally generated jobs
 /deliverables/AHOS-TEXT-TO-CARTOON/
 /deliverables/AHOS-TEXT-TO-CARTOON-DEMO/
+# AHOS studio runtime state
+studio/jobs/
+studio/agents/memory/
+*.blend1
