@@ -1,0 +1,23 @@
+[Unit]
+Description=AHOS Studio OS private Oracle production coordinator
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/ahos-studio-coordinator
+Environment=AHOS_STUDIO_ORACLE_LOCAL=1
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 /home/ubuntu/ahos-studio-coordinator/tools/studio_oracle_service.py --host 127.0.0.1 --port 8799 --state-dir /home/ubuntu/.local/share/ahos-studio-os
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=false
+
+[Install]
+WantedBy=multi-user.target

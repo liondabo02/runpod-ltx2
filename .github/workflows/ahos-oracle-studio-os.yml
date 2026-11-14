@@ -1,0 +1,39 @@
+name: AHOS Studio OS Oracle Coordinator
+on:
+  push:
+    branches:
+      - feature/ahos-studio-oracle-coordinator-20261114
+    paths:
+      - tools/studio_oracle_service.py
+      - tools/studio_os_cloud_writer.py
+      - tools/ahos_studio_os.py
+      - tools/open_oracle_studio.py
+      - tests/test_studio_oracle_service.py
+      - .github/workflows/ahos-oracle-studio-os.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install --disable-pip-version-check pytest
+      - name: Compile cloud service
+        run: python -m py_compile tools/studio_oracle_service.py tools/studio_os_cloud_writer.py tools/ahos_studio_os.py tools/open_oracle_studio.py
+      - name: Run Studio OS, server API and cinematic guard tests
+        run: python -m pytest -q tests/test_studio_oracle_service.py tests/test_ahos_studio_os.py tests/test_studio_cinematic_router.py tests/test_ltx25_shot_worker.py
+      - name: Assert no public production bind or false quality claims
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          a=Path('tools/studio_oracle_service.py').read_text()
+          assert 'if args.host!="127.0.0.1"' in a
+          assert '"production_ready":False' in a
+          assert 'MAX_CONTENT = 12000' in a
+          print('PRIVATE_BIND_AND_HONEST_GATES_PASS')
+          PY

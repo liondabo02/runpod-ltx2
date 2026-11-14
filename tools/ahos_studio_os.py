@@ -248,9 +248,16 @@ CREATE TABLE IF NOT EXISTS events(
             elif kind=="story" and use_existing_oracle:
                 # Real AI planning on existing Oracle VM, never calls paid hosted APIs.
                 try:
-                    from studio_os_cloud_writer import generate_outline
-                    data=generate_outline(episode["owner_prompt"],episode["cast"],episode["scene_count"],
-                                          record=self.root/"ops/oracle/last-instance.json")
+                    import os
+                    if os.environ.get("AHOS_STUDIO_ORACLE_LOCAL") == "1":
+                        from studio_os_cloud_writer import generate_outline_local
+                        data=generate_outline_local(episode["owner_prompt"],episode["cast"],
+                                                    episode["scene_count"])
+                    else:
+                        from studio_os_cloud_writer import generate_outline
+                        data=generate_outline(episode["owner_prompt"],episode["cast"],
+                                              episode["scene_count"],
+                                              record=self.root/"ops/oracle/last-instance.json")
                     path=self.db_path.parent/"episode-artifacts"/episode_id/"story-outline.json"
                     path.parent.mkdir(parents=True,exist_ok=True)
                     path.write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding="utf-8")
