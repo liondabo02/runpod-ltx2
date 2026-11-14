@@ -56,6 +56,9 @@ def test_http_lease_upload_qa_and_auth(tmp_path):
         for task in ("intake","canon","story","storyboard","asset_inventory"):
             db.execute("UPDATE tasks SET state='DONE_VERIFIED' WHERE episode_id=? AND task_id=?",
                        (eid,task))
+        frame=(coordinator.engine.root/"studio/reference/owner_accepted_roster_v1/characters/01_aden.png").read_bytes()
+        db.execute("UPDATE tasks SET result_json=? WHERE episode_id=? AND task_id='canon'",
+                   (json.dumps({"locked_characters":{"aden":hashlib.sha256(frame).hexdigest()}}),eid))
     server=ThreadingHTTPServer(("127.0.0.1",0),handler_factory(coordinator))
     thread=threading.Thread(target=server.serve_forever,daemon=True)
     thread.start()
