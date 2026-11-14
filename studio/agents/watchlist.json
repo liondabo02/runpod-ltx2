@@ -1,0 +1,83 @@
+{
+  "schema": "ahos.watchlist.v1",
+  "purpose": "Sources the studio watches for new engines/tools. Scout never auto-spends and never auto-merges; it proposes an adapter and its licence risk.",
+  "targets": [
+    {
+      "id": "faster-whisper",
+      "kind": "engine",
+      "gap": "lipsync",
+      "repo": "https://github.com/SYSTRAN/faster-whisper",
+      "hf": "Systran/faster-whisper-small",
+      "license": "MIT",
+      "adopted": true,
+      "module": "faster_whisper"
+    },
+    {
+      "id": "edge-tts",
+      "kind": "engine",
+      "gap": "voice",
+      "repo": "https://github.com/rany2/edge-tts",
+      "license": "GPL-3.0",
+      "adopted": true,
+      "module": "edge_tts",
+      "note": "endpoint usage rights stay review_required"
+    },
+    {
+      "id": "xtts-v2",
+      "kind": "engine",
+      "gap": "voice",
+      "repo": "https://github.com/coqui-ai/TTS",
+      "hf": "coqui/XTTS-v2",
+      "license": "CPML (non-commercial) - owner decision required",
+      "adopted": false,
+      "module": "TTS",
+      "use_case": "Kurmancî zero-shot dubbing from a 6-10 s reference"
+    },
+    {
+      "id": "trellis2",
+      "kind": "engine",
+      "gap": "character_model",
+      "repo": "https://github.com/microsoft/TRELLIS",
+      "license": "MIT (verify weights)",
+      "adopted": false,
+      "use_case": "image-to-3D for missing characters; needs GPU"
+    },
+    {
+      "id": "ltx-video",
+      "kind": "engine",
+      "gap": "scene",
+      "repo": "https://github.com/Lightricks/LTX-Video",
+      "license": "check model card",
+      "adopted": false,
+      "use_case": "cinematic inserts only; identity drift risk"
+    },
+    {
+      "id": "wan-animate",
+      "kind": "engine",
+      "gap": "animation",
+      "repo": "https://github.com/Wan-Video/Wan2.2",
+      "license": "check model card",
+      "adopted": false,
+      "use_case": "motion transfer for acting tests; GPU"
+    },
+    {
+      "id": "montreal-forced-aligner",
+      "kind": "engine",
+      "gap": "lipsync",
+      "repo": "https://github.com/MontrealCorpusTools/Montreal-Forced-Aligner",
+      "license": "MIT",
+      "adopted": false,
+      "module": "montreal_forced_aligner",
+      "use_case": "phoneme-level alignment for drift < 40 ms"
+    },
+    {
+      "id": "remotion",
+      "kind": "engine",
+      "gap": "editing",
+      "repo": "https://github.com/remotion-dev/remotion",
+      "license": "company licence above 3 employees",
+      "adopted": false,
+      "use_case": "programmatic titles/captions; optional"
+    }
+  ]
+}
