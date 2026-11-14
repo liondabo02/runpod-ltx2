@@ -53,12 +53,21 @@ def main(argv=None):
     ns = parser.parse_args(argv)
 
     job = Path(ns.job_dir).resolve()
-    shots = [Path(s) if Path(s).is_absolute() else (job / s) for s in ns.shots]
+    job.mkdir(parents=True, exist_ok=True)
+    shots = []
+    for given in ns.shots:
+        raw = Path(given)
+        if raw.is_absolute():
+            shots.append(raw)
+        else:
+            shots.append(next((c for c in (raw.resolve(), (job / raw).resolve()) if c.is_file()),
+                              (job / raw).resolve()))
     missing = [str(s) for s in shots if not s.is_file()]
     if missing:
         report = {"schema": "ahos.edit-manifest.v1", "status": "BLOCKED",
                   "error": "missing shots", "missing": missing}
         if ns.evidence:
+            Path(ns.evidence).parent.mkdir(parents=True, exist_ok=True)
             Path(ns.evidence).write_text(json.dumps(report, indent=2), encoding="utf-8")
         print("EDIT_BLOCKED missing=%d" % len(missing))
         return 2
