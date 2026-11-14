@@ -176,6 +176,27 @@ def handler_factory(coordinator: Coordinator):
                 else:
                     coordinator.media_queue.sync_ready()
                     self.reply(200,coordinator.media_queue.status())
+            elif route=="/api/media/reference":
+                try:
+                    worker=coordinator.media_queue.auth(self.bearer(),role="worker")
+                    query=parse_qs(urlsplit(self.path).query)
+                    episode_id=query.get("episode_id",[""])[0]
+                    character=query.get("character",[""])[0]
+                    path,actual_sha,size=coordinator.media_queue.reference_for_worker(
+                        worker,episode_id,character)
+                    self.send_response(200)
+                    self.send_header("Content-Type","image/png")
+                    self.send_header("Content-Length",str(size))
+                    self.send_header("X-Reference-SHA256",actual_sha)
+                    self.send_header("Cache-Control","no-store")
+                    self.end_headers()
+                    with path.open("rb") as source:
+                        while True:
+                            data=source.read(1024*1024)
+                            if not data:break
+                            self.wfile.write(data)
+                except (QueueError,OSError) as exc:
+                    self.reply(403,{"error":str(exc)})
             elif route=="/api/media/artifact":
                 try:
                     reviewer=coordinator.media_queue.auth(self.bearer(),role="reviewer")
