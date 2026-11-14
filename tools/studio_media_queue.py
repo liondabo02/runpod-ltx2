@@ -524,6 +524,62 @@ CREATE TABLE IF NOT EXISTS media_artifact_history (
                        (time.time(),job_id,"FAILED",worker["worker_id"],reason))
         return {"status":state,"production_ready":False}
 
+    def dependencies_for_worker(self, worker, job_id):
+        """Return only QA-approved upstream media artifacts for an active lease."""
+        if worker["role"]!="worker":
+            raise QueueError("Only production workers may fetch dependencies")
+        with self.connect() as db:
+            job=db.execute("SELECT * FROM media_jobs WHERE job_id=? AND "
+                           "state='LEASED' AND worker_id=? AND lease_until>?",
+                           (job_id,worker["worker_id"],time.time())).fetchone()
+            if not job:
+                raise QueueError("An active media job lease is required")
+            deps=json.loads(job["payload"]).get("dependencies",[])
+            result=[]
+            for task_id in deps:
+                parent=db.execute(
+                    "SELECT * FROM media_jobs WHERE episode_id=? AND task_id=?",
+                    (job["episode_id"],task_id)).fetchone()
+                if not parent:
+                    # A story/canon/shotplan dependency may be a completed local
+                    # StudioOS stage rather than a Media Factory output.
+                    continue
+                if parent["state"]!="QA_PASS":
+                    raise QueueError("Upstream media has not passed QA: "+task_id)
+                media=db.execute(
+                    "SELECT filename,sha256,bytes FROM media_artifacts "
+                    "WHERE job_id=? AND role='worker'",(parent["job_id"],)).fetchall()
+                if not media:
+                    raise QueueError("Approved upstream job has no artifacts")
+                result.extend({
+                    "task_id":task_id,"filename":item["filename"],
+                    "sha256":item["sha256"],"bytes":item["bytes"],
+                } for item in media)
+        return result
+
+    def dependency_for_worker(self, worker, job_id, dependency_task_id, filename):
+        """Never expose a producer's other episode/unfinished/failed media."""
+        required=self.dependencies_for_worker(worker,job_id)
+        if not any(x["task_id"]==dependency_task_id and
+                   x["filename"]==filename for x in required):
+            raise QueueError("Requested file is not an approved upstream dependency")
+        with self.connect() as db:
+            child=db.execute("SELECT episode_id FROM media_jobs WHERE job_id=?",(job_id,)).fetchone()
+            parent=db.execute(
+                "SELECT job_id FROM media_jobs WHERE episode_id=? AND task_id=? AND state='QA_PASS'",
+                (child["episode_id"],dependency_task_id)).fetchone()
+            if not parent:
+                raise QueueError("Upstream media no longer approved")
+            item=db.execute(
+                "SELECT * FROM media_artifacts WHERE job_id=? AND role='worker' "
+                "AND filename=?",(parent["job_id"],filename)).fetchone()
+            if not item:
+                raise QueueError("Approved upstream file missing")
+            path=Path(item["local_path"])
+            if not path.is_file() or path.stat().st_size!=item["bytes"] or checksum(path)!=item["sha256"]:
+                raise QueueError("Upstream media file was modified or removed")
+            return path,item["sha256"],item["bytes"]
+
     def reference_for_worker(self, worker, episode_id, character):
         """Serve only an active worker's exact accepted canonical frame.
 
