@@ -32,6 +32,11 @@ def system(tmp_path):
         for tid in ("intake","canon","story","storyboard","asset_inventory"):
             db.execute("UPDATE tasks SET state='DONE_VERIFIED' WHERE episode_id=? AND task_id=?",
                        (episode["episode_id"],tid))
+        reference=(root/"studio/reference/owner_accepted_roster_v1/characters/01_aden.png").read_bytes()
+        db.execute("UPDATE tasks SET result_json=? WHERE episode_id=? AND task_id='canon'",
+                   (json.dumps({"locked_characters":{"aden":hashlib.sha256(reference).hexdigest()},
+                                "identity_source":"owner_accepted_roster_v1"}),
+                    episode["episode_id"]))
     queue=MediaQueue(os,tmp_path/"cloud")
     return queue,os,episode["episode_id"]
 
