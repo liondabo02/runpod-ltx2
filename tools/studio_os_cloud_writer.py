@@ -104,6 +104,100 @@ def generate_outline(prompt: str, cast: list[str], scene_count: int,
     }
 
 
+def generate_outline_local(prompt: str, cast: list[str], scene_count: int,
+                           *, model: str = DEFAULT_MODEL, timeout: int = 150) -> dict:
+    """Use existing Oracle Ollama through *loopback*, without local SSH/private keys.
+
+    Draft only. 1-20 scenes split into small batches so a low-resource ARM
+    model can work reliably and stay within bounded output limits.
+    """
+    import urllib.request
+    import urllib.error
+    if not 1 <= scene_count <= 20:
+        raise ValueError("Scene count must be 1..20")
+    if not isinstance(prompt, str) or not prompt.strip() or len(prompt) > 4000:
+        raise ValueError("Invalid story premise")
+    if not isinstance(cast, list) or not all(isinstance(c, str) for c in cast):
+        raise ValueError("Invalid series cast")
+    scenes = []
+    for offset in range(0, scene_count, 3):
+        count = min(3, scene_count - offset)
+        prefix = ("Previously planned scenes: " +
+                  " | ".join(s["summary"][:160] for s in scenes[-2:]))
+        instruction = (
+            "You are an animated series scriptwriter for children ages 2 to 5. "
+            "Only output valid JSON, without Markdown. Write Turkish. "
+            "Do not change the identities of recurring series characters. "
+            "Return an object with property scenes, containing exactly " +
+            str(count) + " objects. Each object MUST contain: location (string), "
+            "summary (at least 25 characters, beginning-middle-end progression), "
+            "emotional_beat (string), characters (array of first names). "
+            "Write safe, gentle, coherent dramatic events with cause and effect; "
+            "keep visual continuity and specific physical actions for animation. "
+            "Cast: " + ", ".join(cast) + ". "
+            "Story idea: " + prompt + ". "
+            "Total episode scenes: " + str(scene_count) + ". "
+            "Current batch begins at global scene " + str(offset + 1) + ". "
+            + prefix
+        )
+        payload = {"model": model, "stream": False, "format": "json",
+                   "prompt": instruction,
+                   "options": {"temperature": 0.3, "num_predict": 950}}
+        req = urllib.request.Request(
+            "http://127.0.0.1:11434/api/generate",
+            data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as response:
+                outer = json.load(response)
+            partial = json.loads(outer["response"])
+        except (urllib.error.URLError, TimeoutError, ValueError, KeyError) as exc:
+            raise RuntimeError("Oracle local Ollama returned invalid scene draft") from exc
+        batch = partial.get("scenes")
+        if not isinstance(batch, list) or len(batch) != count:
+            raise RuntimeError("Director returned incorrect scene count")
+        for item in batch:
+            if not isinstance(item, dict) or not isinstance(item.get("summary"), str):
+                raise RuntimeError("Director returned incomplete scene")
+            if len(item["summary"].strip()) < 25:
+                raise RuntimeError("Director scene summary too short")
+            members = item.get("characters", [])
+            if not isinstance(members, list) or not all(isinstance(x, str) for x in members):
+                raise RuntimeError("Director character list invalid")
+            scenes.append({
+                "number": len(scenes) + 1,
+                "location": str(item.get("location", "belirlenmedi"))[:100],
+                "summary": item["summary"][:900],
+                "emotional_beat": str(item.get("emotional_beat", ""))[:250],
+                "characters": members[:12],
+            })
+    new_guests = sorted({
+        c for s in scenes for c in s["characters"]
+        if c.casefold() not in {x.casefold() for x in cast}
+    })
+    return {
+        "schema": "ahos.studio-os.outline.v1",
+        "source": "Oracle localhost Ollama (no external API)",
+        "model": model,
+        "new_paid_api_calls": 0,
+        "status": "DRAFT_UNREVIEWED",
+        "original_prompt_sha256": hashlib.sha256(prompt.encode()).hexdigest(),
+        "cast": cast,
+        "guest_characters_pending_assets": new_guests,
+        "outline": {
+            "title": prompt[:100], "premise": prompt,
+            "learning_goal": "Çocuk dostu, yaşa uygun hikâye",
+            "scenes": scenes,
+        },
+        "generated_tokens": None,
+        "creative_approved": False,
+        "identity_approved": False,
+        "production_ready": False,
+    }
+
+
 def main(argv=None):
     ap=argparse.ArgumentParser()
     ap.add_argument("--prompt",required=True)
