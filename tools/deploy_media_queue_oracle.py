@@ -75,7 +75,7 @@ def run(mode: str, record: Path) -> int:
         script=ROOT/"ops/oracle/deploy-media-worker-queue.sh"
         if not script.is_file():
             raise ValueError("Version-controlled Oracle deployment script missing")
-        data=script.read_bytes()
+        data=script.read_bytes().replace(b"\r\n", b"\n")
     elif mode=="preflight":
         data=PREFLIGHT.encode("utf-8")
     elif mode=="verify":
