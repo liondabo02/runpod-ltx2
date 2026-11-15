@@ -149,7 +149,36 @@ def test_names_produce_distinct_silhouettes():
     assert max(counts.values()) != min(counts.values()), f"siluetler aynı: {counts}"
 
 
+def test_mouth_has_exactly_three_openness_levels():
+    """CN snap: ağız sürekli değil, yalnız 3 kademe (kapalı/yarım/tam) olmalı."""
+
+    from PIL import Image, ImageDraw
+
+    from ahos import studio_2d
+
+    mouth_color = (150, 46, 46)
+
+    def mouth_height(level: float) -> int:
+        image = Image.new("RGB", (studio_2d.WIDTH, studio_2d.HEIGHT), (255, 255, 255))
+        draw = ImageDraw.Draw(image)
+        studio_2d._character(draw, "aden", 640, 700, t=1.0, talking=True, gesture=0.4,
+                             mouth=level)
+        pixels = image.load()
+        rows = [y for y in range(520, 640)
+                if any(pixels[x, y] == mouth_color for x in range(600, 680, 2))]
+        return max(rows) - min(rows) if rows else 0
+
+    heights = {mouth_height(level) for level in (0.0, 0.1, 0.4, 0.55, 0.8, 1.0)}
+    assert len(heights) == 3, f"3 kademe bekleniyordu, bulunan: {sorted(heights)}"
+
+
 def test_frames_are_not_static_across_time():
+    """Statiklik yasağı: farklı zamanlarda üretilen kareler birebir aynı olmamalı."""
+
+    first = _character_frame("aden", t=0.0)
+    second = _character_frame("aden", t=0.45)
+    assert list(first.getdata()) != list(second.getdata())
+
     """Statiklik yasağı: farklı zamanlarda üretilen kareler birebir aynı olmamalı."""
 
     first = _character_frame("aden", t=0.0)

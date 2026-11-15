@@ -234,10 +234,10 @@ def _character(draw: ImageDraw.ImageDraw, name: str, x: int, base: int, *, t: fl
     # ağız: ses zarfı varsa gerçek genlik, yoksa 3 kademeli CN açıklığı
     if mouth is not None:
         level = max(0.0, min(1.0, mouth))
-        mouth_h = 4 + int(22 * level)
     else:
-        level = 0.6 if talking and (t * 7) % 2 < 1 else 0.15
-        mouth_h = 4 + int(22 * level)
+        level = 0.65 if talking and (t * 7) % 2 < 1 else 0.0
+    # CN: sürekli sinüs değil, 3 kademeli açıklık (kapalı / yarım / tam)
+    mouth_h = 4 if level < 0.2 else (14 if level < 0.6 else 26)
     draw.ellipse([x - 16, top + 84, x + 16, top + 84 + mouth_h],
                  fill=(150, 46, 46), outline=OUTLINE, width=3)
     # yanak (vurgu tonu)
