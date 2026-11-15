@@ -98,45 +98,118 @@ def _background(draw: ImageDraw.ImageDraw, kind: str, t: float, shift: float) ->
         draw.ellipse([x + 20, 500, x + 120, 560], fill=(70, 140, 70) if kind == "day" else (55, 100, 55))
 
 
+def _shade(color, factor: float):
+    """Düz renk paletinden gölge/vurgu tonu üretir (gradyan yok)."""
+
+    return tuple(max(0, min(255, int(channel * factor))) for channel in color)
+
+
+OUTLINE = (26, 26, 31)
+OUTLINE_WIDTH = 4
+
+
 def _character(draw: ImageDraw.ImageDraw, name: str, x: int, base: int, *, t: float,
                talking: bool, gesture: float, mouth: float | None = None) -> None:
+    """CN tarzı karakter: kalın dış kontur, iri gözler, belirgin siluet."""
+
     colors = PALETTE.get(name, PALETTE["aden"])
     bob = int(10 * math.sin(t * 3.1)) + int(3 * math.sin(t * 7.0))
     sway = int(6 * math.sin(t * 1.9))
     x += sway
-    top = base - 210 + bob
-    # bacaklar (hafif adım)
+    top = base - 220 + bob
+
+    shirt, pants = colors["shirt"], colors["pants"]
+    shirt_dark = _shade(shirt, 0.82)
+    skin = colors["skin"]
+    hair = colors["hair"]
+
+    # zemin gölgesi (karakteri zemine oturtur)
+    draw.ellipse([x - 62, base - 12, x + 62, base + 10], fill=(0, 0, 0, 55))
+
+    # bacaklar (abartılı ayak, konturlu)
     step = int(10 * math.sin(t * 5.0))
-    draw.rectangle([x - 34 - step, base - 70, x - 6 - step, base], fill=colors["pants"])
-    draw.rectangle([x + 6 + step, base - 70, x + 34 + step, base], fill=colors["pants"])
-    # gövde
-    draw.rounded_rectangle([x - 46, top + 120, x + 46, base - 60], radius=18, fill=colors["shirt"])
-    # kollar: jest + salınım (koordinatlar her zaman sıralı tutulur)
+    for side, offset in ((-1, -step), (1, step)):
+        draw.rounded_rectangle([x + side * 34 - 18 + offset, base - 76,
+                                x + side * 34 + 18 + offset, base - 8],
+                               radius=10, fill=pants, outline=OUTLINE, width=3)
+        draw.rounded_rectangle([x + side * 34 - 24 + offset, base - 14,
+                                x + side * 34 + 26 + offset, base + 4],
+                               radius=8, fill=_shade(pants, 0.7), outline=OUTLINE, width=3)
+
+    # gövde + gölge yarısı
+    draw.rounded_rectangle([x - 50, top + 116, x + 50, base - 62], radius=20,
+                           fill=shirt, outline=OUTLINE, width=OUTLINE_WIDTH)
+    draw.rounded_rectangle([x + 4, top + 122, x + 46, base - 68], radius=16,
+                           fill=shirt_dark)
+
+    # kollar: jest + salınım, abartılı el
     swing = int(18 * math.sin(t * 5.0))
-    arm_lift = max(0, min(90, int(40 * gesture)))
+    arm_lift = max(0, min(96, int(44 * gesture)))
 
-    def _arm(x0: int, x1: int, y_top: int, y_bottom: int) -> None:
+    def _arm(inner: int, outer: int, y_top: int, y_bottom: int) -> None:
         top_y, bottom_y = sorted((y_top, y_bottom))
-        if bottom_y - top_y < 12:
-            bottom_y = top_y + 12
-        draw.rounded_rectangle([x0, top_y, x1, bottom_y], radius=10, fill=colors["shirt"])
+        if bottom_y - top_y < 14:
+            bottom_y = top_y + 14
+        draw.rounded_rectangle([inner, top_y, outer, bottom_y], radius=11,
+                               fill=shirt, outline=OUTLINE, width=3)
+        hand_x = (inner + outer) // 2
+        draw.ellipse([hand_x - 14, bottom_y - 8, hand_x + 14, bottom_y + 20],
+                     fill=skin, outline=OUTLINE, width=3)
 
-    _arm(x - 74, x - 50, top + 130 - arm_lift + swing, base - 70 - arm_lift + swing)
-    _arm(x + 50, x + 74, top + 130 - swing, base - 70 - swing)
-    # baş
-    draw.ellipse([x - 48, top, x + 48, top + 110], fill=colors["skin"])
-    draw.chord([x - 48, top - 10, x + 48, top + 70], 180, 360, fill=colors["hair"])
-    # gözler + kırpma
-    blink = (t % 3.4) < 0.12
-    eye_h = 3 if blink else 10
-    draw.ellipse([x - 26, top + 52, x - 12, top + 52 + eye_h], fill=(30, 30, 30))
-    draw.ellipse([x + 12, top + 52, x + 26, top + 52 + eye_h], fill=(30, 30, 30))
-    # ağız: ses zarfı varsa gerçek genlik, yoksa replik zamanlaması
+    _arm(x - 78, x - 52, top + 128 - arm_lift + swing, base - 74 - arm_lift + swing)
+    _arm(x + 52, x + 78, top + 128 - swing, base - 74 - swing)
+
+    # baş (iri) + saç silueti (isme göre farklı: tek bakışta ayırt edilir)
+    head = 58
+    draw.ellipse([x - head, top - 6, x + head, top + 116], fill=skin,
+                 outline=OUTLINE, width=OUTLINE_WIDTH)
+    variant = sum(ord(ch) for ch in str(name)) % 3
+    if variant == 0:  # kısa küt saç
+        draw.chord([x - head - 4, top - 18, x + head + 4, top + 78], 180, 360,
+                   fill=hair, outline=OUTLINE, width=3)
+    elif variant == 1:  # iki yanda topuz
+        draw.chord([x - head - 4, top - 14, x + head + 4, top + 70], 180, 360,
+                   fill=hair, outline=OUTLINE, width=3)
+        for side in (-1, 1):
+            draw.ellipse([x + side * (head - 6) - 18, top + 14,
+                          x + side * (head - 6) + 18, top + 50],
+                         fill=hair, outline=OUTLINE, width=3)
+    else:  # dağınık / dik saç
+        spikes = [(x - head, top + 6), (x - 30, top - 26), (x - 6, top + 2),
+                  (x + 18, top - 30), (x + head, top + 4), (x + head, top + 34),
+                  (x - head, top + 34)]
+        draw.polygon(spikes, fill=hair, outline=OUTLINE, width=3)
+
+    # gözler: iri beyaz + bebek + konuşurken kısılan kaş
+    blink = (t % 4.2) < 0.10
+    eye_w, eye_h = 30, (4 if blink else 34)
+    for side in (-1, 1):
+        eye_x = x + side * 26
+        draw.ellipse([eye_x - eye_w // 2, top + 46, eye_x + eye_w // 2, top + 46 + eye_h],
+                     fill=(255, 255, 255), outline=OUTLINE, width=3)
+        if not blink:
+            draw.ellipse([eye_x - 8, top + 56, eye_x + 8, top + 76], fill=(28, 24, 24))
+            draw.ellipse([eye_x - 3, top + 58, eye_x + 3, top + 64], fill=(255, 255, 255))
+    if not blink:
+        for side in (-1, 1):
+            brow_y = top + 34 - (4 if talking else 0)
+            draw.line([x + side * 26 - 15, brow_y, x + side * 26 + 15, brow_y],
+                      fill=OUTLINE, width=4)
+
+    # ağız: ses zarfı varsa gerçek genlik, yoksa 3 kademeli CN açıklığı
     if mouth is not None:
-        mouth_h = 3 + int(14 * max(0.0, min(1.0, mouth)))
+        level = max(0.0, min(1.0, mouth))
+        mouth_h = 4 + int(22 * level)
     else:
-        mouth_h = int(4 + (12 if talking and (t * 7) % 2 < 1 else 2))
-    draw.ellipse([x - 14, top + 76, x + 14, top + 76 + mouth_h], fill=(120, 40, 40))
+        level = 0.6 if talking and (t * 7) % 2 < 1 else 0.15
+        mouth_h = 4 + int(22 * level)
+    draw.ellipse([x - 16, top + 84, x + 16, top + 84 + mouth_h],
+                 fill=(150, 46, 46), outline=OUTLINE, width=3)
+    # yanak (vurgu tonu)
+    for side in (-1, 1):
+        cheek = x + side * 40
+        draw.ellipse([cheek - 11, top + 78, cheek + 11, top + 96],
+                     fill=_shade((240, 156, 146), 1.0))
 
 
 def episode_timeline(episode: Episode) -> list[dict]:
