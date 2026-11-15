@@ -229,9 +229,11 @@ def build_track(clips: list[tuple[Path, float, float]], total_seconds: float,
             frames = array.array("h")
             frames.frombytes(handle.readframes(handle.getnframes()))
         offset = int(start * sample_rate)
-        limit = min(len(frames), max(0, total_frames - offset))
-        for index in range(limit):
-            buffer[offset + index] = frames[index]
+        # Kırpma YOK: replik süresi slottan uzunsa tampon büyütülür, cümle ortası kesilmez.
+        needed = offset + len(frames)
+        if needed > len(buffer):
+            buffer.extend(array.array("h", [0]) * (needed - len(buffer)))
+        buffer[offset:offset + len(frames)] = frames
 
     if music:
         sfx = generate_sfx(out.parent, sample_rate=sample_rate,
