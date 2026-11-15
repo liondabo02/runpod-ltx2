@@ -14,13 +14,17 @@ from __future__ import annotations
 
 import array
 import asyncio
+import hashlib
 import json
+import math
 import shutil
 import subprocess
 import sys
 import wave
 from dataclasses import dataclass
 from pathlib import Path
+
+import numpy as np
 
 SAMPLE_RATE = 22050
 
@@ -116,9 +120,101 @@ def wav_duration(path: str | Path) -> float:
         return handle.getnframes() / float(handle.getframerate() or SAMPLE_RATE)
 
 
+SFX_GAIN = 0.12
+
+
+def _pcm(samples: np.ndarray) -> bytes:
+    """[-1, 1] float dalgayı 16-bit mono PCM'e çevir (kırpma korumalı)."""
+
+    return np.clip(samples * 32767.0, -32768, 32767).astype("<i2").tobytes()
+
+
+def generate_sfx(directory: str | Path, *, sample_rate: int = SAMPLE_RATE,
+                 seed: int = 7) -> dict[str, Path]:
+    """Üç kısa, deterministik SFX üret: step / whoosh / pop.
+
+    Dosyalar `directory/sfx/` altına yazılır; aynı tohum aynı baytları verir.
+    """
+
+    out = Path(directory) / "sfx"
+    out.mkdir(parents=True, exist_ok=True)
+    rng = np.random.default_rng(seed)
+    durations = {"step": 0.12, "whoosh": 0.22, "pop": 0.16}
+    paths: dict[str, Path] = {}
+    for kind, seconds in durations.items():
+        count = max(1, int(seconds * sample_rate))
+        t = np.arange(count, dtype=np.float64) / sample_rate
+        if kind == "step":
+            noise = rng.standard_normal(count)
+            wave_data = (0.65 * np.sin(2 * np.pi * 1500 * t)
+                         + 0.35 * noise) * np.exp(-t * 45.0)
+        elif kind == "whoosh":
+            noise = rng.standard_normal(count)
+            kernel = np.ones(9, dtype=np.float64) / 9.0
+            filtered = np.convolve(noise, kernel, mode="same")
+            wave_data = filtered * np.sin(np.pi * t / seconds) ** 2
+        else:  # pop
+            freq = 700.0 - 320.0 * (t / max(seconds, 1e-6))
+            wave_data = np.sin(2 * np.pi * np.cumsum(freq) / sample_rate) * np.exp(-t * 26.0)
+        peak = float(np.max(np.abs(wave_data))) or 1.0
+        wave_data = 0.8 * wave_data / peak
+        path = out / f"{kind}.wav"
+        with wave.open(str(path), "wb") as handle:
+            handle.setnchannels(1)
+            handle.setsampwidth(2)
+            handle.setframerate(sample_rate)
+            handle.writeframes(_pcm(wave_data))
+        paths[kind] = path
+    return paths
+
+
+def _mix_at(buffer: array.array, samples: np.ndarray, offset: int, gain: float) -> None:
+    """Kısa SFX'i ana buffer'a taşmadan ekle; toplam örnek sayısı değişmez."""
+
+    if offset < 0 or offset >= len(buffer):
+        return
+    limit = min(len(samples), len(buffer) - offset)
+    if limit <= 0:
+        return
+    mixed = (np.frombuffer(buffer[offset:offset + limit].tobytes(), dtype="<i2").astype(np.float64)
+             + samples[:limit] * gain * 32767.0)
+    mixed = np.clip(mixed, -32768, 32767).astype("<i2")
+    buffer[offset:offset + limit] = array.array("h", mixed.tobytes())
+
+
+def _peak_times(buffer: array.array, sample_rate: int, *, window: float = 0.05,
+                min_gap: float = 0.25, threshold: float = 0.8) -> list[float]:
+    """RMS zirvelerini deterministik zaman damgalarına çevir."""
+
+    if not buffer:
+        return []
+    span = max(1, int(window * sample_rate))
+    rms_values: list[float] = []
+    for start in range(0, len(buffer), span):
+        chunk = np.frombuffer(buffer[start:start + span].tobytes(), dtype="<i2").astype(np.float64)
+        rms_values.append(float(np.sqrt(np.mean(chunk * chunk))) if len(chunk) else 0.0)
+    peak = max(rms_values) if rms_values else 0.0
+    if peak <= 0:
+        return []
+    times: list[float] = []
+    last = -1e9
+    for index, value in enumerate(rms_values):
+        when = index * window
+        if value >= threshold * peak and when - last >= min_gap:
+            times.append(round(when, 3))
+            last = when
+    return times
+
+
 def build_track(clips: list[tuple[Path, float, float]], total_seconds: float,
-                out_path: str | Path, *, sample_rate: int = SAMPLE_RATE) -> Path:
-    """(dosya, başlangıç, süre) listesini tek sessiz/konuşmalı WAV'a diz."""
+                out_path: str | Path, *, sample_rate: int = SAMPLE_RATE,
+                music: bool = False, seed_text: str = "",
+                scene_starts: list[float] | tuple[float, ...] | None = None) -> Path:
+    """(dosya, başlangıç, süre) listesini tek WAV'a diz.
+
+    `music=True` ise step/whoosh/pop SFX'leri eklenir. Toplam süre ve örnek
+    sayısı her durumda korunur; SFX gain'i düşüktür ve konuşmayı ezmez.
+    """
 
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -136,6 +232,23 @@ def build_track(clips: list[tuple[Path, float, float]], total_seconds: float,
         limit = min(len(frames), max(0, total_frames - offset))
         for index in range(limit):
             buffer[offset + index] = frames[index]
+
+    if music:
+        sfx = generate_sfx(out.parent, sample_rate=sample_rate,
+                           seed=int.from_bytes(hashlib.sha256(seed_text.encode("utf-8")).digest()[:4],
+                                               "big"))
+        cues: list[tuple[str, float]] = []
+        for start in scene_starts or ():
+            cues.append(("step", float(start)))
+        for _path, start, _duration in clips:
+            cues.append(("whoosh", float(start)))
+        for when in _peak_times(array.array("h", buffer), sample_rate):
+            cues.append(("pop", float(when)))
+        for kind, when in cues:
+            with wave.open(str(sfx[kind]), "rb") as handle:
+                samples = np.frombuffer(handle.readframes(handle.getnframes()),
+                                        dtype="<i2").astype(np.float64) / 32768.0
+            _mix_at(buffer, samples, int(round(when * sample_rate)), SFX_GAIN)
 
     with wave.open(str(out), "wb") as handle:
         handle.setnchannels(1)

@@ -11,7 +11,8 @@ import pytest
 
 from ahos.studio_2d import Episode, Line, Scene, render_episode
 from ahos.studio_qa import verify_episode
-from ahos.studio_voice import build_track, list_voices, rms, synthesize_wav, wav_duration
+from ahos.studio_voice import (build_track, generate_sfx, list_voices, rms,
+                               synthesize_wav, wav_duration)
 
 RATE = 22050
 
@@ -116,3 +117,38 @@ def test_voiced_episode_passes_the_gate(tmp_path):
     assert report["passed"] is True, report
     assert report["measurements"]["audio_streams"] == 1
     assert report["measurements"]["audio"]["rms"] > 120
+
+
+def test_sfx_files_are_short_and_deterministic(tmp_path):
+    first = generate_sfx(tmp_path / "one")
+    second = generate_sfx(tmp_path / "two")
+    assert set(first) == {"step", "whoosh", "pop"}
+    for kind in first:
+        assert first[kind].is_file()
+        assert 0.10 <= wav_duration(first[kind]) <= 0.25
+        assert first[kind].read_bytes() == second[kind].read_bytes()
+
+
+def test_music_sfx_adds_cues_without_changing_duration(tmp_path):
+    """SFX cue noktalarında RMS artmalı; toplam örnek sayısı değişmemeli."""
+
+    total = 1.0
+    track = build_track([], total, tmp_path / "track.wav", music=True,
+                        seed_text="sfx-test", scene_starts=[0.0])
+    with wave.open(str(track), "rb") as handle:
+        assert handle.getnframes() == int(total * RATE)
+        frames = array.array("h")
+        frames.frombytes(handle.readframes(handle.getnframes()))
+
+    def energy(start: float, seconds: float = 0.1) -> float:
+        chunk = frames[int(start * RATE):int((start + seconds) * RATE)]
+        return sum(abs(v) for v in chunk) / max(1, len(chunk))
+
+    assert energy(0.0) > energy(0.6) + 20
+    assert (tmp_path / "sfx" / "step.wav").is_file()
+
+
+def test_music_sfx_keeps_silence_without_cues(tmp_path):
+    track = build_track([], 0.5, tmp_path / "silent.wav", music=True, seed_text="none")
+    assert rms(track) == 0.0
+    assert wav_duration(track) == pytest.approx(0.5, abs=1e-6)
