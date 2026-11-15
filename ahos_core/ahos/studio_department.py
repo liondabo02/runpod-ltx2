@@ -2,11 +2,13 @@
 from __future__ import annotations
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
 import wave
 import unicodedata
+from dataclasses import dataclass
 from pathlib import Path
 
 STAGES = (
@@ -172,3 +174,130 @@ def acceptance(runtime, idea_id, task, *, owner_review=None):
         return []
     except (OSError,ValueError,TypeError,KeyError,subprocess.SubprocessError,wave.Error) as exc:
         return [str(exc)[:240]]
+
+
+# --- Sağlayıcı kaydı (S1) ---------------------------------------------------
+# Model adı, fiyat veya vendor adı koda gömülmez: hepsi katalog dosyasından
+# (varsayılan `studio/pipeline/providers.json`) okunur. Ücretli sağlayıcı yalnızca
+# açık sahip onayı + bütçe kapısıyla seçilebilir; aksi halde ücretsiz yol kalır.
+
+
+class ProviderRegistryError(ValueError):
+    """Katalog geçersiz (şema ihlali, çift kimlik, eksik alan)."""
+
+
+@dataclass(frozen=True, slots=True)
+class ProviderDescriptor:
+    """Tek sağlayıcı kaydı; `adapter` çalıştırma kodunu, `model_ref` config'i işaret eder."""
+
+    provider_id: str
+    adapter: str
+    task_types: frozenset[str]
+    languages: frozenset[str]
+    paid: bool
+    external: bool
+    commercial_default: bool
+    priority: int
+    model_ref: str = ""
+
+    def supports(self, task_type: str, language: str) -> bool:
+        return task_type in self.task_types and language in self.languages
+
+    def to_payload(self) -> dict:
+        return {
+            "provider_id": self.provider_id,
+            "adapter": self.adapter,
+            "task_types": sorted(self.task_types),
+            "languages": sorted(self.languages),
+            "paid": self.paid,
+            "external": self.external,
+            "commercial_default": self.commercial_default,
+            "priority": int(self.priority),
+            "model_ref": self.model_ref,
+        }
+
+
+CATALOG_ENV = "AHOS_PROVIDER_CATALOG"
+_REQUIRED_FIELDS = ("provider_id", "adapter", "task_types", "languages", "paid",
+                    "external", "commercial_default", "priority")
+
+
+def provider_catalog_path() -> Path:
+    """Katalog yolu: ortam değişkeni ya da repo kökündeki varsayılan dosya."""
+
+    override = os.environ.get(CATALOG_ENV, "").strip()
+    if override:
+        return Path(override)
+    return Path(__file__).resolve().parents[2] / "studio" / "pipeline" / "providers.json"
+
+
+@dataclass(frozen=True, slots=True)
+class ProviderRegistry:
+    """Katalogdan yüklenen sağlayıcı kaydı; seçim deterministik ve fail-closed."""
+
+    providers: tuple[ProviderDescriptor, ...]
+
+    @classmethod
+    def from_payload(cls, payload: dict) -> "ProviderRegistry":
+        if not isinstance(payload, dict) or not isinstance(payload.get("providers"), list):
+            raise ProviderRegistryError("katalog 'providers' listesi içermeli")
+        seen: set[str] = set()
+        rows: list[ProviderDescriptor] = []
+        for index, item in enumerate(payload["providers"]):
+            if not isinstance(item, dict):
+                raise ProviderRegistryError(f"providers[{index}] nesne olmalı")
+            missing = [field for field in _REQUIRED_FIELDS if field not in item]
+            if missing:
+                raise ProviderRegistryError(f"providers[{index}] eksik alan: {missing}")
+            provider_id = str(item["provider_id"]).strip()
+            if not provider_id:
+                raise ProviderRegistryError(f"providers[{index}] boş provider_id")
+            if provider_id in seen:
+                raise ProviderRegistryError(f"çift provider_id: {provider_id}")
+            seen.add(provider_id)
+            task_types = frozenset(str(value) for value in item["task_types"])
+            languages = frozenset(str(value) for value in item["languages"])
+            if not task_types or not languages:
+                raise ProviderRegistryError(f"{provider_id}: task_types/languages boş olamaz")
+            rows.append(ProviderDescriptor(
+                provider_id=provider_id,
+                adapter=str(item["adapter"]),
+                task_types=task_types,
+                languages=languages,
+                paid=bool(item["paid"]),
+                external=bool(item["external"]),
+                commercial_default=bool(item["commercial_default"]),
+                priority=int(item["priority"]),
+                model_ref=str(item.get("model_ref") or ""),
+            ))
+        if not rows:
+            raise ProviderRegistryError("katalog boş")
+        return cls(providers=tuple(rows))
+
+    @classmethod
+    def load(cls, path: str | Path | None = None) -> "ProviderRegistry":
+        source = Path(path) if path else provider_catalog_path()
+        try:
+            payload = json.loads(source.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ProviderRegistryError(f"katalog okunamadı ({source}): {exc}") from exc
+        return cls.from_payload(payload)
+
+    def candidates(self, task_type: str, language: str) -> list[ProviderDescriptor]:
+        """Uygun sağlayıcılar: ücretsiz → ticari varsayılan → öncelik → kimlik."""
+
+        rows = [row for row in self.providers if row.supports(task_type, language)]
+        return sorted(rows, key=lambda row: (row.paid, not row.commercial_default,
+                                             int(row.priority), row.provider_id))
+
+    def resolve(self, task_type: str, language: str, *, allow_paid: bool = False,
+                approval: str | None = None) -> ProviderDescriptor | None:
+        """İlk uygun sağlayıcı; ücretli olan yalnızca onay+bütçe izniyle döner."""
+
+        for row in self.candidates(task_type, language):
+            if row.paid:
+                if not allow_paid or not str(approval or "").strip():
+                    continue
+            return row
+        return None
+

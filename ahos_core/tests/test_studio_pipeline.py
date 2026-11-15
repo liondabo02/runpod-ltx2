@@ -47,3 +47,59 @@ def test_owner_command_produces_an_episode(tmp_path):
     assert len(episodes) == 1
     acceptance = json.loads(episodes[0].with_name("acceptance.json").read_text(encoding="utf-8"))
     assert acceptance["passed"] is True
+
+
+def test_provider_registry_resolves_free_local_first():
+    """Katalogdan seçim: ücretsiz/yerel sağlayıcı, ücretliden önce gelir."""
+
+    from ahos.studio_department import ProviderRegistry
+
+    registry = ProviderRegistry.load()
+    chosen = registry.resolve("video.generate", "tr")
+    assert chosen is not None
+    assert chosen.paid is False
+    assert chosen.adapter
+    assert chosen.model_ref
+
+
+def test_provider_registry_requires_approval_for_paid():
+    """Ücretsiz varsayılan korunur; ücretli yol yalnızca onay+bütçe izniyle açılır."""
+
+    from ahos.studio_department import ProviderRegistry
+
+    registry = ProviderRegistry.load()
+    default = registry.resolve("video.generate", "tr")
+    assert default is not None and default.paid is False
+
+    paid_only = ProviderRegistry.from_payload({"providers": [{
+        "provider_id": "paid-video",
+        "task_types": ["video.generate"],
+        "adapter": "external_adapter",
+        "languages": ["tr"],
+        "paid": True,
+        "external": True,
+        "commercial_default": False,
+        "priority": 1,
+        "model_ref": "config://paid/video",
+    }]})
+    assert paid_only.resolve("video.generate", "tr") is None
+    assert paid_only.resolve("video.generate", "tr", allow_paid=True) is None
+    approved = paid_only.resolve("video.generate", "tr", allow_paid=True,
+                                 approval="owner-approved-123")
+    assert approved is not None and approved.paid is True
+
+
+
+def test_provider_registry_fails_closed_on_bad_catalog():
+    """Eksik/çift kayıt sessizce geçmez; katalog hatası yükselir."""
+
+    import pytest
+
+    from ahos.studio_department import ProviderRegistry, ProviderRegistryError
+
+    with pytest.raises(ProviderRegistryError):
+        ProviderRegistry.from_payload({"providers": [{"provider_id": "x"}]})
+
+    with pytest.raises(ProviderRegistryError):
+        ProviderRegistry.from_payload({"providers": []})
+

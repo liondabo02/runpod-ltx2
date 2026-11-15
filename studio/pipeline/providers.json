@@ -1,0 +1,49 @@
+{
+  "schema": "ahos.providers.v1",
+  "providers": [
+    {
+      "provider_id": "local-comfy",
+      "task_types": ["video.generate", "image.generate"],
+      "adapter": "comfyui_local",
+      "languages": ["tr", "en", "de"],
+      "paid": false,
+      "external": false,
+      "commercial_default": true,
+      "priority": 10,
+      "model_ref": "config://comfy/checkpoint"
+    },
+    {
+      "provider_id": "runpod-video",
+      "task_types": ["video.generate"],
+      "adapter": "runpod_video",
+      "languages": ["tr", "en"],
+      "paid": true,
+      "external": true,
+      "commercial_default": false,
+      "priority": 20,
+      "model_ref": "config://runpod/video-model"
+    },
+    {
+      "provider_id": "edge-tts",
+      "task_types": ["tts"],
+      "adapter": "edge_tts",
+      "languages": ["tr", "en", "de"],
+      "paid": false,
+      "external": true,
+      "commercial_default": true,
+      "priority": 10,
+      "model_ref": ""
+    },
+    {
+      "provider_id": "runpod-voice",
+      "task_types": ["tts"],
+      "adapter": "runpod_voice",
+      "languages": ["tr", "en"],
+      "paid": true,
+      "external": true,
+      "commercial_default": false,
+      "priority": 30,
+      "model_ref": "config://runpod/tts-model"
+    }
+  ]
+}
