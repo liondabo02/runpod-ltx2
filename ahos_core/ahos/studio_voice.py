@@ -257,6 +257,7 @@ def build_track(clips: list[tuple[Path, float, float]], total_seconds: float,
         handle.setsampwidth(2)
         handle.setframerate(sample_rate)
         handle.writeframes(buffer.tobytes())
+    normalize_loudness(out)
     return out
 
 
@@ -312,6 +313,38 @@ def profile_for(role_type: str | None = None, age_band: str | None = None) -> di
     semitones = hz / 20.0 if hz else 0.0      # +25Hz ≈ +1.25 semiton, -20Hz ≈ -1 semiton
     return {"semitones": round(semitones, 2), "rate_pct": _number(rate_text),
             "style_prompt": str(raw.get("style_prompt") or "")}
+
+
+def normalize_loudness(path: str | Path, *, target_dbfs: float = -18.0) -> Path:
+    """Miksin seviyesini hedef RMS'e çeker (replikler arası ses sıçramasını azaltır).
+
+    Konuşma motoru değişmez; yalnızca kazanç dengelenir. Aşırı kazanç kırpılır
+    (-6..+12 dB) ve 0.5 dB'den küçük farklar dosyaya dokunmaz.
+    """
+
+    import math
+
+    target = Path(path)
+    level = rms(target)
+    if level <= 0:
+        return target
+    current_db = 20.0 * math.log10(max(1e-9, level / 32768.0))
+    gain = max(-6.0, min(12.0, float(target_dbfs) - current_db))
+    if abs(gain) < 0.5:
+        return target
+    ffmpeg = shutil.which("ffmpeg")
+    if not ffmpeg:
+        return target
+    temp_out = target.with_name(target.stem + ".norm.wav")
+    proc = subprocess.run(
+        [ffmpeg, "-y", "-loglevel", "error", "-i", str(target),
+         "-af", f"volume={gain:.2f}dB", "-ac", "1", "-ar", str(SAMPLE_RATE), str(temp_out)],
+        capture_output=True, text=True, timeout=300)
+    if proc.returncode != 0:
+        temp_out.unlink(missing_ok=True)
+        return target
+    temp_out.replace(target)
+    return target
 
 
 def rms(path: str | Path) -> float:
