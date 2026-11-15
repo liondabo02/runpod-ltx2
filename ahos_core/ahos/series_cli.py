@@ -252,8 +252,21 @@ def main(argv: list[str] | None = None) -> int:
     number = args.episode or int(state.get("next_episode") or 1)
     plans = plan_season(series, episodes=max(number, int(state.get("planned") or args.episodes)))
     plan = plans[number - 1]
+    # P5: LLM senaryo adaptörünü hatta bağla (anahtar yoksa şablon devreye girer).
+    script_adapter = None
+    try:
+        import os as _os
+
+        if _os.environ.get("AHOS_LLM_API_KEY", "").strip():
+            from .series import default_script_adapters
+
+            script_adapter = default_script_adapters().get("llm")
+    except Exception:  # noqa: BLE001 - LLM yoksa şablonla devam (fail-closed)
+        script_adapter = None
+
     episode = build_episode(series, plan, lines_per_scene=args.lines_per_scene,
-                            line_seconds=args.line_seconds)
+                            line_seconds=args.line_seconds,
+                            script_adapter=script_adapter)
     out = root / "episodes" / f"b{number:02d}"
     import time
 
