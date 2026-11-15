@@ -1,0 +1,9 @@
+{
+  "provider": "llm",
+  "model_ref": "config://llm/model",
+  "model": "",
+  "base_url": "",
+  "max_tokens": 800,
+  "budget_usd_cap": 2.0,
+  "timeout_s": 40
+}
