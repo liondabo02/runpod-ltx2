@@ -23,16 +23,19 @@ from .series import (
 from .studio_pipeline import produce_episode
 
 
-def _bible(root: Path) -> SeriesBible:
+def _bible(root: Path, topic: str | None = None) -> SeriesBible:
     path = root / "series.json"
     if path.is_file():
         data = json.loads(path.read_text(encoding="utf-8"))
         data["characters"] = [Character(**item) for item in data.get("characters", [])]
         return SeriesBible(**data)
+    premise = (str(topic).strip() if topic else
+               "İki kardeş her bölüm yeni bir şey keşfeder.")
+    title = (str(topic).strip()[:70] if topic else "Aden ve Kaan") or "Aden ve Kaan"
     return SeriesBible(
         series_id=root.name or "dizi",
-        title="Aden ve Kaan",
-        premise="İki kardeş her bölüm yeni bir şey keşfeder.",
+        title=title,
+        premise=premise,
         characters=[
             Character("aden", "Aden", "female"),
             Character("kaan", "Kaan", "male"),
@@ -183,13 +186,15 @@ def main(argv: list[str] | None = None) -> int:
                         help="Bölüm başına sert maliyet tavanı (0 = yalnız ücretsiz)")
     parser.add_argument("--providers", default=None,
                         help="Sağlayıcı kataloğu yolu")
+    parser.add_argument("--topic", default=None,
+                        help="Dizi konusu (series.json yoksa başlık/öncül olarak kullanılır)")
     parser.add_argument("command", choices=["plan", "produce", "status"])
     parser.add_argument("--episode", type=int, default=None)
     args = parser.parse_args(argv)
 
     root = Path(args.root)
     root.mkdir(parents=True, exist_ok=True)
-    series = _bible(root)
+    series = _bible(root, args.topic)
     _save_bible(root, series)
     state = load_state(root)
 
