@@ -83,3 +83,76 @@ def test_episode_manifest_is_written(tmp_path):
     stored = json.loads((tmp_path / "episode.json").read_text(encoding="utf-8"))
     assert stored["title"] == manifest["title"]
     assert stored["frames"] == manifest["frames"]
+
+
+def _character_frame(name, *, x=640, base=700, t=1.0):
+    """Beyaz zemin üzerinde tek karakter karesi (çizim yolu, ffmpeg yok)."""
+
+    from PIL import Image, ImageDraw
+
+    from ahos import studio_2d
+
+    image = Image.new("RGB", (studio_2d.WIDTH, studio_2d.HEIGHT), (255, 255, 255))
+    draw = ImageDraw.Draw(image)
+    studio_2d._character(draw, name, x, base, t=t, talking=True, gesture=0.6, mouth=0.5)
+    return image
+
+
+def _luma(pixel):
+    return 0.2126 * pixel[0] + 0.7152 * pixel[1] + 0.0722 * pixel[2]
+
+
+def test_character_has_bold_outline():
+    """Kontur kuralı: karakter çevresinde OUTLINE rengi belirgin olmalı."""
+
+    from ahos import studio_2d
+
+    image = _character_frame("aden")
+    pixels = image.load()
+    outline_hits = 0
+    sampled = 0
+    # baş bölgesinin yatay taramaları (üst/orta/alt)
+    for y in range(430, 640, 10):
+        for x in range(560, 720, 2):
+            sampled += 1
+            if pixels[x, y] == studio_2d.OUTLINE:
+                outline_hits += 1
+    assert sampled > 0
+    assert outline_hits > 150, f"kontur pikseli çok az: {outline_hits}"
+    assert outline_hits / sampled > 0.05
+
+
+def test_character_contrasts_with_background():
+    """Kontrast kuralı: karakter ile arka plan arasında ΔL >= 25 olmalı."""
+
+    image = _character_frame("kaan")
+    pixels = image.load()
+    background = _luma(pixels[10, 10])
+    samples = [_luma(pixels[x, y]) for y in range(420, 640, 20) for x in range(600, 690, 10)]
+    foreground = sum(samples) / len(samples)
+    assert abs(foreground - background) >= 25, f"ΔL düşük: {abs(foreground - background):.1f}"
+
+
+def test_names_produce_distinct_silhouettes():
+    """Silüet kuralı: farklı isimler farklı saç kütlesi üretmeli (ayırt edilebilir)."""
+
+    from ahos import studio_2d
+
+    counts = {}
+    for name in ("aden", "kaan", "anne"):
+        image = _character_frame(name)
+        hair = studio_2d.PALETTE[name]["hair"]
+        pixels = image.load()
+        counts[name] = sum(1 for y in range(400, 520, 2)
+                           for x in range(560, 720, 2) if pixels[x, y] == hair)
+    assert min(counts.values()) > 0, counts
+    assert max(counts.values()) != min(counts.values()), f"siluetler aynı: {counts}"
+
+
+def test_frames_are_not_static_across_time():
+    """Statiklik yasağı: farklı zamanlarda üretilen kareler birebir aynı olmamalı."""
+
+    first = _character_frame("aden", t=0.0)
+    second = _character_frame("aden", t=0.45)
+    assert list(first.getdata()) != list(second.getdata())
+
