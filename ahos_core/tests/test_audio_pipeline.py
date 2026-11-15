@@ -162,3 +162,98 @@ def test_audio_manifest_is_persistent(tmp_path: Path):
     db = tmp_path / "audio.db"
     AudioManifestStore(db).upsert_planned(job)
     assert AudioManifestStore(db).count("S01E001") == 1
+
+
+def _tiny_episode():
+    from ahos.studio_2d import Episode, Line, Scene
+
+    return Episode(title="d", language="tr", scenes=[
+        Scene("s1", "Açılış", "day", ["aden"],
+              [Line("s1", "aden", "merhaba", 2.0), Line("s1", "aden", "devam", 1.0)]),
+        Scene("s2", "Kapanış", "night", ["kaan"], [Line("s2", "kaan", "hoşça kal", 2.0)]),
+    ])
+
+
+def test_plan_jobs_is_deterministic_and_offline():
+    from ahos.audio_pipeline import AudioBudgetPolicy, plan_jobs
+
+    policy = AudioBudgetPolicy()
+    first = plan_jobs(_tiny_episode(), policy)
+    second = plan_jobs(_tiny_episode(), policy)
+
+    assert [job.job_id for job in first] == [job.job_id for job in second]
+    assert all(job.paid is False for job in first)
+    # 3 replik + 2 sahne müziği
+    assert len(first) == 5
+    assert [job.task_type.value for job in first].count("dialogue_tts") == 3
+
+
+def test_resolve_provider_by_language_capability_and_priority():
+    from ahos.audio_pipeline import (AudioBudgetPolicy, AudioProviderDescriptor,
+                                     AudioProviderRegistry, resolve_provider)
+
+    def provider(pid, languages, priority, paid=False, caps=("tts",)):
+        return AudioProviderDescriptor(
+            provider_id=pid, name=pid, supported_languages=frozenset(languages),
+            capabilities=frozenset(caps), paid=paid, external=False,
+            commercial_default=True, priority=priority)
+
+    registry = AudioProviderRegistry((
+        provider("slow-tr", {"tr"}, 50),
+        provider("fast-tr", {"tr"}, 5),
+        provider("en-only", {"en"}, 1),
+        provider("video-only", {"tr"}, 1, caps=("video",)),
+    ))
+    policy = AudioBudgetPolicy(allow_external=True)
+    assert resolve_provider("tts", "tr", policy, registry=registry).provider_id == "fast-tr"
+    assert resolve_provider("tts", "de", policy, registry=registry) is None
+
+
+def test_paid_provider_requires_approval_and_budget():
+    from ahos.audio_pipeline import (AudioBudgetPolicy, AudioProviderDescriptor,
+                                     AudioProviderRegistry, resolve_provider)
+
+    paid = AudioProviderDescriptor(
+        provider_id="paid-tts", name="paid", supported_languages=frozenset({"tr"}),
+        capabilities=frozenset({"tts"}), paid=True, external=True,
+        commercial_default=True, priority=1)
+    registry = AudioProviderRegistry((paid,))
+
+    assert resolve_provider("tts", "tr", AudioBudgetPolicy(), registry=registry) is None
+    assert resolve_provider(
+        "tts", "tr", AudioBudgetPolicy(allow_paid=True, approval="owner-ok"),
+        registry=registry) is None  # bütçe yok -> çağrı yok
+    allowed = AudioBudgetPolicy(allow_paid=True, approval="owner-ok",
+                                budget_remaining_usd=5.0)
+    assert resolve_provider("tts", "tr", allowed, registry=registry).provider_id == "paid-tts"
+
+
+def test_fallback_rejects_wrong_language_adapter(tmp_path):
+    from ahos.audio_pipeline import (AudioBudgetPolicy, AudioProviderDescriptor,
+                                     AudioProviderRegistry, plan_jobs,
+                                     synthesize_with_fallback)
+
+    def provider(pid, priority):
+        return AudioProviderDescriptor(
+            provider_id=pid, name=pid, supported_languages=frozenset({"tr"}),
+            capabilities=frozenset({"tts"}), paid=False, external=False,
+            commercial_default=True, priority=priority)
+
+    registry = AudioProviderRegistry((provider("first", 1), provider("second", 2)))
+    policy = AudioBudgetPolicy(allow_external=True)
+    job = plan_jobs(_tiny_episode(), policy, registry=registry)[0]
+
+    def wrong_language(_job, out_path):
+        return {"path": str(out_path), "language": "en", "engine": "fake"}
+
+    def good(_job, out_path):
+        Path(out_path).write_bytes(b"RIFF")
+        return {"path": str(out_path), "language": "tr", "engine": "fake"}
+
+    result = synthesize_with_fallback(
+        job, tmp_path / "a.wav",
+        {"first": wrong_language, "second": good},
+        policy=policy, registry=registry)
+    assert result["provider_id"] == "second"
+    assert result["tried"] == ["first", "second"]
+

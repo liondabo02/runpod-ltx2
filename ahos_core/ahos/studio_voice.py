@@ -349,3 +349,29 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+def synthesize_job(job, out_path) -> dict:
+    """Provider sözleşmesi: `AudioJob` -> {path, engine, voice, language, latency, cost}.
+
+    Konuşma profili (pitch/rate) `audio_pipeline.speaking_profile` tarafından
+    config'ten çözülür; burada yalnız mevcut motor sürülür.
+    """
+
+    import time
+
+    text = str((job.payload or {}).get("text") or "")
+    if not text.strip():
+        raise ValueError("boş replik")
+    started = time.time()
+    info = synthesize(text, out_path, language=str(job.language or "tr"),
+                      speaker=str(job.speaker_character_id or ""))
+    return {
+        "path": str(info.get("path") or out_path),
+        "engine": info.get("engine"),
+        "voice": info.get("voice") or info.get("name"),
+        "language": str(job.language or "tr"),
+        "latency_s": round(time.time() - started, 3),
+        "cost_usd": 0.0,
+    }
+

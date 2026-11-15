@@ -1,0 +1,45 @@
+{
+  "schema": "ahos.speaking-profiles.v1",
+  "default": {
+    "pitch": "+0Hz",
+    "rate": "+0%",
+    "style_prompt": "clear, warm, age appropriate"
+  },
+  "profiles": {
+    "child": {
+      "pitch": "+25Hz",
+      "rate": "+8%",
+      "style_prompt": "bright, curious child voice, gentle articulation"
+    },
+    "teen": {
+      "pitch": "+10Hz",
+      "rate": "+4%",
+      "style_prompt": "lively teen voice, natural pace"
+    },
+    "adult": {
+      "pitch": "+0Hz",
+      "rate": "+0%",
+      "style_prompt": "warm adult voice, clear diction"
+    },
+    "elder": {
+      "pitch": "-20Hz",
+      "rate": "-10%",
+      "style_prompt": "warm, slow storytelling voice"
+    },
+    "kahraman": {
+      "pitch": "+8Hz",
+      "rate": "+2%",
+      "style_prompt": "confident, friendly lead voice"
+    },
+    "arkadaş": {
+      "pitch": "+4Hz",
+      "rate": "+3%",
+      "style_prompt": "playful companion voice"
+    },
+    "bilge": {
+      "pitch": "-12Hz",
+      "rate": "-6%",
+      "style_prompt": "calm, wise mentor voice"
+    }
+  }
+}
