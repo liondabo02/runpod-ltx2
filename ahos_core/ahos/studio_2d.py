@@ -267,6 +267,15 @@ def episode_timeline(episode: Episode) -> list[dict]:
     return rows
 
 
+def _flash_alpha(t_local: float) -> float:
+    """Sahne başında 1 karelik beyaz flash (CN geçişi). 1.0 → tam beyaz kare."""
+
+    frame = 1.0 / float(FPS)
+    if t_local < frame:
+        return 1.0
+    return 0.0
+
+
 def _subtitle_band(draw: ImageDraw.ImageDraw, text: str, *, speaker: str = "") -> None:
     """CN tarzı altyazı: konturlu kalın yazı + konuşanın renginde isim şeridi."""
 
@@ -384,6 +393,8 @@ def render_episode(episode: Episode, out_dir: str | Path, *,
             draw.text((40, 30), episode.title, font=_font(34), fill=(255, 255, 255))
             draw.text((40, 80), f"{scene.setting}", font=_font(24), fill=(235, 235, 235))
             _subtitle_band(draw, caption, speaker=speaker)
+            if _flash_alpha(t) >= 1.0:
+                draw.rectangle([0, 0, WIDTH, HEIGHT], fill=(255, 255, 255))
             emit(image)
             frame_no += 1
             t += per_frame

@@ -149,6 +149,16 @@ def test_names_produce_distinct_silhouettes():
     assert max(counts.values()) != min(counts.values()), f"siluetler aynı: {counts}"
 
 
+def test_scene_transition_has_white_flash_frame():
+    """Geçiş: sahne başında 1 kare beyaz flash olmalı, sonrasında olmamalı."""
+
+    from ahos import studio_2d
+
+    assert studio_2d._flash_alpha(0.0) == 1.0
+    assert studio_2d._flash_alpha(0.5 / studio_2d.FPS) == 1.0
+    assert studio_2d._flash_alpha(2.0 / studio_2d.FPS) == 0.0
+
+
 def test_mouth_has_exactly_three_openness_levels():
     """CN snap: ağız sürekli değil, yalnız 3 kademe (kapalı/yarım/tam) olmalı."""
 
