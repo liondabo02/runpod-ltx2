@@ -267,12 +267,31 @@ def episode_timeline(episode: Episode) -> list[dict]:
     return rows
 
 
-def _subtitle_band(draw: ImageDraw.ImageDraw, text: str) -> None:
+def _subtitle_band(draw: ImageDraw.ImageDraw, text: str, *, speaker: str = "") -> None:
+    """CN tarzı altyazı: konturlu kalın yazı + konuşanın renginde isim şeridi."""
+
     if not text:
         return
+    band_h = 128
+    top = HEIGHT - band_h
+    draw.rectangle([0, top, WIDTH, HEIGHT], fill=(18, 18, 24))
+    accent = PALETTE.get(speaker, PALETTE["aden"])["shirt"]
+    draw.rectangle([0, top, WIDTH, top + 8], fill=accent)
+    if speaker:
+        name_font = _font(28)
+        label = speaker.upper()
+        box = draw.textbbox((0, 0), label, font=name_font)
+        pad = 16
+        draw.rounded_rectangle([36, top + 14, 36 + (box[2] - box[0]) + pad * 2, top + 14 + 44],
+                               radius=10, fill=accent)
+        draw.text((36 + pad, top + 18), label, font=name_font, fill=(16, 16, 20))
+
     font = _font(38)
-    draw.rectangle([0, HEIGHT - 120, WIDTH, HEIGHT], fill=(0, 0, 0))
-    draw.text((60, HEIGHT - 104), text[:110], font=font, fill=(255, 255, 255))
+    y = top + (52 if speaker else 26)
+    # kontur: 4 yönde OFFSET, sonra dolgu (CN başlık stili)
+    for dx, dy in ((-3, 0), (3, 0), (0, -3), (0, 3)):
+        draw.text((60 + dx, y + dy), text[:110], font=font, fill=OUTLINE)
+    draw.text((60, y), text[:110], font=font, fill=(255, 255, 255))
 
 
 def render_episode(episode: Episode, out_dir: str | Path, *,
@@ -364,7 +383,7 @@ def render_episode(episode: Episode, out_dir: str | Path, *,
 
             draw.text((40, 30), episode.title, font=_font(34), fill=(255, 255, 255))
             draw.text((40, 80), f"{scene.setting}", font=_font(24), fill=(235, 235, 235))
-            _subtitle_band(draw, caption)
+            _subtitle_band(draw, caption, speaker=speaker)
             emit(image)
             frame_no += 1
             t += per_frame
