@@ -462,17 +462,21 @@ def render_from_clips(episode: Episode, clips: list[str], out_dir: str | Path, *
                                        encoding="utf-8")
 
     video_path = out / "episode.mp4"
+    partial_video = out / "episode.partial.mp4"
     if audio is not None and Path(audio).is_file():
         muxed = subprocess.run(
             [ffmpeg, "-y", "-loglevel", "error", "-i", str(silent_video), "-i", str(audio),
              "-c:v", "copy", "-c:a", "aac", "-strict", "-2", "-b:a", "128k", "-af", "apad",
-             "-t", f"{total_seconds:.3f}", "-movflags", "+faststart", str(video_path)],
+             "-t", f"{total_seconds:.3f}", "-movflags", "+faststart", str(partial_video)],
             capture_output=True, text=True, timeout=1800)
         if muxed.returncode != 0:
+            partial_video.unlink(missing_ok=True)
             raise RuntimeError("ses miksajı başarısız: " + (muxed.stderr or "")[-300:])
         silent_video.unlink(missing_ok=True)
     else:
-        silent_video.replace(video_path)
+        silent_video.replace(partial_video)
+    # Crash safety: yarım dosya asla `episode.mp4` adıyla görünmez.
+    partial_video.replace(video_path)
 
     manifest = {
         "title": episode.title,

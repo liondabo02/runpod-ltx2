@@ -230,6 +230,26 @@ def test_cli_budget_gate_blocks_before_production(tmp_path, monkeypatch):
     assert calls["n"] == 0
 
 
+def test_render_from_clips_is_atomic(tmp_path):
+    """Klipler birleştirilirken `episode.mp4` yarım görünmez (partial→replace)."""
+
+    from ahos.studio_2d import Episode, Line, Scene, render_from_clips
+
+    episode = Episode(title="t", scenes=[Scene(
+        scene_id="s1", setting="Açılış", background="day", characters=["aden"],
+        lines=[Line("s1", "aden", "merhaba", 2.0)])])
+    first = _ffmpeg_clip(tmp_path / "a.mp4", source="testsrc", seconds=2)
+    second = _ffmpeg_clip(tmp_path / "b.mp4", source="testsrc", seconds=2)
+
+    out = tmp_path / "ep"
+    manifest = render_from_clips(episode, [str(first), str(second)], out,
+                                 output_size=(320, 180))
+    assert (out / "episode.mp4").is_file()
+    assert not (out / "episode.partial.mp4").exists()
+    assert manifest["clips"] == 2
+    assert manifest["duration_seconds"] > 0
+
+
 def test_preflight_validates_provider_catalog(tmp_path):
     """Preflight: geçerli katalog OK, bozuk katalog checklist'te FAIL."""
 
