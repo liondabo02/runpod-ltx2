@@ -336,22 +336,22 @@ def _subtitle_band(draw: ImageDraw.ImageDraw, text: str, *, speaker: str = "") -
 
     if not text:
         return
-    band_h = 128
+    band_h = 96
     top = HEIGHT - band_h
     draw.rectangle([0, top, WIDTH, HEIGHT], fill=(18, 18, 24))
     accent = PALETTE.get(speaker, PALETTE["aden"])["shirt"]
-    draw.rectangle([0, top, WIDTH, top + 8], fill=accent)
+    draw.rectangle([0, top, WIDTH, top + 7], fill=accent)
     if speaker:
-        name_font = _font(28)
+        name_font = _font(26)
         label = speaker.upper()
         box = draw.textbbox((0, 0), label, font=name_font)
-        pad = 16
-        draw.rounded_rectangle([36, top + 14, 36 + (box[2] - box[0]) + pad * 2, top + 14 + 44],
-                               radius=10, fill=accent)
-        draw.text((36 + pad, top + 18), label, font=name_font, fill=(16, 16, 20))
+        pad = 14
+        draw.rounded_rectangle([36, top + 12, 36 + (box[2] - box[0]) + pad * 2, top + 44],
+                               radius=9, fill=accent)
+        draw.text((36 + pad, top + 15), label, font=name_font, fill=(16, 16, 20))
 
-    font = _font(38)
-    y = top + (52 if speaker else 26)
+    font = _font(34)
+    y = top + (40 if speaker else 22)
     # kontur: 4 yönde OFFSET, sonra dolgu (CN başlık stili)
     for dx, dy in ((-3, 0), (3, 0), (0, -3), (0, 3)):
         draw.text((60 + dx, y + dy), text[:110], font=font, fill=OUTLINE)
