@@ -312,6 +312,10 @@ def profile_for(role_type: str | None = None, age_band: str | None = None) -> di
     semitones = hz / 20.0 if hz else 0.0      # +25Hz ≈ +1.25 semiton, -20Hz ≈ -1 semiton
     return {"semitones": round(semitones, 2), "rate_pct": _number(rate_text),
             "style_prompt": str(raw.get("style_prompt") or "")}
+
+
+def rms(path: str | Path) -> float:
+    """Sesin RMS seviyesi (16-bit mono WAV); QA kapısı bunu kullanır."""
     with wave.open(str(path), "rb") as handle:
         frames = array.array("h")
         frames.frombytes(handle.readframes(handle.getnframes()))
