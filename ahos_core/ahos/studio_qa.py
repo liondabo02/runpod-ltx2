@@ -363,15 +363,66 @@ def verify_production(video: str | Path, *, expected_seconds: float,
         "loudness_ok": (None not in (loudness,) and low <= float(loudness) <= high)
         if expects_voice else True,
     }
+
+    # Stil kapısı: örneklenen karelerden kontur ve kontrast (fail-closed).
+    style = _style_checks(folder)
+    checks.update({key: bool(value["ok"]) for key, value in style.items()})
+
     return {
         "video": str(video),
         "measurements": {"duration": duration, "expected_seconds": round(float(expected_seconds), 3),
                          "duration_delta": duration_delta, "motion_score": motion,
                          "cut_count": cuts, "audio_present": has_audio,
-                         "loudness_dbfs": loudness},
+                         "loudness_dbfs": loudness,
+                         "style": {key: value["value"] for key, value in style.items()}},
         "thresholds": {"motion_threshold": float(motion_threshold), "min_cuts": int(min_cuts),
-                       "loudness_range": [low, high], "tolerance": float(tolerance)},
+                       "loudness_range": [low, high], "tolerance": float(tolerance),
+                       "outline_min_ratio": 0.0015, "contrast_min": 25.0},
         "checks": checks,
         "passed": all(checks.values()),
     }
+
+
+def _style_checks(frames_dir) -> dict:
+    """Örnek karelerde kontur oranı ve kontrast (karakter/arka plan ayrımı)."""
+
+    from pathlib import Path
+
+    from PIL import Image
+
+    files = sorted(Path(frames_dir).glob("f*.png"))
+    if not files:
+        return {"style_outline_ok": {"ok": False, "value": 0.0},
+                "style_contrast_ok": {"ok": False, "value": 0.0}}
+
+    outline = (26, 26, 31)
+    ratios: list[float] = []
+    contrasts: list[float] = []
+    for path in files:
+        with Image.open(path) as image:
+            frame = image.convert("RGB")
+            width, height = frame.size
+            pixels = frame.load()
+            total = 0
+            hits = 0
+            lumas: list[float] = []
+            for y in range(0, height, 4):
+                for x in range(0, width, 4):
+                    pixel = pixels[x, y]
+                    total += 1
+                    lumas.append(0.2126 * pixel[0] + 0.7152 * pixel[1] + 0.0722 * pixel[2])
+                    if pixel == outline:
+                        hits += 1
+            if total:
+                ratios.append(hits / total)
+            if lumas:
+                lumas.sort()
+                cut = max(1, len(lumas) // 20)
+                contrasts.append(sum(lumas[-cut:]) / cut - sum(lumas[:cut]) / cut)
+
+    ratio = round(sum(ratios) / len(ratios), 5) if ratios else 0.0
+    contrast = round(sum(contrasts) / len(contrasts), 2) if contrasts else 0.0
+    return {"style_outline_ok": {"ok": ratio >= 0.0015, "value": ratio},
+            "style_contrast_ok": {"ok": contrast >= 25.0, "value": contrast}}
+
 
