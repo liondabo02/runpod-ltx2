@@ -230,6 +230,27 @@ def test_cli_budget_gate_blocks_before_production(tmp_path, monkeypatch):
     assert calls["n"] == 0
 
 
+def test_cli_writes_production_summary(tmp_path, monkeypatch):
+    """Üretim sonunda status/ETA/cost özeti JSON'u yazılır."""
+
+    import json
+
+    from ahos import series_cli
+
+    monkeypatch.setattr(series_cli, "produce_episode", lambda *a, **k: {
+        "passed": True, "score": 100.0, "problems": [],
+        "measurements": {"duration_seconds": 12.0}, "voice": {"engine": "fake"}})
+    (tmp_path / "episodes" / "b01").mkdir(parents=True)
+    code = series_cli.main(["--root", str(tmp_path), "--no-voice", "produce", "--episode", "1"])
+    assert code in (0, 1)
+    summary = json.loads((tmp_path / "episodes" / "b01" / "production-summary.json")
+                         .read_text(encoding="utf-8"))
+    assert summary["episode"] == 1
+    assert summary["cost_so_far"] == 0.0
+    assert summary["eta_seconds"] == 0
+    assert "elapsed_seconds" in summary
+
+
 def test_render_from_clips_is_atomic(tmp_path):
     """Klipler birleştirilirken `episode.mp4` yarım görünmez (partial→replace)."""
 

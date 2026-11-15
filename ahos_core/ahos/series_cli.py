@@ -213,6 +213,9 @@ def main(argv: list[str] | None = None) -> int:
     episode = build_episode(series, plan, lines_per_scene=args.lines_per_scene,
                             line_seconds=args.line_seconds)
     out = root / "episodes" / f"b{number:02d}"
+    import time
+
+    started_at = time.time()
     if args.dry_run:
         return _dry_run(episode, out, number, args)
     if args.resume and (out / "episode.mp4").is_file():
@@ -270,6 +273,24 @@ def main(argv: list[str] | None = None) -> int:
     }
     (out / "production-ledger.json").write_text(
         json.dumps(ledger, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # Durum özeti: süre, stage zamanları, maliyet, tahmini kalan süre.
+    elapsed = round(time.time() - started_at, 2)
+    summary = {
+        "schema": "ahos.production-summary.v1",
+        "episode": number,
+        "status": "verified" if ledger["passed"] else "failed",
+        "duration_seconds": ledger["duration_seconds"],
+        "elapsed_seconds": elapsed,
+        "stages": [{"stage": row["stage"], "status": row["status"]} for row in ledger["stages"]],
+        "current_stage": None,
+        "cost_so_far": ledger["cost"]["total_cost"],
+        "currency": ledger["cost"]["currency"],
+        "eta_seconds": 0,
+        "passed": ledger["passed"],
+    }
+    (out / "production-summary.json").write_text(
+        json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
     state["produced"] = sorted(set(state.get("produced", [])) | {number})
