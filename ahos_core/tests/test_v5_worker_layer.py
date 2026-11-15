@@ -11,7 +11,11 @@ import pytest
 
 from ahos import agent_office, office_3d, worker_card, worker_state
 
-NOW = datetime(2026, 11, 7, 9, 0, tzinfo=timezone.utc)
+# Sabit bir takvim tarihi kullanılamaz: kayıt TTL'i (30 dk) ve "boşta" penceresi
+# (24 saat) gerçek saate göre ölçülür; mutlak tarih birkaç gün sonra testleri
+# kendiliğinden kırar (metrikler "çok eski" görünüp çevrimdışı olur). NOW'ı gerçek
+# saate göre "3 saat önce" sabitlemek niyeti korur ve koşuyu determinist yapar.
+NOW = datetime.now(timezone.utc) - timedelta(hours=3)
 
 
 def _runtime(tmp_path, workers=(("w-a", "Alfa"), ("w-b", "Beta"))):
@@ -49,9 +53,13 @@ def test_fresh_recorded_event_wins_over_metrics(tmp_path):
 
 
 def test_stale_recorded_event_falls_back_to_metrics(tmp_path):
-    worker_state.set_state(tmp_path, "w-a", "blocked", note="eski olay")
+    # `set_state` duvar saatini yazar; "TTL'i dolmuş kayıt" senaryosu için kayıt
+    # zamanı açıkça NOW'a sabitleniyor (3 saat sonra bakıldığında TTL aşılmış olur).
+    recorded = {"worker": "w-a", "state": "blocked", "note": "eski olay",
+                "updated_at": NOW.isoformat()}
     later = NOW + timedelta(hours=3)
-    record = worker_state.derive(tmp_path, "w-a", last_active=later.isoformat(), now=later)
+    record = worker_state.derive(tmp_path, "w-a", last_active=later.isoformat(),
+                                 now=later, recorded=recorded)
     assert record["state"] == "idle"
     assert record["source"] == "metric"
 
