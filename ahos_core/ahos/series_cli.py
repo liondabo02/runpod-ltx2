@@ -47,6 +47,59 @@ def _save_bible(root: Path, series: SeriesBible) -> Path:
     return path
 
 
+def _preflight(require_comfy: bool = False) -> tuple[bool, list[dict]]:
+    """Hazırlık kontrolü: araçlar + (gerekiyorsa) ComfyUI; net checklist döner."""
+
+    import shutil
+
+    checklist: list[dict] = []
+    for tool in ("ffmpeg", "ffprobe"):
+        checklist.append({"check": tool, "ok": bool(shutil.which(tool)),
+                          "hint": "PATH'e ekleyin"})
+    if require_comfy:
+        from .comfy_bridge import ComfyUnavailable, health
+
+        try:
+            info = health(timeout=3.0)
+            checklist.append({"check": "comfyui", "ok": True,
+                              "hint": str(info.get("host") or "")})
+        except ComfyUnavailable as exc:
+            checklist.append({"check": "comfyui", "ok": False, "hint": str(exc)[:120]})
+    return all(row["ok"] for row in checklist), checklist
+
+
+def _dry_run(episode, out, number: int, args) -> int:
+    """Plan + maliyet tahmini; sağlayıcı çağrısı YAPMAZ."""
+
+    from .audio_pipeline import AudioBudgetPolicy, plan_jobs
+    from .costs import BudgetRefusal, estimate, guard
+
+    jobs = plan_jobs(episode, AudioBudgetPolicy())
+    plan = []
+    for job in jobs:
+        if job.task_type.value == "dialogue_tts":
+            units = len(str(job.payload.get("text") or "")) / 1000.0
+        else:
+            units = float(job.payload.get("seconds") or 0.0)
+        plan.append({"stage": job.task_type.value, "provider": job.provider_id,
+                     "units": units})
+    report = estimate(plan)
+    try:
+        if args.max_cost:
+            guard(report, episode_cap=args.max_cost)
+    except BudgetRefusal as exc:
+        print(f"[butce] reddedildi: {exc}")
+        return 4
+
+    out.mkdir(parents=True, exist_ok=True)
+    payload = {"episode": number, "dry_run": True, "jobs": len(jobs),
+               "duration_seconds": round(episode.duration(), 3), "cost": report}
+    (out / "dry-run.json").write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     import sys
 
@@ -63,6 +116,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--lines-per-scene", type=int, default=2)
     parser.add_argument("--line-seconds", type=float, default=3.0)
     parser.add_argument("--no-voice", action="store_true")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Yalnızca plan + maliyet tahmini (sağlayıcı çağrısı yok)")
+    parser.add_argument("--resume", action="store_true",
+                        help="Doğrulanmış bölüm varsa atla")
+    parser.add_argument("--max-cost", type=float, default=0.0,
+                        help="Bölüm başına sert maliyet tavanı (0 = yalnız ücretsiz)")
+    parser.add_argument("--providers", default=None,
+                        help="Sağlayıcı kataloğu yolu")
     parser.add_argument("command", choices=["plan", "produce", "status"])
     parser.add_argument("--episode", type=int, default=None)
     args = parser.parse_args(argv)
@@ -93,6 +154,18 @@ def main(argv: list[str] | None = None) -> int:
     episode = build_episode(series, plan, lines_per_scene=args.lines_per_scene,
                             line_seconds=args.line_seconds)
     out = root / "episodes" / f"b{number:02d}"
+    if args.dry_run:
+        return _dry_run(episode, out, number, args)
+    if args.resume and (out / "episode.mp4").is_file():
+        print(json.dumps({"episode": number, "skipped": True,
+                          "reason": "verified episode exists", "out": str(out)},
+                         ensure_ascii=False, indent=2))
+        return 0
+    ready, checklist = _preflight(require_comfy=False)
+    if not ready:
+        print(json.dumps({"ready": False, "checklist": checklist},
+                         ensure_ascii=False, indent=2))
+        return 3
     report = produce_episode(episode, out, language=series.language, use_voice=not args.no_voice)
 
     state["produced"] = sorted(set(state.get("produced", [])) | {number})

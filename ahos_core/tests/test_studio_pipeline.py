@@ -176,6 +176,55 @@ def test_moving_clip_with_audio_passes(tmp_path):
     assert report["passed"] is True, report
 
 
+def test_cli_dry_run_makes_zero_provider_calls(tmp_path, monkeypatch):
+    """--dry-run: plan + maliyet üretir, sağlayıcı çağrısı yapmaz."""
+
+    import json
+
+    from ahos import series_cli
+
+    calls = {"n": 0}
+    monkeypatch.setattr(series_cli, "produce_episode",
+                        lambda *a, **k: calls.__setitem__("n", calls["n"] + 1))
+    code = series_cli.main(["--root", str(tmp_path), "--dry-run", "produce", "--episode", "1"])
+
+    assert code == 0
+    assert calls["n"] == 0
+    payload = json.loads((tmp_path / "episodes" / "b01" / "dry-run.json")
+                         .read_text(encoding="utf-8"))
+    assert payload["dry_run"] is True
+    assert payload["cost"]["total_cost"] >= 0.0
+
+
+def test_cli_resume_skips_verified_episode(tmp_path, monkeypatch):
+    """--resume: doğrulanmış bölüm varsa üretim çağrılmaz."""
+
+    from ahos import series_cli
+
+    calls = {"n": 0}
+    monkeypatch.setattr(series_cli, "produce_episode",
+                        lambda *a, **k: calls.__setitem__("n", calls["n"] + 1))
+    target = tmp_path / "episodes" / "b01"
+    target.mkdir(parents=True)
+    (target / "episode.mp4").write_bytes(b"x")
+
+    code = series_cli.main(["--root", str(tmp_path), "--resume", "produce", "--episode", "1"])
+    assert code == 0
+    assert calls["n"] == 0
+
+
+def test_cli_preflight_failure_blocks_with_checklist(tmp_path, monkeypatch):
+    """Preflight başarısızsa non-zero döner ve checklist yazar."""
+
+    from ahos import series_cli
+
+    monkeypatch.setattr(series_cli, "_preflight", lambda require_comfy=False: (
+        False, [{"check": "ffmpeg", "ok": False, "hint": "PATH'e ekleyin"}]))
+    code = series_cli.main(["--root", str(tmp_path), "produce", "--episode", "1"])
+    assert code == 3
+
+
+
 
 def test_provider_registry_fails_closed_on_bad_catalog():
     """Eksik/çift kayıt sessizce geçmez; katalog hatası yükselir."""
