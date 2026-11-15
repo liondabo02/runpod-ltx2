@@ -74,28 +74,63 @@ def _font(size: int):
 
 
 def _background(draw: ImageDraw.ImageDraw, kind: str, t: float, shift: float) -> None:
+    """Katmanlı (paralaks) arka plan: uzak silüet → orta katman → zemin.
+
+    CN mantığı: düz renkler, belirgin silüetler, önde koyu/arkada açık değer.
+    """
+
     if kind == "night":
-        for y in range(HEIGHT):
-            k = y / HEIGHT
-            draw.line([(0, y), (WIDTH, y)], fill=(int(15 + 15 * k), int(20 + 25 * k), int(55 + 35 * k)))
-        draw.ellipse([1000, 80, 1120, 200], fill=(240, 240, 200))
-        draw.ellipse([300, 120, 340, 160], fill=(250, 250, 220))
-        draw.ellipse([360, 90, 390, 120], fill=(250, 250, 220))
+        sky_top, sky_bottom = (18, 24, 52), (46, 62, 104)
+        ground, far, mid = (26, 40, 46), (34, 52, 70), (22, 36, 40)
+        lamp = (246, 238, 206)
     elif kind == "sunset":
-        for y in range(HEIGHT):
-            k = y / HEIGHT
-            draw.line([(0, y), (WIDTH, y)], fill=(int(250 - 60 * k), int(150 - 40 * k), int(90 + 40 * k)))
-        draw.ellipse([900 + shift // 2, 300, 1040 + shift // 2, 440], fill=(255, 200, 120))
+        sky_top, sky_bottom = (232, 116, 88), (255, 208, 150)
+        ground, far, mid = (128, 86, 72), (168, 110, 92), (96, 68, 58)
+        lamp = (255, 210, 140)
     else:
-        for y in range(HEIGHT):
-            k = y / HEIGHT
-            draw.line([(0, y), (WIDTH, y)], fill=(int(120 + 90 * k), int(180 + 50 * k), int(245 - 20 * k)))
-        draw.ellipse([150 + shift, 90, 250 + shift, 190], fill=(255, 235, 120))
-        draw.ellipse([700 - shift, 140, 860 - shift, 220], fill=(255, 255, 255))
-    ground = (90, 160, 80) if kind == "day" else (70, 110, 60) if kind == "sunset" else (30, 60, 40)
-    draw.rectangle([0, 520, WIDTH, HEIGHT], fill=ground)
-    for x in range(0, WIDTH, 160):
-        draw.ellipse([x + 20, 500, x + 120, 560], fill=(70, 140, 70) if kind == "day" else (55, 100, 55))
+        sky_top, sky_bottom = (108, 186, 236), (214, 238, 250)
+        ground, far, mid = (92, 168, 96), (128, 196, 132), (64, 132, 72)
+        lamp = (255, 238, 140)
+
+    for y in range(HEIGHT):
+        ratio = y / HEIGHT
+        draw.line([(0, y), (WIDTH, y)],
+                  fill=(int(sky_top[0] + (sky_bottom[0] - sky_top[0]) * ratio),
+                        int(sky_top[1] + (sky_bottom[1] - sky_top[1]) * ratio),
+                        int(sky_top[2] + (sky_bottom[2] - sky_top[2]) * ratio)))
+
+    # uzak katman (yavaş): tepeler
+    far_shift = int(shift * 0.25)
+    for index in range(-1, 5):
+        cx = index * 420 + far_shift
+        draw.ellipse([cx, 380, cx + 520, 700], fill=far)
+
+    # gökyüzü nesnesi (güneş/ay) — orta hızda
+    sun_x = 980 + int(shift * 0.5)
+    if kind == "night":
+        draw.ellipse([sun_x, 90, sun_x + 110, 200], fill=lamp)
+        draw.ellipse([sun_x + 34, 100, sun_x + 96, 168], fill=far)
+    else:
+        draw.ellipse([sun_x, 80, sun_x + 130, 210], fill=lamp)
+
+    # orta katman: ağaç/tepe silüetleri (orta hız)
+    mid_shift = int(shift * 0.6)
+    for index in range(-1, 8):
+        tx = index * 240 + mid_shift
+        draw.ellipse([tx, 430, tx + 200, 620], fill=mid)
+        draw.rectangle([tx + 88, 520, tx + 112, 620], fill=_shade(mid, 0.8))
+
+    # ön katman: zemin + çim tutamları (hızlı)
+    ground_y = 560
+    draw.rectangle([0, ground_y, WIDTH, HEIGHT], fill=ground)
+    near_shift = int(shift * 1.0)
+    for x in range(-160, WIDTH + 160, 120):
+        bx = x + (near_shift % 120)
+        draw.ellipse([bx, ground_y - 16, bx + 120, ground_y + 44], fill=_shade(ground, 0.9))
+        for blade in range(3):
+            gx = bx + 24 + blade * 30
+            draw.line([gx, ground_y + 6, gx + 6, ground_y - 26],
+                      fill=_shade(ground, 1.25), width=5)
 
 
 def _shade(color, factor: float):
