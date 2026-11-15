@@ -68,6 +68,24 @@ def _preflight(require_comfy: bool = False) -> tuple[bool, list[dict]]:
     return all(row["ok"] for row in checklist), checklist
 
 
+def _cost_estimate(episode) -> dict:
+    """Ses işlerinden maliyet tahmini (çağrı yapmaz)."""
+
+    from .audio_pipeline import AudioBudgetPolicy, plan_jobs
+    from .costs import estimate
+
+    jobs = plan_jobs(episode, AudioBudgetPolicy())
+    plan = []
+    for job in jobs:
+        if job.task_type.value == "dialogue_tts":
+            units = len(str(job.payload.get("text") or "")) / 1000.0
+        else:
+            units = float(job.payload.get("seconds") or 0.0)
+        plan.append({"stage": job.task_type.value, "provider": job.provider_id,
+                     "units": units})
+    return estimate(plan)
+
+
 def _dry_run(episode, out, number: int, args) -> int:
     """Plan + maliyet tahmini; sağlayıcı çağrısı YAPMAZ."""
 
@@ -166,6 +184,18 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps({"ready": False, "checklist": checklist},
                          ensure_ascii=False, indent=2))
         return 3
+
+    # Maliyet kapısı: üretimden ÖNCE tahmin + bütçe kontrolü (paid çağrı yok).
+    from .costs import BudgetRefusal, guard
+
+    estimate_report = _cost_estimate(episode)
+    if args.max_cost:
+        try:
+            guard(estimate_report, episode_cap=args.max_cost)
+        except BudgetRefusal as exc:
+            print(json.dumps({"blocked_budget": True, "reason": str(exc),
+                              "estimate": estimate_report}, ensure_ascii=False, indent=2))
+            return 4
     report = produce_episode(episode, out, language=series.language, use_voice=not args.no_voice)
 
     # Crash safety: yarım dosya bırakma (temp -> atomic replace) + stage ledger.

@@ -213,6 +213,23 @@ def test_cli_resume_skips_verified_episode(tmp_path, monkeypatch):
     assert calls["n"] == 0
 
 
+def test_cli_budget_gate_blocks_before_production(tmp_path, monkeypatch):
+    """Üretimden önce maliyet kapısı: bütçe aşımı exit 4 + çağrı yok."""
+
+    from ahos import series_cli
+
+    calls = {"n": 0}
+    monkeypatch.setattr(series_cli, "produce_episode",
+                        lambda *a, **k: calls.__setitem__("n", calls["n"] + 1))
+    monkeypatch.setattr(series_cli, "_cost_estimate",
+                        lambda episode: {"total_cost": 5.0, "currency": "USD", "lines": []})
+
+    code = series_cli.main(["--root", str(tmp_path), "--max-cost", "1",
+                            "produce", "--episode", "1"])
+    assert code == 4
+    assert calls["n"] == 0
+
+
 def test_cli_preflight_failure_blocks_with_checklist(tmp_path, monkeypatch):
     """Preflight başarısızsa non-zero döner ve checklist yazar."""
 
