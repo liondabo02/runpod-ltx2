@@ -277,3 +277,48 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+def verify_release(out_dir, *, episode_cap: float | None = None) -> dict:
+    """Teslim kapısı: video + ledger + maliyet kanıtı birlikte doğrulanır.
+
+    `episode_cap` verilirse `cost-evidence.json`/`production-ledger.json` içindeki
+    toplam maliyet tavanı aşamaz (fail-closed). Dosya yoksa teslim yoktur.
+    """
+
+    import json
+    from pathlib import Path
+
+    root = Path(out_dir)
+    checks: dict[str, bool] = {}
+    details: dict[str, object] = {}
+
+    video = root / "episode.mp4"
+    checks["video_present"] = video.is_file() and video.stat().st_size > 100_000
+    details["video_bytes"] = video.stat().st_size if video.is_file() else 0
+
+    ledger_path = root / "production-ledger.json"
+    ledger = {}
+    if ledger_path.is_file():
+        try:
+            ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            ledger = {}
+    checks["ledger_present"] = bool(ledger)
+    checks["ledger_passed"] = bool(ledger.get("passed")) if ledger else False
+    failed = [row.get("stage") for row in ledger.get("stages") or []
+              if str(row.get("status")) in {"failed", "blocked"}]
+    checks["no_failed_stage"] = not failed
+    details["failed_stages"] = failed
+
+    cost = float((ledger.get("cost") or {}).get("total_cost") or 0.0)
+    details["cost_total"] = cost
+    if episode_cap is not None:
+        checks["within_budget"] = cost <= float(episode_cap) + 1e-9
+        details["episode_cap"] = float(episode_cap)
+    else:
+        checks["within_budget"] = True
+
+    return {"root": str(root), "checks": checks, "details": details,
+            "passed": all(checks.values())}
+

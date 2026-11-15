@@ -301,3 +301,60 @@ class ProviderRegistry:
             return row
         return None
 
+
+
+# --- Stage-gated acceptance ------------------------------------------------
+# Kural: evidence dosyası olmadan stage PASS olamaz; başarısız stage downstream'i
+# bloklar. Kısmi "delivery" üretilmez (fail-closed).
+
+STAGE_EVIDENCE: dict[str, tuple[str, ...]] = {
+    "brief": ("brief.json",),
+    "story": ("story.json",),
+    "voice": ("voices.json",),
+    "animation": ("animation.mp4",),
+    "mix": ("mix.wav",),
+    "assembly": ("episode.mp4",),
+    "qa": ("acceptance.json",),
+}
+
+
+def require_evidence(stage: str, out_dir, *, evidence: dict | None = None) -> dict:
+    """Stage'in zorunlu kanıt dosyalarını doğrular (boş dosya kanıt sayılmaz)."""
+
+    root = Path(out_dir)
+    required = tuple((evidence or STAGE_EVIDENCE).get(str(stage), ()))
+    missing: list[str] = []
+    present: list[str] = []
+    for name in required:
+        candidate = root / name
+        if not candidate.is_file() or candidate.stat().st_size <= 0:
+            missing.append(name)
+        else:
+            present.append(name)
+    return {"stage": str(stage), "required": list(required), "present": present,
+            "missing": missing, "ok": not missing}
+
+
+def stage_gate(out_dir, *, stages=None, evidence: dict | None = None) -> dict:
+    """Tüm aşamaları sırayla denetler; ilk başarısız aşamadan sonrası `blocked`."""
+
+    root = Path(out_dir)
+    order = tuple(stages or STAGE_EVIDENCE.keys())
+    results: list[dict] = []
+    blocked: list[str] = []
+    blocked_at: str | None = None
+    for stage in order:
+        if blocked_at is not None:
+            blocked.append(stage)
+            results.append({"stage": stage, "ok": False, "blocked": True,
+                            "missing": [], "reason": f"blocked_by:{blocked_at}"})
+            continue
+        outcome = require_evidence(stage, root, evidence=evidence)
+        results.append(outcome)
+        if not outcome["ok"]:
+            blocked_at = stage
+    return {"root": str(root), "stages": results, "blocked": blocked,
+            "blocked_at": blocked_at,
+            "ready": blocked_at is None,
+            "passed": blocked_at is None}
+

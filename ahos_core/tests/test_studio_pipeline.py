@@ -239,3 +239,40 @@ def test_provider_registry_fails_closed_on_bad_catalog():
     with pytest.raises(ProviderRegistryError):
         ProviderRegistry.from_payload({"providers": []})
 
+
+
+def test_stage_gate_blocks_downstream_without_evidence(tmp_path):
+    """Evidence yoksa stage PASS olmaz; sonraki aşamalar blocked işaretlenir."""
+
+    from ahos.studio_department import stage_gate
+
+    report = stage_gate(tmp_path)
+    assert report["ready"] is False
+    assert report["blocked_at"] == "brief"
+    assert "story" in report["blocked"]
+
+    (tmp_path / "brief.json").write_text("{}", encoding="utf-8")
+    (tmp_path / "story.json").write_text("{}", encoding="utf-8")
+    partial = stage_gate(tmp_path)
+    assert partial["stages"][0]["ok"] is True
+    assert partial["blocked_at"] == "voice"
+
+
+def test_release_gate_requires_video_ledger_and_budget(tmp_path):
+    """Teslim: video + ledger + bütçe birlikte; eksikse passed=False."""
+
+    import json
+
+    from ahos.release_gate import verify_release
+
+    assert verify_release(tmp_path)["passed"] is False
+
+    (tmp_path / "episode.mp4").write_bytes(b"\x00" * 120_000)
+    ledger = {"passed": True, "stages": [{"stage": "qa", "status": "passed"}],
+              "cost": {"total_cost": 0.0}}
+    (tmp_path / "production-ledger.json").write_text(
+        json.dumps(ledger), encoding="utf-8")
+
+    assert verify_release(tmp_path, episode_cap=1.0)["passed"] is True
+    assert verify_release(tmp_path, episode_cap=-1.0)["passed"] is False
+
