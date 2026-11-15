@@ -260,7 +260,58 @@ def build_track(clips: list[tuple[Path, float, float]], total_seconds: float,
     return out
 
 
-def rms(path: str | Path) -> float:
+def apply_voice_profile(path: str | Path, *, semitones: float = 0.0,
+                        rate_pct: float = 0.0) -> Path:
+    """Replike yaş/rol profilini uygular: perde kaydırma + tempo (süre korunur).
+
+    `semitones`: +2 çocuk, 0 yetişkin, -1.5 yaşlı (perde).
+    `rate_pct` : konuşma hızı yüzdesi (+8 çocuk, -10 yaşlı).
+    Süre korunur: asetrate ile perde kaydırılır, atempo ters oranla geri alınır.
+    """
+
+    target = Path(path)
+    if abs(float(semitones)) < 1e-6 and abs(float(rate_pct)) < 1e-6:
+        return target
+    ffmpeg = shutil.which("ffmpeg")
+    if not ffmpeg:
+        raise RuntimeError("ffmpeg bulunamadı (ses profili uygulanamaz)")
+
+    ratio = 2.0 ** (float(semitones) / 12.0)
+    tempo = (1.0 / ratio) * (1.0 + float(rate_pct) / 100.0)
+    tempo = max(0.5, min(2.0, tempo))
+    temp_out = target.with_name(target.stem + ".profiled.wav")
+    command = [ffmpeg, "-y", "-loglevel", "error", "-i", str(target),
+               "-filter:a", f"asetrate={int(SAMPLE_RATE * ratio)},aresample={SAMPLE_RATE},"
+                            f"atempo={tempo:.4f}",
+               "-ac", "1", "-ar", str(SAMPLE_RATE), str(temp_out)]
+    proc = subprocess.run(command, capture_output=True, text=True, timeout=300)
+    if proc.returncode != 0:
+        raise RuntimeError("ses profili uygulanamadı: " + (proc.stderr or "")[-200:])
+    temp_out.replace(target)
+    return target
+
+
+def profile_for(role_type: str | None = None, age_band: str | None = None) -> dict:
+    """Yaş/rol profilini (semitone + hız) `speaking_profiles.json` üzerinden çözer."""
+
+    from .audio_pipeline import speaking_profile
+
+    raw = speaking_profile(role_type, age_band)
+    pitch_text = str(raw.get("pitch") or "+0Hz").strip()
+    rate_text = str(raw.get("rate") or "+0%").strip()
+
+    def _number(text: str) -> float:
+        digits = "".join(ch for ch in text if ch.isdigit() or ch in "+-.")
+        try:
+            return float(digits)
+        except ValueError:
+            return 0.0
+
+    # "+25Hz" gibi küçük Hz farkları duyulmaz; Hz -> semiton yaklaşımı kullanılır.
+    hz = _number(pitch_text)
+    semitones = hz / 20.0 if hz else 0.0      # +25Hz ≈ +1.25 semiton, -20Hz ≈ -1 semiton
+    return {"semitones": round(semitones, 2), "rate_pct": _number(rate_text),
+            "style_prompt": str(raw.get("style_prompt") or "")}
     with wave.open(str(path), "rb") as handle:
         frames = array.array("h")
         frames.frombytes(handle.readframes(handle.getnframes()))
