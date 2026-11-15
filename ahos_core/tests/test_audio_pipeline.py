@@ -174,6 +174,33 @@ def _tiny_episode():
     ])
 
 
+def test_speaking_profile_age_overrides_role():
+    """Yaş bandı pitch/rate'i belirler; rol yalnızca stil ekler."""
+
+    from ahos.audio_pipeline import speaking_profile
+
+    child_hero = speaking_profile("kahraman", "child")
+    assert child_hero["pitch"] == "+25Hz"
+    assert child_hero["rate"] == "+8%"
+    assert speaking_profile(None, "elder")["pitch"] == "-20Hz"
+    assert speaking_profile("bilge", None)["pitch"] == "-12Hz"
+    assert speaking_profile(None, None)["pitch"] == "+0Hz"
+
+
+def test_stage_gate_accepts_voice_directory(tmp_path):
+    """Dizin kanıtı: `voice/` altında dosya varsa voice aşaması geçer."""
+
+    from ahos.studio_department import require_evidence
+
+    (tmp_path / "voices.json")  # yok: dizin alternatifi kullanılacak
+    (tmp_path / "voice").mkdir()
+    (tmp_path / "voice" / "line_00.wav").write_bytes(b"RIFF" + b"\x00" * 40)
+
+    report = require_evidence("voice", tmp_path)
+    assert report["ok"] is True
+    assert "voices.json" in report["present"]
+
+
 def test_default_adapters_registers_local_edge():
     """Adapter haritası: gerçek motor (`local-edge`) kayıtlı, uydurma yok."""
 

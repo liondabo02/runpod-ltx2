@@ -447,7 +447,7 @@ def speaking_profile(role_type: str | None = None, age_band: str | None = None,
 
     data = profiles if profiles is not None else load_speaking_profiles()
     result = dict(DEFAULT_SPEAKING_PROFILE, **dict(data.get("default") or {}))
-    for key in (str(age_band or "").strip().lower(), str(role_type or "").strip().lower()):
+    for key in (str(role_type or "").strip().lower(), str(age_band or "").strip().lower()):
         if not key:
             continue
         overlay = (data.get("profiles") or {}).get(key)

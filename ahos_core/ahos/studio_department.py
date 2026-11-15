@@ -307,14 +307,20 @@ class ProviderRegistry:
 # Kural: evidence dosyası olmadan stage PASS olamaz; başarısız stage downstream'i
 # bloklar. Kısmi "delivery" üretilmez (fail-closed).
 
-STAGE_EVIDENCE: dict[str, tuple[str, ...]] = {
-    "brief": ("brief.json",),
+STAGE_EVIDENCE: dict[str, tuple[str, ...]] = {    "brief": ("brief.json",),
     "story": ("story.json",),
     "voice": ("voices.json",),
     "animation": ("animation.mp4",),
     "mix": ("mix.wav",),
     "assembly": ("episode.mp4",),
     "qa": ("acceptance.json",),
+}
+
+#: Birincil kanıt dosyası yoksa kabul edilecek alternatifler (üretim çıktısı
+#: bazı aşamalarda dosya yerine dizin üretir: `voice/`, `animation/`).
+EVIDENCE_ALTERNATIVES: dict[str, tuple[str, ...]] = {
+    "voices.json": ("voice",),
+    "animation.mp4": ("animation",),
 }
 
 
@@ -327,10 +333,17 @@ def require_evidence(stage: str, out_dir, *, evidence: dict | None = None) -> di
     present: list[str] = []
     for name in required:
         candidate = root / name
-        if not candidate.is_file() or candidate.stat().st_size <= 0:
-            missing.append(name)
-        else:
+        if candidate.is_file() and candidate.stat().st_size > 0:
             present.append(name)
+            continue
+        alternative = next((root / alt for alt in EVIDENCE_ALTERNATIVES.get(name, ())
+                            if ((root / alt).is_file() and (root / alt).stat().st_size > 0)
+                            or ((root / alt).is_dir() and any((root / alt).iterdir()))), None)
+        if alternative is not None:
+            # Dizin/alternatif dosya da kanıttır (ör. `voice/` altındaki replikler).
+            present.append(name)
+        else:
+            missing.append(name)
     return {"stage": str(stage), "required": list(required), "present": present,
             "missing": missing, "ok": not missing}
 
