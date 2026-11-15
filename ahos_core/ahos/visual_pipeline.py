@@ -648,3 +648,86 @@ def generate_clips(episode, workflow_path, out_dir, *, style: str = "",
         clips.append(str(clip))
     return clips
 
+
+# --- Ücretsiz illüstrasyon motoru: Pollinations (anahtarsız) -----------------
+# Karakter tutarlılığı: aynı karakter bloğu + karaktere sabit seed + referans
+# görsel (kontext). Ücret yok; başarısızlıkta açık hata (fail-closed).
+
+POLLINATIONS_BASE = "https://image.pollinations.ai/prompt/"
+
+
+def character_seed(character_id: str) -> int:
+    """Karaktere sabit seed: aynı karakter her çekimde aynı tohumla üretilir."""
+
+    digest = hashlib.blake2b(str(character_id).encode("utf-8"), digest_size=4).digest()
+    return int.from_bytes(digest, "big") % 100000
+
+
+def pollinations_token() -> str:
+    """Token: ortam değişkeni ya da ~/.ahos/.env.runtime dosyasından (varsa)."""
+
+    import os
+    from pathlib import Path
+
+    token = os.environ.get("AHOS_POLL_TOKEN", "").strip()
+    if token:
+        return token
+    for candidate in (Path.home() / ".ahos" / ".env.runtime",
+                      Path(__file__).resolve().parents[2] / "control_plane_v2" / ".env.runtime"):
+        try:
+            if not candidate.is_file():
+                continue
+            for line in candidate.read_text(encoding="utf-8-sig", errors="replace").splitlines():
+                if line.strip().startswith("AHOS_POLL_TOKEN="):
+                    return line.split("=", 1)[1].strip().strip('"').strip("'")
+        except OSError:
+            continue
+    return ""
+
+
+def pollinations_url(prompt: str, *, seed: int = 0, width: int = 1024, height: int = 576,
+                     model: str = "", reference: str = "", token: str = "") -> str:
+    """Pollinations görsel URL'i (indirme ayrı adım; burada yalnız URL kurulur)."""
+
+    import urllib.parse
+
+    url = POLLINATIONS_BASE + urllib.parse.quote(str(prompt)[:900])
+    query = f"?width={int(width)}&height={int(height)}&seed={int(seed)}"
+    if token:
+        query += "&nologo=true"          # filigransız yalnız token ile
+    if model:
+        query += "&model=" + urllib.parse.quote(str(model))
+    if reference:
+        query += "&image=" + urllib.parse.quote(str(reference))
+    return url + query
+
+
+def fetch_image(url: str, out_path, *, timeout: float = 180.0, token: str = "") -> dict:
+    """URL'den görseli indirir; gerçek görsel değilse hata (sahte çıktı yok)."""
+
+    import urllib.request
+    from pathlib import Path
+
+    target = Path(out_path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    headers = {"User-Agent": "AHOS-Studio/1.0"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    request = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(request, timeout=float(timeout)) as response:
+        data = response.read()
+    if not (data[:8] == b"\x89PNG\r\n\x1a\n" or data[:2] == b"\xff\xd8"):
+        raise RuntimeError(f"geçersiz görsel yanıtı ({len(data)} bayt)")
+    target.write_bytes(data)
+    return {"path": str(target), "bytes": len(data), "token_used": bool(token)}
+
+
+def generate_still(prompt: str, out_path, *, seed: int = 0, width: int = 1024,
+                   height: int = 576, model: str = "", reference: str = "") -> dict:
+    """Tek illüstrasyon üretir (ücretsiz motor; token varsa filigransız)."""
+
+    token = pollinations_token()
+    url = pollinations_url(prompt, seed=seed, width=width, height=height,
+                           model=model, reference=reference, token=token)
+    return fetch_image(url, out_path, token=token)
+
