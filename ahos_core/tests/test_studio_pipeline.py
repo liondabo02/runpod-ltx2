@@ -114,6 +114,9 @@ def _ffmpeg_clip(path, *, source, seconds, audio=False):
         image = Image.new("RGB", (320, 180), (0, 0, 200) if static else (30, 60, 120))
         if not static:
             draw = ImageDraw.Draw(image)
+            # Stil kapısı gerçek üretim karelerinde kontur arar; test klibi de
+            # geçerli bir çizgi film karesi gibi konturlu olmalı.
+            draw.rectangle([0, 0, 319, 179], outline=(26, 26, 31), width=6)
             x = 20 + (index * 6) % 250
             draw.rectangle([x, 60, x + 60, 120], fill=(240, 200, 60))
         image.save(frames / f"f{index:04d}.png")
@@ -131,7 +134,8 @@ def _ffmpeg_clip(path, *, source, seconds, audio=False):
                 for i in range(int(seconds * 16000))]).tobytes())
         args += ["-i", str(tone), "-c:a", "aac", "-strict", "-2", "-ar", "48000",
                  "-shortest"]
-    args += ["-pix_fmt", "yuv420p", "-r", str(fps), str(path)]
+    args += ["-c:v", "libx264rgb", "-qp", "0", "-pix_fmt", "rgb24",
+             "-r", str(fps), str(path)]
     subprocess.run(args, check=True, capture_output=True)
     return path
 
