@@ -23,6 +23,21 @@ from .studio_2d import Episode, Line, Scene
 
 BACKGROUNDS = ("day", "sunset", "night")
 
+#: Sezon boyunca dönen mekân havuzu (dizi devamlılığı: her bölüm farklı mekân).
+SEASON_SETTINGS: tuple[str, ...] = (
+    "Park", "Ev", "Sokak", "Köprü", "Okul", "Pazar", "Sahil", "Orman", "Meydan", "Tepe",
+)
+
+
+def setting_for(episode_number: int, scene_index: int, *, scenes: int = 4) -> str:
+    """Bölüme özgü mekân: aynı bölümde tekrar etmez, bölümler arasında değişir.
+
+    Örnek: 1. bölüm → Park, Ev, Sokak, Köprü · 2. bölüm → Okul, Pazar, Sahil, Orman.
+    """
+
+    start = (max(1, int(episode_number)) - 1) * max(1, int(scenes))
+    return SEASON_SETTINGS[(start + max(0, int(scene_index))) % len(SEASON_SETTINGS)]
+
 
 @dataclass
 class Character:
