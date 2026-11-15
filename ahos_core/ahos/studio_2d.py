@@ -334,3 +334,167 @@ def _ts(seconds: float) -> str:
     m, ms = divmod(ms, 60_000)
     s, ms = divmod(ms, 1000)
     return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
+
+
+def _probe_media(path: str | Path) -> dict:
+    """Klip künyesi (fps/boyut/süre); ffprobe yoksa açık hata (fail-closed)."""
+
+    tool = shutil.which("ffprobe")
+    if not tool:
+        raise RuntimeError("ffprobe bulunamadı: klip doğrulaması yapılamaz")
+    proc = subprocess.run(
+        [tool, "-v", "error", "-select_streams", "v:0",
+         "-show_entries", "stream=width,height,r_frame_rate",
+         "-show_entries", "format=duration", "-of", "json", str(path)],
+        capture_output=True, text=True, timeout=120)
+    if proc.returncode != 0:
+        raise RuntimeError(f"ffprobe hatası ({path}): {(proc.stderr or '')[-200:]}")
+    data = json.loads(proc.stdout or "{}")
+    stream = (data.get("streams") or [{}])[0]
+    numerator, _, denominator = str(stream.get("r_frame_rate") or "0/1").partition("/")
+    try:
+        fps = float(numerator) / float(denominator or 1)
+    except (ValueError, ZeroDivisionError):
+        fps = 0.0
+    return {"width": int(stream.get("width") or 0),
+            "height": int(stream.get("height") or 0),
+            "fps": round(fps, 3),
+            "duration": round(float((data.get("format") or {}).get("duration") or 0.0), 3)}
+
+
+def _normalize_clip(source: Path, target: Path, *, width: int, height: int, fps: float) -> Path:
+    """Klibi teslim formatına çevirir (ölçek + letterbox + fps + yuv420p)."""
+
+    ffmpeg = shutil.which("ffmpeg")
+    if not ffmpeg:
+        raise RuntimeError("ffmpeg bulunamadı")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    scale = (f"scale={width}:{height}:force_original_aspect_ratio=decrease,"
+             f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1,fps={fps}")
+    proc = subprocess.run(
+        [ffmpeg, "-y", "-loglevel", "error", "-i", str(source), "-vf", scale,
+         "-an", "-c:v", "libx264", "-pix_fmt", "yuv420p", str(target)],
+        capture_output=True, text=True, timeout=3600)
+    if proc.returncode != 0:
+        raise RuntimeError(f"klip normalize edilemedi ({source}): {(proc.stderr or '')[-200:]}")
+    return target
+
+
+def render_from_clips(episode: Episode, clips: list[str], out_dir: str | Path, *,
+                      audio: str | Path | None = None,
+                      output_size: tuple[int, int] | None = None,
+                      transition_seconds: float = 0.0) -> dict:
+    """Klipleri bölüme çevirir; fps/boyut doğrulanır, gerekirse normalize edilir.
+
+    Normalize edilenler `normalized` alanında kaydedilir; xfade kullanılırsa toplam
+    süre `sum(durations) - (n-1)*transition` olarak hesaplanır ve senaryo süresiyle
+    birlikte manifeste yazılır.
+    """
+
+    if not clips:
+        raise ValueError("clips must not be empty")
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    if not shutil.which("ffmpeg"):
+        raise RuntimeError("ffmpeg bulunamadı")
+
+    target_size = (int(output_size[0]), int(output_size[1])) if output_size else (WIDTH, HEIGHT)
+    probes = [_probe_media(clip) for clip in clips]
+    target_fps = float(probes[0]["fps"] or FPS)
+
+    normalized: list[dict] = []
+    sources: list[Path] = []
+    for index, (clip, probe) in enumerate(zip(clips, probes)):
+        mismatch = ((probe["width"], probe["height"]) != target_size
+                    or abs(probe["fps"] - target_fps) > 0.01)
+        if not mismatch:
+            sources.append(Path(clip))
+            continue
+        fixed = _normalize_clip(Path(clip), out / "normalized" / f"clip{index:02d}.mp4",
+                                width=target_size[0], height=target_size[1], fps=target_fps)
+        normalized.append({"clip": str(clip), "before": probe,
+                           "after": _probe_media(fixed), "output": str(fixed)})
+        sources.append(fixed)
+
+    durations = [_probe_media(source)["duration"] for source in sources]
+    transition = max(0.0, float(transition_seconds))
+    if transition and len(sources) < 2:
+        transition = 0.0
+    total_seconds = round(sum(durations) - transition * (len(sources) - 1), 3)
+
+    silent_video = out / "episode.nosound.mp4"
+    ffmpeg = shutil.which("ffmpeg")
+    if transition > 0:
+        args: list[str] = [ffmpeg, "-y", "-loglevel", "error"]
+        for source in sources:
+            args += ["-i", str(source)]
+        chain: list[str] = []
+        last, elapsed = "0:v", 0.0
+        for index in range(1, len(sources)):
+            elapsed += durations[index - 1] - transition
+            chain.append(f"[{last}][{index}:v]xfade=transition=fade:"
+                         f"duration={transition}:offset={round(elapsed, 3)}[v{index}]")
+            last = f"v{index}"
+        args += ["-filter_complex", ";".join(chain), "-map", f"[{last}]",
+                 "-r", str(FPS), "-c:v", "libx264", "-pix_fmt", "yuv420p",
+                 "-movflags", "+faststart", str(silent_video)]
+        proc = subprocess.run(args, capture_output=True, text=True, timeout=3600)
+        if proc.returncode != 0:
+            raise RuntimeError("xfade birleştirme başarısız: " + (proc.stderr or "")[-300:])
+    else:
+        listing = out / "clips.txt"
+        listing.write_text("".join(f"file '{path.resolve().as_posix()}'\n" for path in sources),
+                           encoding="utf-8")
+        proc = subprocess.run(
+            [ffmpeg, "-y", "-loglevel", "error", "-f", "concat", "-safe", "0",
+             "-i", str(listing), "-r", str(FPS), "-c:v", "libx264", "-pix_fmt", "yuv420p",
+             "-movflags", "+faststart", str(silent_video)],
+            capture_output=True, text=True, timeout=3600)
+        if proc.returncode != 0:
+            raise RuntimeError("klip birleştirme başarısız: " + (proc.stderr or "")[-300:])
+
+    timeline = episode_timeline(episode)
+    srt_path = out / "episode.srt"
+    srt_path.write_text("\n".join(
+        f"{index}\n{_ts(row['start'])} --> {_ts(row['end'])}\n{row['text']}\n"
+        for index, row in enumerate(timeline, start=1)), encoding="utf-8")
+    (out / "timeline.json").write_text(json.dumps(timeline, indent=2, ensure_ascii=False),
+                                       encoding="utf-8")
+
+    video_path = out / "episode.mp4"
+    if audio is not None and Path(audio).is_file():
+        muxed = subprocess.run(
+            [ffmpeg, "-y", "-loglevel", "error", "-i", str(silent_video), "-i", str(audio),
+             "-c:v", "copy", "-c:a", "aac", "-strict", "-2", "-b:a", "128k", "-af", "apad",
+             "-t", f"{total_seconds:.3f}", "-movflags", "+faststart", str(video_path)],
+            capture_output=True, text=True, timeout=1800)
+        if muxed.returncode != 0:
+            raise RuntimeError("ses miksajı başarısız: " + (muxed.stderr or "")[-300:])
+        silent_video.unlink(missing_ok=True)
+    else:
+        silent_video.replace(video_path)
+
+    manifest = {
+        "title": episode.title,
+        "language": episode.language,
+        "scenes": len(episode.scenes),
+        "duration_seconds": total_seconds,
+        "script_seconds": round(episode.duration(), 3),
+        "fps": FPS,
+        "resolution": list(target_size),
+        "video": str(video_path),
+        "subtitles": str(srt_path),
+        "audio": str(audio) if audio is not None else None,
+        "timeline": str(out / "timeline.json"),
+        "frames": 0,
+        "voice": "clips",
+        "source": "clips",
+        "clips": len(sources),
+        "transition_seconds": transition,
+        "clip_durations": durations,
+        "normalized": normalized,
+    }
+    (out / "episode.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False),
+                                      encoding="utf-8")
+    return manifest
+

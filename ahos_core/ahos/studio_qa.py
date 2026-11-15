@@ -254,3 +254,124 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+def _frame_at(video: str | Path, moment: float, target: Path) -> bool:
+    """Belirli saniyeden tek kare çıkarır (ffmpeg); başarısızsa False."""
+
+    ffmpeg = shutil.which("ffmpeg")
+    if not ffmpeg:
+        return False
+    proc = subprocess.run(
+        [ffmpeg, "-y", "-loglevel", "error", "-ss", f"{max(0.0, moment):.3f}",
+         "-i", str(video), "-frames:v", "1", str(target)],
+        capture_output=True, timeout=120)
+    return proc.returncode == 0 and target.is_file()
+
+
+def _motion_and_cuts(video: str | Path, *, duration: float, sample_count: int,
+                     work_dir: Path) -> tuple[float, int]:
+    """Örneklenen kareler arası farktan hareket skoru ve kesme sayısı üretir."""
+
+    from PIL import Image, ImageChops
+
+    work_dir.mkdir(parents=True, exist_ok=True)
+    frames = []
+    for index in range(max(2, sample_count)):
+        moment = duration * (index + 0.5) / max(2, sample_count)
+        target = work_dir / f"f{index:02d}.png"
+        if not _frame_at(video, moment, target):
+            continue
+        with Image.open(target) as image:
+            frames.append(image.convert("L").resize((160, 90)))
+    if len(frames) < 2:
+        return 0.0, 0
+    diffs = []
+    for previous, current in zip(frames, frames[1:]):
+        difference = ImageChops.difference(previous, current)
+        histogram = difference.histogram()
+        total = sum(value * count for value, count in enumerate(histogram))
+        pixels = sum(histogram) or 1
+        diffs.append(round(total / pixels / 255.0, 5))
+    motion = round(sum(diffs) / len(diffs), 5)
+    cuts = sum(1 for value in diffs if value >= 0.12)
+    return motion, cuts
+
+
+def _loudness_dbfs(video: str | Path) -> float | None:
+    """Ses akışının RMS seviyesi (dBFS); ses yoksa `None`."""
+
+    import array
+    import math
+
+    ffmpeg = shutil.which("ffmpeg")
+    if not ffmpeg:
+        return None
+    proc = subprocess.run(
+        [ffmpeg, "-v", "error", "-i", str(video), "-f", "s16le", "-ac", "1", "-ar", "16000", "-"],
+        capture_output=True, timeout=300)
+    if proc.returncode != 0 or not proc.stdout:
+        return None
+    samples = array.array("h")
+    samples.frombytes(proc.stdout[: len(proc.stdout) - (len(proc.stdout) % 2)])
+    if not samples:
+        return None
+    step = max(1, len(samples) // 20000)
+    values = samples[::step]
+    mean_square = sum(float(value) ** 2 for value in values) / max(1, len(values))
+    if mean_square <= 0:
+        return -120.0
+    return round(20.0 * math.log10(math.sqrt(mean_square) / 32768.0), 2)
+
+
+def verify_production(video: str | Path, *, expected_seconds: float,
+                      expects_voice: bool = True, motion_threshold: float = 0.02,
+                      min_cuts: int = 1, loudness_range: tuple[float, float] = (-45.0, -6.0),
+                      sample_count: int = 8, tolerance: float = 0.5,
+                      work_dir: str | Path | None = None) -> dict:
+    """Üretim kapısı: hareket, kesme, ses, ses seviyesi ve süre — makine-okur rapor.
+
+    Slayt teslimi imkânsızdır: hareket skoru eşiğin altındaysa `motion_ok` düşer.
+    """
+
+    import tempfile
+
+    ffprobe = shutil.which("ffprobe")
+    if not ffprobe:
+        raise RuntimeError("ffprobe bulunamadı")
+    proc = subprocess.run(
+        [ffprobe, "-v", "error", "-show_entries", "format=duration",
+         "-show_entries", "stream=codec_type", "-of", "json", str(video)],
+        capture_output=True, text=True, timeout=120)
+    data = json.loads(proc.stdout or "{}")
+    streams = data.get("streams") or []
+    duration = round(float((data.get("format") or {}).get("duration") or 0.0), 3)
+    has_audio = any(stream.get("codec_type") == "audio" for stream in streams)
+
+    folder = Path(work_dir) if work_dir else Path(tempfile.mkdtemp(prefix="ahos-qa-"))
+    motion, cuts = _motion_and_cuts(video, duration=max(duration, expected_seconds),
+                                   sample_count=sample_count, work_dir=folder)
+    loudness = _loudness_dbfs(video) if has_audio else None
+
+    duration_delta = round(abs(duration - float(expected_seconds)), 3)
+    low, high = loudness_range
+    checks = {
+        "duration_ok": duration_delta <= float(tolerance),
+        "motion_ok": motion >= float(motion_threshold),
+        "cuts_ok": cuts >= int(min_cuts),
+        "audio_ok": has_audio if expects_voice else True,
+        "loudness_ok": (None not in (loudness,) and low <= float(loudness) <= high)
+        if expects_voice else True,
+    }
+    return {
+        "video": str(video),
+        "measurements": {"duration": duration, "expected_seconds": round(float(expected_seconds), 3),
+                         "duration_delta": duration_delta, "motion_score": motion,
+                         "cut_count": cuts, "audio_present": has_audio,
+                         "loudness_dbfs": loudness},
+        "thresholds": {"motion_threshold": float(motion_threshold), "min_cuts": int(min_cuts),
+                       "loudness_range": [low, high], "tolerance": float(tolerance)},
+        "checks": checks,
+        "passed": all(checks.values()),
+    }
+

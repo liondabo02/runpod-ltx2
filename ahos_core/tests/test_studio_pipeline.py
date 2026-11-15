@@ -90,6 +90,93 @@ def test_provider_registry_requires_approval_for_paid():
 
 
 
+def _ffmpeg_clip(path, *, source, seconds, audio=False):
+    """Deterministik test klibi: PIL kareleri (hareketli/durgun) + isteğe bağlı ton."""
+
+    import array
+    import math
+    import shutil
+    import subprocess
+    import wave
+
+    from PIL import Image, ImageDraw
+
+    if not shutil.which("ffmpeg"):
+        import pytest
+
+        pytest.skip("ffmpeg yok")
+    fps = 24
+    total = max(1, int(seconds * fps))
+    static = source.startswith("color")
+    frames = path.parent / f"frames-{path.stem}"
+    frames.mkdir(parents=True, exist_ok=True)
+    for index in range(total):
+        image = Image.new("RGB", (320, 180), (0, 0, 200) if static else (30, 60, 120))
+        if not static:
+            draw = ImageDraw.Draw(image)
+            x = 20 + (index * 6) % 250
+            draw.rectangle([x, 60, x + 60, 120], fill=(240, 200, 60))
+        image.save(frames / f"f{index:04d}.png")
+
+    args = ["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(fps),
+            "-i", str(frames / "f%04d.png")]
+    if audio:
+        tone = path.parent / f"tone-{path.stem}.wav"
+        with wave.open(str(tone), "wb") as handle:
+            handle.setnchannels(1)
+            handle.setsampwidth(2)
+            handle.setframerate(16000)
+            handle.writeframes(array.array("h", [
+                int(8000 * math.sin(2 * math.pi * 440 * i / 16000))
+                for i in range(int(seconds * 16000))]).tobytes())
+        args += ["-i", str(tone), "-c:a", "aac", "-strict", "-2", "-ar", "48000",
+                 "-shortest"]
+    args += ["-pix_fmt", "yuv420p", "-r", str(fps), str(path)]
+    subprocess.run(args, check=True, capture_output=True)
+    return path
+
+
+
+def test_static_clip_fails_motion_gate(tmp_path):
+    from ahos.studio_qa import verify_production
+
+    clip = _ffmpeg_clip(tmp_path / "static.mp4", source="color=c=blue", seconds=3)
+    report = verify_production(clip, expected_seconds=3.0, expects_voice=False)
+    assert report["checks"]["motion_ok"] is False
+    assert report["passed"] is False
+    assert report["measurements"]["motion_score"] < 0.02
+
+
+def test_duration_mismatch_fails(tmp_path):
+    from ahos.studio_qa import verify_production
+
+    clip = _ffmpeg_clip(tmp_path / "moving.mp4", source="testsrc2", seconds=2)
+    report = verify_production(clip, expected_seconds=6.0, expects_voice=False)
+    assert report["checks"]["duration_ok"] is False
+    assert report["passed"] is False
+
+
+def test_missing_voice_fails_when_expected(tmp_path):
+    from ahos.studio_qa import verify_production
+
+    clip = _ffmpeg_clip(tmp_path / "moving.mp4", source="testsrc2", seconds=2)
+    report = verify_production(clip, expected_seconds=2.0, expects_voice=True)
+    assert report["checks"]["audio_ok"] is False
+    assert report["passed"] is False
+
+
+def test_moving_clip_with_audio_passes(tmp_path):
+    from ahos.studio_qa import verify_production
+
+    clip = _ffmpeg_clip(tmp_path / "good.mp4", source="testsrc2", seconds=3, audio=True)
+    report = verify_production(clip, expected_seconds=3.0, expects_voice=True,
+                               min_cuts=0, loudness_range=(-60.0, 0.0))
+    assert report["checks"]["motion_ok"] is True
+    assert report["checks"]["audio_ok"] is True
+    assert report["passed"] is True, report
+
+
+
 def test_provider_registry_fails_closed_on_bad_catalog():
     """Eksik/çift kayıt sessizce geçmez; katalog hatası yükselir."""
 
