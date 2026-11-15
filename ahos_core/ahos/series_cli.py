@@ -162,7 +162,44 @@ def _dry_run(episode, out, number: int, args) -> int:
     return 0
 
 
+def _load_env_file() -> None:
+    """`.env.runtime` içindeki anahtarları ortama yükler (bir kez girmek yeter).
+
+    Sıra: `AHOS_ENV_FILE` → repo `control_plane_v2/.env.runtime` → `~/.ahos/.env.runtime`.
+    Var olan ortam değişkenleri **ezilmez** (öncelik: gerçek ortam > dosya).
+    """
+
+    import os
+    from pathlib import Path
+
+    candidates = []
+    override = os.environ.get("AHOS_ENV_FILE", "").strip()
+    if override:
+        candidates.append(Path(override))
+    candidates.append(Path(__file__).resolve().parents[2] / "control_plane_v2" / ".env.runtime")
+    candidates.append(Path.home() / ".ahos" / ".env.runtime")
+
+    for candidate in candidates:
+        try:
+            if not candidate.is_file():
+                continue
+            text = candidate.read_text(encoding="utf-8-sig", errors="replace")
+        except OSError:
+            continue
+        for line in text.splitlines():
+            raw = line.strip()
+            if not raw or raw.startswith("#") or "=" not in raw:
+                continue
+            key, _, value = raw.partition("=")
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+            if key and key not in os.environ:
+                os.environ[key] = value
+        return
+
+
 def main(argv: list[str] | None = None) -> int:
+    _load_env_file()
     import sys
 
     try:
