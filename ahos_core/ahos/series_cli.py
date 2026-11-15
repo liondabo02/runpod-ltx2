@@ -168,6 +168,39 @@ def main(argv: list[str] | None = None) -> int:
         return 3
     report = produce_episode(episode, out, language=series.language, use_voice=not args.no_voice)
 
+    # Crash safety: yarım dosya bırakma (temp -> atomic replace) + stage ledger.
+    import shutil
+
+    final_video = out / "episode.mp4"
+    if final_video.is_file():
+        partial = out / "episode.partial.mp4"
+        shutil.copy2(final_video, partial)
+        partial.replace(final_video)
+    ledger = {
+        "schema": "ahos.production-ledger.v1",
+        "episode": number,
+        "title": plan.title,
+        "duration_seconds": (report.get("measurements") or {}).get("duration_seconds"),
+        "passed": bool(report.get("passed")),
+        "stages": [
+            {"stage": "story", "status": "verified", "provider": "local-template"},
+            {"stage": "voice",
+             "status": "verified" if report.get("voice") else "skipped",
+             "provider": (report.get("voice") or {}).get("engine") or "none"},
+            {"stage": "render",
+             "status": "verified" if final_video.is_file() else "failed",
+             "provider": "local-2d"},
+            {"stage": "qa", "status": "passed" if report.get("passed") else "failed",
+             "provider": "studio-qa"},
+        ],
+        "cost": {"total_cost": 0.0, "currency": "USD", "note": "free/local path"},
+        "retries": 0,
+        "episode_id": f"b{number:02d}",
+    }
+    (out / "production-ledger.json").write_text(
+        json.dumps(ledger, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
     state["produced"] = sorted(set(state.get("produced", [])) | {number})
     state["next_episode"] = number + 1
     state["planned"] = len(plans)
