@@ -47,15 +47,33 @@ def _save_bible(root: Path, series: SeriesBible) -> Path:
     return path
 
 
-def _preflight(require_comfy: bool = False) -> tuple[bool, list[dict]]:
-    """Hazırlık kontrolü: araçlar + (gerekiyorsa) ComfyUI; net checklist döner."""
+def _preflight(require_comfy: bool = False, *, providers_path: str | None = None,
+               require_runpod: bool = False, model_path: str | None = None
+               ) -> tuple[bool, list[dict]]:
+    """Hazırlık kontrolü: araçlar + katalog + (istenirse) ComfyUI / RunPod / model.
 
+    Yalnızca yapılandırılmış kontroller çalışır; hiçbiri sessizce atlanmaz,
+    sonuç tek bir `checklist` olarak döner (fail-closed).
+    """
+
+    import os
     import shutil
 
     checklist: list[dict] = []
     for tool in ("ffmpeg", "ffprobe"):
         checklist.append({"check": tool, "ok": bool(shutil.which(tool)),
                           "hint": "PATH'e ekleyin"})
+
+    if providers_path:
+        from .studio_department import ProviderRegistry, ProviderRegistryError
+
+        try:
+            registry = ProviderRegistry.load(providers_path)
+            checklist.append({"check": "providers", "ok": bool(registry.providers),
+                              "hint": f"{len(registry.providers)} kayıt"})
+        except ProviderRegistryError as exc:
+            checklist.append({"check": "providers", "ok": False, "hint": str(exc)[:120]})
+
     if require_comfy:
         from .comfy_bridge import ComfyUnavailable, health
 
@@ -65,6 +83,29 @@ def _preflight(require_comfy: bool = False) -> tuple[bool, list[dict]]:
                               "hint": str(info.get("host") or "")})
         except ComfyUnavailable as exc:
             checklist.append({"check": "comfyui", "ok": False, "hint": str(exc)[:120]})
+
+    if require_runpod:
+        endpoint = str(os.environ.get("AHOS_RUNPOD_ENDPOINT") or "").strip()
+        if not endpoint:
+            checklist.append({"check": "runpod", "ok": False,
+                              "hint": "AHOS_RUNPOD_ENDPOINT tanımlı değil"})
+        else:
+            import urllib.error
+            import urllib.request
+
+            try:
+                with urllib.request.urlopen(endpoint, timeout=4) as response:
+                    ok = 200 <= int(response.status) < 500
+                checklist.append({"check": "runpod", "ok": ok, "hint": endpoint})
+            except (urllib.error.URLError, OSError, ValueError) as exc:
+                checklist.append({"check": "runpod", "ok": False, "hint": str(exc)[:120]})
+
+    if model_path:
+        from pathlib import Path
+
+        exists = Path(model_path).exists()
+        checklist.append({"check": "model", "ok": exists, "hint": str(model_path)})
+
     return all(row["ok"] for row in checklist), checklist
 
 
@@ -179,7 +220,7 @@ def main(argv: list[str] | None = None) -> int:
                           "reason": "verified episode exists", "out": str(out)},
                          ensure_ascii=False, indent=2))
         return 0
-    ready, checklist = _preflight(require_comfy=False)
+    ready, checklist = _preflight(require_comfy=False, providers_path=args.providers)
     if not ready:
         print(json.dumps({"ready": False, "checklist": checklist},
                          ensure_ascii=False, indent=2))

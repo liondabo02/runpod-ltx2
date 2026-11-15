@@ -230,12 +230,42 @@ def test_cli_budget_gate_blocks_before_production(tmp_path, monkeypatch):
     assert calls["n"] == 0
 
 
+def test_preflight_validates_provider_catalog(tmp_path):
+    """Preflight: geçerli katalog OK, bozuk katalog checklist'te FAIL."""
+
+    from ahos.series_cli import _preflight
+
+    good = tmp_path / "providers.json"
+    good.write_text('{"providers": [{"provider_id": "p1", "adapter": "a", '
+                    '"task_types": ["tts"], "languages": ["tr"], "paid": false, '
+                    '"external": false, "commercial_default": true, "priority": 1}]}',
+                    encoding="utf-8")
+    ok, checklist = _preflight(providers_path=str(good))
+    providers_row = next(row for row in checklist if row["check"] == "providers")
+    assert providers_row["ok"] is True
+
+    bad = tmp_path / "broken.json"
+    bad.write_text('{"providers": []}', encoding="utf-8")
+    ok, checklist = _preflight(providers_path=str(bad))
+    assert next(row for row in checklist if row["check"] == "providers")["ok"] is False
+
+
+def test_preflight_runpod_requires_endpoint(monkeypatch):
+    """RunPod kontrolü: endpoint yoksa FAIL (sessizce atlanmaz)."""
+
+    from ahos.series_cli import _preflight
+
+    monkeypatch.delenv("AHOS_RUNPOD_ENDPOINT", raising=False)
+    ok, checklist = _preflight(require_runpod=True)
+    assert next(row for row in checklist if row["check"] == "runpod")["ok"] is False
+
+
 def test_cli_preflight_failure_blocks_with_checklist(tmp_path, monkeypatch):
     """Preflight başarısızsa non-zero döner ve checklist yazar."""
 
     from ahos import series_cli
 
-    monkeypatch.setattr(series_cli, "_preflight", lambda require_comfy=False: (
+    monkeypatch.setattr(series_cli, "_preflight", lambda *a, **k: (
         False, [{"check": "ffmpeg", "ok": False, "hint": "PATH'e ekleyin"}]))
     code = series_cli.main(["--root", str(tmp_path), "produce", "--episode", "1"])
     assert code == 3
