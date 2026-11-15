@@ -54,3 +54,82 @@ def test_policy_file_is_zero_cost_and_cheap_first():
     assert policy.cheap_first is True
     assert estimate_tokens("abcd" * 100) == 100
     assert Policy().max_retries == 2
+
+
+def test_estimate_math_and_stage_breakdown():
+    """Tahmin: units * price; stage bazında toplanır; para birimi katalogdan."""
+
+    from ahos.costs import estimate
+
+    report = estimate([
+        {"stage": "voice", "provider": "local-edge", "units": 12.0},
+        {"stage": "video", "provider": "runpod-video", "units": 10.0},
+        {"stage": "video", "provider": "runpod-video", "units": 5.0},
+    ])
+    assert report["currency"] == "USD"
+    assert report["stages"]["voice"]["cost"] == 0.0
+    assert report["stages"]["video"]["cost"] == round(15.0 * 0.012, 4)
+    assert report["total_cost"] == round(15.0 * 0.012, 4)
+    assert report["paid_providers"] == ["runpod-video"]
+
+
+def test_budget_refusal_happens_before_calls():
+    """Bütçe aşımı `BudgetRefusal` ile reddedilir (çağrı yapılmaz)."""
+
+    import pytest
+
+    from ahos.costs import BudgetRefusal, estimate, guard
+
+    report = estimate([{"stage": "video", "provider": "runpod-video", "units": 100.0}])
+    assert report["total_cost"] > 1.0
+    with pytest.raises(BudgetRefusal):
+        guard(report, episode_cap=0.5)
+    with pytest.raises(BudgetRefusal):
+        guard(report, episode_cap=100.0, provider_caps={"runpod-video": 0.5})
+    assert guard(report, episode_cap=100.0)["ok"] is True
+
+
+def test_free_first_ordering_prefers_local():
+    """Ücretsiz/yerel sağlayıcı her zaman önce; ücretli sonra."""
+
+    from ahos.costs import order_providers
+
+    ordered = order_providers(["runpod-voice", "local-edge", "runpod-kokoro"],
+                              approval="owner-ok")
+    assert ordered[0]["provider_id"] == "local-edge"
+    assert ordered[0]["paid"] is False
+    assert all(row["paid"] for row in ordered[1:])
+
+
+def test_paid_provider_requires_approval_token():
+    """Approval token yoksa ücretli sağlayıcı sıralamaya hiç girmez."""
+
+    from ahos.costs import order_providers
+
+    ordered = order_providers(["runpod-voice", "local-edge"])
+    assert [row["provider_id"] for row in ordered] == ["local-edge"]
+
+    with_token = order_providers(["runpod-voice"], approval="owner-ok")
+    assert [row["provider_id"] for row in with_token] == ["runpod-voice"]
+
+
+def test_ledger_breakdown_and_blocked_evidence(tmp_path):
+    """Bitmiş bölüm: stage bazında maliyet + blocked_budget evidence dosyası."""
+
+    import json
+
+    from ahos.costs import CostLedger
+
+    ledger = CostLedger()
+    ledger.charge("voice", "local-edge", units=10.0, cost=0.0)
+    ledger.charge("video", "runpod-video", units=5.0, cost=0.06)
+    breakdown = ledger.breakdown()
+    assert breakdown["stages"] == {"voice": 0.0, "video": 0.06}
+    assert breakdown["total_cost"] == 0.06
+
+    path = ledger.write_evidence(tmp_path / "cost-evidence.json", blocked=True,
+                                 reason="episode cap")
+    payload = json.loads((tmp_path / "cost-evidence.json").read_text(encoding="utf-8"))
+    assert payload["blocked_budget"] is True and payload["reason"] == "episode cap"
+    assert path["total_cost"] == 0.06
+

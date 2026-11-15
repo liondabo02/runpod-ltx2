@@ -1,0 +1,15 @@
+{
+  "schema": "ahos.cost-catalog.v1",
+  "currency": "USD",
+  "providers": {
+    "local-edge": { "unit": "1k_chars", "price": 0.0 },
+    "local-comfy": { "unit": "second", "price": 0.0 },
+    "local-music-bed": { "unit": "second", "price": 0.0 },
+    "runpod-video": { "unit": "second", "price": 0.012 },
+    "runpod-voice": { "unit": "1k_chars", "price": 0.03 },
+    "runpod-kokoro": { "unit": "1k_chars", "price": 0.02 },
+    "chatterbox-multilingual": { "unit": "1k_chars", "price": 0.05 },
+    "fish-speech-s2": { "unit": "1k_chars", "price": 0.04 },
+    "f5-tts": { "unit": "1k_chars", "price": 0.035 }
+  }
+}
