@@ -566,6 +566,20 @@ def speech_candidates(task_type: str, language: str, policy: AudioBudgetPolicy, 
     return sorted(rows, key=lambda p: (p.paid, p.priority, p.provider_id))
 
 
+def default_adapters() -> dict:
+    """Gerçekten var olan adapter'lar: provider_id -> synthesize(job, out_path).
+
+    Yeni bir motor bağlamak için yalnızca buraya bir giriş eklenir; seçim/fallback
+    mantığı (`speech_candidates` + `synthesize_with_fallback`) değişmez.
+    Ücretli/uzak adaptörler ancak kendi modüllerinde `synthesize` sözleşmesini
+    uyguladıktan sonra buraya eklenmelidir (kayıtsız sağlayıcı sessizce atlanır).
+    """
+
+    from .studio_voice import synthesize_job
+
+    return {"local-edge": synthesize_job}
+
+
 def synthesize_with_fallback(job: AudioJob, out_path, adapters: dict, *,
                              policy: AudioBudgetPolicy, registry=None,
                              log=None) -> dict:

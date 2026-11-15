@@ -174,7 +174,38 @@ def _tiny_episode():
     ])
 
 
-def test_plan_jobs_is_deterministic_and_offline():
+def test_default_adapters_registers_local_edge():
+    """Adapter haritası: gerçek motor (`local-edge`) kayıtlı, uydurma yok."""
+
+    from ahos.audio_pipeline import default_adapters
+
+    adapters = default_adapters()
+    assert "local-edge" in adapters
+    assert callable(adapters["local-edge"])
+
+
+def test_fallback_skips_unregistered_provider(tmp_path):
+    """Kayıtlı adapter yoksa sessizce başarı sayılmaz: açık hata."""
+
+    import pytest
+
+    from ahos.audio_pipeline import (AudioBudgetPolicy, AudioPipelineError,
+                                     AudioProviderDescriptor, AudioProviderRegistry,
+                                     plan_jobs, synthesize_with_fallback)
+
+    paid = AudioProviderDescriptor(
+        provider_id="paid-only", name="paid", supported_languages=frozenset({"tr"}),
+        capabilities=frozenset({"tts"}), paid=True, external=True,
+        commercial_default=True, priority=1)
+    registry = AudioProviderRegistry((paid,))
+    policy = AudioBudgetPolicy(allow_paid=True, approval="owner-ok",
+                               budget_remaining_usd=5.0)
+    job = plan_jobs(_tiny_episode(), policy, registry=registry)[0]
+
+    with pytest.raises(AudioPipelineError):
+        synthesize_with_fallback(job, tmp_path / "x.wav", {}, policy=policy,
+                                 registry=registry)
+
     from ahos.audio_pipeline import AudioBudgetPolicy, plan_jobs
 
     policy = AudioBudgetPolicy()
