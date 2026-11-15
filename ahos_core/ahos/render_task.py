@@ -6,7 +6,8 @@ from .worker_runtime import WorkerExecutionResult
 _VIDEO_OUTPUT_NODES = {"SaveVideo", "VHS_VideoCombine"}
 
 
-def _valid_artifact(candidate, root: Path, *, video_required: bool) -> bool:
+def _valid_artifact(candidate, root: Path, *, video_required: bool,
+                    expected_seconds: float | None = None) -> bool:
     """Reject empty, spoofed or escaped media files before reporting delivery."""
     path = Path(candidate)
     if path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(root):
@@ -20,7 +21,13 @@ def _valid_artifact(candidate, root: Path, *, video_required: bool) -> bool:
         header = stream.read(12)
     if suffix == ".png":
         return header.startswith(b"\x89PNG\r\n\x1a\n")
-    return header[4:8] == b"ftyp"
+    if header[4:8] != b"ftyp":
+        return False
+    if expected_seconds is not None:
+        measured = _probe_duration(path)
+        if measured is None or abs(measured - float(expected_seconds)) > 0.5:
+            return False
+    return True
 
 
 def make_render_executor(workflow_path, out_dir):
@@ -56,3 +63,27 @@ def make_render_executor(workflow_path, out_dir):
             return WorkerExecutionResult(item.task_id, worker_id, False,
                 f"Render başarısız: {exc}")
     return executor
+
+
+def _probe_duration(path: str | Path) -> float | None:
+    """ffprobe varsa süreyi ölçer; yoksa/başarısızsa `None` (fail-closed değil, bilgi)."""
+
+    import json
+    import shutil
+    import subprocess
+
+    tool = shutil.which("ffprobe")
+    if not tool:
+        return None
+    try:
+        proc = subprocess.run(
+            [tool, "-v", "error", "-show_entries", "format=duration",
+             "-of", "json", str(path)],
+            capture_output=True, text=True, timeout=30,
+        )
+        if proc.returncode != 0:
+            return None
+        return float(json.loads(proc.stdout or "{}").get("format", {}).get("duration") or 0.0)
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return None
+

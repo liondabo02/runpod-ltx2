@@ -165,3 +165,71 @@ def fill_template(template_path: str | Path, **params) -> dict:
     if not isinstance(result, dict) or not result:
         raise ValueError("Workflow boş veya nesne değil")
     return result
+
+
+HEALTH_TIMEOUT = 3.0
+QUEUE_TIMEOUT = 5.0
+
+
+class ComfyStageError(ComfyUnavailable):
+    """Dispatcher'ın anlayacağı yapılandırılmış hata (retry/fallback/block)."""
+
+    def __init__(self, message: str, *, info: dict | None = None) -> None:
+        super().__init__(message)
+        self.info = dict(info or {})
+
+
+def health(*, host: str | None = None, timeout: float = HEALTH_TIMEOUT) -> dict:
+    """ComfyUI ayakta mı? Kısa timeout; erişilemezse `ComfyUnavailable`."""
+
+    base = (host or DEFAULT_HOST).rstrip("/")
+    payload = _request(f"{base}/system_stats", timeout=timeout)
+    return {"ok": True, "host": base, "system": payload}
+
+
+def queue_status(*, host: str | None = None, timeout: float = QUEUE_TIMEOUT) -> dict:
+    """Kuyruk doluluk bilgisi (planlama/erteleyeme kararı için)."""
+
+    base = (host or DEFAULT_HOST).rstrip("/")
+    payload = _request(f"{base}/queue", timeout=timeout)
+    return {
+        "ok": True,
+        "running": len(payload.get("queue_running") or []),
+        "pending": len(payload.get("queue_pending") or []),
+    }
+
+
+#: Dispatcher'ın tanıdığı hata sınıfları.
+FAILURE_CLASSES = ("queue_full", "model_missing", "oom", "timeout",
+                   "invalid_output", "auth", "provider_error", "unavailable")
+
+_RULES: tuple[tuple[tuple[str, ...], str], ...] = (
+    (("out of memory", "cuda out of memory", "oom"), "oom"),
+    (("not found", "no such file", "checkpoint", "model"), "model_missing"),
+    (("queue", "busy", "full"), "queue_full"),
+    (("timeout", "timed out"), "timeout"),
+    (("unauthorized", "forbidden", "401", "403", "auth"), "auth"),
+    (("empty", "invalid", "corrupt", "no output"), "invalid_output"),
+    (("refused", "unreachable", "connection", "timed out"), "unavailable"),
+)
+
+
+def classify_error(exc: BaseException | str) -> dict:
+    """Hata metnini sınıflandırır; dispatcher için {class, retryable, action} döner."""
+
+    text = str(exc).lower()
+    failure = "provider_error"
+    for needles, name in _RULES:
+        if any(needle in text for needle in needles):
+            failure = name
+            break
+    retryable = failure in {"queue_full", "timeout", "oom", "unavailable"}
+    if retryable:
+        action = "retry"
+    elif failure in {"model_missing", "provider_error", "invalid_output"}:
+        action = "fallback"
+    else:  # auth / bilinmeyen kritik
+        action = "block"
+    return {"failure_class": failure, "retryable": retryable, "action": action,
+            "detail": str(exc)[:200]}
+

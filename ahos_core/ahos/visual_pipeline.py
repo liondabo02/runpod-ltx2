@@ -530,3 +530,121 @@ def write_workflow_contract(path: str | Path) -> Path:
         encoding="utf-8",
     )
     return destination
+
+
+#: AI çekim prompt'ları için ortak negatif liste (kaliteyi korur).
+NEGATIVE_PROMPT = ("blurry, lowres, jpeg artifacts, extra fingers, deformed hands, "
+                   "text, watermark, logo, duplicate limbs")
+
+
+def _shot_seed(shot_id: str) -> int:
+    """Çekim kimliğinden tekrarlanabilir seed (aynı çekim → aynı seed)."""
+
+    digest = hashlib.blake2b(str(shot_id).encode("utf-8"), digest_size=8).digest()
+    return int.from_bytes(digest, "big") % (2 ** 31 - 1)
+
+
+def shot_prompts(episode, *, style: str = "") -> list[dict]:
+    """Bölümü çekim başına AI iş tarifine çevirir (deterministik)."""
+
+    rows: list[dict] = []
+    for scene in episode.scenes:
+        for index, line in enumerate(scene.lines):
+            shot_id = f"{scene.scene_id}-{index + 1:02d}"
+            text = str(line.text).strip()
+            pieces = [str(style).strip(), f"2D cartoon scene, {scene.setting}",
+                      f"{scene.background} lighting", f"{line.speaker} speaking", text]
+            rows.append({
+                "shot_id": shot_id,
+                "scene_id": scene.scene_id,
+                "setting": scene.setting,
+                "background": scene.background,
+                "speaker": line.speaker,
+                "text": text,
+                "prompt": ", ".join(piece for piece in pieces if piece)[:400],
+                "negative_prompt": NEGATIVE_PROMPT,
+                "seed": _shot_seed(shot_id),
+                "duration_seconds": max(2, int(round(float(line.seconds)))),
+            })
+    return rows
+
+
+def _manifest_path(shot_dir: Path) -> Path:
+    return shot_dir / "job.json"
+
+
+def _write_manifest(path: Path, payload: dict) -> dict:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = dict(payload, updated_at=datetime.now(timezone.utc).isoformat())
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    return payload
+
+
+def _read_manifest(path: Path) -> dict | None:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def generate_clips(episode, workflow_path, out_dir, *, style: str = "",
+                   resume: bool = True, log=None) -> list[str]:
+    """Çekim başına AI klibi üretir; manifest yaşam döngüsü ve resume desteklidir.
+
+    Akış: pending → running → verified/failed. `resume=True` iken manifest
+    "verified" ve çıktı dosyası duruyorsa sağlayıcı **hiç çağrılmaz**.
+    Sağlayıcı hataları `ComfyStageError` olarak yapılandırılmış bilgiyle döner.
+    """
+
+    from .comfy_bridge import ComfyStageError, classify_error, fill_template, render
+
+    inform = log or (lambda *_: None)
+    target = Path(out_dir)
+    target.mkdir(parents=True, exist_ok=True)
+    clips: list[str] = []
+
+    for row in shot_prompts(episode, style=style):
+        shot_dir = target / row["shot_id"]
+        manifest_path = _manifest_path(shot_dir)
+        previous = _read_manifest(manifest_path) if resume else None
+        if previous and previous.get("status") == "verified":
+            output = Path(str(previous.get("output_path") or ""))
+            if output.is_file():
+                inform(f"[ai] {row['shot_id']} atlandı (verified)")
+                clips.append(str(output))
+                continue
+
+        manifest = _write_manifest(manifest_path, {
+            **row,
+            "workflow_path": str(workflow_path),
+            "output_path": str(shot_dir / "clip.mp4"),
+            "status": "pending",
+            "attempts": int((previous or {}).get("attempts") or 0),
+        })
+        manifest = _write_manifest(manifest_path, {**manifest, "status": "running",
+                                                   "attempts": manifest["attempts"] + 1})
+        try:
+            workflow = fill_template(workflow_path, prompt=row["prompt"],
+                                     negative_prompt=row["negative_prompt"],
+                                     seed=str(row["seed"]))
+            produced = render(workflow, shot_dir)
+        except Exception as exc:  # noqa: BLE001 - sağlayıcı hataları sınıflandırılır
+            info = classify_error(exc)
+            _write_manifest(manifest_path, {**manifest, "status": "failed", **info})
+            raise ComfyStageError(f"{row['shot_id']}: {exc}", info=info) from exc
+
+        videos = [Path(item) for item in produced
+                  if str(item).lower().endswith((".mp4", ".webm"))]
+        if not videos or not videos[0].is_file() or videos[0].stat().st_size < 12:
+            info = classify_error("invalid output: empty or missing video file")
+            _write_manifest(manifest_path, {**manifest, "status": "failed", **info})
+            raise ComfyStageError(f"{row['shot_id']}: geçersiz çıktı", info=info)
+
+        clip = videos[0]
+        _write_manifest(manifest_path, {**manifest, "status": "verified",
+                                        "output_path": str(clip),
+                                        "bytes": clip.stat().st_size})
+        clips.append(str(clip))
+    return clips
+

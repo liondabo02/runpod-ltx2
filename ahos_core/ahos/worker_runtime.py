@@ -349,3 +349,16 @@ def local_pass_qa(
         passed=passed,
         summary="local deterministic QA passed" if passed else "local deterministic QA failed",
     )
+
+
+def classify_provider_failure(exc: BaseException | str) -> dict:
+    """Sağlayıcı hatasını dispatcher sınıfına çevirir (ağ çağrısı yapmaz).
+
+    Dönüş: {"failure_class", "retryable", "action", "detail"} — action
+    değerleri `retry` | `fallback` | `block`.
+    """
+
+    from .comfy_bridge import classify_error
+
+    return classify_error(exc)
+
