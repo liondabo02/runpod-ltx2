@@ -85,7 +85,7 @@ def test_episode_manifest_is_written(tmp_path):
     assert stored["frames"] == manifest["frames"]
 
 
-def _character_frame(name, *, x=640, base=700, t=1.0):
+def _character_frame(name, *, x=640, base=700, t=1.0, scale=1.0):
     """Beyaz zemin üzerinde tek karakter karesi (çizim yolu, ffmpeg yok)."""
 
     from PIL import Image, ImageDraw
@@ -94,7 +94,8 @@ def _character_frame(name, *, x=640, base=700, t=1.0):
 
     image = Image.new("RGB", (studio_2d.WIDTH, studio_2d.HEIGHT), (255, 255, 255))
     draw = ImageDraw.Draw(image)
-    studio_2d._character(draw, name, x, base, t=t, talking=True, gesture=0.6, mouth=0.5)
+    studio_2d._character(draw, name, x, base, t=t, talking=True, gesture=0.6,
+                         mouth=0.5, scale=scale)
     return image
 
 
@@ -189,9 +190,38 @@ def test_frames_are_not_static_across_time():
     second = _character_frame("aden", t=0.45)
     assert list(first.getdata()) != list(second.getdata())
 
-    """Statiklik yasağı: farklı zamanlarda üretilen kareler birebir aynı olmamalı."""
 
-    first = _character_frame("aden", t=0.0)
-    second = _character_frame("aden", t=0.45)
-    assert list(first.getdata()) != list(second.getdata())
+def test_scale_changes_the_character_frame():
+    """Punch-in: aynı t, farklı scale → kare birebir aynı olmamalı."""
+
+    normal = _character_frame("aden", t=0.7, scale=1.0)
+    punched = _character_frame("aden", t=0.7, scale=1.06)
+    assert normal.tobytes() != punched.tobytes()
+
+
+def test_scale_one_keeps_the_old_drawing():
+    """Regresyon: scale=1.0 doğrudan eski çizim yolunu kullanmalı."""
+
+    from PIL import Image, ImageDraw
+
+    from ahos import studio_2d
+
+    direct = Image.new("RGB", (studio_2d.WIDTH, studio_2d.HEIGHT), (255, 255, 255))
+    studio_2d._draw_character(ImageDraw.Draw(direct), "aden", 640, 700, t=0.7,
+                              talking=True, gesture=0.6, mouth=0.5)
+    wrapped = _character_frame("aden", t=0.7, scale=1.0)
+    assert direct.tobytes() == wrapped.tobytes()
+
+
+def test_shake_offsets_peak_frames_deterministically():
+    """Shake: ardışık peak karelerinde en az 2 px'lik x farkı üretmeli."""
+
+    from ahos.studio_2d import _shake_offset
+
+    envelope = [0.0, 0.95, 0.95, 0.2, 0.0]
+    assert abs(_shake_offset(envelope, 1)) >= 2
+    assert abs(_shake_offset(envelope, 2)) >= 2
+    assert _shake_offset(envelope, 1) != _shake_offset(envelope, 2)
+    assert _shake_offset(envelope, 3) == 0
+    assert _shake_offset([], 1) == 0
 

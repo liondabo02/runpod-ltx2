@@ -143,8 +143,8 @@ OUTLINE = (26, 26, 31)
 OUTLINE_WIDTH = 4
 
 
-def _character(draw: ImageDraw.ImageDraw, name: str, x: int, base: int, *, t: float,
-               talking: bool, gesture: float, mouth: float | None = None) -> None:
+def _draw_character(draw: ImageDraw.ImageDraw, name: str, x: int, base: int, *, t: float,
+                    talking: bool, gesture: float, mouth: float | None = None) -> None:
     """CN tarzı karakter: kalın dış kontur, iri gözler, belirgin siluet."""
 
     colors = PALETTE.get(name, PALETTE["aden"])
@@ -245,6 +245,61 @@ def _character(draw: ImageDraw.ImageDraw, name: str, x: int, base: int, *, t: fl
         cheek = x + side * 40
         draw.ellipse([cheek - 11, top + 78, cheek + 11, top + 96],
                      fill=_shade((240, 156, 146), 1.0))
+
+
+def _character(draw: ImageDraw.ImageDraw, name: str, x: int, base: int, *, t: float,
+               talking: bool, gesture: float, mouth: float | None = None,
+               scale: float = 1.0) -> None:
+    """Karakteri çiz; scale != 1 ise tüm gövdeyi (x, base) etrafında ölçekle.
+
+    Ölçekleme, çizim koordinatlarını tek tek değiştirmek yerine karakteri
+    saydam bir katmana çizip çapa noktası etrafında yeniden boyutlandırır.
+    Böylece scale=1.0 birebir eski davranışı korur; tüm yarıçaplar, uzuvlar,
+    yüz ve kontur kalınlıkları aynı oranda ölçeklenir.
+    """
+
+    if abs(float(scale) - 1.0) < 1e-9:
+        _draw_character(draw, name, x, base, t=t, talking=talking,
+                        gesture=gesture, mouth=mouth)
+        return
+
+    if scale <= 0:
+        raise ValueError("scale must be > 0")
+
+    target = draw._image
+    overlay = Image.new("RGBA", target.size, (0, 0, 0, 0))
+    overlay_draw = ImageDraw.Draw(overlay)
+    _draw_character(overlay_draw, name, x, base, t=t, talking=talking,
+                    gesture=gesture, mouth=mouth)
+
+    pad_x, pad_y = 220, 360
+    left = max(0, x - pad_x)
+    top_ = max(0, base - pad_y)
+    right = min(target.width, x + pad_x)
+    bottom = min(target.height, base + 40)
+    region = overlay.crop((left, top_, right, bottom))
+    resized = region.resize(
+        (max(1, int(round(region.width * scale))),
+         max(1, int(round(region.height * scale)))),
+        Image.Resampling.LANCZOS,
+    )
+    dest_x = int(round(x - (x - left) * scale))
+    dest_y = int(round(base - (base - top_) * scale))
+    target.paste(resized, (dest_x, dest_y), resized)
+
+
+def _shake_offset(envelope: list[float] | None, frame_no: int) -> int:
+    """Ses zirvelerinde deterministik ±3 px shake; sessizlikte 0."""
+
+    if not envelope or frame_no < 0 or frame_no >= len(envelope):
+        return 0
+    peak = max(envelope)
+    if peak <= 0:
+        return 0
+    if envelope[frame_no] <= 0.8 * peak:
+        return 0
+    return 3 if (frame_no // 2) % 2 == 0 else -3
+
 
 
 def episode_timeline(episode: Episode) -> list[dict]:
@@ -363,6 +418,8 @@ def render_episode(episode: Episode, out_dir: str | Path, *,
     for scene in episode.scenes:
         scene_seconds = scene.duration()
         per_frame = 1.0 / FPS
+        scene_frames = max(1, int(round(scene_seconds * FPS)))
+        scene_frame = 0
         t = 0.0
         # sahne içi konuşma zaman çizelgesi
         schedule: list[tuple[float, float, str, str]] = []
@@ -381,14 +438,19 @@ def render_episode(episode: Episode, out_dir: str | Path, *,
             speaker = current[2] if current else ""
             caption = current[3] if current else ""
 
+            # Punch-in: çekim boyunca 1.00 -> 1.06; kare bazlı deterministik.
+            progress = min(1.0, max(0.0, scene_frame / max(1, scene_frames - 1)))
+            scale = 1.0 + 0.06 * progress
+            shake_x = _shake_offset(envelope, frame_no)
+
             for position, name in enumerate(scene.characters[:3]):
-                x = 380 + position * 320
+                x = 380 + position * 320 + shake_x
                 gesture = math.sin(t * 1.7) if speaker == name else 0.0
                 lip = None
                 if envelope is not None and speaker == name and frame_no < len(envelope):
                     lip = envelope[frame_no]
                 _character(draw, name, x, 560, t=t, talking=speaker == name,
-                           gesture=max(0.0, gesture), mouth=lip)
+                           gesture=max(0.0, gesture), mouth=lip, scale=scale)
 
             draw.text((40, 30), episode.title, font=_font(34), fill=(255, 255, 255))
             draw.text((40, 80), f"{scene.setting}", font=_font(24), fill=(235, 235, 235))
@@ -397,6 +459,7 @@ def render_episode(episode: Episode, out_dir: str | Path, *,
                 draw.rectangle([0, 0, WIDTH, HEIGHT], fill=(255, 255, 255))
             emit(image)
             frame_no += 1
+            scene_frame += 1
             t += per_frame
 
         for start, end, _speaker, text in schedule:
