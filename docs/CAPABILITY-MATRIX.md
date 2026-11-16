@@ -15,7 +15,7 @@ disk boş = 35 GB     GPU (nvidia-smi) = YOK
 |---|---|---|---|---|---|---|---|
 | 3D model + rig + render | **Blender 4.5.16** | blender.org | 4.5 LTS · GPL-3.0 (OSI, ticari kullanım açık) | CPU yeterli; GPU opsiyonel | Ücretsiz, anahtar yok | Kurulu dizin: `C:\\actions-runner\\_work\\blender-4.5.16-windows-x64`; geri alma = dizini kullanmamak | **INSTALL (mevcut, PATH'e eklenmeli)** |
 | 2D iskelet rig + animasyon | Godot 4.x | godotengine.org | 4.x · MIT (OSI) | CPU | Ücretsiz | ~120 MB indirme; geri alma = dizin sil | **EVALUATE** (indirme onayı) |
-| Lip-sync (viseme) | Rhubarb Lip Sync | github.com/DanielSWolf/rhubarb-lip-sync | MIT olduğu **doğrulanmalı** (resmî LICENSE) | CPU | Ücretsiz | ~10 MB; geri alma = sil | **EVALUATE (lisans doğrulanacak)** |
+| Lip-sync (viseme) | Rhubarb Lip Sync | github.com/DanielSWolf/rhubarb-lip-sync | v1.14.0 · **MIT doğrulandı** (resmî LICENSE) | CPU | Ücretsiz | ~87 MB Windows zip; kuruldu: `C:\actions-runner\_work\tools\rhubarb`; geri alma = sil | **INSTALL + VERIFIED** (10 cue gerçek WAV testi) |
 | Fonem/forced alignment | Whisper (openai/whisper) | github.com/openai/whisper | MIT (kod); **model ağırlıkları ayrı lisans** | CPU (yavaş) / GPU | Ücretsiz | small ≈ 460 MB, medium ≈ 1.5 GB → **500 MB kuralı** | **BLOCKED_SIZE** (onay gerekir; small sınırda) |
 | TR TTS (kadın/erkek) | edge-tts | pypi | MIT (kod) · Microsoft servis ToS | CPU | Ücretsiz, anahtar yok | Kurulu (`edge_tts=VAR`) | **INSTALL (mevcut)** |
 | TR TTS (yerel, çocuk sesi) | Piper | github.com/rhasspy/piper | Kod MIT; **ses modelleri ayrı lisans** | CPU | Ücretsiz | Model ~60-100 MB/ses; geri alma = model sil | **EVALUATE** (model lisansı ses bazında doğrulanacak) |
@@ -31,7 +31,15 @@ disk boş = 35 GB     GPU (nvidia-smi) = YOK
 - 500 MB üzeri indirme kuralı: Whisper medium+, LTX/Wan modelleri → **onay istenmeden indirilmeyecek**.
 - Ticari kullanım: Blender GPL ve Godot MIT temiz; **edge-tts Microsoft servis ToS** ve **Piper ses modelleri** ayrıca doğrulanmalı (BLOCKED_LICENSE riski burada).
 
-## Faz 2 için önerilen ilk kurulum (onay bekliyor)
-1. **Blender’ı PATH’e ekle** (indirme yok, kurulu) → rig/animasyon doğrulaması: `blender --version` + tek kare render.
-2. **Piper TR ses modeli** (~60-100 MB) → lisansı ses bazında kontrol edilip kurulacak.
-3. **Rhubarb** (~10 MB) → LICENSE dosyası okunup MIT ise kurulacak.
+## Faz 2 gerçekleşen (2026-11-16)
+
+- **Blender 4.5.16**: `tools\blender.cmd` shim; `BLENDER_SHIM_OK`, exit 0.
+- **Rhubarb 1.14.0**: MIT lisansı doğrulandı, kuruldu, gerçek Türkçe WAV'dan
+  **10 mouthCue** üretti (3.55 sn). Adaptör: `ahos_core/ahos/lipsync.py`;
+  test: 5 passed.
+- Ayrıntı ve SHA'lar: `docs/INSTALL-LOG.md`.
+
+## Faz 2 için kalan (onay/karar)
+1. **Godot 4** (~120 MB, MIT) → 2D iskelet rig için mi Blender mı kararı.
+2. **Piper TR** → ses modeli lisansı ses bazında doğrulanmadan indirilmez.
+3. **GPU/LTX/Wan** → GPU yok; `BLOCKED_GPU`.
