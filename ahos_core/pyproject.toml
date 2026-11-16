@@ -33,6 +33,7 @@ ahos-company = "ahos.company_foundry:main"
 ahos-idea = "ahos.ideas:main"
 ahos-metrics = "ahos.failure_analytics:main"
 ahos-office = "ahos.office_server:main"
+ahos-skills = "ahos.studio_skills:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
