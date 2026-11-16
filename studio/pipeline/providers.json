@@ -2,6 +2,17 @@
   "schema": "ahos.providers.v1",
   "providers": [
     {
+      "provider_id": "pollinations-free",
+      "task_types": ["image.generate"],
+      "adapter": "pollinations",
+      "languages": ["tr", "en", "de", "fr", "es", "ar", "ru", "zh"],
+      "paid": false,
+      "external": true,
+      "commercial_default": true,
+      "priority": 5,
+      "model_ref": "config://pollinations/flux"
+    },
+    {
       "provider_id": "local-comfy",
       "task_types": ["video.generate", "image.generate"],
       "adapter": "comfyui_local",
