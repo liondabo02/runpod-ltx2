@@ -50,3 +50,10 @@ Test: `python -m pytest tests/test_lipsync.py -q` → **5 passed**.
 - Yeni harcama: **0 EUR**
 - API anahtarı koda/ rapora yazılmadı; edge-tts geçici ses olarak etiketli.
 - Kalite eşikleri düşürülmedi; viseme yoksa adaptör hata verir, sahte cue üretmez.
+
+## Godot 4.3.stable.official.77dcf97d8 · 2026-11-21T10:17:31
+komut : C:\actions-runner\_work\tools\godot\Godot_v4.3-stable_win64.exe --headless --version
+cikti  : 4.3.stable.official.77dcf97d8
+lisans : MIT (godotengine.org/license)
+konum : C:\actions-runner\_work\tools\godot\Godot_v4.3-stable_win64.exe
+wrapper: tools\godot.cmd
