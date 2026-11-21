@@ -1,11 +1,12 @@
 # Aden — 5 saniyelik yerel klip
 
 - Video: `aden_idle_5s.mp4` — 768×512, 24 fps, 5.000 sn, 120 kare
+- Sesli sürüm: `aden_idle_5s_voiced.mp4` — aynı video + geçici Türkçe ses + Rhubarb viseme
 - Üretim: Blender 4.5.16 Workbench, Aden rig (`idle_wave` döngüsü)
-- Ses: yok (ses/lip-sync ayrı aşama)
+- Ses: edge-tts geçici yetişkin ses; **final karakter sesi değil**
 - Kimlik: **PENDING_IDENTITY_REVIEW** (onaylı final değil)
-- QA: `qa.json` — tüm kontroller PASS
-- Önizleme: `preview.png`
+- QA: `qa.json` ve `qa_voiced.json` — tüm kontroller PASS
+- Önizleme: `preview.png` / `preview_voiced.png`
 
 ## Yeniden üretim
 

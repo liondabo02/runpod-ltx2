@@ -1,0 +1,73 @@
+{
+  "schema": "ahos.lipsync.contract.v1",
+  "character_id": "aden",
+  "identity_status": "PENDING_IDENTITY_REVIEW",
+  "voice_status": "TEMPORARY_ADULT_EDGE_TTS / NOT FINAL",
+  "audio": {
+    "path": "aden-line.wav",
+    "bytes": 156720,
+    "sha256": "d3a48f868882c01b5345c211732dda94d848d8b9140460ada392afaa1d7ca591"
+  },
+  "visemes": {
+    "path": "aden-line.json",
+    "source": "rhubarb-lip-sync 1.14.0",
+    "duration": 3.55,
+    "cue_count": 10,
+    "cues": [
+      {
+        "start": 0.0,
+        "end": 0.2,
+        "value": "X"
+      },
+      {
+        "start": 0.2,
+        "end": 0.47,
+        "value": "B"
+      },
+      {
+        "start": 0.47,
+        "end": 0.59,
+        "value": "A"
+      },
+      {
+        "start": 0.59,
+        "end": 0.76,
+        "value": "C"
+      },
+      {
+        "start": 0.76,
+        "end": 0.97,
+        "value": "B"
+      },
+      {
+        "start": 0.97,
+        "end": 1.94,
+        "value": "X"
+      },
+      {
+        "start": 1.94,
+        "end": 2.22,
+        "value": "B"
+      },
+      {
+        "start": 2.22,
+        "end": 2.3,
+        "value": "A"
+      },
+      {
+        "start": 2.3,
+        "end": 2.63,
+        "value": "B"
+      },
+      {
+        "start": 2.63,
+        "end": 3.55,
+        "value": "X"
+      }
+    ]
+  },
+  "license": {
+    "rhubarb": "MIT",
+    "audio": "temporary test line; not for publication"
+  }
+}

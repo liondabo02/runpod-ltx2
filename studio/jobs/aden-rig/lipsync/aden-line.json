@@ -1,0 +1,18 @@
+{
+  "metadata": {
+    "soundFile": "C:\\actions-runner\\_work\\tools\\lipsync-test.wav",
+    "duration": 3.55
+  },
+  "mouthCues": [
+    { "start": 0.00, "end": 0.20, "value": "X" },
+    { "start": 0.20, "end": 0.47, "value": "B" },
+    { "start": 0.47, "end": 0.59, "value": "A" },
+    { "start": 0.59, "end": 0.76, "value": "C" },
+    { "start": 0.76, "end": 0.97, "value": "B" },
+    { "start": 0.97, "end": 1.94, "value": "X" },
+    { "start": 1.94, "end": 2.22, "value": "B" },
+    { "start": 2.22, "end": 2.30, "value": "A" },
+    { "start": 2.30, "end": 2.63, "value": "B" },
+    { "start": 2.63, "end": 3.55, "value": "X" }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "schema": "ahos.voiced-clip.qa.v1",
+  "video": "C:\\actions-runner\\_work\\AHOS-work-s1\\studio\\jobs\\aden-clip\\aden_idle_5s_voiced.mp4",
+  "duration": 5.047,
+  "video_stream": {
+    "codec_type": "video",
+    "width": 768,
+    "height": 512,
+    "r_frame_rate": "24/1",
+    "nb_frames": "120",
+    "tags": {}
+  },
+  "audio_stream": {
+    "codec_type": "audio",
+    "sample_rate": "22050",
+    "channels": 1,
+    "r_frame_rate": "0/0",
+    "nb_frames": "109",
+    "tags": {}
+  },
+  "audio_rms": 2184.84,
+  "mouth_delta": 1.823,
+  "identity_status": "PENDING_IDENTITY_REVIEW",
+  "voice_status": "TEMPORARY_ADULT_EDGE_TTS / NOT FINAL",
+  "checks": {
+    "video_768x512": true,
+    "fps_24": true,
+    "frames_120": true,
+    "audio_stream": true,
+    "audio_mono_22k": true,
+    "duration_5s": true,
+    "audio_not_silent": true,
+    "viseme_mouth_moves": true,
+    "file_nonempty": true
+  },
+  "passed": true
+}
