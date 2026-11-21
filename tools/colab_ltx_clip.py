@@ -48,15 +48,19 @@ def try_ltx(out: Path) -> str:
     import torch
 
     pipe = LTXPipeline.from_pretrained("Lightricks/LTX-Video", torch_dtype=torch.float16)
-    pipe.to("cuda")
-    frames = pipe(
+    # T4 16 GB: tüm modeli GPU'da tutmak yerine katmanları gerektiğinde taşı.
+    pipe.enable_model_cpu_offload()
+    pipe.enable_vae_slicing()
+    # LTX-Video çerçeve sayısı 8n+1 olmalı; 5 sn @ 24 fps = 121 kare.
+    frames = ((SECONDS * 24 - 1) // 8) * 8 + 1
+    result = pipe(
         prompt=PROMPT, width=WIDTH, height=HEIGHT,
-        num_frames=SECONDS * 24, num_inference_steps=30,
+        num_frames=frames, num_inference_steps=30,
         generator=torch.Generator("cuda").manual_seed(SEED),
     ).frames[0]
     from diffusers.utils import export_to_video
 
-    export_to_video(frames, str(out), fps=24)
+    export_to_video(result, str(out), fps=24)
     return "ltx"
 
 
@@ -74,10 +78,16 @@ def try_still_clip(out: Path) -> str:
                  generator=torch.Generator("cuda").manual_seed(SEED)).images[0]
     still = out.with_suffix(".png")
     image.save(still)
+    zoompan = (
+        f"scale={WIDTH}:{HEIGHT},"
+        "zoompan=z='min(zoom+0.0008,1.08)':d=1:"
+        "x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
+        f"s={WIDTH}x{HEIGHT}:fps=24"
+    )
     subprocess.run(
         ["ffmpeg", "-y", "-loglevel", "error", "-loop", "1", "-i", str(still),
-         "-t", str(SECONDS), "-vf", f"scale={WIDTH}:{HEIGHT}",
-         "-c:v", "libx264", "-pix_fmt", "yuv420p", str(out)], check=True)
+         "-t", str(SECONDS), "-vf", zoompan,
+         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "24", str(out)], check=True)
     return "sdxl+zoompan"
 
 
