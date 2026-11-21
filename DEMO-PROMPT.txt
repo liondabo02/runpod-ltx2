@@ -1,0 +1,16 @@
+Bu repo AHOS Studio: konu → senaryo → karakter rig → render → ses → Rhubarb viseme → QA hattı.
+
+Önce şu dosyaları oku:
+- PROJECT-DEMO.md
+- docs/CAPABILITY-MATRIX.md
+- docs/INSTALL-LOG.md
+- studio/jobs/aden-clip/qa_voiced.json
+
+Sonra kanıta dayalı inceleme yap:
+1. Gerçekten çalışan parçalar ve sadece iddia olanlar.
+2. 5 sn klipteki en zayıf halka.
+3. 8 dakikalık bölüme çıkmak için sıradaki 3 teknik adım.
+4. Eksik testler/kanıtlar.
+5. Riskler: kimlik, ses lisansı, GPU, gizli maliyet.
+
+Kod değiştirme; önce rapor yaz. Her iddiaya dosya/komut kanıtı ekle.
