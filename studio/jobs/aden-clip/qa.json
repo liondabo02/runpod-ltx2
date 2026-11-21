@@ -1,0 +1,23 @@
+{
+  "schema": "ahos.local-clip.qa.v1",
+  "video": "C:\\actions-runner\\_work\\AHOS-work-s1\\studio\\jobs\\aden-clip\\aden_idle_5s.mp4",
+  "duration": 5.0,
+  "fps": "24/1",
+  "resolution": [
+    768,
+    512
+  ],
+  "frames": 120,
+  "bytes": 233827,
+  "identity_status": "PENDING_IDENTITY_REVIEW",
+  "audio": "silent (voice/lipsync ayrı aşama)",
+  "checks": {
+    "duration_5s": true,
+    "resolution_768x512": true,
+    "fps_24": true,
+    "frames_120": true,
+    "real_motion": true,
+    "file_nonempty": true
+  },
+  "passed": true
+}
