@@ -26,7 +26,7 @@ def check_tests():
     lines = [l for l in out.splitlines() if l.startswith(("FAIL:", "ERROR:"))]
     foreign = [l for l in lines if "_FailedTest" in l]  # başka daldan gelen, modülü burada olmayan testler
     real = [l for l in lines if "_FailedTest" not in l]
-    return (not real), ("gerçek hata: %s | yabancı import hatası: %d" % (real[:5], len(foreign)))
+    return (not real), ("gerçek hata: %s | yabancı import hatası: %d | son: %s" % (real[:5], len(foreign), (out[out.find(real[0]):][:900] if real else "")))
 
 
 def main():
