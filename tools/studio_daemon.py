@@ -62,6 +62,8 @@ def run_job(fname, runner=None):
                        "--seconds", str(job.get("seconds", 480)), "--render-seconds", str(job.get("render_seconds", 12))]
                 if job.get("series_id"):
                     cmd += ["--series-id", job["series_id"]]
+                if job.get("script_file"):
+                    cmd += ["--script-file", job["script_file"]]
             logp = os.path.join(Q, base + ".log")
             limit = float(os.environ.get("AHOS_JOB_TIMEOUT_MIN", "45")) * 60
             t0 = time.time(); cancelled = False

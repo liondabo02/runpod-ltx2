@@ -21,6 +21,8 @@ import animatic_worker as aw  # noqa: E402
 import character_worker as cw  # noqa: E402
 import render_worker as rw  # noqa: E402
 import video_qa as vqa  # noqa: E402
+import series_memory as sm  # noqa: E402
+import script_fidelity as sf  # noqa: E402
 
 ROOT = os.path.dirname(HERE)
 
@@ -185,7 +187,7 @@ class StepLog(list):
 
 
 
-def run(command, series_id=None, seconds=480, base=None, render_seconds=12):
+def run(command, series_id=None, seconds=480, base=None, render_seconds=12, script_text=None):
     base = base or os.path.join(ROOT, "series")
     report = {"command": command, "steps": StepLog(), "series_id": None, "episode": None}
     # 1) Dizi var mı?
@@ -222,6 +224,13 @@ def run(command, series_id=None, seconds=480, base=None, render_seconds=12):
     if bible["continuity"]["running_facts"]:
         idea += "\nÖnceki bölümlerden süreklilik: " + " | ".join(bible["continuity"]["running_facts"][-5:])
 
+    sdir = os.path.join(base, sid)
+    ctx = sm.context_block(sdir)                      # dizi hafızası: önceki bölümlerin olguları
+    if ctx:
+        idea += "\n" + ctx
+    wr.set_source(script_text)                        # sahibin senaryosu varsa yazarlar metne sadık kalır
+    if script_text:
+        os.makedirs(out, exist_ok=True); open(os.path.join(out, "source_script.txt"), "w", encoding="utf-8").write(script_text)
     # 3) Yazarlar Odası
     try:
         sheet, hist = wr.run(bible, idea, seconds, out)
@@ -243,6 +252,19 @@ def run(command, series_id=None, seconds=480, base=None, render_seconds=12):
 
     # 4) Bağımsız doğrulama (kodla, üretici değil)
     if sheet:
+        try:
+            rec = sm.record_episode(sdir, eid, sheet)
+            drift = sm.lock_canon(sdir, bible)
+            led.add("memory", "DONE_DRAFT" if not drift else "NEEDS_REVISION",
+                    f"{eid} kaydedildi; kilit kayması: {len(drift)}", os.path.join(sdir, "memory.json"))
+            report["steps"].append({"worker": "series_memory", "status": "DONE_DRAFT" if not drift else "NEEDS_REVISION", "drift": drift})
+        except Exception as e:  # noqa: BLE001
+            led.add("memory", "BLOCKED", f"{type(e).__name__}: {str(e)[:200]}")
+        if script_text:
+            fid = sf.check(script_text, sheet["beats"])
+            write_json(os.path.join(out, "script_fidelity.json"), fid)
+            led.add("fidelity", fid["status"], f"replik kapsamı {fid['coverage']}", os.path.join(out, "script_fidelity.json"))
+            report["steps"].append({"worker": "script_fidelity", "status": fid["status"], "coverage": fid["coverage"]})
         errs, warns = validate(sheet, bible, seconds)
         qa = {"verdict": "PASS" if not errs else "NEEDS_REVISION", "errors": errs, "warnings": warns,
               "creative": "NOT_EVALUATED", "cost_eur": 0, "generated_at": now()}
@@ -334,8 +356,10 @@ def main():
     p.add_argument("--command", required=True); p.add_argument("--series-id")
     p.add_argument("--seconds", type=int, default=480)
     p.add_argument("--render-seconds", type=int, default=12, help="0=render yok, -1=tüm bölüm")
+    p.add_argument("--script-file", help="sahibin senaryo metni (sadık mod)")
     a = p.parse_args()
-    print(tell(run(a.command, a.series_id, a.seconds, render_seconds=a.render_seconds)))
+    txt = open(a.script_file, encoding="utf-8").read() if a.script_file else None
+    print(tell(run(a.command, a.series_id, a.seconds, render_seconds=a.render_seconds, script_text=txt)))
 
 
 if __name__ == "__main__":

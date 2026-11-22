@@ -142,7 +142,32 @@ def split_long(beats, t0, t1, max_len=9.5):
     return out
 
 
+SOURCE = {"text": None}   # sahibin senaryosu; doluysa yazarlar METNE SADIK kalır
+
+
+def set_source(text):
+    SOURCE["text"] = text or None
+
+
+FAITHFUL = ("SADAKAT MODU: Sahibin yazdığı senaryo KANUNDUR. Olayları, sırayı, mekânları, karakter adlarını ve repliklerini DEĞİŞTİRME, "
+            "yeni olay/karakter/replik UYDURMA, hiçbir olayı atlama. Görevin yalnız metni vuruşlara bölmek, kamerayı/eylemi görünür hâle getirmek "
+            "ve replikleri biçime çevirmektir. Metinde olmayan şeyi yalnız geçiş/hareket gerekiyorsa ekle.")
+
+
+def _source_slice(act_no, n_acts):
+    paras = [p for p in re.split(r"\n\s*\n", SOURCE["text"] or "") if p.strip()]
+    if not paras:
+        return ""
+    a = int(len(paras) * (act_no - 1) / n_acts); b = max(a + 1, int(round(len(paras) * act_no / n_acts)))
+    return "\n\n".join(paras[a:b])
+
+
 def write_outline(bible, idea, seconds):
+    if SOURCE["text"]:
+        n = max(1, round(seconds / ACT_SECONDS))
+        u = (f"Bible: {bible_summary(bible)}\nSAHİBİN SENARYOSU:\n{SOURCE['text'][:12000]}\nToplam {seconds} sn, {n} perde. Perdeleri senaryonun sırasına göre böl. "
+             f'JSON: {{"title":"","logline":"","acts":[{{"act":1,"summary":"","location_id":"","goal":"","obstacle":""}}]}}')
+        return llm_json(WRITER_SYS + " " + FAITHFUL + lessons.prompt_block("writer"), u, need=["acts"])
     n = max(1, round(seconds / ACT_SECONDS))
     u = (f"Bible: {bible_summary(bible)}\nFikir: {idea}\nToplam {seconds} sn, {n} perde. "
          f'JSON: {{"title":"","logline":"","acts":[{{"act":1,"summary":"","location_id":"","goal":"","obstacle":""}}]}}')
@@ -151,14 +176,16 @@ def write_outline(bible, idea, seconds):
 
 def write_act(bible, outline, act_no, t0, t1, notes=None, prev_tail=None):
     a = outline["acts"][act_no - 1]
+    src = _source_slice(act_no, len(outline["acts"])) if SOURCE["text"] else ""
     u = (f"Bible: {bible_summary(bible)}\nPerde {act_no}/{len(outline['acts'])}: {json.dumps(a, ensure_ascii=False)}\n"
+         f"{('BU PERDENİN SENARYO METNİ (sadık kal):' + chr(10) + src + chr(10)) if src else ''}"
          f"Zaman aralığı: {t0}-{t1} sn. TAM OLARAK {need_beats(t0, t1)} vuruş yaz (vuruş başına 6-9 sn), aralıksız ve kesintisiz; her vuruşta en az bir diyalog satırı olsun.\n"
          + (f"Önceki perde sonu: {prev_tail}\n" if prev_tail else "")
          + (f"Düzeltilecek eleştiriler: {json.dumps(notes, ensure_ascii=False)}\n" if notes else "")
          + 'JSON: {"beats":[{"t_start":0,"t_end":6,"scene_id":"","location":"<bible id>","light_time":"",'
            '"characters":["<bible id>"],"action":"","dialogue":"","emotion":{"valence":0,"arousal":0,"intensity":0},'
            '"camera":"","sound":"","safety_note":""}]}')
-    return llm_json(WRITER_SYS + lessons.prompt_block("writer"), u, need=["beats"])["beats"]
+    return llm_json(WRITER_SYS + (" " + FAITHFUL if SOURCE["text"] else "") + lessons.prompt_block("writer"), u, need=["beats"])["beats"]
 
 
 

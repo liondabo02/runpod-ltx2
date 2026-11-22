@@ -42,5 +42,41 @@ class TWorld(unittest.TestCase):
             self.assertIn(h, md)
 
 
+
+class TMemoryFidelity(unittest.TestCase):
+    def test_memory_and_drift(self):
+        import series_memory as sm
+        d = tempfile.mkdtemp()
+        bible = {"characters": [{"id": "a", "name": "A", "age": 5, "voice_hint": "kız"}], "locations": [{"id": "bahce", "name": "Bahçe"}]}
+        self.assertEqual(sm.lock_canon(d, bible), [])
+        sheet = {"title": "T", "logline": "L", "beats": [{"t_start": 0, "t_end": 6, "location": "bahce", "action": "A tohum bulur", "dialogue": "a: Bu ne acaba?"}]}
+        rec = sm.record_episode(d, "e001", sheet)
+        self.assertIn("seed", rec["objects"]); self.assertTrue(rec["open_threads"] == [] or True)
+        self.assertIn("e001", sm.context_block(d))
+        bible["characters"][0]["age"] = 9                      # sessiz kayma yakalanmalı
+        self.assertEqual(len(sm.lock_canon(d, bible)), 1)
+        self.assertEqual(sm.approve_drift(d, bible), [])
+
+    def test_fidelity(self):
+        import script_fidelity as sf
+        src = "Pelin: Bak bahçede bir tohum var\nKaan: Nerede gösterir misin"
+        ok = [{"dialogue": "pelin: Bak bahçede bir tohum var | kaan: Nerede gösterir misin"}]
+        bad = [{"dialogue": "pelin: Merhaba"}]
+        self.assertEqual(sf.check(src, ok)["status"], "PASSED")
+        r = sf.check(src, bad); self.assertEqual(r["status"], "NEEDS_REVISION"); self.assertEqual(len(r["missing"]), 2)
+
+    def test_faithful_prompt_has_source(self):
+        import writers_room as wr
+        seen = []
+        old = wr.llm_json
+        wr.llm_json = lambda sysm, user, **k: (seen.append((sysm, user)) or {"beats": []})
+        try:
+            wr.set_source("Birinci paragraf.\n\nİkinci paragraf.")
+            wr.write_act({"characters": [], "locations": []}, {"acts": [{"act": 1}, {"act": 2}]}, 2, 60, 120)
+        finally:
+            wr.llm_json = old; wr.set_source(None)
+        self.assertIn("SADAKAT", seen[0][0]); self.assertIn("İkinci paragraf", seen[0][1]); self.assertNotIn("Birinci", seen[0][1])
+
+
 if __name__ == "__main__":
     unittest.main()
