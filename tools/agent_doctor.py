@@ -36,7 +36,7 @@ def main():
         to.log(m, "friction", "modül yüklenemedi: " + e[:120], "import hatasını gider")
     if not ok:
         to.log("tests", "friction", "birim testleri başarısız: " + tail[-120:], "başarısız testi incele")
-    rep = {"status": "PASSED" if not bad and ok else "FAILED", "import_errors": bad, "tests_ok": ok}
+    rep = {"status": "PASSED" if not bad and ok else "FAILED", "import_errors": bad, "tests_ok": ok, "tests_detail": tail}
     os.makedirs(os.path.join(ROOT, "studio", "reports"), exist_ok=True)
     json.dump(rep, open(os.path.join(ROOT, "studio", "reports", "agent_doctor.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     print(json.dumps(rep, ensure_ascii=False, indent=1)); return 0 if rep["status"] == "PASSED" else 1

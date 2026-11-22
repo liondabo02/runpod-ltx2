@@ -11,7 +11,7 @@ class T(unittest.TestCase):
         d = tempfile.mkdtemp(); out = os.path.join(d, "a.mp4")
         cmd = [FF, "-y", "-loglevel", "error", "-f", "lavfi", "-i", f"{vsrc}size=1280x720:rate=12:duration={secs}"]
         cmd += (["-f", "lavfi", "-i", f"sine=frequency=440:duration={secs}"] if audio else [])
-        cmd += ["-pix_fmt", "yuv420p", out]
+        cmd += ["-pix_fmt", "yuv420p", "-strict", "-2", out]
         subprocess.run(cmd, check=True); return out
 
     def test_good_video_passes(self):
