@@ -52,11 +52,14 @@ class TLong(unittest.TestCase):
 class TResume(unittest.TestCase):
     def test_acts_resume_after_failure(self):
         import writers_room as w, tempfile
+        orig_act, orig_say = w.write_act, w.say
+        self.addCleanup(lambda: (setattr(w, "write_act", orig_act), setattr(w, "say", orig_say)))
         w.say = lambda *_: None
-        calls = []
+        calls, state = [], {"failed": False}
         def fake_act(bible, outline, act_no, t0, t1, notes=None, tail=None):
             calls.append(act_no)
-            if act_no == 3 and calls.count(3) == 1:
+            if act_no == 3 and not state["failed"]:
+                state["failed"] = True
                 raise RuntimeError("LLM boş")
             return [{"t_start": 0, "t_end": 7, "action": "a%d_%d" % (act_no, k), "dialogue": "", "location": "l", "characters": []} for k in range(need(t0, t1))]
         need = w.need_beats

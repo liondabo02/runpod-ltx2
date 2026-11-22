@@ -29,6 +29,15 @@ class T(unittest.TestCase):
         json.dump({"beats": beats}, open(os.path.join(d, "beat_sheet.json"), "w"))
         m = aw.run(d); self.assertEqual(m["voiced_lines"], 0); self.assertEqual(m["status"], "PASSED")
 
+    def test_relative_path(self):
+        d = tempfile.mkdtemp(); old = os.getcwd(); os.chdir(os.path.dirname(d))
+        try:
+            beats = [{"t_start": 0, "t_end": 6, "location": "x", "characters": [], "action": "a", "camera": "c", "sound": "s"}]
+            json.dump({"beats": beats}, open(os.path.join(d, "beat_sheet.json"), "w"))
+            m = aw.run(os.path.basename(d)); self.assertEqual(m["status"], "PASSED")
+        finally:
+            os.chdir(old)
+
 
 if __name__ == "__main__":
     unittest.main()

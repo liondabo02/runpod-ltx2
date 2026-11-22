@@ -17,7 +17,7 @@ def main():
         st = "ses: %s" % v.get("tts", "edge-tts")
         if v.get("native_review_required"): st += " · ANADİLİ İNCELEMESİ GEREKLİ"
         L.append("%s. %s (%s) — %s" % (v.get("order", "?"), v.get("name"), code, st))
-    L += ["", "## Dürüst notlar",
+    L += ["", "## Dil test durumu (uçtan uca denenen)", "- Denenen: en (121 satır geçti), kmr (yalnız çeviri + örnek ses). Diğer diller henüz denenmedi: desteği 'çalışıyor' diye raporlanmaz.", "", "## Dürüst notlar",
           "- Kurmancî: ücretsiz LLM çevirisi güvenilmez; ses modeli (Meta MMS) CC-BY-NC, ticari yayın için hukuki kontrol gerekir.",
           "- Teknik pipeline testi ≠ profesyonel kalite: yaratıcı kalite henüz ölçülmüyor (NOT_EVALUATED).",
           "- Sahip onayı bekleyen: yaratıcı onay, lisans/ticari kullanım, Kurmancî inceleme.", ""]

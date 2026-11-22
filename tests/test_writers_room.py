@@ -105,6 +105,8 @@ class T(unittest.TestCase):
         b = [{"action": "Pelin ve Tosan koşar", "dialogue": "Tosan: Hadi! tosan küçük"}]
         n = wr.fix_names(b, BIBLE2)
         self.assertEqual(b[0]["action"], "Pelin ve Tosun koşar"); self.assertEqual(b[0]["dialogue"], "Tosun: Hadi! tosan küçük"); self.assertGreaterEqual(n, 2)
+        g = [{"action": "Gelin buraya! Pelin geldi", "dialogue": ""}]; wr.fix_names(g, BIBLE2)
+        self.assertEqual(g[0]["action"], "Gelin buraya! Pelin geldi")   # gerçek kelime bozulmamalı
         bb = good_beats(0, 480); bb[-1]["characters"] = []
         errs, _ = validate({"beats": bb}, BIBLE, 480)
         self.assertFalse(any("characters" in e for e in errs))

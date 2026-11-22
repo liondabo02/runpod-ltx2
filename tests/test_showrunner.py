@@ -49,13 +49,20 @@ class T(unittest.TestCase):
             self.assertIn('BLOCKED', [s['status'] for s in r['steps']])
 
     def test_bad_bible_fails_closed(self):
-        bad = dict(BIBLE_RAW); bad["characters"] = [{"id": "A B"}]
+        bad = dict(BIBLE_RAW); bad["characters"] = []
         class Bad(Fake):
             def __call__(s, system, user, temperature=0.7): return json.dumps(bad)
         wr.llm_call = Bad(); wr.time.sleep = lambda *_: None
         with tempfile.TemporaryDirectory() as d:
             r = sr.run("x", None, 480, d)
             self.assertEqual(r["steps"][0]["status"], "FAILED")
+
+    def test_normalize_bible_fixes_ids(self):
+        raw = sr.normalize_bible({"characters": [{"id": "bulut_kız_id", "name": "B", "relationships": {"bulut_kız_id": "x"}}, {"id": "Kaan ID"}],
+                                  "locations": [{"id": "bulut_bahçe_id"}]})
+        self.assertEqual([c["id"] for c in raw["characters"]], ["bulut_kiz", "kaan"])
+        self.assertEqual(raw["locations"][0]["id"], "bulut_bahce")
+        self.assertEqual(sr.check_bible(raw), [])
 
     def test_slug(self):
         self.assertEqual(sr.slug("Bulut Bahçesi!"), "bulut-bahcesi")
