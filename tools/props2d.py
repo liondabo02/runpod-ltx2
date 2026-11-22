@@ -4,7 +4,8 @@ import math, re
 INK = (38, 30, 42)
 RULES = [("seed", r"tohum|çekirdek|ışık veren"), ("stone", r"\btaş|\btas\b|kaya"), ("hat", r"şapka|hasır"),
          ("flower", r"çiçek|tomurcuk|filiz|fidan"), ("bottle", r"şişe|kavanoz"), ("drops", r"damla|yağmur|su\b"),
-         ("leaves", r"yaprak|rüzgâr|rüzgar"), ("shovel", r"kürek|küreği")]
+         ("leaves", r"yaprak|rüzgâr|rüzgar"), ("shovel", r"kürek|küreği"),
+         ("mic", r"mikrofon|stand-?up|sahne"), ("balloon", r"balon"), ("lantern", r"fener|lamba"), ("kite", r"uçurtma|ucurtma")]
 RX = [(k, re.compile(p, re.I)) for k, p in RULES]
 
 
@@ -60,6 +61,23 @@ def draw(cv, cam, kind, wx, wy, t, k=0):
             lx = ((t * 0.9 + i * 0.7) % 6.0) - 3.0 + wx
             ly = 1.0 + 0.5 * math.sin(t * 2 + i) + i * 0.12
             cv.ellipse(cam.x(lx), cam.y(ly), 0.09 * s, 0.045 * s, (110 + i * 12, 190, 90), INK, ow * 0.5)
+    elif kind == "mic":
+        cv.line([(x, y - 0.95 * s), (x, y + 0.05 * s)], (90, 90, 100), max(3, int(ow * 1.6)))
+        cv.ellipse(x, y + 0.08 * s, 0.22 * s, 0.05 * s, (70, 70, 80), INK, ow)
+        cv.ellipse(x, y - 1.0 * s, 0.09 * s, 0.11 * s, (50, 50, 58), INK, ow)
+    elif kind == "balloon":
+        sway = math.sin(t * 2 + k) * 0.06 * s
+        cv.line([(x, y), (x + sway, y - 0.5 * s)], INK, max(2, int(ow * 0.8)))
+        cv.ellipse(x + sway, y - 0.8 * s, 0.24 * s, 0.3 * s, (235, 80, 100), INK, ow)
+        cv.ellipse(x + sway - 0.08 * s, y - 0.9 * s, 0.05 * s, 0.07 * s, (255, 200, 205), None, 0)
+    elif kind == "lantern":
+        g = 0.5 + 0.5 * math.sin(t * 5 + k)
+        cv.ellipse(x, y, (0.3 + 0.05 * g) * s, (0.3 + 0.05 * g) * s, (255, 240, 170), None, 0)
+        cv.poly([(x - 0.1 * s, y - 0.14 * s), (x + 0.1 * s, y - 0.14 * s), (x + 0.12 * s, y + 0.14 * s), (x - 0.12 * s, y + 0.14 * s)], (255, 205, 80), INK, ow)
+    elif kind == "kite":
+        fl = math.sin(t * 3 + k) * 0.08 * s
+        cv.line([(x, y), (x + fl, y - 0.9 * s)], INK, max(2, int(ow * 0.7)))
+        cv.poly([(x + fl, y - 1.5 * s), (x + fl + 0.28 * s, y - 1.2 * s), (x + fl, y - 0.85 * s), (x + fl - 0.28 * s, y - 1.2 * s)], (90, 170, 235), INK, ow)
     elif kind == "shovel":
         cv.line([(x, y - 0.6 * s), (x, y)], (150, 100, 60), max(3, int(ow * 2)))
         cv.poly([(x - 0.1 * s, y), (x + 0.1 * s, y), (x + 0.07 * s, y + 0.22 * s), (x - 0.07 * s, y + 0.22 * s)], (190, 190, 200), INK, ow)
@@ -73,7 +91,8 @@ def place(kind, xs, heights, t, lt, dur):
     return {"seed": (cx + 0.15 * math.sin(t * 1.3), h * (0.62 + 0.12 * math.sin(t * 2.0))),
             "stone": (cx + 0.9, -0.05), "hat": (cx + 1.6 * (ph - 0.5) * 2, h * 1.25 + 0.15 * math.sin(t * 5)),
             "flower": (cx - 0.7, 0.0), "bottle": (cx + 0.35, h * 0.35), "drops": (cx, 0.0),
-            "leaves": (cx, 0.0), "shovel": (cx - 0.5, 0.1)}.get(kind, (cx, h * 0.5))
+            "leaves": (cx, 0.0), "shovel": (cx - 0.5, 0.1),
+            "mic": (cx - 0.9, 0.0), "balloon": (cx + 0.7, h * 0.75), "lantern": (cx + 0.5, h * 0.55), "kite": (cx - 0.6, h * 0.9)}.get(kind, (cx, h * 0.5))
 
 
 def fx_kinds(kinds):

@@ -69,9 +69,67 @@ def bush(cv, cam, wx, wy, r, ow):
     cv.ellipse(x - 0.2 * r * s, y - 0.45 * r * s, r * s * 0.5, r * s * 0.32, (105, 190, 105), None, 0)
 
 
+def _stage(cv, cam, t, ow):
+    """Stand-up/tiyatro sahnesi: tuğla duvar, spot ışığı, perde, tahta zemin."""
+    gradient(cv, (70, 30, 40), (110, 50, 55))
+    s = cam.s; fy = cam.y(1.3)
+    cx = cam.x(0.0)
+    for i in range(7):                             # spot ışığı (alfa yerine açılan halkalar)
+        k = i / 6.0
+        cv.ellipse(cx, fy - 1.1 * s, (1.7 - 1.2 * k) * s, (1.3 - 0.9 * k) * s, (int(105 + 55 * k), int(55 + 45 * k), int(58 + 30 * k)), None, 0)
+    for r in range(int(H // (0.3 * s)) + 2):      # tuğlalar
+        y = r * 0.3 * s
+        cv.line([(0, y), (W, y)], (60, 26, 34), 2)
+        off = 0.0 if r % 2 else 0.45 * s
+        x = off
+        while x < W:
+            cv.line([(x, y), (x, y + 0.3 * s)], (60, 26, 34), 2); x += 0.9 * s
+    gradient(cv, (120, 78, 48), (86, 54, 34), fy, H)   # tahta zemin
+    for i in range(-14, 16):
+        x = cam.x(i * 0.8)
+        cv.line([(x, fy), (x - 0.5 * s, H)], (64, 40, 26), 2)
+    cv.poly([(0, fy), (W, fy), (W, fy + 6), (0, fy + 6)], INK, None, 0)
+    for sg in (-1, 1):                             # kırmızı perdeler
+        x0 = W / 2 + sg * (W / 2 - 0.55 * s)
+        for j in range(5):
+            xa = x0 + sg * j * 0.2 * s
+            cv.poly([(xa, 0), (xa + sg * 0.2 * s, 0), (xa + sg * 0.2 * s, fy), (xa, fy)], (150 - j % 2 * 30, 25, 40), INK, ow * 0.6)
+    cv.ellipse(cam.x(-3.3), cam.y(3.0), 0.16 * s, 0.16 * s, (255, 225, 120), INK, ow)   # sahne lambaları
+    cv.ellipse(cam.x(3.3), cam.y(3.0), 0.16 * s, 0.16 * s, (255, 225, 120), INK, ow)
+
+
+def _village(cv, cam, t, ow):
+    """Köy/mahalle sokağı: gökyüzü, tepeler, renkli evler, çit, taş yol."""
+    gradient(cv, (120, 190, 245), (230, 245, 255))
+    s = cam.s
+    cv.ellipse(cam.x(-4, 0.1), cam.y(3.3), 0.7 * s, 0.7 * s, (255, 238, 150), None, 0)
+    hills(cv, cam, 1.45, 0.35, (130, 195, 120), 0.3, 3, t)
+    cols = [(230, 120, 100), (240, 200, 90), (120, 170, 220), (200, 140, 200), (140, 200, 150)]
+    for i in range(-6, 7):
+        wx = i * 1.5; hh = 0.65 + ((i * 7) % 3) * 0.15
+        x0, x1 = cam.x(wx, 0.6), cam.x(wx + 1.0, 0.6); yb = cam.y(0.62); yt = cam.y(0.62 + hh)
+        cv.poly([(x0, yb), (x0, yt), (x1, yt), (x1, yb)], cols[i % 5], INK, ow)
+        cv.poly([(x0 - 0.1 * s, yt), ((x0 + x1) / 2, yt - 0.32 * s), (x1 + 0.1 * s, yt)], (176, 82, 70), INK, ow)
+        wx0 = x0 + 0.25 * (x1 - x0)
+        cv.poly([(wx0, yt + 0.15 * s), (wx0 + 0.2 * s, yt + 0.15 * s), (wx0 + 0.2 * s, yt + 0.4 * s), (wx0, yt + 0.4 * s)], (255, 245, 190), INK, ow * 0.7)
+    fy = cam.y(0.6)
+    gradient(cv, (190, 165, 130), (150, 128, 98), fy, H)
+    for r in range(4):                             # kaldırım taşları
+        for c in range(-16, 17):
+            x = cam.x(c * 0.6 + (0.3 if r % 2 else 0)); y = fy + (0.2 + r * 0.45) * s
+            cv.ellipse(x, y, 0.26 * s, 0.1 * s, (165, 142, 112), None, 0)
+    for i in range(-12, 13):                       # çit
+        x = cam.x(i * 0.5)
+        cv.poly([(x, fy - 0.45 * s), (x + 0.12 * s, fy - 0.45 * s), (x + 0.12 * s, fy), (x, fy)], (225, 200, 160), INK, ow * 0.6)
+
+
 def scene_back(cv, kind, cam, t=0.0, seed=1):
     ow = max(1.6, 0.012 * cam.s)
     rnd = random.Random(seed)
+    if kind == "stage":
+        _stage(cv, cam, t, ow); return
+    if kind == "village":
+        _village(cv, cam, t, ow); return
     if kind == "garden":
         gradient(cv, (96, 176, 243), (205, 238, 255))
         cv.ellipse(cam.x(6.5, 0.1), cam.y(4.3), 0.55 * cam.s, 0.55 * cam.s, (255, 236, 130), None, 0)
@@ -167,7 +225,19 @@ def scene_back(cv, kind, cam, t=0.0, seed=1):
         cv.poly([(tvx + 0.1 * cam.s, tvy + 0.1 * cam.s), (tvx + 1.2 * cam.s, tvy + 0.1 * cam.s), (tvx + 1.2 * cam.s, tvy + 0.8 * cam.s), (tvx + 0.1 * cam.s, tvy + 0.8 * cam.s)], (150, 205, 240), None, 0)
 
 
+def birds(cv, cam, t):
+    """Uzakta uçan kuşlar (yalnız dış mekânlar; hareketli arka plan = canlılık)."""
+    for i in range(3):
+        bx = ((t * (0.35 + 0.1 * i) + i * 3.1) % 14.0) - 7.0
+        by = 3.4 + 0.3 * i + 0.12 * math.sin(t * 2 + i)
+        x, y, w = cam.x(bx, 0.3), cam.y(by), 0.16 * cam.s
+        fl = math.sin(t * 9 + i) * 0.5 * w
+        cv.line([(x - w, y + fl), (x, y), (x + w, y + fl)], INK, max(2, int(0.02 * cam.s)))
+
+
 def scene_front(cv, kind, cam, t=0.0):
+    if kind in ("garden", "path", "water", "village"):
+        birds(cv, cam, t)
     if kind in ("garden", "path", "water") and cam.z < 1.8:
         ow = max(1.6, 0.012 * cam.s)
         for wx, wy, r in ((-3.0, -0.95, 0.75), (3.1, -1.0, 0.7), (-4.8, -0.8, 0.5), (4.9, -0.8, 0.5)):   # ön plan katmanı (derinlik)
