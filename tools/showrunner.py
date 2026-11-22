@@ -35,7 +35,7 @@ PIPELINE = [
     ("voice",          "studio-voice-lipsync",           "diyalog sesleri",                  True),
     ("lipsync",        "studio-voice-lipsync",           "dudak senkronu",                   True),
     ("render",         "studio-render",                  "2D çizgi film render (yerel, Blender)", True),
-    ("edit",           "studio-editing-sound",           "kurgu (animatik); müzik/ses efekti henüz yok", True),
+    ("edit",           "studio-editing-sound",           "kurgu (animatik); müzik/efekt render aşamasında karışır", True),
     ("security",       "studio-rights-licence",          "telif/lisans geçidi",              False),
     ("finance",        "studio-budget-control",          "maliyet denetimi",                 False),
     ("qa",             "studio-independent-qa",          "bağımsız kalite denetimi",         True),

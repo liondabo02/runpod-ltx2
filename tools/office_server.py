@@ -13,10 +13,10 @@ Q = os.path.join(ROOT, "studio", "queue"); OUT = os.path.join(ROOT, "out"); REPO
 WORKERS = [
     ("showrunner", "Yapımcı (Showrunner)", "komutu işlere böler", True), ("director", "Yönetmen", "seri bible, bölüm planı", True),
     ("writers_room", "Senaryo Odası", "yaz-eleştir-düzelt", True), ("validator", "Senaryo Denetçisi", "süre/kural kontrolü", True),
-    ("voice", "Ses + Dudak", "seslendirme, ağız şekilleri", True), ("localisation", "Dublaj (8 dil)", "çeviri + yerel ses", True),
+    ("voice", "Ses + Dudak", "seslendirme, ağız şekilleri", True), ("localisation", "Dublaj (10 dil)", "çeviri + yerel ses (Kurmancî: inceleme gerekli)", True),
     ("animatic", "Animatik", "ön izleme", True), ("character", "Karakter Tasarımcı", "tasarım kilitleme", True),
     ("render", "Render (2D)", "kare üretimi + montaj", True), ("video_qa", "Video Kalite", "teknik denetim", True),
-    ("music_sfx", "Müzik/Efekt", "henüz bağlı değil", False), ("rights", "Hak/Lisans", "henüz bağlı değil", False),
+    ("music_sfx", "Müzik/Efekt", "kodla üretilen telifsiz müzik + efekt", True), ("rights", "Hak/Lisans", "henüz bağlı değil", False),
     ("finance", "Finans", "henüz bağlı değil", False), ("research", "Araştırma", "henüz bağlı değil", False),
     ("analytics", "Analiz", "henüz bağlı değil", False), ("distribution", "Dağıtım", "henüz bağlı değil", False),
 ]
