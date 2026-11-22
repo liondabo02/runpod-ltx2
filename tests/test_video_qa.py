@@ -15,7 +15,7 @@ class T(unittest.TestCase):
         subprocess.run(cmd, check=True); return out
 
     def test_good_video_passes(self):
-        r = vq.check(self.mk("testsrc2=", True), 6); self.assertEqual(r["verdict"], "PASS", r["problems"])
+        r = vq.check(self.mk("testsrc=", True), 6); self.assertEqual(r["verdict"], "PASS", r["problems"])
 
     def test_blank_and_silent_fail(self):
         r = vq.check(self.mk("color=c=blue:", False), 6)
@@ -23,7 +23,7 @@ class T(unittest.TestCase):
         self.assertTrue(any("boş" in p or "değişmiyor" in p for p in r["problems"]))
 
     def test_wrong_duration(self):
-        r = vq.check(self.mk("testsrc2=", True, 6), 20); self.assertTrue(any("süre" in p for p in r["problems"]))
+        r = vq.check(self.mk("testsrc=", True, 6), 20); self.assertTrue(any("süre" in p for p in r["problems"]))
 
 
 if __name__ == "__main__":
