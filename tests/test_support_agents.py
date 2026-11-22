@@ -20,5 +20,15 @@ class T(unittest.TestCase):
         self.assertEqual(json.load(open(r["rights"]))["status"], "REVIEW_REQUIRED")  # müzik manifesti yok
         self.assertTrue(json.load(open(r["distribution"]))["blocked_by_rights"])
 
+
+class TShorts(unittest.TestCase):
+    def test_window_prefers_busy_part(self):
+        import shorts_worker as sh
+        beats = [{"t_start": i * 10, "t_end": i * 10 + 10} for i in range(30)]
+        beats[20].update(line="x", fx=["burst"], emotion="surprise")
+        w = sh.pick_window(beats, 40)
+        self.assertTrue(w["t0"] <= 200 < w["t1"]); self.assertEqual(w["t1"] - w["t0"], 40)
+
+
 if __name__ == "__main__":
     unittest.main()

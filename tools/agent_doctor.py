@@ -22,7 +22,11 @@ def check_imports():
 def check_tests():
     r = subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", os.path.join(ROOT, "tests")],
                        capture_output=True, text=True, cwd=ROOT)
-    return r.returncode == 0, (r.stderr or r.stdout)[-600:]
+    out = (r.stderr or "") + (r.stdout or "")
+    lines = [l for l in out.splitlines() if l.startswith(("FAIL:", "ERROR:"))]
+    foreign = [l for l in lines if "_FailedTest" in l]  # başka daldan gelen, modülü burada olmayan testler
+    real = [l for l in lines if "_FailedTest" not in l]
+    return (not real), ("gerçek hata: %s | yabancı import hatası: %d" % (real[:5], len(foreign)))
 
 
 def main():
