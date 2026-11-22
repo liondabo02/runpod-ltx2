@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from validate_beat_sheet import validate  # noqa: E402
 import lessons  # noqa: E402
 
-ACT_SECONDS = 80
+ACT_SECONDS = 40
 PASS_SCORE = 80
 
 
@@ -54,7 +54,30 @@ def extract_json(text):
     s = m.group(1) if m else text
     a = min([i for i in (s.find("{"), s.find("[")) if i >= 0] or [0])
     b = max(s.rfind("}"), s.rfind("]"))
-    return json.loads(s[a:b + 1])
+    raw = s[a:b + 1]
+    try:
+        return json.loads(raw)
+    except ValueError:
+        return json.loads(repair_json(raw))
+
+
+def repair_json(raw):
+    """Ücretsiz modellerin sık yaptığı hatalar: eksik virgül, fazla virgül, kesik kapanış, akıllı tırnak."""
+    t = raw.replace("\u201c", '"').replace("\u201d", '"')
+    t = re.sub(r'([}\]"0-9el])\s*\n\s*(["{\[])', r'\1,\n\2', t)        # satır sonunda eksik virgül
+    t = re.sub(r'}\s*{', '},{', t)
+    t = re.sub(r',\s*([}\]])', r'\1', t)                                  # fazla virgül
+    stack = []; instr = False; esc = False
+    for ch in t:
+        if instr:
+            if esc: esc = False
+            elif ch == "\\": esc = True
+            elif ch == '"': instr = False
+        elif ch == '"': instr = True
+        elif ch in "{[": stack.append("}" if ch == "{" else "]")
+        elif ch in "}]" and stack: stack.pop()
+    if instr: t += '"'
+    return t + "".join(reversed(stack))
 
 
 

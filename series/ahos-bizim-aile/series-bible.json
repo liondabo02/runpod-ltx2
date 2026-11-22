@@ -1,0 +1,428 @@
+{
+  "schema": "ahos.series_bible.v1",
+  "series_id": "ahos-bizim-aile",
+  "title": "Merhaba, Bizim Aile!",
+  "language_default": "tr",
+  "age_band": "2-5",
+  "tone": "sıcak, eğlenceli, öğretici",
+  "visual_style": {
+    "look": "yumuşak sıcak renkler",
+    "frame_rate": 24,
+    "render_style": "2d_flat_puppet_12fps"
+  },
+  "characters": [
+    {
+      "id": "aden",
+      "name": "Aden",
+      "age": 3,
+      "role": "kız çocuk, ana rol",
+      "look": "kobalt tişört, sarı uçurtma, lacivert şort, sarı yıldız toka (sabit), sol yanakta üç çil (sabit)",
+      "personality": "",
+      "safety_notes": [],
+      "identity_lock": {
+        "reference_png": "studio/reference/owner_accepted_roster_v1/characters/01_aden.png",
+        "sha256": "",
+        "model_hash": "",
+        "rig_hash": ""
+      },
+      "voice": {
+        "profile_id": "aden",
+        "hint": "",
+        "engine": "edge-tts",
+        "licence_status": "review_required"
+      }
+    },
+    {
+      "id": "kaan",
+      "name": "Kaan",
+      "age": 1,
+      "role": "erkek bebek, ana rol",
+      "look": "mercan/kırmızı tişört, koyu mavi pantolon, bebeksi oran",
+      "personality": "",
+      "safety_notes": [],
+      "identity_lock": {
+        "reference_png": "studio/reference/owner_accepted_roster_v1/characters/02_kaan.png",
+        "sha256": "",
+        "model_hash": "",
+        "rig_hash": ""
+      },
+      "voice": {
+        "profile_id": "kaan",
+        "hint": "",
+        "engine": "edge-tts",
+        "licence_status": "review_required"
+      }
+    },
+    {
+      "id": "esra",
+      "name": "Esra",
+      "age": 33,
+      "role": "anne (kadın)",
+      "look": "gül kurusu başörtüsü, krem çiçek işlemeli üst",
+      "personality": "",
+      "safety_notes": [],
+      "identity_lock": {
+        "reference_png": "studio/reference/owner_accepted_roster_v1/characters/03_esra.png",
+        "sha256": "",
+        "model_hash": "",
+        "rig_hash": ""
+      },
+      "voice": {
+        "profile_id": "esra",
+        "hint": "",
+        "engine": "edge-tts",
+        "licence_status": "review_required"
+      }
+    },
+    {
+      "id": "ahmet",
+      "name": "Ahmet",
+      "age": 33,
+      "role": "baba",
+      "look": "bordo kazak, lacivert yaka",
+      "personality": "",
+      "safety_notes": [],
+      "identity_lock": {
+        "reference_png": "studio/reference/owner_accepted_roster_v1/characters/04_ahmet.png",
+        "sha256": "",
+        "model_hash": "",
+        "rig_hash": ""
+      },
+      "voice": {
+        "profile_id": "ahmet",
+        "hint": "",
+        "engine": "edge-tts",
+        "licence_status": "review_required"
+      }
+    },
+    {
+      "id": "esma",
+      "name": "Esma",
+      "age": 29,
+      "role": "teyze, hamile (kadın)",
+      "look": "zeytin yeşili başörtüsü, krem işlemeli elbise, hamile (5 aylık)",
+      "personality": "",
+      "safety_notes": [],
+      "identity_lock": {
+        "reference_png": "studio/reference/owner_accepted_roster_v1/characters/05_esma.png",
+        "sha256": "",
+        "model_hash": "",
+        "rig_hash": ""
+      },
+      "voice": {
+        "profile_id": "esma",
+        "hint": "",
+        "engine": "edge-tts",
+        "licence_status": "review_required"
+      }
+    },
+    {
+      "id": "harun",
+      "name": "Harun",
+      "age": 30,
+      "role": "enişte, lider",
+      "look": "lacivert gömlek, krem iç tişört, omuz çantası, saat, uzun dalgalı saç",
+      "personality": "",
+      "safety_notes": [],
+      "identity_lock": {
+        "reference_png": "studio/reference/owner_accepted_roster_v1/characters/06_harun.png",
+        "sha256": "",
+        "model_hash": "",
+        "rig_hash": ""
+      },
+      "voice": {
+        "profile_id": "harun",
+        "hint": "",
+        "engine": "edge-tts",
+        "licence_status": "review_required"
+      }
+    },
+    {
+      "id": "veysel",
+      "name": "Veysel",
+      "age": 33,
+      "role": "aile dostu",
+      "look": "turkuaz gömlek, kahverengi yelek, mavi gözler, kısa sakal",
+      "personality": "",
+      "safety_notes": [],
+      "identity_lock": {
+        "reference_png": "studio/reference/owner_accepted_roster_v1/characters/07_veysel.png",
+        "sha256": "",
+        "model_hash": "",
+        "rig_hash": ""
+      },
+      "voice": {
+        "profile_id": "veysel",
+        "hint": "",
+        "engine": "edge-tts",
+        "licence_status": "review_required"
+      }
+    },
+    {
+      "id": "oznur",
+      "name": "Öznur",
+      "age": 31,
+      "role": "aile dostu anne (kadın)",
+      "look": "mor başörtüsü, mavi hırka, bordo yelek, sarı çiçek broş",
+      "personality": "",
+      "safety_notes": [],
+      "identity_lock": {
+        "reference_png": "studio/reference/owner_accepted_roster_v1/characters/08_oznur.png",
+        "sha256": "",
+        "model_hash": "",
+        "rig_hash": ""
+      },
+      "voice": {
+        "profile_id": "oznur",
+        "hint": "",
+        "engine": "edge-tts",
+        "licence_status": "review_required"
+      }
+    },
+    {
+      "id": "salih",
+      "name": "Salih",
+      "age": 2,
+      "role": "oğlan çocuk",
+      "look": "hardal tişört, yeşil bahçıvan tulum, ayı nakışı",
+      "personality": "",
+      "safety_notes": [],
+      "identity_lock": {
+        "reference_png": "studio/reference/owner_accepted_roster_v1/characters/09_salih.png",
+        "sha256": "",
+        "model_hash": "",
+        "rig_hash": ""
+      },
+      "voice": {
+        "profile_id": "salih",
+        "hint": "",
+        "engine": "edge-tts",
+        "licence_status": "review_required"
+      }
+    },
+    {
+      "id": "medine",
+      "name": "Medine",
+      "age": 0,
+      "role": "kız bebek",
+      "look": "pembe battaniye, çiçekli bebek tulumu, pembe fiyonk (2 aylık)",
+      "personality": "",
+      "safety_notes": [
+        "bebek: konuşma yok"
+      ],
+      "identity_lock": {
+        "reference_png": "studio/reference/owner_accepted_roster_v1/characters/10_medine.png",
+        "sha256": "",
+        "model_hash": "",
+        "rig_hash": ""
+      },
+      "voice": {
+        "profile_id": "medine",
+        "hint": "bebek mırıltısı",
+        "engine": "edge-tts",
+        "licence_status": "review_required"
+      }
+    },
+    {
+      "id": "davut",
+      "name": "Davut",
+      "age": 30,
+      "role": "aile dostu, iri",
+      "look": "kırmızı gömlek, kahverengi yelek, uzun kıvırcık saç, iri yapı",
+      "personality": "",
+      "safety_notes": [],
+      "identity_lock": {
+        "reference_png": "studio/reference/owner_accepted_roster_v1/characters/11_davut.png",
+        "sha256": "",
+        "model_hash": "",
+        "rig_hash": ""
+      },
+      "voice": {
+        "profile_id": "davut",
+        "hint": "",
+        "engine": "edge-tts",
+        "licence_status": "review_required"
+      }
+    },
+    {
+      "id": "fatos",
+      "name": "Fatoş",
+      "age": 30,
+      "role": "aile dostu anne (kadın)",
+      "look": "somon hırka, kolsuz bluz, küpe, omuz hizası kestane saç, BAŞÖRTÜSÜZ",
+      "personality": "",
+      "safety_notes": [],
+      "identity_lock": {
+        "reference_png": "studio/reference/owner_accepted_roster_v1/characters/12_fatos.png",
+        "sha256": "",
+        "model_hash": "",
+        "rig_hash": ""
+      },
+      "voice": {
+        "profile_id": "fatos",
+        "hint": "",
+        "engine": "edge-tts",
+        "licence_status": "review_required"
+      }
+    },
+    {
+      "id": "emos",
+      "name": "Emoş",
+      "age": 4,
+      "role": "kız çocuk",
+      "look": "turkuaz bluz, mercan askılı elbise, kısa kahverengi kâhkül saç, kırmızı toka",
+      "personality": "",
+      "safety_notes": [],
+      "identity_lock": {
+        "reference_png": "studio/reference/owner_accepted_roster_v1/characters/13_emos.png",
+        "sha256": "",
+        "model_hash": "",
+        "rig_hash": ""
+      },
+      "voice": {
+        "profile_id": "emos",
+        "hint": "",
+        "engine": "edge-tts",
+        "licence_status": "review_required"
+      }
+    },
+    {
+      "id": "berzan",
+      "name": "Berzan",
+      "age": 2,
+      "role": "oğlan çocuk, ikiz",
+      "look": "turuncu tişört (araba desenli), lacivert pantolon",
+      "personality": "",
+      "safety_notes": [],
+      "identity_lock": {
+        "reference_png": "studio/reference/owner_accepted_roster_v1/characters/14_berzan.png",
+        "sha256": "",
+        "model_hash": "",
+        "rig_hash": ""
+      },
+      "voice": {
+        "profile_id": "berzan",
+        "hint": "",
+        "engine": "edge-tts",
+        "licence_status": "review_required"
+      }
+    },
+    {
+      "id": "aras",
+      "name": "Aras",
+      "age": 2,
+      "role": "oğlan çocuk, ikiz",
+      "look": "mavi üst, tavşan peluş",
+      "personality": "",
+      "safety_notes": [],
+      "identity_lock": {
+        "reference_png": "studio/reference/owner_accepted_roster_v1/characters/15_aras.png",
+        "sha256": "",
+        "model_hash": "",
+        "rig_hash": ""
+      },
+      "voice": {
+        "profile_id": "aras",
+        "hint": "",
+        "engine": "edge-tts",
+        "licence_status": "review_required"
+      }
+    },
+    {
+      "id": "ramin",
+      "name": "Ramin",
+      "age": 0,
+      "role": "erkek bebek",
+      "look": "nane yeşili tulum, ayıcık kulaklı bere, bez kundak (1 aylık)",
+      "personality": "",
+      "safety_notes": [
+        "bebek: konuşma yok"
+      ],
+      "identity_lock": {
+        "reference_png": "studio/reference/owner_accepted_roster_v1/characters/16_ramin.png",
+        "sha256": "",
+        "model_hash": "",
+        "rig_hash": ""
+      },
+      "voice": {
+        "profile_id": "ramin",
+        "hint": "bebek mırıltısı",
+        "engine": "edge-tts",
+        "licence_status": "review_required"
+      }
+    }
+  ],
+  "locations": [
+    {
+      "id": "home_salon",
+      "name": "Harun ve Esma'nın evi — salon",
+      "description": "Kanepe, sehpa, doğu penceresi, halı"
+    },
+    {
+      "id": "home_kitchen",
+      "name": "Aynı ev — mutfak",
+      "description": "Masa, tezgâh, doğu penceresi"
+    },
+    {
+      "id": "home_entry_corridor",
+      "name": "Aynı ev — giriş/koridor",
+      "description": "Ayakkabılık, ana kapı, aynı ev düzeni"
+    },
+    {
+      "id": "park_entrance",
+      "name": "Park girişi",
+      "description": "Kemer kapı, güney ucu"
+    },
+    {
+      "id": "park_family_area",
+      "name": "Park aile buluşma ve dinlenme alanı",
+      "description": "Piknik çimi, bank, büyük ağaç, merkez-batı"
+    },
+    {
+      "id": "park_rules_sign",
+      "name": "Kurallar tabelası",
+      "description": "Girişin sağında, ana yolda"
+    },
+    {
+      "id": "park_trash_walk",
+      "name": "Çöp kutusu ve yürüyüş alanı",
+      "description": "Ana yol boyunca, tabelanın kuzeyi"
+    },
+    {
+      "id": "park_flower_bed",
+      "name": "Çiçeklik",
+      "description": "Doğuda, kırmızı laleler, taş çerçeve"
+    },
+    {
+      "id": "park_slide_zone",
+      "name": "Kaydırak bölgesi",
+      "description": "Kuzeydoğuda, tek kaydırak, merdiven, yumuşak zemin"
+    },
+    {
+      "id": "park_bike_pedestrian",
+      "name": "Bisiklet ve yaya yolu",
+      "description": "Parkı çevreleyen halka; bisiklet ve yaya şeritleri yan yana"
+    }
+  ],
+  "continuity": {
+    "episodes": [
+      {
+        "id": "e001",
+        "title": "Merhaba, Bizim Aile! — Parkın Kuralları",
+        "logline": "Aden ve Kaan'ın ailesi parkta park kurallarını öğrenir.",
+        "status": "DONE_DRAFT"
+      }
+    ],
+    "running_facts": [
+      "e001: Aden ve Kaan'ın ailesi parkta park kurallarını öğrenir."
+    ]
+  },
+  "episode_defaults": {
+    "min_seconds": 480,
+    "max_cost_eur": 1.0
+  },
+  "owner_approval": {
+    "identity": "PENDING",
+    "episode_final": "PENDING"
+  }
+}

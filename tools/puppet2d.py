@@ -111,7 +111,7 @@ def derive_design(ch, spec):
     iris = (60, 40, 20) if h % 2 else (30, 60, 110)
     return {"id": ch["id"], "species": species, "hair_style": style, "accessory": acc, "hair": hair, "skin": skin,
             "shirt": shirt, "shorts": shorts, "accent": accent, "class": cls, "height": float(spec.get("height_m", 1.1)),
-            "iris": iris, "female": female, "age": age}
+            "iris": iris, "female": female, "age": age, "scarf": col("scarf", accent)}
 
 
 # ---------------------------------------------------------------- ağız şekilleri (Rhubarb A-H, X)
@@ -188,6 +188,10 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         cv.ellipse(px, head_cy + head_h * 0.18, head_w * 0.17, head_h * 0.34, hair, INK, ow, rot=-0.3)
     if style == "bob":
         cv.ellipse(hx, head_cy + head_h * 0.1, head_w * 0.60, head_h * 0.62, hair, INK, ow)
+    if style == "hijab":      # başörtüsü: arka katman + omuza dökülen kumaş
+        sc_ = des["scarf"]
+        cv.ellipse(hx, head_cy + head_h * 0.50, head_w * 0.66, head_h * 0.34, shade(sc_, 0.88), INK, ow)
+        cv.ellipse(hx, head_cy + head_h * 0.06, head_w * 0.64, head_h * 0.66, sc_, INK, ow)
 
     # ---- bacaklar
     for side, sg in (("L", -1), ("R", 1)):
@@ -298,6 +302,18 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
                      (hx + (dx + 0.07) * head_w, head_cy - head_h * 0.40)], hair, INK, ow * 0.8)
     # ---- aksesuar
     acc = des["accessory"]
+    if style == "hijab":      # yüzü çerçeveleyen ön şerit
+        sc_ = des["scarf"]
+        outer = cv.arc_pts(hx, head_cy - head_h * 0.02, head_w * 0.60, head_h * 0.58, math.pi * 1.04, math.pi * 1.96, 26)
+        inner = cv.arc_pts(hx, head_cy + head_h * 0.02, head_w * 0.46, head_h * 0.44, math.pi * 1.96, math.pi * 1.04, 26)
+        cv.poly(outer + inner, sc_, INK, ow * 0.9)
+    if acc == "star":         # sarı yıldız toka
+        cx_, cy_, r_ = hx - head_w * 0.30, top + head_h * 0.16, head_w * 0.12
+        pts = []
+        for i in range(10):
+            a = -math.pi / 2 + i * math.pi / 5; rr = r_ if i % 2 == 0 else r_ * 0.45
+            pts.append((cx_ + math.cos(a) * rr, cy_ + math.sin(a) * rr))
+        cv.poly(pts, (255, 214, 60), INK, ow * 0.7)
     if acc == "glasses":
         for sg in (-1, 1):
             cv.ellipse(hx + sg * ex + face * head_w * 0.12, eye_y, erx * 1.45, ery * 1.25, (255, 255, 255), None, 0) if False else None

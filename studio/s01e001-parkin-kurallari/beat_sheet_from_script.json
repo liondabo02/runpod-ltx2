@@ -1,0 +1,1394 @@
+{
+ "schema": "ahos.beat_sheet.v1",
+ "status": "FROM_OWNER_SCRIPT",
+ "series_id": "ahos-bizim-aile",
+ "title": "Merhaba, Bizim Aile! — Parkın Kuralları",
+ "logline": "Aden ve Kaan'ın ailesi parkta park kurallarını öğrenir.",
+ "total_seconds": 480.0,
+ "beats": [
+  {
+   "t_start": 0.0,
+   "t_end": 7.0,
+   "scene_id": "SC01",
+   "location": "home_salon",
+   "light_time": "sabah güneşi doğu penceresinden, sıcak, gün 08:30",
+   "characters": [
+    "aden",
+    "kaan"
+   ],
+   "action": "Güneş ışığı salonu doldurur, Aden gerinir ve uçurtmasını fark eder. (Aden battaniyede oturur, Kaan kanepe altından görünür -> Aden ayağa fırlar, Kaan emekler)",
+   "dialogue": "aden: Günaydın! Bugün park var!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.85,
+    "intensity": 0.88
+   },
+   "camera": "geniş, yavaş içeri itme",
+   "sound": "ortam sesi; geçiş: yumuşak açılış",
+   "safety_note": "",
+   "shot_id": "sc01_sh01"
+  },
+  {
+   "t_start": 7.0,
+   "t_end": 14.0,
+   "scene_id": "SC01",
+   "location": "home_salon",
+   "light_time": "sabah güneşi doğu penceresinden, sıcak, gün 08:30",
+   "characters": [
+    "aden"
+   ],
+   "action": "Aden uçurtmayı gösterir ve izleyiciye elini sallar. (Aden uçurtmayı alır -> Uçurtmayı havaya kaldırır, zıplar)",
+   "dialogue": "aden: Ben Aden. Üç yaşındayım.",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.55,
+    "intensity": 0.65
+   },
+   "camera": "orta, sabit, hafif sağa kayış",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc01_sh02"
+  },
+  {
+   "t_start": 14.0,
+   "t_end": 21.0,
+   "scene_id": "SC01",
+   "location": "home_salon",
+   "light_time": "sabah güneşi doğu penceresinden, sıcak, gün 08:30",
+   "characters": [
+    "kaan"
+   ],
+   "action": "Kaan emekleyerek kameraya yaklaşır, durur, başını yana eğer. (Kaan dört ayak üstünde -> Kaan oturur, kahkaha atar)",
+   "dialogue": "kaan: Aaa!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "yakın (alçak açı), Kaan'ı takip",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc01_sh03"
+  },
+  {
+   "t_start": 21.0,
+   "t_end": 28.0,
+   "scene_id": "SC01",
+   "location": "home_salon",
+   "light_time": "sabah güneşi doğu penceresinden, sıcak, gün 08:30",
+   "characters": [
+    "aden",
+    "kaan"
+   ],
+   "action": "Aden kardeşini tanıtır; Kaan Aden'in parmağını yakalar. (Aden Kaan'a bakar, çömelir -> Aden Kaan'ın elini tutar)",
+   "dialogue": "aden: Bu da kardeşim Kaan. | kaan: Abla!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "orta, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc01_sh04"
+  },
+  {
+   "t_start": 28.0,
+   "t_end": 35.0,
+   "scene_id": "SC01",
+   "location": "home_salon",
+   "light_time": "sabah güneşi doğu penceresinden, sıcak, gün 08:30",
+   "characters": [
+    "aden",
+    "kaan",
+    "esra"
+   ],
+   "action": "Mutfaktan çağrı gelir; çocuklar sese doğru gider. (İkisi birlikte kapıya bakar -> Aden kapıya koşar, Kaan emekler)",
+   "dialogue": "esra: Kahvaltı hazır, gelin bakalım!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "geniş, arkadan yavaş geri çekilme",
+   "sound": "ortam sesi; geçiş: mutfağa geçiş (ses köprüsü)",
+   "safety_note": "",
+   "shot_id": "sc01_sh05"
+  },
+  {
+   "t_start": 35.0,
+   "t_end": 43.0,
+   "scene_id": "SC02",
+   "location": "home_kitchen",
+   "light_time": "sabah, mutfak penceresinden yumuşak ışık, gün 08:35",
+   "characters": [
+    "esra",
+    "aden"
+   ],
+   "action": "Esra kendini tanıtır, Aden annesine sarılır. (Esra sepeti açar, Aden yanında -> Esra elmayı Aden'e uzatır)",
+   "dialogue": "esra: Merhaba! Ben Esra, Aden'in annesiyim. | aden: Annem!",
+   "emotion": {
+    "valence": 0.7,
+    "arousal": 0.65,
+    "intensity": 0.73
+   },
+   "camera": "orta, sol kayış",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc02_sh01"
+  },
+  {
+   "t_start": 43.0,
+   "t_end": 51.0,
+   "scene_id": "SC02",
+   "location": "home_kitchen",
+   "light_time": "sabah, mutfak penceresinden yumuşak ışık, gün 08:35",
+   "characters": [
+    "ahmet"
+   ],
+   "action": "Ahmet gülümseyerek tekerleği sağlamlaştırır. (Ahmet bebek arabasının tekerini çevirir -> Ahmet doğrulur, başparmak gösterir)",
+   "dialogue": "ahmet: Ben de Ahmet, babalarıyım. Tekerler tamam!",
+   "emotion": {
+    "valence": 0.7,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "orta, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc02_sh02"
+  },
+  {
+   "t_start": 51.0,
+   "t_end": 59.0,
+   "scene_id": "SC02",
+   "location": "home_kitchen",
+   "light_time": "sabah, mutfak penceresinden yumuşak ışık, gün 08:35",
+   "characters": [
+    "kaan",
+    "ahmet"
+   ],
+   "action": "Kaan babasına uzanır; baba kucaklar. (Kaan Ahmet'in ayağına tutunur -> Ahmet Kaan'ı kucağına alır)",
+   "dialogue": "kaan: Baba!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "yakın, Kaan'a odaklanma",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc02_sh03"
+  },
+  {
+   "t_start": 59.0,
+   "t_end": 67.0,
+   "scene_id": "SC02",
+   "location": "home_kitchen",
+   "light_time": "sabah, mutfak penceresinden yumuşak ışık, gün 08:35",
+   "characters": [
+    "esra",
+    "ahmet",
+    "aden",
+    "kaan"
+   ],
+   "action": "Esra herkese suyu verir, Ahmet sepeti kapatır. (Aile masada dağınık -> Aile sepet etrafında toplanır)",
+   "dialogue": "esra: Bugün parkta hepimiz kurallara uyacağız. | aden: Ben biliyorum!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "geniş, yavaş yukarı kaldırma",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc02_sh04"
+  },
+  {
+   "t_start": 67.0,
+   "t_end": 75.0,
+   "scene_id": "SC02",
+   "location": "home_kitchen",
+   "light_time": "sabah, mutfak penceresinden yumuşak ışık, gün 08:35",
+   "characters": [
+    "aden",
+    "esra",
+    "ahmet"
+   ],
+   "action": "Aden ebeveynlerini kapıya çağırır, Ahmet sepeti kaldırır. (Aden ellerini beline koyar -> Aden kapıya yürür)",
+   "dialogue": "aden: Hadi gidelim! | ahmet: Önce teyzeye uğrayalım.",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "orta, sabit",
+   "sound": "ortam sesi; geçiş: koridora geçiş",
+   "safety_note": "",
+   "shot_id": "sc02_sh05"
+  },
+  {
+   "t_start": 75.0,
+   "t_end": 83.0,
+   "scene_id": "SC03",
+   "location": "home_entry_corridor",
+   "light_time": "sabah, koridor penceresinden tatlı ışık, gün 08:45",
+   "characters": [
+    "esma",
+    "harun"
+   ],
+   "action": "Harun ve Esma misafirleri koridorda karşılar. (Esma ayakkabılığın yanında, Harun çantayı toplar -> Esma gülümseyerek kapıya döner)",
+   "dialogue": "esma: Hoş geldiniz! Ben Esma, Aden ve Kaan'ın teyzesiyim.",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "geniş, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc03_sh01"
+  },
+  {
+   "t_start": 83.0,
+   "t_end": 91.0,
+   "scene_id": "SC03",
+   "location": "home_entry_corridor",
+   "light_time": "sabah, koridor penceresinden tatlı ışık, gün 08:45",
+   "characters": [
+    "harun"
+   ],
+   "action": "Harun uzun boyuyla eğilir, çocuklara selam verir. (Harun çantayı omuzlar -> Harun elini kalbine koyar)",
+   "dialogue": "harun: Ben Harun, enişteniz. Bugün park lideriyim!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "orta, sağa kayış",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc03_sh02"
+  },
+  {
+   "t_start": 91.0,
+   "t_end": 99.0,
+   "scene_id": "SC03",
+   "location": "home_entry_corridor",
+   "light_time": "sabah, koridor penceresinden tatlı ışık, gün 08:45",
+   "characters": [
+    "aden",
+    "esma"
+   ],
+   "action": "Aden teyzesinin karnını yavaşça okşar, Esma gülümser. (Aden Esma'nın karnına bakar -> Aden elini nazikçe karnına koyar)",
+   "dialogue": "aden: Teyze, içinde bebek var mı? | esma: Evet, beş aylık.",
+   "emotion": {
+    "valence": 0.7,
+    "arousal": 0.35,
+    "intensity": 0.5
+   },
+   "camera": "yakın, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc03_sh03"
+  },
+  {
+   "t_start": 99.0,
+   "t_end": 108.0,
+   "scene_id": "SC03",
+   "location": "home_entry_corridor",
+   "light_time": "sabah, koridor penceresinden tatlı ışık, gün 08:45",
+   "characters": [
+    "kaan",
+    "harun"
+   ],
+   "action": "Kaan Harun'a bakar ve kıkırdar; Harun onu omzuna oturtur. (Kaan Harun'un bacağına tutunur -> Harun Kaan'ı yukarı kaldırır)",
+   "dialogue": "kaan: Hop! | harun: Hop! Kaan uçuyor.",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.85,
+    "intensity": 0.88
+   },
+   "camera": "orta, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc03_sh04"
+  },
+  {
+   "t_start": 108.0,
+   "t_end": 117.0,
+   "scene_id": "SC03",
+   "location": "home_entry_corridor",
+   "light_time": "sabah, koridor penceresinden tatlı ışık, gün 08:45",
+   "characters": [
+    "harun",
+    "esma",
+    "esra",
+    "ahmet",
+    "aden",
+    "kaan"
+   ],
+   "action": "Harun herkesi topluyor; Esma çantasını alır; hep birlikte çıkarlar. (Herkes koridorda -> Herkes kapıdan çıkar)",
+   "dialogue": "harun: Herkes hazır mı? Parka! | esma: Hadi bakalım!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.65,
+    "intensity": 0.73
+   },
+   "camera": "geniş, arkadan takip",
+   "sound": "ortam sesi; geçiş: dış mekâna geçiş",
+   "safety_note": "",
+   "shot_id": "sc03_sh05"
+  },
+  {
+   "t_start": 117.0,
+   "t_end": 125.0,
+   "scene_id": "SC03",
+   "location": "home_entry_corridor",
+   "light_time": "sabah, koridor penceresinden tatlı ışık, gün 08:45",
+   "characters": [
+    "aden",
+    "kaan"
+   ],
+   "action": "Aden ve Kaan izleyiciye el sallar; kapı yavaşça kapanır. (Çocuklar kapıda -> Aden el sallar)",
+   "dialogue": "aden: Bizimle gelin!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "orta (kapı eşiği), sabit",
+   "sound": "ortam sesi; geçiş: kapı kapanışıyla geçiş",
+   "safety_note": "",
+   "shot_id": "sc03_sh06"
+  },
+  {
+   "t_start": 125.0,
+   "t_end": 134.0,
+   "scene_id": "SC04",
+   "location": "home_entry_corridor",
+   "light_time": "sabah, giriş kapısında dışarıdan gelen ışık, gün 09:00",
+   "characters": [
+    "veysel",
+    "oznur",
+    "salih",
+    "harun"
+   ],
+   "action": "Kapıda Veysel, Öznur ve Salih; Harun karşılar. (Kapı açılır, aile dışarıda -> Veysel içeri adım atar)",
+   "dialogue": "veysel: Günaydın! Ben Veysel. | harun: Hoş geldiniz!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.65,
+    "intensity": 0.73
+   },
+   "camera": "geniş, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc04_sh01"
+  },
+  {
+   "t_start": 134.0,
+   "t_end": 143.0,
+   "scene_id": "SC04",
+   "location": "home_entry_corridor",
+   "light_time": "sabah, giriş kapısında dışarıdan gelen ışık, gün 09:00",
+   "characters": [
+    "oznur",
+    "medine"
+   ],
+   "action": "Öznur uyuyan bebeği tanıtır; Medine hafif bir ses çıkarır. (Öznur taşıma koltuğunu gösterir -> Öznur koltuğu hafifçe sallar)",
+   "dialogue": "oznur: Ben Öznur. Bu da bebeğimiz Medine, iki aylık.",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.35,
+    "intensity": 0.5
+   },
+   "camera": "orta, sağa kayış",
+   "sound": "ortam sesi; geçiş: kesme; ince bebek mırıltısı",
+   "safety_note": "bebek yetişkin gözetiminde; ip, küçük parça ya da yalnız bırakma yok",
+   "shot_id": "sc04_sh02"
+  },
+  {
+   "t_start": 143.0,
+   "t_end": 152.0,
+   "scene_id": "SC04",
+   "location": "home_entry_corridor",
+   "light_time": "sabah, giriş kapısında dışarıdan gelen ışık, gün 09:00",
+   "characters": [
+    "salih",
+    "aden"
+   ],
+   "action": "Salih oyuncağını paylaşır; Aden bakar ve gülümser. (Salih ayıyı sıkı tutar -> Salih ayıyı Aden'e uzatır)",
+   "dialogue": "salih: Ben Salih. İki! | aden: Merhaba Salih!",
+   "emotion": {
+    "valence": 0.7,
+    "arousal": 0.65,
+    "intensity": 0.73
+   },
+   "camera": "yakın, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc04_sh03"
+  },
+  {
+   "t_start": 152.0,
+   "t_end": 161.0,
+   "scene_id": "SC04",
+   "location": "home_entry_corridor",
+   "light_time": "sabah, giriş kapısında dışarıdan gelen ışık, gün 09:00",
+   "characters": [
+    "veysel",
+    "harun"
+   ],
+   "action": "Erkekler selamlaşır; Veysel koltuğu kaldırır. (Veysel güler, mavi gözlerini kırpar -> Veysel ve Harun el sıkışır)",
+   "dialogue": "veysel: Hadi, park bizi bekliyor!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "orta, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc04_sh04"
+  },
+  {
+   "t_start": 161.0,
+   "t_end": 170.0,
+   "scene_id": "SC04",
+   "location": "home_entry_corridor",
+   "light_time": "sabah, giriş kapısında dışarıdan gelen ışık, gün 09:00",
+   "characters": [
+    "veysel",
+    "oznur",
+    "salih",
+    "aden",
+    "harun"
+   ],
+   "action": "İki aile birlikte sokağa çıkar; Salih Aden'in elini tutar. (Grup kapıda -> Grup yola koyulur)",
+   "dialogue": "oznur: Salih, elini bırakma.",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.35,
+    "intensity": 0.5
+   },
+   "camera": "geniş, geri çekilme",
+   "sound": "ortam sesi; geçiş: sokağa geçiş (güneşli dış)",
+   "safety_note": "",
+   "shot_id": "sc04_sh05"
+  },
+  {
+   "t_start": 170.0,
+   "t_end": 179.0,
+   "scene_id": "SC05",
+   "location": "park_entrance",
+   "light_time": "sabah, park girişinde açık gökyüzü, gün 09:30, güneş doğu-güneydoğuda",
+   "characters": [
+    "davut",
+    "fatos",
+    "emos",
+    "berzan",
+    "aras",
+    "ramin"
+   ],
+   "action": "Davut ailesiyle girişte bekliyor; kapı kemeri görünür. (Aile park kapısında -> Davut el sallar)",
+   "dialogue": "davut: Selam millet! Biz geldik!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.65,
+    "intensity": 0.73
+   },
+   "camera": "geniş, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "bebek yetişkin gözetiminde; ip, küçük parça ya da yalnız bırakma yok",
+   "shot_id": "sc05_sh01"
+  },
+  {
+   "t_start": 179.0,
+   "t_end": 188.0,
+   "scene_id": "SC05",
+   "location": "park_entrance",
+   "light_time": "sabah, park girişinde açık gökyüzü, gün 09:30, güneş doğu-güneydoğuda",
+   "characters": [
+    "davut",
+    "fatos"
+   ],
+   "action": "Davut kendini tanıtır; Fatoş rahat bir gülümsemeyle yanına gelir. (Davut ellerini beline koyar -> Davut gülerek omuzlarını silkelemeler)",
+   "dialogue": "davut: Ben Davut, kocaman bir babayım! | fatos: Ben Fatoş. Hoş geldiniz!",
+   "emotion": {
+    "valence": 0.7,
+    "arousal": 0.65,
+    "intensity": 0.73
+   },
+   "camera": "orta, sol kayış",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc05_sh02"
+  },
+  {
+   "t_start": 188.0,
+   "t_end": 197.0,
+   "scene_id": "SC05",
+   "location": "park_entrance",
+   "light_time": "sabah, park girişinde açık gökyüzü, gün 09:30, güneş doğu-güneydoğuda",
+   "characters": [
+    "emos",
+    "aden"
+   ],
+   "action": "Emos dört yaşında, kendinden emin; Aden'le el çırparlar. (Emos ellerini beline koyar -> Emos Aden'e koşar)",
+   "dialogue": "emos: Ben Emoş. Dört yaşındayım! | aden: Emoş!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.65,
+    "intensity": 0.73
+   },
+   "camera": "orta, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc05_sh03"
+  },
+  {
+   "t_start": 197.0,
+   "t_end": 206.0,
+   "scene_id": "SC05",
+   "location": "park_entrance",
+   "light_time": "sabah, park girişinde açık gökyüzü, gün 09:30, güneş doğu-güneydoğuda",
+   "characters": [
+    "berzan",
+    "aras",
+    "fatos"
+   ],
+   "action": "İkizlerin farklılığı: Berzan hareketli, Aras sakin; Fatoş tanıtır. (İkizler yan yana; Berzan göz kırpar, Aras peluşa sarılır -> Berzan başparmak, Aras gülümser)",
+   "dialogue": "fatos: Bunlar ikizlerimiz Berzan ve Aras. | berzan: Ben Berzan! | aras: Aras.",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "yakın, ikiz çifte odaklanma",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc05_sh04"
+  },
+  {
+   "t_start": 206.0,
+   "t_end": 215.0,
+   "scene_id": "SC05",
+   "location": "park_entrance",
+   "light_time": "sabah, park girişinde açık gökyüzü, gün 09:30, güneş doğu-güneydoğuda",
+   "characters": [
+    "fatos",
+    "ramin"
+   ],
+   "action": "Fatoş uyuyan Ramin'i tanıtır; Ramin nefes alır, hafif bir ses çıkarır. (Fatoş çift arabanın yanında -> Fatoş battaniyeyi düzeltir)",
+   "dialogue": "fatos: Bu da Ramin, bir aylık.",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.35,
+    "intensity": 0.5
+   },
+   "camera": "orta, sabit",
+   "sound": "ortam sesi; geçiş: parka geçiş; yeni doğan nefes ve minik ses",
+   "safety_note": "bebek yetişkin gözetiminde; ip, küçük parça ya da yalnız bırakma yok",
+   "shot_id": "sc05_sh05"
+  },
+  {
+   "t_start": 215.0,
+   "t_end": 223.0,
+   "scene_id": "SC06",
+   "location": "park_rules_sign",
+   "light_time": "sabah sonu, güneş yükselmiş, gölgeler kısa, gün 10:00",
+   "characters": [
+    "harun",
+    "aden",
+    "emos",
+    "salih",
+    "berzan",
+    "aras"
+   ],
+   "action": "Park kurallar tabelası görünür; Harun çocukları tabelanın önüne toplar. (Çocuklar tabelaya doğru yürür -> Çocuklar tabelanın önünde)",
+   "dialogue": "harun: Bakın, parkın kuralları!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "geniş, yavaş içeri itme",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc06_sh01"
+  },
+  {
+   "t_start": 223.0,
+   "t_end": 231.0,
+   "scene_id": "SC06",
+   "location": "park_rules_sign",
+   "light_time": "sabah sonu, güneş yükselmiş, gölgeler kısa, gün 10:00",
+   "characters": [
+    "harun",
+    "aden"
+   ],
+   "action": "Harun birinci ve ikinci kuralı anlatır; Aden tekrar eder. (Harun tabelayı gösterir -> Aden tabelaya el sürmeden parmağıyla işaret eder)",
+   "dialogue": "harun: Bir: Çöpler çöp kutusuna! | aden: Çöp kutusu!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.65,
+    "intensity": 0.73
+   },
+   "camera": "orta, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc06_sh02"
+  },
+  {
+   "t_start": 231.0,
+   "t_end": 239.0,
+   "scene_id": "SC06",
+   "location": "park_rules_sign",
+   "light_time": "sabah sonu, güneş yükselmiş, gölgeler kısa, gün 10:00",
+   "characters": [
+    "emos",
+    "salih",
+    "harun"
+   ],
+   "action": "İki: çiçekleri koparmayız; Emos ve Salih tepki verir. (Emos tabelaya bakar -> Salih ellerini çırpar)",
+   "dialogue": "harun: İki: Çiçeklere bakarız, koparmayız. | emos: Koparmayız!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "yakın, sağa kayış",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc06_sh03"
+  },
+  {
+   "t_start": 239.0,
+   "t_end": 247.0,
+   "scene_id": "SC06",
+   "location": "park_rules_sign",
+   "light_time": "sabah sonu, güneş yükselmiş, gölgeler kısa, gün 10:00",
+   "characters": [
+    "berzan",
+    "aras",
+    "kaan",
+    "harun"
+   ],
+   "action": "Üç: kaydırakta sıra; Berzan sabırsız, Aras sakin. (Berzan zıplar, Aras Kaan'a bakar -> Aras Kaan'ın elini tutar)",
+   "dialogue": "harun: Üç: Kaydırakta sıra bekleriz. | berzan: Sıra!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "orta, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc06_sh04"
+  },
+  {
+   "t_start": 247.0,
+   "t_end": 255.0,
+   "scene_id": "SC06",
+   "location": "park_rules_sign",
+   "light_time": "sabah sonu, güneş yükselmiş, gölgeler kısa, gün 10:00",
+   "characters": [
+    "harun",
+    "esma",
+    "davut",
+    "fatos",
+    "veysel",
+    "oznur",
+    "esra",
+    "ahmet"
+   ],
+   "action": "Dört: işaretlere bakarız; herkes birlikte alkışlar. (Yetişkinler çocukların arkasında -> Yetişkinler başlarıyla onaylar)",
+   "dialogue": "harun: Dört: İşaretlere bakar, güvenli yoldan yürürüz. | davut: Yaşasın kurallar!",
+   "emotion": {
+    "valence": 0.7,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "geniş, hafif yukarı kayış",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc06_sh05"
+  },
+  {
+   "t_start": 255.0,
+   "t_end": 264.0,
+   "scene_id": "SC07",
+   "location": "park_trash_walk",
+   "light_time": "öğleye doğru, güneş doğudan yükselmiş, gün 10:20",
+   "characters": [
+    "berzan",
+    "aden"
+   ],
+   "action": "Berzan elmayı bitirir ve sapı çimene atar. (Berzan elma yer -> Berzan sapı fırlatır)",
+   "dialogue": "berzan: Bitti!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "geniş, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc07_sh01"
+  },
+  {
+   "t_start": 264.0,
+   "t_end": 273.0,
+   "scene_id": "SC07",
+   "location": "park_trash_walk",
+   "light_time": "öğleye doğru, güneş doğudan yükselmiş, gün 10:20",
+   "characters": [
+    "aras"
+   ],
+   "action": "Aras sapı fark edip eğilir, alır; çöp kutusuna bakar. (Aras peluşa sarılı oturur -> Aras kalkar ve sapı alır)",
+   "dialogue": "aras: Çöp. Kutu.",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.35,
+    "intensity": 0.5
+   },
+   "camera": "orta, Aras'ı takip",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc07_sh02"
+  },
+  {
+   "t_start": 273.0,
+   "t_end": 282.0,
+   "scene_id": "SC07",
+   "location": "park_trash_walk",
+   "light_time": "öğleye doğru, güneş doğudan yükselmiş, gün 10:20",
+   "characters": [
+    "aras",
+    "berzan"
+   ],
+   "action": "Aras sapı çöp kutusuna atar; Berzan utanarak güler. (Aras sapı tutar -> Aras sapı kutuya atar, Berzan bakar)",
+   "dialogue": "berzan: Pardon! | aras: Çöp kutusu!",
+   "emotion": {
+    "valence": 0.7,
+    "arousal": 0.65,
+    "intensity": 0.73
+   },
+   "camera": "yakın, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc07_sh03"
+  },
+  {
+   "t_start": 282.0,
+   "t_end": 291.0,
+   "scene_id": "SC07",
+   "location": "park_trash_walk",
+   "light_time": "öğleye doğru, güneş doğudan yükselmiş, gün 10:20",
+   "characters": [
+    "davut",
+    "aden",
+    "emos"
+   ],
+   "action": "Davut 'çöp avcısı' olur; çocuklar kutu etrafında toplanır. (Davut çömelir -> Davut kutuya çöp atar)",
+   "dialogue": "davut: Ben çöp avcısıyım! Hop, kutuya! | aden: Ben de!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 1,
+    "intensity": 1
+   },
+   "camera": "orta, sol kayış",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc07_sh04"
+  },
+  {
+   "t_start": 291.0,
+   "t_end": 300.0,
+   "scene_id": "SC07",
+   "location": "park_trash_walk",
+   "light_time": "öğleye doğru, güneş doğudan yükselmiş, gün 10:20",
+   "characters": [
+    "harun",
+    "aden",
+    "emos",
+    "berzan",
+    "aras",
+    "davut"
+   ],
+   "action": "Temiz yürüyüş alanı; Harun başparmak gösterir. (Çocuklar çöp toplar -> Çocuklar kutu önünde sıralanır)",
+   "dialogue": "harun: Aferin! Park tertemiz.",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "geniş, geri çekilme",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc07_sh05"
+  },
+  {
+   "t_start": 300.0,
+   "t_end": 308.0,
+   "scene_id": "SC08",
+   "location": "park_flower_bed",
+   "light_time": "öğle öncesi, çiçeklikte yumuşak gölge, gün 10:40",
+   "characters": [
+    "emos",
+    "aden",
+    "salih"
+   ],
+   "action": "Çiçeklik renklidir; Emos kırmızı laleye uzanır. (Çocuklar çiçekliğe yaklaşır -> Emos elini uzatır)",
+   "dialogue": "emos: Güzel çiçek!",
+   "emotion": {
+    "valence": 0.7,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "geniş, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc08_sh01"
+  },
+  {
+   "t_start": 308.0,
+   "t_end": 316.0,
+   "scene_id": "SC08",
+   "location": "park_flower_bed",
+   "light_time": "öğle öncesi, çiçeklikte yumuşak gölge, gün 10:40",
+   "characters": [
+    "fatos",
+    "emos"
+   ],
+   "action": "Fatoş sakin ve şefkatli bir tonda açıklar. (Fatoş Emos'un yanına çömelir -> Fatoş Emos'un elini nazikçe tutar)",
+   "dialogue": "fatos: Bakalım, koklayalım. Ama koparmayalım.",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.35,
+    "intensity": 0.5
+   },
+   "camera": "orta, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc08_sh02"
+  },
+  {
+   "t_start": 316.0,
+   "t_end": 324.0,
+   "scene_id": "SC08",
+   "location": "park_flower_bed",
+   "light_time": "öğle öncesi, çiçeklikte yumuşak gölge, gün 10:40",
+   "characters": [
+    "emos",
+    "salih"
+   ],
+   "action": "Emos çiçeği koklar; Salih aynısını yapar. (Emos eğilir -> Emos ve Salih lalenin yanında durur)",
+   "dialogue": "emos: Mis gibi! | salih: Mis!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.65,
+    "intensity": 0.73
+   },
+   "camera": "yakın, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc08_sh03"
+  },
+  {
+   "t_start": 324.0,
+   "t_end": 332.0,
+   "scene_id": "SC08",
+   "location": "park_flower_bed",
+   "light_time": "öğle öncesi, çiçeklikte yumuşak gölge, gün 10:40",
+   "characters": [
+    "kaan",
+    "oznur"
+   ],
+   "action": "Kelebek Kaan'ın önünde uçar; Öznur sessizce bekler. (Kaan çimende oturur -> Kaan kelebeğe uzanır)",
+   "dialogue": "kaan: Kelebek! | oznur: Sessiz, ürkütmeyelim.",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.7,
+    "intensity": 0.77
+   },
+   "camera": "orta, yavaş sağa",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc08_sh04"
+  },
+  {
+   "t_start": 332.0,
+   "t_end": 340.0,
+   "scene_id": "SC08",
+   "location": "park_flower_bed",
+   "light_time": "öğle öncesi, çiçeklikte yumuşak gölge, gün 10:40",
+   "characters": [
+    "emos",
+    "fatos",
+    "salih",
+    "oznur",
+    "aden",
+    "kaan"
+   ],
+   "action": "Kelebek uçar gider; çiçekler yerinde kalır. (Çocuklar çiçeklik çevresinde -> Çocuklar çiçekliği geride bırakır)",
+   "dialogue": "aden: Çiçekler yerinde!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.7,
+    "intensity": 0.77
+   },
+   "camera": "geniş, geri çekilme",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc08_sh05"
+  },
+  {
+   "t_start": 340.0,
+   "t_end": 349.0,
+   "scene_id": "SC09",
+   "location": "park_slide_zone",
+   "light_time": "öğle, güneş yüksek, kısa gölgeler, gün 11:00",
+   "characters": [
+    "berzan",
+    "salih",
+    "aden",
+    "emos"
+   ],
+   "action": "Çocuklar kaydırağa koşar; Berzan sıra bozmak ister. (Çocuklar merdiven önünde karışık -> Berzan öne doğru atılır)",
+   "dialogue": "berzan: Ben ilk!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.7,
+    "intensity": 0.77
+   },
+   "camera": "geniş, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc09_sh01"
+  },
+  {
+   "t_start": 349.0,
+   "t_end": 358.0,
+   "scene_id": "SC09",
+   "location": "park_slide_zone",
+   "light_time": "öğle, güneş yüksek, kısa gölgeler, gün 11:00",
+   "characters": [
+    "harun",
+    "berzan"
+   ],
+   "action": "Harun nazikçe durdurur ve sıra işaretini gösterir. (Harun yavaşça önünü keser -> Berzan durur)",
+   "dialogue": "harun: Dur bakalım. Sıra nerede?",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.35,
+    "intensity": 0.5
+   },
+   "camera": "orta, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc09_sh02"
+  },
+  {
+   "t_start": 358.0,
+   "t_end": 367.0,
+   "scene_id": "SC09",
+   "location": "park_slide_zone",
+   "light_time": "öğle, güneş yüksek, kısa gölgeler, gün 11:00",
+   "characters": [
+    "aden",
+    "emos",
+    "salih",
+    "berzan"
+   ],
+   "action": "Çocuklar sıraya girer; Aden başa geçer. (Çocuklar bir çizgide -> Çocuklar tek sıra olur)",
+   "dialogue": "aden: Ben başta! | emos: Ben arkada.",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "orta, sol kayış",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc09_sh03"
+  },
+  {
+   "t_start": 367.0,
+   "t_end": 376.0,
+   "scene_id": "SC09",
+   "location": "park_slide_zone",
+   "light_time": "öğle, güneş yüksek, kısa gölgeler, gün 11:00",
+   "characters": [
+    "aden"
+   ],
+   "action": "Aden kaydırır, yüzü neşeli; alt tarafta Kaan bekler. (Aden kaydırak tepesinde -> Aden kaydıraktan aşağı inip kollarını açar)",
+   "dialogue": "aden: Yuppi!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "yakın, kaydıraktan aşağıya",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc09_sh04"
+  },
+  {
+   "t_start": 376.0,
+   "t_end": 385.0,
+   "scene_id": "SC09",
+   "location": "park_slide_zone",
+   "light_time": "öğle, güneş yüksek, kısa gölgeler, gün 11:00",
+   "characters": [
+    "salih",
+    "berzan",
+    "emos",
+    "kaan",
+    "esra"
+   ],
+   "action": "Sırayla herkes kayar; Esra Kaan'ı kucağına alır. (Sıra devam eder -> Sıradaki çocuk kaydırağa çıkar)",
+   "dialogue": "berzan: Sıra benim! | esra: Aferin, güzel bekledin.",
+   "emotion": {
+    "valence": 0.7,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "geniş, geri çekilme",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc09_sh05"
+  },
+  {
+   "t_start": 385.0,
+   "t_end": 393.0,
+   "scene_id": "SC10",
+   "location": "park_bike_pedestrian",
+   "light_time": "öğleye yakın, açık gökyüzü, gölgeler kısa, gün 11:20",
+   "characters": [
+    "davut",
+    "aden"
+   ],
+   "action": "Yaya yolu ile bisiklet yolu yan yana; Davut yanlış tarafta. (Davut yola yürür -> Davut bisiklet yoluna girer)",
+   "dialogue": "davut: Ne güzel yol!",
+   "emotion": {
+    "valence": 0.7,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "geniş, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc10_sh01"
+  },
+  {
+   "t_start": 393.0,
+   "t_end": 401.0,
+   "scene_id": "SC10",
+   "location": "park_bike_pedestrian",
+   "light_time": "öğleye yakın, açık gökyüzü, gölgeler kısa, gün 11:20",
+   "characters": [
+    "aden",
+    "davut"
+   ],
+   "action": "Aden işareti gösterir; Davut hemen çekilir. (Aden işaretlere bakar -> Aden Davut'un elini tutar)",
+   "dialogue": "aden: Amca, bu bisiklet yolu!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "orta, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc10_sh02"
+  },
+  {
+   "t_start": 401.0,
+   "t_end": 409.0,
+   "scene_id": "SC10",
+   "location": "park_bike_pedestrian",
+   "light_time": "öğleye yakın, açık gökyüzü, gölgeler kısa, gün 11:20",
+   "characters": [
+    "ahmet",
+    "emos",
+    "berzan"
+   ],
+   "action": "Ahmet işareti gösterir; çocuklar işareti tekrar eder. (Ahmet çocukları yaya yoluna alır -> Çocuklar yaya yolunda sıralı)",
+   "dialogue": "ahmet: Yaya yolu yürüyenler için. | emos: Yürüyenler!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "yakın, sağa kayış",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc10_sh03"
+  },
+  {
+   "t_start": 409.0,
+   "t_end": 417.0,
+   "scene_id": "SC10",
+   "location": "park_bike_pedestrian",
+   "light_time": "öğleye yakın, açık gökyüzü, gölgeler kısa, gün 11:20",
+   "characters": [
+    "esma",
+    "harun"
+   ],
+   "action": "Harun Esma'ya destek olur; birlikte kuralı gösterirler. (Harun Esma'nın elini tutar -> Çift güvenli yolda yürür)",
+   "dialogue": "harun: Güvenli yol, güvenli adım.",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.35,
+    "intensity": 0.5
+   },
+   "camera": "orta, arkadan takip",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc10_sh04"
+  },
+  {
+   "t_start": 417.0,
+   "t_end": 425.0,
+   "scene_id": "SC10",
+   "location": "park_bike_pedestrian",
+   "light_time": "öğleye yakın, açık gökyüzü, gölgeler kısa, gün 11:20",
+   "characters": [
+    "davut",
+    "aden",
+    "emos",
+    "berzan",
+    "ahmet",
+    "harun",
+    "esma"
+   ],
+   "action": "Bir bisikletli zil çalarak geçer; herkes yaya yolunda güvende. (Grup iki yolun kenarında -> Grup yaya yolunda ilerler)",
+   "dialogue": "davut: Zil sesi duydum, kenardayım!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "geniş, yükselen",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc10_sh05"
+  },
+  {
+   "t_start": 425.0,
+   "t_end": 432.0,
+   "scene_id": "SC11",
+   "location": "park_family_area",
+   "light_time": "öğle, aile alanında açık gölge, gün 11:40",
+   "characters": [
+    "harun",
+    "aden",
+    "emos",
+    "salih",
+    "berzan",
+    "aras"
+   ],
+   "action": "Piknik örtüsünde tekrar oyunu başlar. (Çocuklar örtüde otururlar -> Harun elini kaldırır)",
+   "dialogue": "harun: Hadi, kuralları tekrar edelim!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "geniş, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc11_sh01"
+  },
+  {
+   "t_start": 432.0,
+   "t_end": 439.0,
+   "scene_id": "SC11",
+   "location": "park_family_area",
+   "light_time": "öğle, aile alanında açık gölge, gün 11:40",
+   "characters": [
+    "aden",
+    "harun"
+   ],
+   "action": "Aden çöp kutusu hareketini gösterir. (Aden elinde çöp tutar -> Aden çöpü kutuya atma hareketi yapar)",
+   "dialogue": "aden: Çöp kutusuna!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "orta, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc11_sh02"
+  },
+  {
+   "t_start": 439.0,
+   "t_end": 446.0,
+   "scene_id": "SC11",
+   "location": "park_family_area",
+   "light_time": "öğle, aile alanında açık gölge, gün 11:40",
+   "characters": [
+    "emos",
+    "salih"
+   ],
+   "action": "İki çocuk çiçek koklar, koparmaz. (Emos çiçek koklama hareketi -> Salih koklama hareketini taklit eder)",
+   "dialogue": "emos: Koklarız! | salih: Mis!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.65,
+    "intensity": 0.73
+   },
+   "camera": "orta, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc11_sh03"
+  },
+  {
+   "t_start": 446.0,
+   "t_end": 453.0,
+   "scene_id": "SC11",
+   "location": "park_family_area",
+   "light_time": "öğle, aile alanında açık gölge, gün 11:40",
+   "characters": [
+    "berzan",
+    "aras",
+    "kaan"
+   ],
+   "action": "Sıra bekleme hareketi; Kaan öne geçer ve eller havada. (Çocuklar sıra olur -> Kaan en önde parmağını kaldırır)",
+   "dialogue": "berzan: Sıra! | aras: Bekle. | kaan: Ben!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.65,
+    "intensity": 0.73
+   },
+   "camera": "orta, sağa kayış",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc11_sh04"
+  },
+  {
+   "t_start": 453.0,
+   "t_end": 460.0,
+   "scene_id": "SC11",
+   "location": "park_family_area",
+   "light_time": "öğle, aile alanında açık gölge, gün 11:40",
+   "characters": [
+    "harun",
+    "aden",
+    "emos",
+    "salih",
+    "berzan",
+    "aras",
+    "kaan",
+    "esra",
+    "fatos"
+   ],
+   "action": "Herkes dört işareti birlikte gösterir; alkış. (Grup işaretlere bakar -> Grup birlikte alkışlar)",
+   "dialogue": "harun: Süper! Hepsini biliyorsunuz. | esra: Aferin bizim çocuklara!",
+   "emotion": {
+    "valence": 0.7,
+    "arousal": 0.65,
+    "intensity": 0.73
+   },
+   "camera": "geniş, geri çekilme",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc11_sh05"
+  },
+  {
+   "t_start": 460.0,
+   "t_end": 467.0,
+   "scene_id": "SC12",
+   "location": "park_family_area",
+   "light_time": "öğle sonrası, sıcak ışık, gün 12:00",
+   "characters": [
+    "aden",
+    "kaan",
+    "esra",
+    "ahmet",
+    "esma",
+    "harun"
+   ],
+   "action": "Aden ve Kaan'ın ailesi bir araya gelir; Esra Kaan'ı alır. (Aile örtüde dağınık -> Aile toplanır)",
+   "dialogue": "aden: Hepimiz buradayız!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "geniş, yavaş yukarı kaldırma",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "",
+   "shot_id": "sc12_sh01"
+  },
+  {
+   "t_start": 467.0,
+   "t_end": 474.0,
+   "scene_id": "SC12",
+   "location": "park_family_area",
+   "light_time": "öğle sonrası, sıcak ışık, gün 12:00",
+   "characters": [
+    "veysel",
+    "oznur",
+    "salih",
+    "medine",
+    "davut",
+    "fatos",
+    "emos",
+    "berzan",
+    "aras",
+    "ramin"
+   ],
+   "action": "Tüm aile parkta toplanır; bebekler kucakta görünür. (Diğer aileler yaklaşır -> Büyük aile fotoğrafı için dizilir)",
+   "dialogue": "davut: Fotoğraf zamanı!",
+   "emotion": {
+    "valence": 0.55,
+    "arousal": 0.5,
+    "intensity": 0.62
+   },
+   "camera": "çok geniş, sabit",
+   "sound": "ortam sesi; geçiş: kesme",
+   "safety_note": "bebek yetişkin gözetiminde; ip, küçük parça ya da yalnız bırakma yok",
+   "shot_id": "sc12_sh02"
+  },
+  {
+   "t_start": 474.0,
+   "t_end": 480.0,
+   "scene_id": "SC12",
+   "location": "park_family_area",
+   "light_time": "öğle sonrası, sıcak ışık, gün 12:00",
+   "characters": [
+    "aden",
+    "kaan",
+    "esra",
+    "ahmet",
+    "esma",
+    "harun",
+    "veysel",
+    "oznur",
+    "salih",
+    "medine",
+    "davut",
+    "fatos",
+    "emos",
+    "berzan",
+    "aras",
+    "ramin"
+   ],
+   "action": "Kapanış: gün ışığında bütün aile el sallar; uçurtma göğe yükselir. (Aile fotoğraf pozunda -> Aden uçurtmayı havaya kaldırır; herkes el sallar)",
+   "dialogue": "aden: Güle güle! Yine gelin! | harun: Parkta görüşürüz!",
+   "emotion": {
+    "valence": 0.7,
+    "arousal": 1,
+    "intensity": 1
+   },
+   "camera": "geniş, yavaş geri çekilme",
+   "sound": "ortam sesi; geçiş: kararma ve başlık",
+   "safety_note": "bebek yetişkin gözetiminde; ip, küçük parça ya da yalnız bırakma yok",
+   "shot_id": "sc12_sh03"
+  }
+ ]
+}

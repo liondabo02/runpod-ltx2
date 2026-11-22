@@ -15,7 +15,7 @@ def source_lines(text):
     out = []
     for line in (text or "").splitlines():
         m = re.match(r"\s*[-•*]?\s*([A-ZÇĞİÖŞÜa-zçğıöşü][\w ]{0,24}?)\s*[:：]\s*[\"“«]?(.+?)[\"”»]?\s*$", line)
-        if m and len(m.group(2).split()) >= 2:
+        if m and len(m.group(2).split()) >= 2 and m.group(1).strip().lower() not in ("süre", "dil", "yaş", "durum", "ışık", "oyunculuk"):
             out.append((m.group(1).strip(), m.group(2).strip()))
     return out
 

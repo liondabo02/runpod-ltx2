@@ -187,7 +187,7 @@ class StepLog(list):
 
 
 
-def run(command, series_id=None, seconds=480, base=None, render_seconds=12, script_text=None):
+def run(command, series_id=None, seconds=480, base=None, render_seconds=12, script_text=None, beats_sheet=None):
     base = base or os.path.join(ROOT, "series")
     report = {"command": command, "steps": StepLog(), "series_id": None, "episode": None}
     # 1) Dizi var mı?
@@ -233,7 +233,12 @@ def run(command, series_id=None, seconds=480, base=None, render_seconds=12, scri
         os.makedirs(out, exist_ok=True); open(os.path.join(out, "source_script.txt"), "w", encoding="utf-8").write(script_text)
     # 3) Yazarlar Odası
     try:
-        sheet, hist = wr.run(bible, idea, seconds, out)
+        if beats_sheet:                                   # sahibin senaryosundan deterministik vuruşlar (LLM yok)
+            os.makedirs(out, exist_ok=True); sheet = beats_sheet; write_json(os.path.join(out, "beat_sheet.json"), sheet)
+            _e = validate(sheet, bible, seconds)[0]
+            hist = [{"score": "n/a (sahip senaryosu)", "validator_errors": _e}]
+        else:
+            sheet, hist = wr.run(bible, idea, seconds, out)
         last = hist[-1]
         status = "DONE_DRAFT" if not last["validator_errors"] else "NEEDS_REVISION"
         led.add("writers_room", status, f"{eid}: skor {last['score']}, doğrulayıcı hata {len(last['validator_errors'])}",
@@ -357,9 +362,11 @@ def main():
     p.add_argument("--seconds", type=int, default=480)
     p.add_argument("--render-seconds", type=int, default=12, help="0=render yok, -1=tüm bölüm")
     p.add_argument("--script-file", help="sahibin senaryo metni (sadık mod)")
+    p.add_argument("--beats-file", help="hazır beat_sheet.json (LLM yazımı atlanır)")
     a = p.parse_args()
+    bs = json.load(open(a.beats_file, encoding="utf-8")) if a.beats_file else None
     txt = open(a.script_file, encoding="utf-8").read() if a.script_file else None
-    print(tell(run(a.command, a.series_id, a.seconds, render_seconds=a.render_seconds, script_text=txt)))
+    print(tell(run(a.command, a.series_id, a.seconds, render_seconds=a.render_seconds, script_text=txt, beats_sheet=bs)))
 
 
 if __name__ == "__main__":
