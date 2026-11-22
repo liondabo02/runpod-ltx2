@@ -30,5 +30,17 @@ class TShorts(unittest.TestCase):
         self.assertTrue(w["t0"] <= 200 < w["t1"]); self.assertEqual(w["t1"] - w["t0"], 40)
 
 
+
+class TWorld(unittest.TestCase):
+    def test_world_builder_sections(self):
+        import world_builder as wb
+        d = tempfile.mkdtemp()
+        r = wb.build("deneme", "x", d, llm=lambda s, u, t=0.7: "kelime " * 150)
+        self.assertEqual(r["status"], "PASSED"); self.assertGreater(r["pages_approx"], 1.5)
+        md = open(os.path.join(d, "world-bible.md"), encoding="utf-8").read()
+        for h in ("Bölgeler", "Karakterler", "Sezon planı"):
+            self.assertIn(h, md)
+
+
 if __name__ == "__main__":
     unittest.main()
