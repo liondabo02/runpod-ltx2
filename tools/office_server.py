@@ -16,9 +16,10 @@ WORKERS = [
     ("voice", "Ses + Dudak", "seslendirme, ağız şekilleri", True), ("localisation", "Dublaj (10 dil)", "çeviri + yerel ses (Kurmancî: inceleme gerekli)", True),
     ("animatic", "Animatik", "ön izleme", True), ("character", "Karakter Tasarımcı", "tasarım kilitleme", True),
     ("render", "Render (2D)", "kare üretimi + montaj", True), ("video_qa", "Video Kalite", "teknik denetim", True),
-    ("music_sfx", "Müzik/Efekt", "kodla üretilen telifsiz müzik + efekt", True), ("rights", "Hak/Lisans", "henüz bağlı değil", False),
-    ("finance", "Finans", "henüz bağlı değil", False), ("research", "Araştırma", "henüz bağlı değil", False),
-    ("analytics", "Analiz", "henüz bağlı değil", False), ("distribution", "Dağıtım", "henüz bağlı değil", False),
+    ("music_sfx", "Müzik/Efekt", "kodla üretilen telifsiz müzik + efekt", True), ("rights", "Hak/Lisans", "kaynak lisans kaydı (hukuki tavsiye değil)", True),
+    ("finance", "Finans", "bölüm başı 1 EUR sınırı denetimi", True), ("research", "Araştırma", "referans/fikir notları (web gezmez)", True),
+    ("analytics", "Analiz", "teknik ölçüm (izleyici verisi yok)", True), ("distribution", "Dağıtım", "yayın paketi taslağı, yükleme yapmaz", True),
+    ("task_observer", "Gözlemci", "sürtünme gözlemi -> öneri", True), ("agent_doctor", "Ajan Doktoru", "işçileri sınar, bozukları bildirir", True),
 ]
 
 def jobs():
