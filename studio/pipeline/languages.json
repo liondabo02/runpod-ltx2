@@ -1,0 +1,98 @@
+{
+  "_note": "Dublaj dilleri. 'enabled' dilleri yerelleştirme işçisi üretir. Sahip dilediği gibi değiştirebilir. Sesler: edge-tts (ticari kullanım: sahip kararı, review_required).",
+  "source": "tr",
+  "languages": {
+    "tr": {
+      "name": "Türkçe",
+      "enabled": true,
+      "female": "tr-TR-EmelNeural",
+      "male": "tr-TR-AhmetNeural",
+      "child_female": "tr-TR-EmelNeural",
+      "child_male": "tr-TR-AhmetNeural",
+      "order": 1
+    },
+    "de": {
+      "name": "Deutsch",
+      "enabled": true,
+      "female": "de-DE-KatjaNeural",
+      "male": "de-DE-ConradNeural",
+      "child_female": "de-DE-AmalaNeural",
+      "child_male": "de-DE-KasperNeural",
+      "order": 2
+    },
+    "es": {
+      "name": "Español",
+      "enabled": true,
+      "female": "es-ES-ElviraNeural",
+      "male": "es-ES-AlvaroNeural",
+      "child_female": "es-ES-ElviraNeural",
+      "child_male": "es-ES-AlvaroNeural",
+      "order": 3
+    },
+    "fr": {
+      "name": "Français",
+      "enabled": true,
+      "female": "fr-FR-DeniseNeural",
+      "male": "fr-FR-HenriNeural",
+      "child_female": "fr-FR-DeniseNeural",
+      "child_male": "fr-FR-HenriNeural",
+      "order": 4
+    },
+    "ar": {
+      "name": "العربية",
+      "enabled": true,
+      "female": "ar-SA-ZariyahNeural",
+      "male": "ar-SA-HamedNeural",
+      "child_female": "ar-SA-ZariyahNeural",
+      "child_male": "ar-SA-HamedNeural",
+      "order": 5
+    },
+    "pt": {
+      "name": "Português",
+      "enabled": true,
+      "female": "pt-BR-FranciscaNeural",
+      "male": "pt-BR-AntonioNeural",
+      "child_female": "pt-BR-FranciscaNeural",
+      "child_male": "pt-BR-AntonioNeural",
+      "order": 6
+    },
+    "ru": {
+      "name": "Русский",
+      "enabled": true,
+      "female": "ru-RU-SvetlanaNeural",
+      "male": "ru-RU-DmitryNeural",
+      "child_female": "ru-RU-SvetlanaNeural",
+      "child_male": "ru-RU-DmitryNeural",
+      "order": 7
+    },
+    "hi": {
+      "name": "हिन्दी",
+      "enabled": true,
+      "female": "hi-IN-SwaraNeural",
+      "male": "hi-IN-MadhurNeural",
+      "child_female": "hi-IN-SwaraNeural",
+      "child_male": "hi-IN-MadhurNeural",
+      "order": 8
+    },
+    "kmr": {
+      "name": "Kurdî (Kurmancî, Latin alfabesi)",
+      "enabled": true,
+      "tts": "mms",
+      "tts_note": "Meta MMS-TTS (CC-BY-NC 4.0: ticari değil; monetize edilen YouTube için hukuki kontrol gerekir). Ses çalışıyor, çeviri kalitesi zayıf.",
+      "native_review_required": true,
+      "quality_note": "Ücretsiz LLM çevirisi Kurmancîde güvenilmez (denemede anlamsız cümleler çıktı). Yayın öncesi anadili Kürtçe olan biri okumalı.",
+      "mms_model": "facebook/mms-tts-kmr-script_latin",
+      "order": 9
+    },
+    "en": {
+      "name": "English",
+      "enabled": true,
+      "female": "en-US-JennyNeural",
+      "male": "en-US-GuyNeural",
+      "child_female": "en-US-AnaNeural",
+      "child_male": "en-US-AnaNeural",
+      "order": 10
+    }
+  },
+  "_order_note": "Sahibin onayladığı sıra: 1 tr (kaynak), 2 de, 3 es, 4 fr, 5 ar, 6 pt, 7 ru, 8 hi, 9 kmr, 10 en"
+}

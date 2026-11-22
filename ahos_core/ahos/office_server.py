@@ -70,14 +70,14 @@ background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:
 .owner{background:#22304d}.ceo{background:#16202e;border:1px solid var(--line)}
 #ceoToggle{position:fixed;right:16px;bottom:84px;z-index:6}
 </style></head><body>
-<nav id="tabs"><button data-tab="office" class="active">Ofis</button><button data-tab="codex">Codex</button><button data-tab="harun">Harun AI</button><button data-tab="track">Görevler</button><button data-tab="products">Ürünler</button></nav><header><h1>🏢 AHOS Ofis</h1>
+<nav id="tabs"><button data-tab="office" class="active">Ofis</button><button data-tab="cartoon">🎬 Çizgi Film Stüdyosu</button><button data-tab="codex">Codex</button><button data-tab="harun">Harun AI</button><button data-tab="track">Görevler</button><button data-tab="products">Ürünler</button></nav><header><h1>🏢 AHOS Ofis</h1>
 <span class="pill">daemon <b id="dstatus">-</b></span>
 <span class="pill">mod <b id="dmode">-</b></span>
 <span class="pill">teslim <b id="rate">-</b></span>
 <span class="pill">bekleyen fikir <b id="pending">-</b></span><span class="pill">sistem <b id="infra">-</b></span><span class="pill">bilgi <b id="know">-</b></span><a href="/ofis" style="text-decoration:none;border:1px solid #27324a;border-radius:999px;padding:6px 12px;color:#eef3ff;background:#16223a">🏢 Ofis Katı</a></header>
 <div id="goalStrip">hedefler: <span id="goals">-</span></div>
 <div id="recentWrap">son görevler: <span id="recent">-</span></div>
-<section id="tab-codex" class="tabPanel"><iframe src="http://127.0.0.1:8766/office" title="Codex paneli" loading="lazy"></iframe></section><section id="tab-harun" class="tabPanel"><div id="harunInfo"></div></section><section id="tab-track" class="tabPanel"><div id="trackList"></div></section><section id="tab-products" class="tabPanel"><div id="productList"></div></section><main id="rooms"></main>
+<section id="tab-cartoon" class="tabPanel"><iframe src="http://127.0.0.1:8787/" title="Çizgi film stüdyosu" loading="lazy"></iframe></section><section id="tab-codex" class="tabPanel"><iframe src="http://127.0.0.1:8766/office" title="Codex paneli" loading="lazy"></iframe></section><section id="tab-harun" class="tabPanel"><div id="harunInfo"></div></section><section id="tab-track" class="tabPanel"><div id="trackList"></div></section><section id="tab-products" class="tabPanel"><div id="productList"></div></section><main id="rooms"></main>
 <div id="msg"></div>
 <button id="ceoToggle">CEO</button>
 <div id="ceoBox"><h3>CEO ile konuş</h3><div id="ceoLog"></div>
@@ -87,11 +87,11 @@ background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:
 <script>
 let selectedTab = 'office';
 function showTab(name) {
-  const allowed = ['office','codex','harun','track','products'];
+  const allowed = ['office','cartoon','codex','harun','track','products'];
   if (!allowed.includes(name)) name = 'office';
   selectedTab = name;
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
-  const panels = {office:'rooms',codex:'tab-codex',harun:'tab-harun',track:'tab-track',products:'tab-products'};
+  const panels = {office:'rooms',cartoon:'tab-cartoon',codex:'tab-codex',harun:'tab-harun',track:'tab-track',products:'tab-products'};
   Object.keys(panels).forEach(key => {
     const el = document.getElementById(panels[key]);
     if (!el) return;
@@ -220,10 +220,59 @@ class OfficeHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(payload)
 
+    def _cartoon_video(self, target) -> None:
+        import os as _os, re as _re
+        if target is None:
+            self._send(b"not found", "text/plain", 404)
+            return
+        size = _os.path.getsize(target)
+        start, end, code = 0, size - 1, 200
+        m = _re.match(r"bytes=(\d*)-(\d*)", self.headers.get("Range", ""))
+        if m and (m.group(1) or m.group(2)):
+            if m.group(1):
+                start = int(m.group(1))
+                if m.group(2):
+                    end = int(m.group(2))
+            else:
+                start = max(0, size - int(m.group(2)))
+            end = min(end, size - 1)
+            code = 206
+        self.send_response(code)
+        self.send_header("Content-Type", "video/mp4")
+        self.send_header("Accept-Ranges", "bytes")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        if code == 206:
+            self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
+        self.send_header("Content-Length", str(end - start + 1))
+        self.end_headers()
+        with open(target, "rb") as fh:
+            fh.seek(start)
+            left = end - start + 1
+            while left > 0:
+                chunk = fh.read(min(65536, left))
+                if not chunk:
+                    break
+                try:
+                    self.wfile.write(chunk)
+                except OSError:
+                    break
+                left -= len(chunk)
+
     def do_GET(self):  # noqa: N802 - stdlib naming
         from urllib.parse import unquote, urlsplit
         route = urlsplit(self.path).path
         render_root = (Path(self.runtime_dir) / "artifacts" / "renders").resolve()
+        if route.startswith("/api/cartoon/") or route.startswith("/cartoon-video/"):
+            from . import cartoon_bridge as _cb
+            if route == "/api/cartoon/status":
+                self._send(json.dumps(_cb.status(), ensure_ascii=False).encode("utf-8"), "application/json; charset=utf-8")
+            elif route == "/api/cartoon/videos":
+                self._send(json.dumps(_cb.videos(), ensure_ascii=False).encode("utf-8"), "application/json; charset=utf-8")
+            elif route.startswith("/cartoon-video/"):
+                self._cartoon_video(_cb.resolve_video(unquote(route[len("/cartoon-video/"):])))
+            else:
+                self._send(b'{"error":"not found"}', "application/json", 404)
+            return
         if route == "/api/renders":
             files = []
             if render_root.is_dir():
@@ -366,6 +415,25 @@ class OfficeHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):  # noqa: N802
         route = self.path.split("?")[0]
+        if route == "/api/cartoon/cancel":
+            from . import cartoon_bridge as _cb
+            self._send(json.dumps({"ok": True, "msg": _cb.cancel()}, ensure_ascii=False).encode("utf-8"), "application/json; charset=utf-8")
+            return
+        if route == "/api/cartoon/command":
+            origin = self.headers.get("Origin") or ""
+            if origin and not any(h in origin for h in ("127.0.0.1", "localhost")):
+                self._send(b'{"error":"forbidden"}', "application/json", 403)
+                return
+            try:
+                from . import cartoon_bridge as _cb
+                length = int(self.headers.get("Content-Length") or 0)
+                data = json.loads(self.rfile.read(length).decode("utf-8") or "{}")
+                res = _cb.enqueue(str(data.get("command") or ""), data.get("series_id"),
+                                  int(data.get("render_seconds", 12)))
+                self._send(json.dumps({"ok": True, **res}, ensure_ascii=False).encode("utf-8"), "application/json; charset=utf-8")
+            except Exception as exc:  # noqa: BLE001
+                self._send(json.dumps({"ok": False, "error": str(exc)}, ensure_ascii=False).encode("utf-8"), "application/json; charset=utf-8", 400)
+            return
         if route not in {"/api/idea", "/api/ceo"}:
             self._send(b'{"error":"not found"}', "application/json", 404)
             return

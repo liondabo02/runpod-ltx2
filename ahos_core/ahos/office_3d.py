@@ -26,6 +26,13 @@ HTML = r"""<!doctype html>
   #who,#msg{width:100%;background:#0f1728;color:#e8f0ff;border:1px solid #2a3d5c;border-radius:9px;
             padding:6px;margin-top:6px;font:12px system-ui}
   #reply{margin-top:7px;color:#a9e6cf;font-size:12px}
+  #filmBox{position:fixed;left:16px;top:262px;width:300px;max-height:34vh;overflow:auto;z-index:11;
+    background:rgba(12,20,34,.92);border:1px solid rgba(255,211,155,.45);border-radius:12px;padding:10px;color:#dbe7f7;font:12px system-ui}
+  #filmBox h4{margin:0 0 6px;color:#ffd39b;font-size:11px;letter-spacing:.12em;display:flex;gap:6px;align-items:center}
+  #filmBox input{width:100%;box-sizing:border-box;padding:7px;border-radius:8px;border:1px solid #3a536d;background:#0b1422;color:#fff;margin-top:6px}
+  #filmBox button{margin-left:auto;font:11px system-ui;border:1px solid #3a536d;background:#192c44;color:#cfe3ff;border-radius:7px;padding:2px 8px;cursor:pointer}
+  #filmMsg{font-size:11px;color:#9fe8c0;margin-top:4px}
+  @media(max-width:700px){#filmBox{left:9px;top:auto;bottom:calc(29vh + 18px);width:min(300px,calc(100vw - 18px));max-height:26vh}}
   #renders{position:fixed;right:16px;top:16px;width:260px;max-height:26vh;overflow:auto;
         background:rgba(12,18,30,.88);border:1px solid #22314e;border-radius:14px;padding:10px 12px;font-size:12px}
   #renders h4{margin:0 0 6px;color:#ffd39b;font-size:11px;letter-spacing:.14em}
@@ -151,7 +158,14 @@ HTML = r"""<!doctype html>
   <input id="msg" placeholder="işçiye yaz, Enter…">
   <div id="reply"></div>
 </div>
-<div id="renders"><h4>ÜRETİMLER</h4><div id="renderlist">Kontrol ediliyor…</div></div>
+<div id="renders"><h4>ÜRETİMLER</h4><div id="renderlist">Kontrol ediliyor…</div>
+</div>
+
+<div id="filmBox"><h4 id="filmHead">🎬 ÇİZGİ FİLM HATTI <span id="filmState"></span> <button id="filmCancel" type="button" title="Çalışan işi durdur">İptal</button><button id="filmToggle" type="button">Daralt</button></h4>
+<div id="filmBody"><div id="filmStages"></div>
+<input id="filmCmd" placeholder="Film komutu yaz, Enter… (örn: yeni bölüm yap)" maxlength="400">
+<div id="filmLast" style="font-size:11px;color:#ffd39b;margin-top:4px"></div><div id="filmMsg"></div><div id="filmJobs"></div>
+<video id="filmVid" controls style="width:100%;margin-top:6px;border-radius:8px;display:none"></video></div></div>
 <section id="opsBoard" aria-label="Canlı operasyonlar ve kat planı">
   <h4>OPERASYON RADARI <button id="collapseBoard" type="button" aria-expanded="true">Daralt</button></h4>
   <div id="opsBody">
@@ -691,6 +705,27 @@ addEventListener('resize',()=>{
 document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.id==='msg') talk(); });
 
 loadRenders(); setInterval(loadRenders,15000);
+async function loadFilm(){
+  try{
+    const [st,vs]=await Promise.all([fetch('/api/cartoon/status',{cache:'no-store'}).then(r=>r.json()),fetch('/api/cartoon/videos',{cache:'no-store'}).then(r=>r.json())]);
+    document.getElementById('filmState').textContent='· '+st.state; document.getElementById('filmLast').textContent=st.last_line||'';
+    const sb=document.getElementById('filmStages'); sb.replaceChildren(...st.stages.map(x=>{const e=document.createElement('span');e.textContent=x.name+': '+x.state;e.style.cssText='display:inline-block;margin:2px 6px 2px 0;padding:1px 7px;border-radius:99px;font-size:11px;border:1px solid #fff4;'+(x.state==='çalışıyor'?'background:#e8590c;':x.state==='bitti'?'background:#2b9348;':x.state==='hata'?'background:#c92a2a;':'');return e;}));
+    document.getElementById('filmJobs').replaceChildren(...st.jobs.slice().reverse().slice(0,4).map(j=>{const d=document.createElement('div');d.style.fontSize='11px';d.textContent='● '+({pending:'sırada',running:'çalışıyor',done:'bitti',failed:'hata'}[j.state]||j.state)+' · '+j.command.slice(0,60);return d;}));
+    const fv=document.getElementById('filmVid');
+    if(vs.length&&!fv.dataset.src){fv.dataset.src=vs[0].path;fv.src='/cartoon-video/'+vs[0].path.split('/').map(encodeURIComponent).join('/');fv.style.display='block';}
+  }catch(_){document.getElementById('filmState').textContent='· bağlı değil';}
+}
+async function sendFilm(){
+  const el=document.getElementById('filmCmd'),m=document.getElementById('filmMsg'),c=el.value.trim(); if(!c)return;
+  try{const r=await fetch('/api/cartoon/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({command:c,render_seconds:12})});
+    const d=await r.json(); m.textContent=d.ok?('Kuyruğa eklendi · stüdyo: '+d.daemon):('Hata: '+(d.error||r.status)); if(d.ok)el.value=''; loadFilm();
+  }catch(_){m.textContent='bağlantı hatası';}
+}
+document.getElementById('filmCancel').onclick=async()=>{if(confirm('Çalışan film işi durdurulsun mu?')){await fetch('/api/cartoon/cancel',{method:'POST'});}};
+document.getElementById('filmToggle').onclick=()=>{const b=document.getElementById('filmBody'),h=b.style.display==='none';b.style.display=h?'':'none';document.getElementById('filmToggle').textContent=h?'Daralt':'Aç';};
+document.getElementById('filmCmd').addEventListener('keydown',e=>{if(e.key==='Enter')sendFilm();});
+loadFilm(); setInterval(loadFilm,5000);
+
 sync(); setInterval(sync,5000);
 
 // --- etkileşim: işçiye/odaya tıkla → kamera odaklan + kart ---

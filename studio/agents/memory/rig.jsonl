@@ -1,1 +1,1 @@
-{"status": "PASSED", "cast": ["kaan"], "artifacts": 3, "blocked_codes": [], "lessons": [], "worker_id": "rig", "at": "2026-11-14T16:49:57.566666+00:00"}
+{"status": "LESSON", "worker": "rig", "lesson": "Duruş çeşitliliği: karakterler sürekli aynı ayakta duruş pozunda kalmasın; jest, eğilme, yürüme döngüsü ekle.", "source": "auto", "count": 1, "at": "2026-11-22T15:29:36"}
