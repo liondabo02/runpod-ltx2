@@ -1,0 +1,4367 @@
+{
+ "episode_id": "S01E001",
+ "title": "Merhaba, Bizim Aile! — Parkın Kuralları",
+ "target_ms": 480000,
+ "shots": [
+  {
+   "shot_id": "sc01_sh01",
+   "scene_id": "sc01",
+   "framing": "geniş",
+   "lens_perspective": "24mm eşdeğeri (geniş, hafif derin alan)",
+   "camera_movement": "yavaş içeri itme",
+   "character_ids": [
+    "aden",
+    "kaan"
+   ],
+   "character_positions": {
+    "aden": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "kaan": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "aden": {
+     "from": "Aden battaniyede oturur, Kaan kanepe altından görünür",
+     "to": "Aden ayağa fırlar, Kaan emekler",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "kaan": {
+     "from": "Aden battaniyede oturur, Kaan kanepe altından görünür",
+     "to": "Aden ayağa fırlar, Kaan emekler",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Aden battaniyede oturur, Kaan kanepe altından görünür",
+   "final_pose": "Aden ayağa fırlar, Kaan emekler",
+   "action": "Güneş ışığı salonu doldurur, Aden gerinir ve uçurtmasını fark eder",
+   "duration_ms": 7000,
+   "exact_start_ms": 0,
+   "exact_end_ms": 7000,
+   "visual_asset_refs": [
+    "env_home_salon_v1",
+    "char_aden_roster_v1",
+    "char_kaan_roster_v1",
+    "wardrobe_aden_ep001_v1",
+    "wardrobe_kaan_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc01_sh01_l1"
+   ],
+   "dialogue_lines": [
+    "aden: Günaydın! Bugün park var!"
+   ],
+   "transition": "yumuşak açılış"
+  },
+  {
+   "shot_id": "sc01_sh02",
+   "scene_id": "sc01",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "sabit, hafif sağa kayış",
+   "character_ids": [
+    "aden"
+   ],
+   "character_positions": {
+    "aden": {
+     "x_m": 0.0,
+     "depth": "ön",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "aden": {
+     "from": "Aden uçurtmayı alır",
+     "to": "Uçurtmayı havaya kaldırır, zıplar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Aden uçurtmayı alır",
+   "final_pose": "Uçurtmayı havaya kaldırır, zıplar",
+   "action": "Aden uçurtmayı gösterir ve izleyiciye elini sallar",
+   "duration_ms": 7000,
+   "exact_start_ms": 7000,
+   "exact_end_ms": 14000,
+   "visual_asset_refs": [
+    "env_home_salon_v1",
+    "char_aden_roster_v1",
+    "wardrobe_aden_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc01_sh02_l1"
+   ],
+   "dialogue_lines": [
+    "aden: Ben Aden. Üç yaşındayım."
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc01_sh03",
+   "scene_id": "sc01",
+   "framing": "yakın (alçak açı)",
+   "lens_perspective": "65mm eşdeğeri (yüz odaklı, sığ alan)",
+   "camera_movement": "Kaan'ı takip",
+   "character_ids": [
+    "kaan"
+   ],
+   "character_positions": {
+    "kaan": {
+     "x_m": 0.0,
+     "depth": "ön",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "kaan": {
+     "from": "Kaan dört ayak üstünde",
+     "to": "Kaan oturur, kahkaha atar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Kaan dört ayak üstünde",
+   "final_pose": "Kaan oturur, kahkaha atar",
+   "action": "Kaan emekleyerek kameraya yaklaşır, durur, başını yana eğer",
+   "duration_ms": 7000,
+   "exact_start_ms": 14000,
+   "exact_end_ms": 21000,
+   "visual_asset_refs": [
+    "env_home_salon_v1",
+    "char_kaan_roster_v1",
+    "wardrobe_kaan_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc01_sh03_l1"
+   ],
+   "dialogue_lines": [
+    "kaan: Aaa!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc01_sh04",
+   "scene_id": "sc01",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "aden",
+    "kaan"
+   ],
+   "character_positions": {
+    "aden": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "kaan": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "aden": {
+     "from": "Aden Kaan'a bakar, çömelir",
+     "to": "Aden Kaan'ın elini tutar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "kaan": {
+     "from": "Aden Kaan'a bakar, çömelir",
+     "to": "Aden Kaan'ın elini tutar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Aden Kaan'a bakar, çömelir",
+   "final_pose": "Aden Kaan'ın elini tutar",
+   "action": "Aden kardeşini tanıtır; Kaan Aden'in parmağını yakalar",
+   "duration_ms": 7000,
+   "exact_start_ms": 21000,
+   "exact_end_ms": 28000,
+   "visual_asset_refs": [
+    "env_home_salon_v1",
+    "char_aden_roster_v1",
+    "char_kaan_roster_v1",
+    "wardrobe_aden_ep001_v1",
+    "wardrobe_kaan_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc01_sh04_l1",
+    "sc01_sh04_l2"
+   ],
+   "dialogue_lines": [
+    "aden: Bu da kardeşim Kaan.",
+    "kaan: Abla!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc01_sh05",
+   "scene_id": "sc01",
+   "framing": "geniş",
+   "lens_perspective": "24mm eşdeğeri (geniş, hafif derin alan)",
+   "camera_movement": "arkadan yavaş geri çekilme",
+   "character_ids": [
+    "aden",
+    "kaan"
+   ],
+   "character_positions": {
+    "aden": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "kaan": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "aden": {
+     "from": "İkisi birlikte kapıya bakar",
+     "to": "Aden kapıya koşar, Kaan emekler",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "kaan": {
+     "from": "İkisi birlikte kapıya bakar",
+     "to": "Aden kapıya koşar, Kaan emekler",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "İkisi birlikte kapıya bakar",
+   "final_pose": "Aden kapıya koşar, Kaan emekler",
+   "action": "Mutfaktan çağrı gelir; çocuklar sese doğru gider",
+   "duration_ms": 7000,
+   "exact_start_ms": 28000,
+   "exact_end_ms": 35000,
+   "visual_asset_refs": [
+    "env_home_salon_v1",
+    "char_aden_roster_v1",
+    "char_kaan_roster_v1",
+    "wardrobe_aden_ep001_v1",
+    "wardrobe_kaan_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc01_sh05_l1"
+   ],
+   "dialogue_lines": [
+    "esra: Kahvaltı hazır, gelin bakalım!"
+   ],
+   "transition": "mutfağa geçiş (ses köprüsü)"
+  },
+  {
+   "shot_id": "sc02_sh01",
+   "scene_id": "sc02",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "sol kayış",
+   "character_ids": [
+    "esra",
+    "aden"
+   ],
+   "character_positions": {
+    "esra": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "aden": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "esra": {
+     "from": "Esra sepeti açar, Aden yanında",
+     "to": "Esra elmayı Aden'e uzatır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aden": {
+     "from": "Esra sepeti açar, Aden yanında",
+     "to": "Esra elmayı Aden'e uzatır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Esra sepeti açar, Aden yanında",
+   "final_pose": "Esra elmayı Aden'e uzatır",
+   "action": "Esra kendini tanıtır, Aden annesine sarılır",
+   "duration_ms": 8000,
+   "exact_start_ms": 35000,
+   "exact_end_ms": 43000,
+   "visual_asset_refs": [
+    "env_home_kitchen_v1",
+    "char_esra_roster_v1",
+    "char_aden_roster_v1",
+    "wardrobe_esra_ep001_v1",
+    "wardrobe_aden_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc02_sh01_l1",
+    "sc02_sh01_l2"
+   ],
+   "dialogue_lines": [
+    "esra: Merhaba! Ben Esra, Aden'in annesiyim.",
+    "aden: Annem!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc02_sh02",
+   "scene_id": "sc02",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "ahmet"
+   ],
+   "character_positions": {
+    "ahmet": {
+     "x_m": 0.0,
+     "depth": "ön",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "ahmet": {
+     "from": "Ahmet bebek arabasının tekerini çevirir",
+     "to": "Ahmet doğrulur, başparmak gösterir",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Ahmet bebek arabasının tekerini çevirir",
+   "final_pose": "Ahmet doğrulur, başparmak gösterir",
+   "action": "Ahmet gülümseyerek tekerleği sağlamlaştırır",
+   "duration_ms": 8000,
+   "exact_start_ms": 43000,
+   "exact_end_ms": 51000,
+   "visual_asset_refs": [
+    "env_home_kitchen_v1",
+    "char_ahmet_roster_v1",
+    "wardrobe_ahmet_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc02_sh02_l1"
+   ],
+   "dialogue_lines": [
+    "ahmet: Ben de Ahmet, babalarıyım. Tekerler tamam!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc02_sh03",
+   "scene_id": "sc02",
+   "framing": "yakın",
+   "lens_perspective": "65mm eşdeğeri (yüz odaklı, sığ alan)",
+   "camera_movement": "Kaan'a odaklanma",
+   "character_ids": [
+    "kaan",
+    "ahmet"
+   ],
+   "character_positions": {
+    "kaan": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "ahmet": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "kaan": {
+     "from": "Kaan Ahmet'in ayağına tutunur",
+     "to": "Ahmet Kaan'ı kucağına alır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "ahmet": {
+     "from": "Kaan Ahmet'in ayağına tutunur",
+     "to": "Ahmet Kaan'ı kucağına alır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Kaan Ahmet'in ayağına tutunur",
+   "final_pose": "Ahmet Kaan'ı kucağına alır",
+   "action": "Kaan babasına uzanır; baba kucaklar",
+   "duration_ms": 8000,
+   "exact_start_ms": 51000,
+   "exact_end_ms": 59000,
+   "visual_asset_refs": [
+    "env_home_kitchen_v1",
+    "char_kaan_roster_v1",
+    "char_ahmet_roster_v1",
+    "wardrobe_kaan_ep001_v1",
+    "wardrobe_ahmet_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc02_sh03_l1"
+   ],
+   "dialogue_lines": [
+    "kaan: Baba!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc02_sh04",
+   "scene_id": "sc02",
+   "framing": "geniş",
+   "lens_perspective": "24mm eşdeğeri (geniş, hafif derin alan)",
+   "camera_movement": "yavaş yukarı kaldırma",
+   "character_ids": [
+    "esra",
+    "ahmet",
+    "aden",
+    "kaan"
+   ],
+   "character_positions": {
+    "esra": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "ahmet": {
+     "x_m": -0.53,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "aden": {
+     "x_m": 0.53,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    },
+    "kaan": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "esra": {
+     "from": "Aile masada dağınık",
+     "to": "Aile sepet etrafında toplanır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "ahmet": {
+     "from": "Aile masada dağınık",
+     "to": "Aile sepet etrafında toplanır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aden": {
+     "from": "Aile masada dağınık",
+     "to": "Aile sepet etrafında toplanır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "kaan": {
+     "from": "Aile masada dağınık",
+     "to": "Aile sepet etrafında toplanır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Aile masada dağınık",
+   "final_pose": "Aile sepet etrafında toplanır",
+   "action": "Esra herkese suyu verir, Ahmet sepeti kapatır",
+   "duration_ms": 8000,
+   "exact_start_ms": 59000,
+   "exact_end_ms": 67000,
+   "visual_asset_refs": [
+    "env_home_kitchen_v1",
+    "char_esra_roster_v1",
+    "char_ahmet_roster_v1",
+    "char_aden_roster_v1",
+    "char_kaan_roster_v1",
+    "wardrobe_esra_ep001_v1",
+    "wardrobe_ahmet_ep001_v1",
+    "wardrobe_aden_ep001_v1",
+    "wardrobe_kaan_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc02_sh04_l1",
+    "sc02_sh04_l2"
+   ],
+   "dialogue_lines": [
+    "esra: Bugün parkta hepimiz kurallara uyacağız.",
+    "aden: Ben biliyorum!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc02_sh05",
+   "scene_id": "sc02",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "aden",
+    "esra",
+    "ahmet"
+   ],
+   "character_positions": {
+    "aden": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "esra": {
+     "x_m": 0.0,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "ahmet": {
+     "x_m": 1.6,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    }
+   },
+   "movement_trajectory": {
+    "aden": {
+     "from": "Aden ellerini beline koyar",
+     "to": "Aden kapıya yürür",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "esra": {
+     "from": "Aden ellerini beline koyar",
+     "to": "Aden kapıya yürür",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "ahmet": {
+     "from": "Aden ellerini beline koyar",
+     "to": "Aden kapıya yürür",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Aden ellerini beline koyar",
+   "final_pose": "Aden kapıya yürür",
+   "action": "Aden ebeveynlerini kapıya çağırır, Ahmet sepeti kaldırır",
+   "duration_ms": 8000,
+   "exact_start_ms": 67000,
+   "exact_end_ms": 75000,
+   "visual_asset_refs": [
+    "env_home_kitchen_v1",
+    "char_aden_roster_v1",
+    "char_esra_roster_v1",
+    "char_ahmet_roster_v1",
+    "wardrobe_aden_ep001_v1",
+    "wardrobe_esra_ep001_v1",
+    "wardrobe_ahmet_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc02_sh05_l1",
+    "sc02_sh05_l2"
+   ],
+   "dialogue_lines": [
+    "aden: Hadi gidelim!",
+    "ahmet: Önce teyzeye uğrayalım."
+   ],
+   "transition": "koridora geçiş"
+  },
+  {
+   "shot_id": "sc03_sh01",
+   "scene_id": "sc03",
+   "framing": "geniş",
+   "lens_perspective": "24mm eşdeğeri (geniş, hafif derin alan)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "esma",
+    "harun"
+   ],
+   "character_positions": {
+    "esma": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "harun": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "esma": {
+     "from": "Esma ayakkabılığın yanında, Harun çantayı toplar",
+     "to": "Esma gülümseyerek kapıya döner",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "harun": {
+     "from": "Esma ayakkabılığın yanında, Harun çantayı toplar",
+     "to": "Esma gülümseyerek kapıya döner",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Esma ayakkabılığın yanında, Harun çantayı toplar",
+   "final_pose": "Esma gülümseyerek kapıya döner",
+   "action": "Harun ve Esma misafirleri koridorda karşılar",
+   "duration_ms": 8000,
+   "exact_start_ms": 75000,
+   "exact_end_ms": 83000,
+   "visual_asset_refs": [
+    "env_home_entry_corridor_v1",
+    "char_esma_roster_v1",
+    "char_harun_roster_v1",
+    "wardrobe_esma_ep001_v1",
+    "wardrobe_harun_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc03_sh01_l1"
+   ],
+   "dialogue_lines": [
+    "esma: Hoş geldiniz! Ben Esma, Aden ve Kaan'ın teyzesiyim."
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc03_sh02",
+   "scene_id": "sc03",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "sağa kayış",
+   "character_ids": [
+    "harun"
+   ],
+   "character_positions": {
+    "harun": {
+     "x_m": 0.0,
+     "depth": "ön",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "harun": {
+     "from": "Harun çantayı omuzlar",
+     "to": "Harun elini kalbine koyar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Harun çantayı omuzlar",
+   "final_pose": "Harun elini kalbine koyar",
+   "action": "Harun uzun boyuyla eğilir, çocuklara selam verir",
+   "duration_ms": 8000,
+   "exact_start_ms": 83000,
+   "exact_end_ms": 91000,
+   "visual_asset_refs": [
+    "env_home_entry_corridor_v1",
+    "char_harun_roster_v1",
+    "wardrobe_harun_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc03_sh02_l1"
+   ],
+   "dialogue_lines": [
+    "harun: Ben Harun, enişteniz. Bugün park lideriyim!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc03_sh03",
+   "scene_id": "sc03",
+   "framing": "yakın",
+   "lens_perspective": "65mm eşdeğeri (yüz odaklı, sığ alan)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "aden",
+    "esma"
+   ],
+   "character_positions": {
+    "aden": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "esma": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "aden": {
+     "from": "Aden Esma'nın karnına bakar",
+     "to": "Aden elini nazikçe karnına koyar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "esma": {
+     "from": "Aden Esma'nın karnına bakar",
+     "to": "Aden elini nazikçe karnına koyar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Aden Esma'nın karnına bakar",
+   "final_pose": "Aden elini nazikçe karnına koyar",
+   "action": "Aden teyzesinin karnını yavaşça okşar, Esma gülümser",
+   "duration_ms": 8000,
+   "exact_start_ms": 91000,
+   "exact_end_ms": 99000,
+   "visual_asset_refs": [
+    "env_home_entry_corridor_v1",
+    "char_aden_roster_v1",
+    "char_esma_roster_v1",
+    "wardrobe_aden_ep001_v1",
+    "wardrobe_esma_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc03_sh03_l1",
+    "sc03_sh03_l2"
+   ],
+   "dialogue_lines": [
+    "aden: Teyze, içinde bebek var mı?",
+    "esma: Evet, beş aylık."
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc03_sh04",
+   "scene_id": "sc03",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "kaan",
+    "harun"
+   ],
+   "character_positions": {
+    "kaan": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "harun": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "kaan": {
+     "from": "Kaan Harun'un bacağına tutunur",
+     "to": "Harun Kaan'ı yukarı kaldırır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "harun": {
+     "from": "Kaan Harun'un bacağına tutunur",
+     "to": "Harun Kaan'ı yukarı kaldırır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Kaan Harun'un bacağına tutunur",
+   "final_pose": "Harun Kaan'ı yukarı kaldırır",
+   "action": "Kaan Harun'a bakar ve kıkırdar; Harun onu omzuna oturtur",
+   "duration_ms": 9000,
+   "exact_start_ms": 99000,
+   "exact_end_ms": 108000,
+   "visual_asset_refs": [
+    "env_home_entry_corridor_v1",
+    "char_kaan_roster_v1",
+    "char_harun_roster_v1",
+    "wardrobe_kaan_ep001_v1",
+    "wardrobe_harun_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc03_sh04_l1",
+    "sc03_sh04_l2"
+   ],
+   "dialogue_lines": [
+    "kaan: Hop!",
+    "harun: Hop! Kaan uçuyor."
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc03_sh05",
+   "scene_id": "sc03",
+   "framing": "geniş",
+   "lens_perspective": "24mm eşdeğeri (geniş, hafif derin alan)",
+   "camera_movement": "arkadan takip",
+   "character_ids": [
+    "harun",
+    "esma",
+    "esra",
+    "ahmet",
+    "aden",
+    "kaan"
+   ],
+   "character_positions": {
+    "harun": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "esma": {
+     "x_m": -0.96,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "esra": {
+     "x_m": -0.32,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    },
+    "ahmet": {
+     "x_m": 0.32,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "aden": {
+     "x_m": 0.96,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "kaan": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "diğer karaktere"
+    }
+   },
+   "movement_trajectory": {
+    "harun": {
+     "from": "Herkes koridorda",
+     "to": "Herkes kapıdan çıkar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "esma": {
+     "from": "Herkes koridorda",
+     "to": "Herkes kapıdan çıkar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "esra": {
+     "from": "Herkes koridorda",
+     "to": "Herkes kapıdan çıkar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "ahmet": {
+     "from": "Herkes koridorda",
+     "to": "Herkes kapıdan çıkar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aden": {
+     "from": "Herkes koridorda",
+     "to": "Herkes kapıdan çıkar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "kaan": {
+     "from": "Herkes koridorda",
+     "to": "Herkes kapıdan çıkar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Herkes koridorda",
+   "final_pose": "Herkes kapıdan çıkar",
+   "action": "Harun herkesi topluyor; Esma çantasını alır; hep birlikte çıkarlar",
+   "duration_ms": 9000,
+   "exact_start_ms": 108000,
+   "exact_end_ms": 117000,
+   "visual_asset_refs": [
+    "env_home_entry_corridor_v1",
+    "char_harun_roster_v1",
+    "char_esma_roster_v1",
+    "char_esra_roster_v1",
+    "char_ahmet_roster_v1",
+    "char_aden_roster_v1",
+    "char_kaan_roster_v1",
+    "wardrobe_harun_ep001_v1",
+    "wardrobe_esma_ep001_v1",
+    "wardrobe_esra_ep001_v1",
+    "wardrobe_ahmet_ep001_v1",
+    "wardrobe_aden_ep001_v1",
+    "wardrobe_kaan_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc03_sh05_l1",
+    "sc03_sh05_l2"
+   ],
+   "dialogue_lines": [
+    "harun: Herkes hazır mı? Parka!",
+    "esma: Hadi bakalım!"
+   ],
+   "transition": "dış mekâna geçiş"
+  },
+  {
+   "shot_id": "sc03_sh06",
+   "scene_id": "sc03",
+   "framing": "orta (kapı eşiği)",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "aden",
+    "kaan"
+   ],
+   "character_positions": {
+    "aden": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "kaan": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "aden": {
+     "from": "Çocuklar kapıda",
+     "to": "Aden el sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "kaan": {
+     "from": "Çocuklar kapıda",
+     "to": "Aden el sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Çocuklar kapıda",
+   "final_pose": "Aden el sallar",
+   "action": "Aden ve Kaan izleyiciye el sallar; kapı yavaşça kapanır",
+   "duration_ms": 8000,
+   "exact_start_ms": 117000,
+   "exact_end_ms": 125000,
+   "visual_asset_refs": [
+    "env_home_entry_corridor_v1",
+    "char_aden_roster_v1",
+    "char_kaan_roster_v1",
+    "wardrobe_aden_ep001_v1",
+    "wardrobe_kaan_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc03_sh06_l1"
+   ],
+   "dialogue_lines": [
+    "aden: Bizimle gelin!"
+   ],
+   "transition": "kapı kapanışıyla geçiş"
+  },
+  {
+   "shot_id": "sc04_sh01",
+   "scene_id": "sc04",
+   "framing": "geniş",
+   "lens_perspective": "24mm eşdeğeri (geniş, hafif derin alan)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "veysel",
+    "oznur",
+    "salih"
+   ],
+   "character_positions": {
+    "veysel": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "oznur": {
+     "x_m": 0.0,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "salih": {
+     "x_m": 1.6,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    }
+   },
+   "movement_trajectory": {
+    "veysel": {
+     "from": "Kapı açılır, aile dışarıda",
+     "to": "Veysel içeri adım atar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "oznur": {
+     "from": "Kapı açılır, aile dışarıda",
+     "to": "Veysel içeri adım atar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "salih": {
+     "from": "Kapı açılır, aile dışarıda",
+     "to": "Veysel içeri adım atar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Kapı açılır, aile dışarıda",
+   "final_pose": "Veysel içeri adım atar",
+   "action": "Kapıda Veysel, Öznur ve Salih; Harun karşılar",
+   "duration_ms": 9000,
+   "exact_start_ms": 125000,
+   "exact_end_ms": 134000,
+   "visual_asset_refs": [
+    "env_home_entry_corridor_v1",
+    "char_veysel_roster_v1",
+    "char_oznur_roster_v1",
+    "char_salih_roster_v1",
+    "wardrobe_veysel_ep001_v1",
+    "wardrobe_oznur_ep001_v1",
+    "wardrobe_salih_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc04_sh01_l1",
+    "sc04_sh01_l2"
+   ],
+   "dialogue_lines": [
+    "veysel: Günaydın! Ben Veysel.",
+    "harun: Hoş geldiniz!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc04_sh02",
+   "scene_id": "sc04",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "sağa kayış",
+   "character_ids": [
+    "oznur",
+    "medine"
+   ],
+   "character_positions": {
+    "oznur": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "medine": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "oznur": {
+     "from": "Öznur taşıma koltuğunu gösterir",
+     "to": "Öznur koltuğu hafifçe sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "medine": {
+     "from": "Öznur taşıma koltuğunu gösterir",
+     "to": "Öznur koltuğu hafifçe sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Öznur taşıma koltuğunu gösterir",
+   "final_pose": "Öznur koltuğu hafifçe sallar",
+   "action": "Öznur uyuyan bebeği tanıtır; Medine hafif bir ses çıkarır",
+   "duration_ms": 9000,
+   "exact_start_ms": 134000,
+   "exact_end_ms": 143000,
+   "visual_asset_refs": [
+    "env_home_entry_corridor_v1",
+    "char_oznur_roster_v1",
+    "char_medine_roster_v1",
+    "wardrobe_oznur_ep001_v1",
+    "wardrobe_medine_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc04_sh02_l1",
+    "sc04_sh02_l2"
+   ],
+   "dialogue_lines": [
+    "oznur: Ben Öznur. Bu da bebeğimiz Medine, iki aylık.",
+    "medine: [ince bebek mırıltısı]"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc04_sh03",
+   "scene_id": "sc04",
+   "framing": "yakın",
+   "lens_perspective": "65mm eşdeğeri (yüz odaklı, sığ alan)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "salih",
+    "aden"
+   ],
+   "character_positions": {
+    "salih": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "aden": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "salih": {
+     "from": "Salih ayıyı sıkı tutar",
+     "to": "Salih ayıyı Aden'e uzatır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aden": {
+     "from": "Salih ayıyı sıkı tutar",
+     "to": "Salih ayıyı Aden'e uzatır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Salih ayıyı sıkı tutar",
+   "final_pose": "Salih ayıyı Aden'e uzatır",
+   "action": "Salih oyuncağını paylaşır; Aden bakar ve gülümser",
+   "duration_ms": 9000,
+   "exact_start_ms": 143000,
+   "exact_end_ms": 152000,
+   "visual_asset_refs": [
+    "env_home_entry_corridor_v1",
+    "char_salih_roster_v1",
+    "char_aden_roster_v1",
+    "wardrobe_salih_ep001_v1",
+    "wardrobe_aden_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc04_sh03_l1",
+    "sc04_sh03_l2"
+   ],
+   "dialogue_lines": [
+    "salih: Ben Salih. İki!",
+    "aden: Merhaba Salih!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc04_sh04",
+   "scene_id": "sc04",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "veysel",
+    "harun"
+   ],
+   "character_positions": {
+    "veysel": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "harun": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "veysel": {
+     "from": "Veysel güler, mavi gözlerini kırpar",
+     "to": "Veysel ve Harun el sıkışır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "harun": {
+     "from": "Veysel güler, mavi gözlerini kırpar",
+     "to": "Veysel ve Harun el sıkışır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Veysel güler, mavi gözlerini kırpar",
+   "final_pose": "Veysel ve Harun el sıkışır",
+   "action": "Erkekler selamlaşır; Veysel koltuğu kaldırır",
+   "duration_ms": 9000,
+   "exact_start_ms": 152000,
+   "exact_end_ms": 161000,
+   "visual_asset_refs": [
+    "env_home_entry_corridor_v1",
+    "char_veysel_roster_v1",
+    "char_harun_roster_v1",
+    "wardrobe_veysel_ep001_v1",
+    "wardrobe_harun_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc04_sh04_l1"
+   ],
+   "dialogue_lines": [
+    "veysel: Hadi, park bizi bekliyor!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc04_sh05",
+   "scene_id": "sc04",
+   "framing": "geniş",
+   "lens_perspective": "24mm eşdeğeri (geniş, hafif derin alan)",
+   "camera_movement": "geri çekilme",
+   "character_ids": [
+    "veysel",
+    "oznur",
+    "salih",
+    "aden",
+    "harun"
+   ],
+   "character_positions": {
+    "veysel": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "oznur": {
+     "x_m": -0.8,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "salih": {
+     "x_m": 0.0,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    },
+    "aden": {
+     "x_m": 0.8,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "harun": {
+     "x_m": 1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "veysel": {
+     "from": "Grup kapıda",
+     "to": "Grup yola koyulur",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "oznur": {
+     "from": "Grup kapıda",
+     "to": "Grup yola koyulur",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "salih": {
+     "from": "Grup kapıda",
+     "to": "Grup yola koyulur",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aden": {
+     "from": "Grup kapıda",
+     "to": "Grup yola koyulur",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "harun": {
+     "from": "Grup kapıda",
+     "to": "Grup yola koyulur",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Grup kapıda",
+   "final_pose": "Grup yola koyulur",
+   "action": "İki aile birlikte sokağa çıkar; Salih Aden'in elini tutar",
+   "duration_ms": 9000,
+   "exact_start_ms": 161000,
+   "exact_end_ms": 170000,
+   "visual_asset_refs": [
+    "env_home_entry_corridor_v1",
+    "char_veysel_roster_v1",
+    "char_oznur_roster_v1",
+    "char_salih_roster_v1",
+    "char_aden_roster_v1",
+    "char_harun_roster_v1",
+    "wardrobe_veysel_ep001_v1",
+    "wardrobe_oznur_ep001_v1",
+    "wardrobe_salih_ep001_v1",
+    "wardrobe_aden_ep001_v1",
+    "wardrobe_harun_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc04_sh05_l1"
+   ],
+   "dialogue_lines": [
+    "oznur: Salih, elini bırakma."
+   ],
+   "transition": "sokağa geçiş (güneşli dış)"
+  },
+  {
+   "shot_id": "sc05_sh01",
+   "scene_id": "sc05",
+   "framing": "geniş",
+   "lens_perspective": "24mm eşdeğeri (geniş, hafif derin alan)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "davut",
+    "fatos",
+    "emos",
+    "berzan",
+    "aras",
+    "ramin"
+   ],
+   "character_positions": {
+    "davut": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "fatos": {
+     "x_m": -0.96,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "emos": {
+     "x_m": -0.32,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    },
+    "berzan": {
+     "x_m": 0.32,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "aras": {
+     "x_m": 0.96,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "ramin": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "diğer karaktere"
+    }
+   },
+   "movement_trajectory": {
+    "davut": {
+     "from": "Aile park kapısında",
+     "to": "Davut el sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "fatos": {
+     "from": "Aile park kapısında",
+     "to": "Davut el sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "emos": {
+     "from": "Aile park kapısında",
+     "to": "Davut el sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "berzan": {
+     "from": "Aile park kapısında",
+     "to": "Davut el sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aras": {
+     "from": "Aile park kapısında",
+     "to": "Davut el sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "ramin": {
+     "from": "Aile park kapısında",
+     "to": "Davut el sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Aile park kapısında",
+   "final_pose": "Davut el sallar",
+   "action": "Davut ailesiyle girişte bekliyor; kapı kemeri görünür",
+   "duration_ms": 9000,
+   "exact_start_ms": 170000,
+   "exact_end_ms": 179000,
+   "visual_asset_refs": [
+    "env_park_entrance_v1",
+    "char_davut_roster_v1",
+    "char_fatos_roster_v1",
+    "char_emos_roster_v1",
+    "char_berzan_roster_v1",
+    "char_aras_roster_v1",
+    "char_ramin_roster_v1",
+    "wardrobe_davut_ep001_v1",
+    "wardrobe_fatos_ep001_v1",
+    "wardrobe_emos_ep001_v1",
+    "wardrobe_berzan_ep001_v1",
+    "wardrobe_aras_ep001_v1",
+    "wardrobe_ramin_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc05_sh01_l1"
+   ],
+   "dialogue_lines": [
+    "davut: Selam millet! Biz geldik!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc05_sh02",
+   "scene_id": "sc05",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "sol kayış",
+   "character_ids": [
+    "davut",
+    "fatos"
+   ],
+   "character_positions": {
+    "davut": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "fatos": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "davut": {
+     "from": "Davut ellerini beline koyar",
+     "to": "Davut gülerek omuzlarını silkelemeler",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "fatos": {
+     "from": "Davut ellerini beline koyar",
+     "to": "Davut gülerek omuzlarını silkelemeler",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Davut ellerini beline koyar",
+   "final_pose": "Davut gülerek omuzlarını silkelemeler",
+   "action": "Davut kendini tanıtır; Fatoş rahat bir gülümsemeyle yanına gelir",
+   "duration_ms": 9000,
+   "exact_start_ms": 179000,
+   "exact_end_ms": 188000,
+   "visual_asset_refs": [
+    "env_park_entrance_v1",
+    "char_davut_roster_v1",
+    "char_fatos_roster_v1",
+    "wardrobe_davut_ep001_v1",
+    "wardrobe_fatos_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc05_sh02_l1",
+    "sc05_sh02_l2"
+   ],
+   "dialogue_lines": [
+    "davut: Ben Davut, kocaman bir babayım!",
+    "fatos: Ben Fatoş. Hoş geldiniz!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc05_sh03",
+   "scene_id": "sc05",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "emos",
+    "aden"
+   ],
+   "character_positions": {
+    "emos": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "aden": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "emos": {
+     "from": "Emos ellerini beline koyar",
+     "to": "Emos Aden'e koşar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aden": {
+     "from": "Emos ellerini beline koyar",
+     "to": "Emos Aden'e koşar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Emos ellerini beline koyar",
+   "final_pose": "Emos Aden'e koşar",
+   "action": "Emos dört yaşında, kendinden emin; Aden'le el çırparlar",
+   "duration_ms": 9000,
+   "exact_start_ms": 188000,
+   "exact_end_ms": 197000,
+   "visual_asset_refs": [
+    "env_park_entrance_v1",
+    "char_emos_roster_v1",
+    "char_aden_roster_v1",
+    "wardrobe_emos_ep001_v1",
+    "wardrobe_aden_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc05_sh03_l1",
+    "sc05_sh03_l2"
+   ],
+   "dialogue_lines": [
+    "emos: Ben Emoş. Dört yaşındayım!",
+    "aden: Emoş!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc05_sh04",
+   "scene_id": "sc05",
+   "framing": "yakın",
+   "lens_perspective": "65mm eşdeğeri (yüz odaklı, sığ alan)",
+   "camera_movement": "ikiz çifte odaklanma",
+   "character_ids": [
+    "berzan",
+    "aras"
+   ],
+   "character_positions": {
+    "berzan": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "aras": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "berzan": {
+     "from": "İkizler yan yana; Berzan göz kırpar, Aras peluşa sarılır",
+     "to": "Berzan başparmak, Aras gülümser",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aras": {
+     "from": "İkizler yan yana; Berzan göz kırpar, Aras peluşa sarılır",
+     "to": "Berzan başparmak, Aras gülümser",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "İkizler yan yana; Berzan göz kırpar, Aras peluşa sarılır",
+   "final_pose": "Berzan başparmak, Aras gülümser",
+   "action": "İkizlerin farklılığı: Berzan hareketli, Aras sakin; Fatoş tanıtır",
+   "duration_ms": 9000,
+   "exact_start_ms": 197000,
+   "exact_end_ms": 206000,
+   "visual_asset_refs": [
+    "env_park_entrance_v1",
+    "char_berzan_roster_v1",
+    "char_aras_roster_v1",
+    "wardrobe_berzan_ep001_v1",
+    "wardrobe_aras_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc05_sh04_l1",
+    "sc05_sh04_l2",
+    "sc05_sh04_l3"
+   ],
+   "dialogue_lines": [
+    "fatos: Bunlar ikizlerimiz Berzan ve Aras.",
+    "berzan: Ben Berzan!",
+    "aras: Aras."
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc05_sh05",
+   "scene_id": "sc05",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "fatos",
+    "ramin"
+   ],
+   "character_positions": {
+    "fatos": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "ramin": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "fatos": {
+     "from": "Fatoş çift arabanın yanında",
+     "to": "Fatoş battaniyeyi düzeltir",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "ramin": {
+     "from": "Fatoş çift arabanın yanında",
+     "to": "Fatoş battaniyeyi düzeltir",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Fatoş çift arabanın yanında",
+   "final_pose": "Fatoş battaniyeyi düzeltir",
+   "action": "Fatoş uyuyan Ramin'i tanıtır; Ramin nefes alır, hafif bir ses çıkarır",
+   "duration_ms": 9000,
+   "exact_start_ms": 206000,
+   "exact_end_ms": 215000,
+   "visual_asset_refs": [
+    "env_park_entrance_v1",
+    "char_fatos_roster_v1",
+    "char_ramin_roster_v1",
+    "wardrobe_fatos_ep001_v1",
+    "wardrobe_ramin_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc05_sh05_l1",
+    "sc05_sh05_l2"
+   ],
+   "dialogue_lines": [
+    "fatos: Bu da Ramin, bir aylık.",
+    "ramin: [yeni doğan nefes ve minik ses]"
+   ],
+   "transition": "parka geçiş"
+  },
+  {
+   "shot_id": "sc06_sh01",
+   "scene_id": "sc06",
+   "framing": "geniş",
+   "lens_perspective": "24mm eşdeğeri (geniş, hafif derin alan)",
+   "camera_movement": "yavaş içeri itme",
+   "character_ids": [
+    "harun",
+    "aden",
+    "emos",
+    "salih",
+    "berzan",
+    "aras"
+   ],
+   "character_positions": {
+    "harun": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "aden": {
+     "x_m": -0.96,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "emos": {
+     "x_m": -0.32,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    },
+    "salih": {
+     "x_m": 0.32,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "berzan": {
+     "x_m": 0.96,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "aras": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "diğer karaktere"
+    }
+   },
+   "movement_trajectory": {
+    "harun": {
+     "from": "Çocuklar tabelaya doğru yürür",
+     "to": "Çocuklar tabelanın önünde",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aden": {
+     "from": "Çocuklar tabelaya doğru yürür",
+     "to": "Çocuklar tabelanın önünde",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "emos": {
+     "from": "Çocuklar tabelaya doğru yürür",
+     "to": "Çocuklar tabelanın önünde",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "salih": {
+     "from": "Çocuklar tabelaya doğru yürür",
+     "to": "Çocuklar tabelanın önünde",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "berzan": {
+     "from": "Çocuklar tabelaya doğru yürür",
+     "to": "Çocuklar tabelanın önünde",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aras": {
+     "from": "Çocuklar tabelaya doğru yürür",
+     "to": "Çocuklar tabelanın önünde",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Çocuklar tabelaya doğru yürür",
+   "final_pose": "Çocuklar tabelanın önünde",
+   "action": "Park kurallar tabelası görünür; Harun çocukları tabelanın önüne toplar",
+   "duration_ms": 8000,
+   "exact_start_ms": 215000,
+   "exact_end_ms": 223000,
+   "visual_asset_refs": [
+    "env_park_rules_sign_v1",
+    "char_harun_roster_v1",
+    "char_aden_roster_v1",
+    "char_emos_roster_v1",
+    "char_salih_roster_v1",
+    "char_berzan_roster_v1",
+    "char_aras_roster_v1",
+    "wardrobe_harun_ep001_v1",
+    "wardrobe_aden_ep001_v1",
+    "wardrobe_emos_ep001_v1",
+    "wardrobe_salih_ep001_v1",
+    "wardrobe_berzan_ep001_v1",
+    "wardrobe_aras_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc06_sh01_l1"
+   ],
+   "dialogue_lines": [
+    "harun: Bakın, parkın kuralları!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc06_sh02",
+   "scene_id": "sc06",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "harun",
+    "aden"
+   ],
+   "character_positions": {
+    "harun": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "aden": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "harun": {
+     "from": "Harun tabelayı gösterir",
+     "to": "Aden tabelaya el sürmeden parmağıyla işaret eder",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aden": {
+     "from": "Harun tabelayı gösterir",
+     "to": "Aden tabelaya el sürmeden parmağıyla işaret eder",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Harun tabelayı gösterir",
+   "final_pose": "Aden tabelaya el sürmeden parmağıyla işaret eder",
+   "action": "Harun birinci ve ikinci kuralı anlatır; Aden tekrar eder",
+   "duration_ms": 8000,
+   "exact_start_ms": 223000,
+   "exact_end_ms": 231000,
+   "visual_asset_refs": [
+    "env_park_rules_sign_v1",
+    "char_harun_roster_v1",
+    "char_aden_roster_v1",
+    "wardrobe_harun_ep001_v1",
+    "wardrobe_aden_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc06_sh02_l1",
+    "sc06_sh02_l2"
+   ],
+   "dialogue_lines": [
+    "harun: Bir: Çöpler çöp kutusuna!",
+    "aden: Çöp kutusu!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc06_sh03",
+   "scene_id": "sc06",
+   "framing": "yakın",
+   "lens_perspective": "65mm eşdeğeri (yüz odaklı, sığ alan)",
+   "camera_movement": "sağa kayış",
+   "character_ids": [
+    "emos",
+    "salih"
+   ],
+   "character_positions": {
+    "emos": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "salih": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "emos": {
+     "from": "Emos tabelaya bakar",
+     "to": "Salih ellerini çırpar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "salih": {
+     "from": "Emos tabelaya bakar",
+     "to": "Salih ellerini çırpar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Emos tabelaya bakar",
+   "final_pose": "Salih ellerini çırpar",
+   "action": "İki: çiçekleri koparmayız; Emos ve Salih tepki verir",
+   "duration_ms": 8000,
+   "exact_start_ms": 231000,
+   "exact_end_ms": 239000,
+   "visual_asset_refs": [
+    "env_park_rules_sign_v1",
+    "char_emos_roster_v1",
+    "char_salih_roster_v1",
+    "wardrobe_emos_ep001_v1",
+    "wardrobe_salih_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc06_sh03_l1",
+    "sc06_sh03_l2"
+   ],
+   "dialogue_lines": [
+    "harun: İki: Çiçeklere bakarız, koparmayız.",
+    "emos: Koparmayız!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc06_sh04",
+   "scene_id": "sc06",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "berzan",
+    "aras",
+    "kaan"
+   ],
+   "character_positions": {
+    "berzan": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "aras": {
+     "x_m": 0.0,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "kaan": {
+     "x_m": 1.6,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    }
+   },
+   "movement_trajectory": {
+    "berzan": {
+     "from": "Berzan zıplar, Aras Kaan'a bakar",
+     "to": "Aras Kaan'ın elini tutar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aras": {
+     "from": "Berzan zıplar, Aras Kaan'a bakar",
+     "to": "Aras Kaan'ın elini tutar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "kaan": {
+     "from": "Berzan zıplar, Aras Kaan'a bakar",
+     "to": "Aras Kaan'ın elini tutar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Berzan zıplar, Aras Kaan'a bakar",
+   "final_pose": "Aras Kaan'ın elini tutar",
+   "action": "Üç: kaydırakta sıra; Berzan sabırsız, Aras sakin",
+   "duration_ms": 8000,
+   "exact_start_ms": 239000,
+   "exact_end_ms": 247000,
+   "visual_asset_refs": [
+    "env_park_rules_sign_v1",
+    "char_berzan_roster_v1",
+    "char_aras_roster_v1",
+    "char_kaan_roster_v1",
+    "wardrobe_berzan_ep001_v1",
+    "wardrobe_aras_ep001_v1",
+    "wardrobe_kaan_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc06_sh04_l1",
+    "sc06_sh04_l2"
+   ],
+   "dialogue_lines": [
+    "harun: Üç: Kaydırakta sıra bekleriz.",
+    "berzan: Sıra!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc06_sh05",
+   "scene_id": "sc06",
+   "framing": "geniş",
+   "lens_perspective": "24mm eşdeğeri (geniş, hafif derin alan)",
+   "camera_movement": "hafif yukarı kayış",
+   "character_ids": [
+    "harun",
+    "esma",
+    "davut",
+    "fatos",
+    "veysel",
+    "oznur",
+    "esra",
+    "ahmet"
+   ],
+   "character_positions": {
+    "harun": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "esma": {
+     "x_m": -1.14,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "davut": {
+     "x_m": -0.69,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    },
+    "fatos": {
+     "x_m": -0.23,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "veysel": {
+     "x_m": 0.23,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "oznur": {
+     "x_m": 0.69,
+     "depth": "arka",
+     "facing": "diğer karaktere"
+    },
+    "esra": {
+     "x_m": 1.14,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "ahmet": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "harun": {
+     "from": "Yetişkinler çocukların arkasında",
+     "to": "Yetişkinler başlarıyla onaylar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "esma": {
+     "from": "Yetişkinler çocukların arkasında",
+     "to": "Yetişkinler başlarıyla onaylar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "davut": {
+     "from": "Yetişkinler çocukların arkasında",
+     "to": "Yetişkinler başlarıyla onaylar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "fatos": {
+     "from": "Yetişkinler çocukların arkasında",
+     "to": "Yetişkinler başlarıyla onaylar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "veysel": {
+     "from": "Yetişkinler çocukların arkasında",
+     "to": "Yetişkinler başlarıyla onaylar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "oznur": {
+     "from": "Yetişkinler çocukların arkasında",
+     "to": "Yetişkinler başlarıyla onaylar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "esra": {
+     "from": "Yetişkinler çocukların arkasında",
+     "to": "Yetişkinler başlarıyla onaylar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "ahmet": {
+     "from": "Yetişkinler çocukların arkasında",
+     "to": "Yetişkinler başlarıyla onaylar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Yetişkinler çocukların arkasında",
+   "final_pose": "Yetişkinler başlarıyla onaylar",
+   "action": "Dört: işaretlere bakarız; herkes birlikte alkışlar",
+   "duration_ms": 8000,
+   "exact_start_ms": 247000,
+   "exact_end_ms": 255000,
+   "visual_asset_refs": [
+    "env_park_rules_sign_v1",
+    "char_harun_roster_v1",
+    "char_esma_roster_v1",
+    "char_davut_roster_v1",
+    "char_fatos_roster_v1",
+    "char_veysel_roster_v1",
+    "char_oznur_roster_v1",
+    "char_esra_roster_v1",
+    "char_ahmet_roster_v1",
+    "wardrobe_harun_ep001_v1",
+    "wardrobe_esma_ep001_v1",
+    "wardrobe_davut_ep001_v1",
+    "wardrobe_fatos_ep001_v1",
+    "wardrobe_veysel_ep001_v1",
+    "wardrobe_oznur_ep001_v1",
+    "wardrobe_esra_ep001_v1",
+    "wardrobe_ahmet_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc06_sh05_l1",
+    "sc06_sh05_l2"
+   ],
+   "dialogue_lines": [
+    "harun: Dört: İşaretlere bakar, güvenli yoldan yürürüz.",
+    "davut: Yaşasın kurallar!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc07_sh01",
+   "scene_id": "sc07",
+   "framing": "geniş",
+   "lens_perspective": "24mm eşdeğeri (geniş, hafif derin alan)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "berzan",
+    "aden"
+   ],
+   "character_positions": {
+    "berzan": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "aden": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "berzan": {
+     "from": "Berzan elma yer",
+     "to": "Berzan sapı fırlatır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aden": {
+     "from": "Berzan elma yer",
+     "to": "Berzan sapı fırlatır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Berzan elma yer",
+   "final_pose": "Berzan sapı fırlatır",
+   "action": "Berzan elmayı bitirir ve sapı çimene atar",
+   "duration_ms": 9000,
+   "exact_start_ms": 255000,
+   "exact_end_ms": 264000,
+   "visual_asset_refs": [
+    "env_park_trash_walk_v1",
+    "char_berzan_roster_v1",
+    "char_aden_roster_v1",
+    "wardrobe_berzan_ep001_v1",
+    "wardrobe_aden_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc07_sh01_l1"
+   ],
+   "dialogue_lines": [
+    "berzan: Bitti!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc07_sh02",
+   "scene_id": "sc07",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "Aras'ı takip",
+   "character_ids": [
+    "aras"
+   ],
+   "character_positions": {
+    "aras": {
+     "x_m": 0.0,
+     "depth": "ön",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "aras": {
+     "from": "Aras peluşa sarılı oturur",
+     "to": "Aras kalkar ve sapı alır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Aras peluşa sarılı oturur",
+   "final_pose": "Aras kalkar ve sapı alır",
+   "action": "Aras sapı fark edip eğilir, alır; çöp kutusuna bakar",
+   "duration_ms": 9000,
+   "exact_start_ms": 264000,
+   "exact_end_ms": 273000,
+   "visual_asset_refs": [
+    "env_park_trash_walk_v1",
+    "char_aras_roster_v1",
+    "wardrobe_aras_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc07_sh02_l1"
+   ],
+   "dialogue_lines": [
+    "aras: Çöp. Kutu."
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc07_sh03",
+   "scene_id": "sc07",
+   "framing": "yakın",
+   "lens_perspective": "65mm eşdeğeri (yüz odaklı, sığ alan)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "aras",
+    "berzan"
+   ],
+   "character_positions": {
+    "aras": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "berzan": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "aras": {
+     "from": "Aras sapı tutar",
+     "to": "Aras sapı kutuya atar, Berzan bakar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "berzan": {
+     "from": "Aras sapı tutar",
+     "to": "Aras sapı kutuya atar, Berzan bakar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Aras sapı tutar",
+   "final_pose": "Aras sapı kutuya atar, Berzan bakar",
+   "action": "Aras sapı çöp kutusuna atar; Berzan utanarak güler",
+   "duration_ms": 9000,
+   "exact_start_ms": 273000,
+   "exact_end_ms": 282000,
+   "visual_asset_refs": [
+    "env_park_trash_walk_v1",
+    "char_aras_roster_v1",
+    "char_berzan_roster_v1",
+    "wardrobe_aras_ep001_v1",
+    "wardrobe_berzan_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc07_sh03_l1",
+    "sc07_sh03_l2"
+   ],
+   "dialogue_lines": [
+    "berzan: Pardon!",
+    "aras: Çöp kutusu!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc07_sh04",
+   "scene_id": "sc07",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "sol kayış",
+   "character_ids": [
+    "davut",
+    "aden",
+    "emos"
+   ],
+   "character_positions": {
+    "davut": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "aden": {
+     "x_m": 0.0,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "emos": {
+     "x_m": 1.6,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    }
+   },
+   "movement_trajectory": {
+    "davut": {
+     "from": "Davut çömelir",
+     "to": "Davut kutuya çöp atar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aden": {
+     "from": "Davut çömelir",
+     "to": "Davut kutuya çöp atar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "emos": {
+     "from": "Davut çömelir",
+     "to": "Davut kutuya çöp atar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Davut çömelir",
+   "final_pose": "Davut kutuya çöp atar",
+   "action": "Davut 'çöp avcısı' olur; çocuklar kutu etrafında toplanır",
+   "duration_ms": 9000,
+   "exact_start_ms": 282000,
+   "exact_end_ms": 291000,
+   "visual_asset_refs": [
+    "env_park_trash_walk_v1",
+    "char_davut_roster_v1",
+    "char_aden_roster_v1",
+    "char_emos_roster_v1",
+    "wardrobe_davut_ep001_v1",
+    "wardrobe_aden_ep001_v1",
+    "wardrobe_emos_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc07_sh04_l1",
+    "sc07_sh04_l2"
+   ],
+   "dialogue_lines": [
+    "davut: Ben çöp avcısıyım! Hop, kutuya!",
+    "aden: Ben de!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc07_sh05",
+   "scene_id": "sc07",
+   "framing": "geniş",
+   "lens_perspective": "24mm eşdeğeri (geniş, hafif derin alan)",
+   "camera_movement": "geri çekilme",
+   "character_ids": [
+    "harun",
+    "aden",
+    "emos",
+    "berzan",
+    "aras",
+    "davut"
+   ],
+   "character_positions": {
+    "harun": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "aden": {
+     "x_m": -0.96,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "emos": {
+     "x_m": -0.32,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    },
+    "berzan": {
+     "x_m": 0.32,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "aras": {
+     "x_m": 0.96,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "davut": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "diğer karaktere"
+    }
+   },
+   "movement_trajectory": {
+    "harun": {
+     "from": "Çocuklar çöp toplar",
+     "to": "Çocuklar kutu önünde sıralanır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aden": {
+     "from": "Çocuklar çöp toplar",
+     "to": "Çocuklar kutu önünde sıralanır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "emos": {
+     "from": "Çocuklar çöp toplar",
+     "to": "Çocuklar kutu önünde sıralanır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "berzan": {
+     "from": "Çocuklar çöp toplar",
+     "to": "Çocuklar kutu önünde sıralanır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aras": {
+     "from": "Çocuklar çöp toplar",
+     "to": "Çocuklar kutu önünde sıralanır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "davut": {
+     "from": "Çocuklar çöp toplar",
+     "to": "Çocuklar kutu önünde sıralanır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Çocuklar çöp toplar",
+   "final_pose": "Çocuklar kutu önünde sıralanır",
+   "action": "Temiz yürüyüş alanı; Harun başparmak gösterir",
+   "duration_ms": 9000,
+   "exact_start_ms": 291000,
+   "exact_end_ms": 300000,
+   "visual_asset_refs": [
+    "env_park_trash_walk_v1",
+    "char_harun_roster_v1",
+    "char_aden_roster_v1",
+    "char_emos_roster_v1",
+    "char_berzan_roster_v1",
+    "char_aras_roster_v1",
+    "char_davut_roster_v1",
+    "wardrobe_harun_ep001_v1",
+    "wardrobe_aden_ep001_v1",
+    "wardrobe_emos_ep001_v1",
+    "wardrobe_berzan_ep001_v1",
+    "wardrobe_aras_ep001_v1",
+    "wardrobe_davut_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc07_sh05_l1"
+   ],
+   "dialogue_lines": [
+    "harun: Aferin! Park tertemiz."
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc08_sh01",
+   "scene_id": "sc08",
+   "framing": "geniş",
+   "lens_perspective": "24mm eşdeğeri (geniş, hafif derin alan)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "emos",
+    "aden",
+    "salih"
+   ],
+   "character_positions": {
+    "emos": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "aden": {
+     "x_m": 0.0,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "salih": {
+     "x_m": 1.6,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    }
+   },
+   "movement_trajectory": {
+    "emos": {
+     "from": "Çocuklar çiçekliğe yaklaşır",
+     "to": "Emos elini uzatır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aden": {
+     "from": "Çocuklar çiçekliğe yaklaşır",
+     "to": "Emos elini uzatır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "salih": {
+     "from": "Çocuklar çiçekliğe yaklaşır",
+     "to": "Emos elini uzatır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Çocuklar çiçekliğe yaklaşır",
+   "final_pose": "Emos elini uzatır",
+   "action": "Çiçeklik renklidir; Emos kırmızı laleye uzanır",
+   "duration_ms": 8000,
+   "exact_start_ms": 300000,
+   "exact_end_ms": 308000,
+   "visual_asset_refs": [
+    "env_park_flower_bed_v1",
+    "char_emos_roster_v1",
+    "char_aden_roster_v1",
+    "char_salih_roster_v1",
+    "wardrobe_emos_ep001_v1",
+    "wardrobe_aden_ep001_v1",
+    "wardrobe_salih_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc08_sh01_l1"
+   ],
+   "dialogue_lines": [
+    "emos: Güzel çiçek!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc08_sh02",
+   "scene_id": "sc08",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "fatos",
+    "emos"
+   ],
+   "character_positions": {
+    "fatos": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "emos": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "fatos": {
+     "from": "Fatoş Emos'un yanına çömelir",
+     "to": "Fatoş Emos'un elini nazikçe tutar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "emos": {
+     "from": "Fatoş Emos'un yanına çömelir",
+     "to": "Fatoş Emos'un elini nazikçe tutar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Fatoş Emos'un yanına çömelir",
+   "final_pose": "Fatoş Emos'un elini nazikçe tutar",
+   "action": "Fatoş sakin ve şefkatli bir tonda açıklar",
+   "duration_ms": 8000,
+   "exact_start_ms": 308000,
+   "exact_end_ms": 316000,
+   "visual_asset_refs": [
+    "env_park_flower_bed_v1",
+    "char_fatos_roster_v1",
+    "char_emos_roster_v1",
+    "wardrobe_fatos_ep001_v1",
+    "wardrobe_emos_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc08_sh02_l1"
+   ],
+   "dialogue_lines": [
+    "fatos: Bakalım, koklayalım. Ama koparmayalım."
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc08_sh03",
+   "scene_id": "sc08",
+   "framing": "yakın",
+   "lens_perspective": "65mm eşdeğeri (yüz odaklı, sığ alan)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "emos",
+    "salih"
+   ],
+   "character_positions": {
+    "emos": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "salih": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "emos": {
+     "from": "Emos eğilir",
+     "to": "Emos ve Salih lalenin yanında durur",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "salih": {
+     "from": "Emos eğilir",
+     "to": "Emos ve Salih lalenin yanında durur",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Emos eğilir",
+   "final_pose": "Emos ve Salih lalenin yanında durur",
+   "action": "Emos çiçeği koklar; Salih aynısını yapar",
+   "duration_ms": 8000,
+   "exact_start_ms": 316000,
+   "exact_end_ms": 324000,
+   "visual_asset_refs": [
+    "env_park_flower_bed_v1",
+    "char_emos_roster_v1",
+    "char_salih_roster_v1",
+    "wardrobe_emos_ep001_v1",
+    "wardrobe_salih_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc08_sh03_l1",
+    "sc08_sh03_l2"
+   ],
+   "dialogue_lines": [
+    "emos: Mis gibi!",
+    "salih: Mis!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc08_sh04",
+   "scene_id": "sc08",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "yavaş sağa",
+   "character_ids": [
+    "kaan",
+    "oznur"
+   ],
+   "character_positions": {
+    "kaan": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "oznur": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "kaan": {
+     "from": "Kaan çimende oturur",
+     "to": "Kaan kelebeğe uzanır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "oznur": {
+     "from": "Kaan çimende oturur",
+     "to": "Kaan kelebeğe uzanır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Kaan çimende oturur",
+   "final_pose": "Kaan kelebeğe uzanır",
+   "action": "Kelebek Kaan'ın önünde uçar; Öznur sessizce bekler",
+   "duration_ms": 8000,
+   "exact_start_ms": 324000,
+   "exact_end_ms": 332000,
+   "visual_asset_refs": [
+    "env_park_flower_bed_v1",
+    "char_kaan_roster_v1",
+    "char_oznur_roster_v1",
+    "wardrobe_kaan_ep001_v1",
+    "wardrobe_oznur_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc08_sh04_l1",
+    "sc08_sh04_l2"
+   ],
+   "dialogue_lines": [
+    "kaan: Kelebek!",
+    "oznur: Sessiz, ürkütmeyelim."
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc08_sh05",
+   "scene_id": "sc08",
+   "framing": "geniş",
+   "lens_perspective": "24mm eşdeğeri (geniş, hafif derin alan)",
+   "camera_movement": "geri çekilme",
+   "character_ids": [
+    "emos",
+    "fatos",
+    "salih",
+    "oznur",
+    "aden",
+    "kaan"
+   ],
+   "character_positions": {
+    "emos": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "fatos": {
+     "x_m": -0.96,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "salih": {
+     "x_m": -0.32,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    },
+    "oznur": {
+     "x_m": 0.32,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "aden": {
+     "x_m": 0.96,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "kaan": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "diğer karaktere"
+    }
+   },
+   "movement_trajectory": {
+    "emos": {
+     "from": "Çocuklar çiçeklik çevresinde",
+     "to": "Çocuklar çiçekliği geride bırakır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "fatos": {
+     "from": "Çocuklar çiçeklik çevresinde",
+     "to": "Çocuklar çiçekliği geride bırakır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "salih": {
+     "from": "Çocuklar çiçeklik çevresinde",
+     "to": "Çocuklar çiçekliği geride bırakır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "oznur": {
+     "from": "Çocuklar çiçeklik çevresinde",
+     "to": "Çocuklar çiçekliği geride bırakır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aden": {
+     "from": "Çocuklar çiçeklik çevresinde",
+     "to": "Çocuklar çiçekliği geride bırakır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "kaan": {
+     "from": "Çocuklar çiçeklik çevresinde",
+     "to": "Çocuklar çiçekliği geride bırakır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Çocuklar çiçeklik çevresinde",
+   "final_pose": "Çocuklar çiçekliği geride bırakır",
+   "action": "Kelebek uçar gider; çiçekler yerinde kalır",
+   "duration_ms": 8000,
+   "exact_start_ms": 332000,
+   "exact_end_ms": 340000,
+   "visual_asset_refs": [
+    "env_park_flower_bed_v1",
+    "char_emos_roster_v1",
+    "char_fatos_roster_v1",
+    "char_salih_roster_v1",
+    "char_oznur_roster_v1",
+    "char_aden_roster_v1",
+    "char_kaan_roster_v1",
+    "wardrobe_emos_ep001_v1",
+    "wardrobe_fatos_ep001_v1",
+    "wardrobe_salih_ep001_v1",
+    "wardrobe_oznur_ep001_v1",
+    "wardrobe_aden_ep001_v1",
+    "wardrobe_kaan_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc08_sh05_l1"
+   ],
+   "dialogue_lines": [
+    "aden: Çiçekler yerinde!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc09_sh01",
+   "scene_id": "sc09",
+   "framing": "geniş",
+   "lens_perspective": "24mm eşdeğeri (geniş, hafif derin alan)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "berzan",
+    "salih",
+    "aden",
+    "emos"
+   ],
+   "character_positions": {
+    "berzan": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "salih": {
+     "x_m": -0.53,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "aden": {
+     "x_m": 0.53,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    },
+    "emos": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "berzan": {
+     "from": "Çocuklar merdiven önünde karışık",
+     "to": "Berzan öne doğru atılır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "salih": {
+     "from": "Çocuklar merdiven önünde karışık",
+     "to": "Berzan öne doğru atılır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aden": {
+     "from": "Çocuklar merdiven önünde karışık",
+     "to": "Berzan öne doğru atılır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "emos": {
+     "from": "Çocuklar merdiven önünde karışık",
+     "to": "Berzan öne doğru atılır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Çocuklar merdiven önünde karışık",
+   "final_pose": "Berzan öne doğru atılır",
+   "action": "Çocuklar kaydırağa koşar; Berzan sıra bozmak ister",
+   "duration_ms": 9000,
+   "exact_start_ms": 340000,
+   "exact_end_ms": 349000,
+   "visual_asset_refs": [
+    "env_park_slide_zone_v1",
+    "char_berzan_roster_v1",
+    "char_salih_roster_v1",
+    "char_aden_roster_v1",
+    "char_emos_roster_v1",
+    "wardrobe_berzan_ep001_v1",
+    "wardrobe_salih_ep001_v1",
+    "wardrobe_aden_ep001_v1",
+    "wardrobe_emos_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc09_sh01_l1"
+   ],
+   "dialogue_lines": [
+    "berzan: Ben ilk!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc09_sh02",
+   "scene_id": "sc09",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "harun",
+    "berzan"
+   ],
+   "character_positions": {
+    "harun": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "berzan": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "harun": {
+     "from": "Harun yavaşça önünü keser",
+     "to": "Berzan durur",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "berzan": {
+     "from": "Harun yavaşça önünü keser",
+     "to": "Berzan durur",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Harun yavaşça önünü keser",
+   "final_pose": "Berzan durur",
+   "action": "Harun nazikçe durdurur ve sıra işaretini gösterir",
+   "duration_ms": 9000,
+   "exact_start_ms": 349000,
+   "exact_end_ms": 358000,
+   "visual_asset_refs": [
+    "env_park_slide_zone_v1",
+    "char_harun_roster_v1",
+    "char_berzan_roster_v1",
+    "wardrobe_harun_ep001_v1",
+    "wardrobe_berzan_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc09_sh02_l1"
+   ],
+   "dialogue_lines": [
+    "harun: Dur bakalım. Sıra nerede?"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc09_sh03",
+   "scene_id": "sc09",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "sol kayış",
+   "character_ids": [
+    "aden",
+    "emos",
+    "salih",
+    "berzan"
+   ],
+   "character_positions": {
+    "aden": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "emos": {
+     "x_m": -0.53,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "salih": {
+     "x_m": 0.53,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    },
+    "berzan": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "aden": {
+     "from": "Çocuklar bir çizgide",
+     "to": "Çocuklar tek sıra olur",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "emos": {
+     "from": "Çocuklar bir çizgide",
+     "to": "Çocuklar tek sıra olur",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "salih": {
+     "from": "Çocuklar bir çizgide",
+     "to": "Çocuklar tek sıra olur",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "berzan": {
+     "from": "Çocuklar bir çizgide",
+     "to": "Çocuklar tek sıra olur",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Çocuklar bir çizgide",
+   "final_pose": "Çocuklar tek sıra olur",
+   "action": "Çocuklar sıraya girer; Aden başa geçer",
+   "duration_ms": 9000,
+   "exact_start_ms": 358000,
+   "exact_end_ms": 367000,
+   "visual_asset_refs": [
+    "env_park_slide_zone_v1",
+    "char_aden_roster_v1",
+    "char_emos_roster_v1",
+    "char_salih_roster_v1",
+    "char_berzan_roster_v1",
+    "wardrobe_aden_ep001_v1",
+    "wardrobe_emos_ep001_v1",
+    "wardrobe_salih_ep001_v1",
+    "wardrobe_berzan_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc09_sh03_l1",
+    "sc09_sh03_l2"
+   ],
+   "dialogue_lines": [
+    "aden: Ben başta!",
+    "emos: Ben arkada."
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc09_sh04",
+   "scene_id": "sc09",
+   "framing": "yakın",
+   "lens_perspective": "65mm eşdeğeri (yüz odaklı, sığ alan)",
+   "camera_movement": "kaydıraktan aşağıya",
+   "character_ids": [
+    "aden"
+   ],
+   "character_positions": {
+    "aden": {
+     "x_m": 0.0,
+     "depth": "ön",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "aden": {
+     "from": "Aden kaydırak tepesinde",
+     "to": "Aden kaydıraktan aşağı inip kollarını açar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Aden kaydırak tepesinde",
+   "final_pose": "Aden kaydıraktan aşağı inip kollarını açar",
+   "action": "Aden kaydırır, yüzü neşeli; alt tarafta Kaan bekler",
+   "duration_ms": 9000,
+   "exact_start_ms": 367000,
+   "exact_end_ms": 376000,
+   "visual_asset_refs": [
+    "env_park_slide_zone_v1",
+    "char_aden_roster_v1",
+    "wardrobe_aden_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc09_sh04_l1"
+   ],
+   "dialogue_lines": [
+    "aden: Yuppi!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc09_sh05",
+   "scene_id": "sc09",
+   "framing": "geniş",
+   "lens_perspective": "24mm eşdeğeri (geniş, hafif derin alan)",
+   "camera_movement": "geri çekilme",
+   "character_ids": [
+    "salih",
+    "berzan",
+    "emos",
+    "kaan",
+    "esra"
+   ],
+   "character_positions": {
+    "salih": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "berzan": {
+     "x_m": -0.8,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "emos": {
+     "x_m": 0.0,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    },
+    "kaan": {
+     "x_m": 0.8,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "esra": {
+     "x_m": 1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "salih": {
+     "from": "Sıra devam eder",
+     "to": "Sıradaki çocuk kaydırağa çıkar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "berzan": {
+     "from": "Sıra devam eder",
+     "to": "Sıradaki çocuk kaydırağa çıkar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "emos": {
+     "from": "Sıra devam eder",
+     "to": "Sıradaki çocuk kaydırağa çıkar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "kaan": {
+     "from": "Sıra devam eder",
+     "to": "Sıradaki çocuk kaydırağa çıkar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "esra": {
+     "from": "Sıra devam eder",
+     "to": "Sıradaki çocuk kaydırağa çıkar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Sıra devam eder",
+   "final_pose": "Sıradaki çocuk kaydırağa çıkar",
+   "action": "Sırayla herkes kayar; Esra Kaan'ı kucağına alır",
+   "duration_ms": 9000,
+   "exact_start_ms": 376000,
+   "exact_end_ms": 385000,
+   "visual_asset_refs": [
+    "env_park_slide_zone_v1",
+    "char_salih_roster_v1",
+    "char_berzan_roster_v1",
+    "char_emos_roster_v1",
+    "char_kaan_roster_v1",
+    "char_esra_roster_v1",
+    "wardrobe_salih_ep001_v1",
+    "wardrobe_berzan_ep001_v1",
+    "wardrobe_emos_ep001_v1",
+    "wardrobe_kaan_ep001_v1",
+    "wardrobe_esra_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc09_sh05_l1",
+    "sc09_sh05_l2"
+   ],
+   "dialogue_lines": [
+    "berzan: Sıra benim!",
+    "esra: Aferin, güzel bekledin."
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc10_sh01",
+   "scene_id": "sc10",
+   "framing": "geniş",
+   "lens_perspective": "24mm eşdeğeri (geniş, hafif derin alan)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "davut",
+    "aden"
+   ],
+   "character_positions": {
+    "davut": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "aden": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "davut": {
+     "from": "Davut yola yürür",
+     "to": "Davut bisiklet yoluna girer",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aden": {
+     "from": "Davut yola yürür",
+     "to": "Davut bisiklet yoluna girer",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Davut yola yürür",
+   "final_pose": "Davut bisiklet yoluna girer",
+   "action": "Yaya yolu ile bisiklet yolu yan yana; Davut yanlış tarafta",
+   "duration_ms": 8000,
+   "exact_start_ms": 385000,
+   "exact_end_ms": 393000,
+   "visual_asset_refs": [
+    "env_park_bike_pedestrian_v1",
+    "char_davut_roster_v1",
+    "char_aden_roster_v1",
+    "wardrobe_davut_ep001_v1",
+    "wardrobe_aden_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc10_sh01_l1"
+   ],
+   "dialogue_lines": [
+    "davut: Ne güzel yol!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc10_sh02",
+   "scene_id": "sc10",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "aden",
+    "davut"
+   ],
+   "character_positions": {
+    "aden": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "davut": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "aden": {
+     "from": "Aden işaretlere bakar",
+     "to": "Aden Davut'un elini tutar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "davut": {
+     "from": "Aden işaretlere bakar",
+     "to": "Aden Davut'un elini tutar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Aden işaretlere bakar",
+   "final_pose": "Aden Davut'un elini tutar",
+   "action": "Aden işareti gösterir; Davut hemen çekilir",
+   "duration_ms": 8000,
+   "exact_start_ms": 393000,
+   "exact_end_ms": 401000,
+   "visual_asset_refs": [
+    "env_park_bike_pedestrian_v1",
+    "char_aden_roster_v1",
+    "char_davut_roster_v1",
+    "wardrobe_aden_ep001_v1",
+    "wardrobe_davut_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc10_sh02_l1"
+   ],
+   "dialogue_lines": [
+    "aden: Amca, bu bisiklet yolu!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc10_sh03",
+   "scene_id": "sc10",
+   "framing": "yakın",
+   "lens_perspective": "65mm eşdeğeri (yüz odaklı, sığ alan)",
+   "camera_movement": "sağa kayış",
+   "character_ids": [
+    "ahmet",
+    "emos",
+    "berzan"
+   ],
+   "character_positions": {
+    "ahmet": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "emos": {
+     "x_m": 0.0,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "berzan": {
+     "x_m": 1.6,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    }
+   },
+   "movement_trajectory": {
+    "ahmet": {
+     "from": "Ahmet çocukları yaya yoluna alır",
+     "to": "Çocuklar yaya yolunda sıralı",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "emos": {
+     "from": "Ahmet çocukları yaya yoluna alır",
+     "to": "Çocuklar yaya yolunda sıralı",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "berzan": {
+     "from": "Ahmet çocukları yaya yoluna alır",
+     "to": "Çocuklar yaya yolunda sıralı",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Ahmet çocukları yaya yoluna alır",
+   "final_pose": "Çocuklar yaya yolunda sıralı",
+   "action": "Ahmet işareti gösterir; çocuklar işareti tekrar eder",
+   "duration_ms": 8000,
+   "exact_start_ms": 401000,
+   "exact_end_ms": 409000,
+   "visual_asset_refs": [
+    "env_park_bike_pedestrian_v1",
+    "char_ahmet_roster_v1",
+    "char_emos_roster_v1",
+    "char_berzan_roster_v1",
+    "wardrobe_ahmet_ep001_v1",
+    "wardrobe_emos_ep001_v1",
+    "wardrobe_berzan_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc10_sh03_l1",
+    "sc10_sh03_l2"
+   ],
+   "dialogue_lines": [
+    "ahmet: Yaya yolu yürüyenler için.",
+    "emos: Yürüyenler!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc10_sh04",
+   "scene_id": "sc10",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "arkadan takip",
+   "character_ids": [
+    "esma",
+    "harun"
+   ],
+   "character_positions": {
+    "esma": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "harun": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "esma": {
+     "from": "Harun Esma'nın elini tutar",
+     "to": "Çift güvenli yolda yürür",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "harun": {
+     "from": "Harun Esma'nın elini tutar",
+     "to": "Çift güvenli yolda yürür",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Harun Esma'nın elini tutar",
+   "final_pose": "Çift güvenli yolda yürür",
+   "action": "Harun Esma'ya destek olur; birlikte kuralı gösterirler",
+   "duration_ms": 8000,
+   "exact_start_ms": 409000,
+   "exact_end_ms": 417000,
+   "visual_asset_refs": [
+    "env_park_bike_pedestrian_v1",
+    "char_esma_roster_v1",
+    "char_harun_roster_v1",
+    "wardrobe_esma_ep001_v1",
+    "wardrobe_harun_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc10_sh04_l1"
+   ],
+   "dialogue_lines": [
+    "harun: Güvenli yol, güvenli adım."
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc10_sh05",
+   "scene_id": "sc10",
+   "framing": "geniş",
+   "lens_perspective": "24mm eşdeğeri (geniş, hafif derin alan)",
+   "camera_movement": "yükselen",
+   "character_ids": [
+    "davut",
+    "aden",
+    "emos",
+    "berzan",
+    "ahmet",
+    "harun",
+    "esma"
+   ],
+   "character_positions": {
+    "davut": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "aden": {
+     "x_m": -1.07,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "emos": {
+     "x_m": -0.53,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    },
+    "berzan": {
+     "x_m": 0.0,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "ahmet": {
+     "x_m": 0.53,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "harun": {
+     "x_m": 1.07,
+     "depth": "arka",
+     "facing": "diğer karaktere"
+    },
+    "esma": {
+     "x_m": 1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "davut": {
+     "from": "Grup iki yolun kenarında",
+     "to": "Grup yaya yolunda ilerler",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aden": {
+     "from": "Grup iki yolun kenarında",
+     "to": "Grup yaya yolunda ilerler",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "emos": {
+     "from": "Grup iki yolun kenarında",
+     "to": "Grup yaya yolunda ilerler",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "berzan": {
+     "from": "Grup iki yolun kenarında",
+     "to": "Grup yaya yolunda ilerler",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "ahmet": {
+     "from": "Grup iki yolun kenarında",
+     "to": "Grup yaya yolunda ilerler",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "harun": {
+     "from": "Grup iki yolun kenarında",
+     "to": "Grup yaya yolunda ilerler",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "esma": {
+     "from": "Grup iki yolun kenarında",
+     "to": "Grup yaya yolunda ilerler",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Grup iki yolun kenarında",
+   "final_pose": "Grup yaya yolunda ilerler",
+   "action": "Bir bisikletli zil çalarak geçer; herkes yaya yolunda güvende",
+   "duration_ms": 8000,
+   "exact_start_ms": 417000,
+   "exact_end_ms": 425000,
+   "visual_asset_refs": [
+    "env_park_bike_pedestrian_v1",
+    "char_davut_roster_v1",
+    "char_aden_roster_v1",
+    "char_emos_roster_v1",
+    "char_berzan_roster_v1",
+    "char_ahmet_roster_v1",
+    "char_harun_roster_v1",
+    "char_esma_roster_v1",
+    "wardrobe_davut_ep001_v1",
+    "wardrobe_aden_ep001_v1",
+    "wardrobe_emos_ep001_v1",
+    "wardrobe_berzan_ep001_v1",
+    "wardrobe_ahmet_ep001_v1",
+    "wardrobe_harun_ep001_v1",
+    "wardrobe_esma_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc10_sh05_l1"
+   ],
+   "dialogue_lines": [
+    "davut: Zil sesi duydum, kenardayım!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc11_sh01",
+   "scene_id": "sc11",
+   "framing": "geniş",
+   "lens_perspective": "24mm eşdeğeri (geniş, hafif derin alan)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "harun",
+    "aden",
+    "emos",
+    "salih",
+    "berzan",
+    "aras"
+   ],
+   "character_positions": {
+    "harun": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "aden": {
+     "x_m": -0.96,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "emos": {
+     "x_m": -0.32,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    },
+    "salih": {
+     "x_m": 0.32,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "berzan": {
+     "x_m": 0.96,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "aras": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "diğer karaktere"
+    }
+   },
+   "movement_trajectory": {
+    "harun": {
+     "from": "Çocuklar örtüde otururlar",
+     "to": "Harun elini kaldırır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aden": {
+     "from": "Çocuklar örtüde otururlar",
+     "to": "Harun elini kaldırır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "emos": {
+     "from": "Çocuklar örtüde otururlar",
+     "to": "Harun elini kaldırır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "salih": {
+     "from": "Çocuklar örtüde otururlar",
+     "to": "Harun elini kaldırır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "berzan": {
+     "from": "Çocuklar örtüde otururlar",
+     "to": "Harun elini kaldırır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aras": {
+     "from": "Çocuklar örtüde otururlar",
+     "to": "Harun elini kaldırır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Çocuklar örtüde otururlar",
+   "final_pose": "Harun elini kaldırır",
+   "action": "Piknik örtüsünde tekrar oyunu başlar",
+   "duration_ms": 7000,
+   "exact_start_ms": 425000,
+   "exact_end_ms": 432000,
+   "visual_asset_refs": [
+    "env_park_family_area_v1",
+    "char_harun_roster_v1",
+    "char_aden_roster_v1",
+    "char_emos_roster_v1",
+    "char_salih_roster_v1",
+    "char_berzan_roster_v1",
+    "char_aras_roster_v1",
+    "wardrobe_harun_ep001_v1",
+    "wardrobe_aden_ep001_v1",
+    "wardrobe_emos_ep001_v1",
+    "wardrobe_salih_ep001_v1",
+    "wardrobe_berzan_ep001_v1",
+    "wardrobe_aras_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc11_sh01_l1"
+   ],
+   "dialogue_lines": [
+    "harun: Hadi, kuralları tekrar edelim!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc11_sh02",
+   "scene_id": "sc11",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "aden",
+    "harun"
+   ],
+   "character_positions": {
+    "aden": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "harun": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "aden": {
+     "from": "Aden elinde çöp tutar",
+     "to": "Aden çöpü kutuya atma hareketi yapar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "harun": {
+     "from": "Aden elinde çöp tutar",
+     "to": "Aden çöpü kutuya atma hareketi yapar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Aden elinde çöp tutar",
+   "final_pose": "Aden çöpü kutuya atma hareketi yapar",
+   "action": "Aden çöp kutusu hareketini gösterir",
+   "duration_ms": 7000,
+   "exact_start_ms": 432000,
+   "exact_end_ms": 439000,
+   "visual_asset_refs": [
+    "env_park_family_area_v1",
+    "char_aden_roster_v1",
+    "char_harun_roster_v1",
+    "wardrobe_aden_ep001_v1",
+    "wardrobe_harun_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc11_sh02_l1"
+   ],
+   "dialogue_lines": [
+    "aden: Çöp kutusuna!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc11_sh03",
+   "scene_id": "sc11",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "emos",
+    "salih"
+   ],
+   "character_positions": {
+    "emos": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "salih": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "emos": {
+     "from": "Emos çiçek koklama hareketi",
+     "to": "Salih koklama hareketini taklit eder",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "salih": {
+     "from": "Emos çiçek koklama hareketi",
+     "to": "Salih koklama hareketini taklit eder",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Emos çiçek koklama hareketi",
+   "final_pose": "Salih koklama hareketini taklit eder",
+   "action": "İki çocuk çiçek koklar, koparmaz",
+   "duration_ms": 7000,
+   "exact_start_ms": 439000,
+   "exact_end_ms": 446000,
+   "visual_asset_refs": [
+    "env_park_family_area_v1",
+    "char_emos_roster_v1",
+    "char_salih_roster_v1",
+    "wardrobe_emos_ep001_v1",
+    "wardrobe_salih_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc11_sh03_l1",
+    "sc11_sh03_l2"
+   ],
+   "dialogue_lines": [
+    "emos: Koklarız!",
+    "salih: Mis!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc11_sh04",
+   "scene_id": "sc11",
+   "framing": "orta",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "sağa kayış",
+   "character_ids": [
+    "berzan",
+    "aras",
+    "kaan"
+   ],
+   "character_positions": {
+    "berzan": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "aras": {
+     "x_m": 0.0,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "kaan": {
+     "x_m": 1.6,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    }
+   },
+   "movement_trajectory": {
+    "berzan": {
+     "from": "Çocuklar sıra olur",
+     "to": "Kaan en önde parmağını kaldırır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aras": {
+     "from": "Çocuklar sıra olur",
+     "to": "Kaan en önde parmağını kaldırır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "kaan": {
+     "from": "Çocuklar sıra olur",
+     "to": "Kaan en önde parmağını kaldırır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Çocuklar sıra olur",
+   "final_pose": "Kaan en önde parmağını kaldırır",
+   "action": "Sıra bekleme hareketi; Kaan öne geçer ve eller havada",
+   "duration_ms": 7000,
+   "exact_start_ms": 446000,
+   "exact_end_ms": 453000,
+   "visual_asset_refs": [
+    "env_park_family_area_v1",
+    "char_berzan_roster_v1",
+    "char_aras_roster_v1",
+    "char_kaan_roster_v1",
+    "wardrobe_berzan_ep001_v1",
+    "wardrobe_aras_ep001_v1",
+    "wardrobe_kaan_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc11_sh04_l1",
+    "sc11_sh04_l2",
+    "sc11_sh04_l3"
+   ],
+   "dialogue_lines": [
+    "berzan: Sıra!",
+    "aras: Bekle.",
+    "kaan: Ben!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc11_sh05",
+   "scene_id": "sc11",
+   "framing": "geniş",
+   "lens_perspective": "24mm eşdeğeri (geniş, hafif derin alan)",
+   "camera_movement": "geri çekilme",
+   "character_ids": [
+    "harun",
+    "aden",
+    "emos",
+    "salih",
+    "berzan",
+    "aras",
+    "kaan",
+    "esra",
+    "fatos"
+   ],
+   "character_positions": {
+    "harun": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "aden": {
+     "x_m": -1.2,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "emos": {
+     "x_m": -0.8,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    },
+    "salih": {
+     "x_m": -0.4,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "berzan": {
+     "x_m": 0.0,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "aras": {
+     "x_m": 0.4,
+     "depth": "arka",
+     "facing": "diğer karaktere"
+    },
+    "kaan": {
+     "x_m": 0.8,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "esra": {
+     "x_m": 1.2,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "fatos": {
+     "x_m": 1.6,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    }
+   },
+   "movement_trajectory": {
+    "harun": {
+     "from": "Grup işaretlere bakar",
+     "to": "Grup birlikte alkışlar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aden": {
+     "from": "Grup işaretlere bakar",
+     "to": "Grup birlikte alkışlar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "emos": {
+     "from": "Grup işaretlere bakar",
+     "to": "Grup birlikte alkışlar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "salih": {
+     "from": "Grup işaretlere bakar",
+     "to": "Grup birlikte alkışlar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "berzan": {
+     "from": "Grup işaretlere bakar",
+     "to": "Grup birlikte alkışlar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aras": {
+     "from": "Grup işaretlere bakar",
+     "to": "Grup birlikte alkışlar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "kaan": {
+     "from": "Grup işaretlere bakar",
+     "to": "Grup birlikte alkışlar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "esra": {
+     "from": "Grup işaretlere bakar",
+     "to": "Grup birlikte alkışlar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "fatos": {
+     "from": "Grup işaretlere bakar",
+     "to": "Grup birlikte alkışlar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Grup işaretlere bakar",
+   "final_pose": "Grup birlikte alkışlar",
+   "action": "Herkes dört işareti birlikte gösterir; alkış",
+   "duration_ms": 7000,
+   "exact_start_ms": 453000,
+   "exact_end_ms": 460000,
+   "visual_asset_refs": [
+    "env_park_family_area_v1",
+    "char_harun_roster_v1",
+    "char_aden_roster_v1",
+    "char_emos_roster_v1",
+    "char_salih_roster_v1",
+    "char_berzan_roster_v1",
+    "char_aras_roster_v1",
+    "char_kaan_roster_v1",
+    "char_esra_roster_v1",
+    "char_fatos_roster_v1",
+    "wardrobe_harun_ep001_v1",
+    "wardrobe_aden_ep001_v1",
+    "wardrobe_emos_ep001_v1",
+    "wardrobe_salih_ep001_v1",
+    "wardrobe_berzan_ep001_v1",
+    "wardrobe_aras_ep001_v1",
+    "wardrobe_kaan_ep001_v1",
+    "wardrobe_esra_ep001_v1",
+    "wardrobe_fatos_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc11_sh05_l1",
+    "sc11_sh05_l2"
+   ],
+   "dialogue_lines": [
+    "harun: Süper! Hepsini biliyorsunuz.",
+    "esra: Aferin bizim çocuklara!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc12_sh01",
+   "scene_id": "sc12",
+   "framing": "geniş",
+   "lens_perspective": "24mm eşdeğeri (geniş, hafif derin alan)",
+   "camera_movement": "yavaş yukarı kaldırma",
+   "character_ids": [
+    "aden",
+    "kaan",
+    "esra",
+    "ahmet",
+    "esma",
+    "harun"
+   ],
+   "character_positions": {
+    "aden": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "kaan": {
+     "x_m": -0.96,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "esra": {
+     "x_m": -0.32,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    },
+    "ahmet": {
+     "x_m": 0.32,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "esma": {
+     "x_m": 0.96,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "harun": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "diğer karaktere"
+    }
+   },
+   "movement_trajectory": {
+    "aden": {
+     "from": "Aile örtüde dağınık",
+     "to": "Aile toplanır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "kaan": {
+     "from": "Aile örtüde dağınık",
+     "to": "Aile toplanır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "esra": {
+     "from": "Aile örtüde dağınık",
+     "to": "Aile toplanır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "ahmet": {
+     "from": "Aile örtüde dağınık",
+     "to": "Aile toplanır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "esma": {
+     "from": "Aile örtüde dağınık",
+     "to": "Aile toplanır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "harun": {
+     "from": "Aile örtüde dağınık",
+     "to": "Aile toplanır",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Aile örtüde dağınık",
+   "final_pose": "Aile toplanır",
+   "action": "Aden ve Kaan'ın ailesi bir araya gelir; Esra Kaan'ı alır",
+   "duration_ms": 7000,
+   "exact_start_ms": 460000,
+   "exact_end_ms": 467000,
+   "visual_asset_refs": [
+    "env_park_family_area_v1",
+    "char_aden_roster_v1",
+    "char_kaan_roster_v1",
+    "char_esra_roster_v1",
+    "char_ahmet_roster_v1",
+    "char_esma_roster_v1",
+    "char_harun_roster_v1",
+    "wardrobe_aden_ep001_v1",
+    "wardrobe_kaan_ep001_v1",
+    "wardrobe_esra_ep001_v1",
+    "wardrobe_ahmet_ep001_v1",
+    "wardrobe_esma_ep001_v1",
+    "wardrobe_harun_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc12_sh01_l1"
+   ],
+   "dialogue_lines": [
+    "aden: Hepimiz buradayız!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc12_sh02",
+   "scene_id": "sc12",
+   "framing": "çok geniş",
+   "lens_perspective": "40mm eşdeğeri (doğal, yüz bozulmaz)",
+   "camera_movement": "sabit",
+   "character_ids": [
+    "veysel",
+    "oznur",
+    "salih",
+    "medine",
+    "davut",
+    "fatos",
+    "emos",
+    "berzan",
+    "aras",
+    "ramin"
+   ],
+   "character_positions": {
+    "veysel": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "oznur": {
+     "x_m": -1.24,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "salih": {
+     "x_m": -0.89,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    },
+    "medine": {
+     "x_m": -0.53,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "davut": {
+     "x_m": -0.18,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "fatos": {
+     "x_m": 0.18,
+     "depth": "arka",
+     "facing": "diğer karaktere"
+    },
+    "emos": {
+     "x_m": 0.53,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "berzan": {
+     "x_m": 0.89,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "aras": {
+     "x_m": 1.24,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    },
+    "ramin": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "veysel": {
+     "from": "Diğer aileler yaklaşır",
+     "to": "Büyük aile fotoğrafı için dizilir",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "oznur": {
+     "from": "Diğer aileler yaklaşır",
+     "to": "Büyük aile fotoğrafı için dizilir",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "salih": {
+     "from": "Diğer aileler yaklaşır",
+     "to": "Büyük aile fotoğrafı için dizilir",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "medine": {
+     "from": "Diğer aileler yaklaşır",
+     "to": "Büyük aile fotoğrafı için dizilir",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "davut": {
+     "from": "Diğer aileler yaklaşır",
+     "to": "Büyük aile fotoğrafı için dizilir",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "fatos": {
+     "from": "Diğer aileler yaklaşır",
+     "to": "Büyük aile fotoğrafı için dizilir",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "emos": {
+     "from": "Diğer aileler yaklaşır",
+     "to": "Büyük aile fotoğrafı için dizilir",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "berzan": {
+     "from": "Diğer aileler yaklaşır",
+     "to": "Büyük aile fotoğrafı için dizilir",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aras": {
+     "from": "Diğer aileler yaklaşır",
+     "to": "Büyük aile fotoğrafı için dizilir",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "ramin": {
+     "from": "Diğer aileler yaklaşır",
+     "to": "Büyük aile fotoğrafı için dizilir",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Diğer aileler yaklaşır",
+   "final_pose": "Büyük aile fotoğrafı için dizilir",
+   "action": "Tüm aile parkta toplanır; bebekler kucakta görünür",
+   "duration_ms": 7000,
+   "exact_start_ms": 467000,
+   "exact_end_ms": 474000,
+   "visual_asset_refs": [
+    "env_park_family_area_v1",
+    "char_veysel_roster_v1",
+    "char_oznur_roster_v1",
+    "char_salih_roster_v1",
+    "char_medine_roster_v1",
+    "char_davut_roster_v1",
+    "char_fatos_roster_v1",
+    "char_emos_roster_v1",
+    "char_berzan_roster_v1",
+    "char_aras_roster_v1",
+    "char_ramin_roster_v1",
+    "wardrobe_veysel_ep001_v1",
+    "wardrobe_oznur_ep001_v1",
+    "wardrobe_salih_ep001_v1",
+    "wardrobe_medine_ep001_v1",
+    "wardrobe_davut_ep001_v1",
+    "wardrobe_fatos_ep001_v1",
+    "wardrobe_emos_ep001_v1",
+    "wardrobe_berzan_ep001_v1",
+    "wardrobe_aras_ep001_v1",
+    "wardrobe_ramin_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc12_sh02_l1"
+   ],
+   "dialogue_lines": [
+    "davut: Fotoğraf zamanı!"
+   ],
+   "transition": "kesme"
+  },
+  {
+   "shot_id": "sc12_sh03",
+   "scene_id": "sc12",
+   "framing": "geniş",
+   "lens_perspective": "24mm eşdeğeri (geniş, hafif derin alan)",
+   "camera_movement": "yavaş geri çekilme",
+   "character_ids": [
+    "aden",
+    "kaan",
+    "esra",
+    "ahmet",
+    "esma",
+    "harun",
+    "veysel",
+    "oznur",
+    "salih",
+    "medine",
+    "davut",
+    "fatos",
+    "emos",
+    "berzan",
+    "aras",
+    "ramin"
+   ],
+   "character_positions": {
+    "aden": {
+     "x_m": -1.6,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "kaan": {
+     "x_m": -1.39,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "esra": {
+     "x_m": -1.17,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    },
+    "ahmet": {
+     "x_m": -0.96,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "esma": {
+     "x_m": -0.75,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "harun": {
+     "x_m": -0.53,
+     "depth": "arka",
+     "facing": "diğer karaktere"
+    },
+    "veysel": {
+     "x_m": -0.32,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "oznur": {
+     "x_m": -0.11,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "salih": {
+     "x_m": 0.11,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    },
+    "medine": {
+     "x_m": 0.32,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "davut": {
+     "x_m": 0.53,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "fatos": {
+     "x_m": 0.75,
+     "depth": "arka",
+     "facing": "diğer karaktere"
+    },
+    "emos": {
+     "x_m": 0.96,
+     "depth": "ön",
+     "facing": "kameraya"
+    },
+    "berzan": {
+     "x_m": 1.17,
+     "depth": "arka",
+     "facing": "kameraya"
+    },
+    "aras": {
+     "x_m": 1.39,
+     "depth": "ön",
+     "facing": "diğer karaktere"
+    },
+    "ramin": {
+     "x_m": 1.6,
+     "depth": "arka",
+     "facing": "kameraya"
+    }
+   },
+   "movement_trajectory": {
+    "aden": {
+     "from": "Aile fotoğraf pozunda",
+     "to": "Aden uçurtmayı havaya kaldırır; herkes el sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "kaan": {
+     "from": "Aile fotoğraf pozunda",
+     "to": "Aden uçurtmayı havaya kaldırır; herkes el sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "esra": {
+     "from": "Aile fotoğraf pozunda",
+     "to": "Aden uçurtmayı havaya kaldırır; herkes el sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "ahmet": {
+     "from": "Aile fotoğraf pozunda",
+     "to": "Aden uçurtmayı havaya kaldırır; herkes el sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "esma": {
+     "from": "Aile fotoğraf pozunda",
+     "to": "Aden uçurtmayı havaya kaldırır; herkes el sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "harun": {
+     "from": "Aile fotoğraf pozunda",
+     "to": "Aden uçurtmayı havaya kaldırır; herkes el sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "veysel": {
+     "from": "Aile fotoğraf pozunda",
+     "to": "Aden uçurtmayı havaya kaldırır; herkes el sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "oznur": {
+     "from": "Aile fotoğraf pozunda",
+     "to": "Aden uçurtmayı havaya kaldırır; herkes el sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "salih": {
+     "from": "Aile fotoğraf pozunda",
+     "to": "Aden uçurtmayı havaya kaldırır; herkes el sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "medine": {
+     "from": "Aile fotoğraf pozunda",
+     "to": "Aden uçurtmayı havaya kaldırır; herkes el sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "davut": {
+     "from": "Aile fotoğraf pozunda",
+     "to": "Aden uçurtmayı havaya kaldırır; herkes el sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "fatos": {
+     "from": "Aile fotoğraf pozunda",
+     "to": "Aden uçurtmayı havaya kaldırır; herkes el sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "emos": {
+     "from": "Aile fotoğraf pozunda",
+     "to": "Aden uçurtmayı havaya kaldırır; herkes el sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "berzan": {
+     "from": "Aile fotoğraf pozunda",
+     "to": "Aden uçurtmayı havaya kaldırır; herkes el sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "aras": {
+     "from": "Aile fotoğraf pozunda",
+     "to": "Aden uçurtmayı havaya kaldırır; herkes el sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    },
+    "ramin": {
+     "from": "Aile fotoğraf pozunda",
+     "to": "Aden uçurtmayı havaya kaldırır; herkes el sallar",
+     "path": "kısa, yaşa uygun yürüyüş/emekleme; çizgi dışına taşmaz"
+    }
+   },
+   "initial_pose": "Aile fotoğraf pozunda",
+   "final_pose": "Aden uçurtmayı havaya kaldırır; herkes el sallar",
+   "action": "Kapanış: gün ışığında bütün aile el sallar; uçurtma göğe yükselir",
+   "duration_ms": 6000,
+   "exact_start_ms": 474000,
+   "exact_end_ms": 480000,
+   "visual_asset_refs": [
+    "env_park_family_area_v1",
+    "char_aden_roster_v1",
+    "char_kaan_roster_v1",
+    "char_esra_roster_v1",
+    "char_ahmet_roster_v1",
+    "char_esma_roster_v1",
+    "char_harun_roster_v1",
+    "char_veysel_roster_v1",
+    "char_oznur_roster_v1",
+    "char_salih_roster_v1",
+    "char_medine_roster_v1",
+    "char_davut_roster_v1",
+    "char_fatos_roster_v1",
+    "char_emos_roster_v1",
+    "char_berzan_roster_v1",
+    "char_aras_roster_v1",
+    "char_ramin_roster_v1",
+    "wardrobe_aden_ep001_v1",
+    "wardrobe_kaan_ep001_v1",
+    "wardrobe_esra_ep001_v1",
+    "wardrobe_ahmet_ep001_v1",
+    "wardrobe_esma_ep001_v1",
+    "wardrobe_harun_ep001_v1",
+    "wardrobe_veysel_ep001_v1",
+    "wardrobe_oznur_ep001_v1",
+    "wardrobe_salih_ep001_v1",
+    "wardrobe_medine_ep001_v1",
+    "wardrobe_davut_ep001_v1",
+    "wardrobe_fatos_ep001_v1",
+    "wardrobe_emos_ep001_v1",
+    "wardrobe_berzan_ep001_v1",
+    "wardrobe_aras_ep001_v1",
+    "wardrobe_ramin_ep001_v1"
+   ],
+   "voice_cue_refs": [
+    "sc12_sh03_l1",
+    "sc12_sh03_l2"
+   ],
+   "dialogue_lines": [
+    "aden: Güle güle! Yine gelin!",
+    "harun: Parkta görüşürüz!"
+   ],
+   "transition": "kararma ve başlık"
+  }
+ ]
+}

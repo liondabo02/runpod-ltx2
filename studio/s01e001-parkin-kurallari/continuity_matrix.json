@@ -1,0 +1,667 @@
+[
+ {
+  "scene_id": "sc01",
+  "environment": "env_home_salon_v1",
+  "sun": {
+   "azimuth_deg": 110,
+   "elevation_deg": 30.0,
+   "direction": "doğu-güneydoğu"
+  },
+  "characters": {
+   "aden": {
+    "wardrobe": "wardrobe_aden_ep001_v1",
+    "identity_lock": "char_aden_roster_v1",
+    "must_keep": "sarı yıldız toka + sol yanakta üç çil"
+   },
+   "kaan": {
+    "wardrobe": "wardrobe_kaan_ep001_v1",
+    "identity_lock": "char_kaan_roster_v1",
+    "must_keep": ""
+   }
+  },
+  "props": [
+   "prop_uçurtma_v1",
+   "prop_sehpa_v1",
+   "prop_battaniye_v1"
+  ]
+ },
+ {
+  "scene_id": "sc02",
+  "environment": "env_home_kitchen_v1",
+  "sun": {
+   "azimuth_deg": 110,
+   "elevation_deg": 31.8,
+   "direction": "doğu-güneydoğu"
+  },
+  "characters": {
+   "esra": {
+    "wardrobe": "wardrobe_esra_ep001_v1",
+    "identity_lock": "char_esra_roster_v1",
+    "must_keep": "başörtülü"
+   },
+   "ahmet": {
+    "wardrobe": "wardrobe_ahmet_ep001_v1",
+    "identity_lock": "char_ahmet_roster_v1",
+    "must_keep": ""
+   },
+   "aden": {
+    "wardrobe": "wardrobe_aden_ep001_v1",
+    "identity_lock": "char_aden_roster_v1",
+    "must_keep": "sarı yıldız toka + sol yanakta üç çil"
+   },
+   "kaan": {
+    "wardrobe": "wardrobe_kaan_ep001_v1",
+    "identity_lock": "char_kaan_roster_v1",
+    "must_keep": ""
+   }
+  },
+  "props": [
+   "prop_piknik_sepeti_v1",
+   "prop_bebek_arabası_v1",
+   "prop_elma_v1",
+   "prop_su_şişesi_v1"
+  ]
+ },
+ {
+  "scene_id": "sc03",
+  "environment": "env_home_entry_corridor_v1",
+  "sun": {
+   "azimuth_deg": 110,
+   "elevation_deg": 33.9,
+   "direction": "doğu-güneydoğu"
+  },
+  "characters": {
+   "esma": {
+    "wardrobe": "wardrobe_esma_ep001_v1",
+    "identity_lock": "char_esma_roster_v1",
+    "must_keep": "başörtülü"
+   },
+   "harun": {
+    "wardrobe": "wardrobe_harun_ep001_v1",
+    "identity_lock": "char_harun_roster_v1",
+    "must_keep": ""
+   },
+   "aden": {
+    "wardrobe": "wardrobe_aden_ep001_v1",
+    "identity_lock": "char_aden_roster_v1",
+    "must_keep": "sarı yıldız toka + sol yanakta üç çil"
+   },
+   "kaan": {
+    "wardrobe": "wardrobe_kaan_ep001_v1",
+    "identity_lock": "char_kaan_roster_v1",
+    "must_keep": ""
+   },
+   "esra": {
+    "wardrobe": "wardrobe_esra_ep001_v1",
+    "identity_lock": "char_esra_roster_v1",
+    "must_keep": "başörtülü"
+   },
+   "ahmet": {
+    "wardrobe": "wardrobe_ahmet_ep001_v1",
+    "identity_lock": "char_ahmet_roster_v1",
+    "must_keep": ""
+   }
+  },
+  "props": [
+   "prop_ayakkabılık_v1",
+   "prop_çanta_v1",
+   "prop_güneş_gözlüğü_v1"
+  ]
+ },
+ {
+  "scene_id": "sc04",
+  "environment": "env_home_entry_corridor_v1",
+  "sun": {
+   "azimuth_deg": 110,
+   "elevation_deg": 36.5,
+   "direction": "doğu-güneydoğu"
+  },
+  "characters": {
+   "veysel": {
+    "wardrobe": "wardrobe_veysel_ep001_v1",
+    "identity_lock": "char_veysel_roster_v1",
+    "must_keep": "mavi gözler"
+   },
+   "oznur": {
+    "wardrobe": "wardrobe_oznur_ep001_v1",
+    "identity_lock": "char_oznur_roster_v1",
+    "must_keep": "başörtülü"
+   },
+   "salih": {
+    "wardrobe": "wardrobe_salih_ep001_v1",
+    "identity_lock": "char_salih_roster_v1",
+    "must_keep": ""
+   },
+   "medine": {
+    "wardrobe": "wardrobe_medine_ep001_v1",
+    "identity_lock": "char_medine_roster_v1",
+    "must_keep": ""
+   },
+   "aden": {
+    "wardrobe": "wardrobe_aden_ep001_v1",
+    "identity_lock": "char_aden_roster_v1",
+    "must_keep": "sarı yıldız toka + sol yanakta üç çil"
+   },
+   "harun": {
+    "wardrobe": "wardrobe_harun_ep001_v1",
+    "identity_lock": "char_harun_roster_v1",
+    "must_keep": ""
+   }
+  },
+  "props": [
+   "prop_bebek_taşıma_koltuğu_v1",
+   "prop_oyuncak_ayı_v1",
+   "prop_çiçekli_kese_v1"
+  ]
+ },
+ {
+  "scene_id": "sc05",
+  "environment": "env_park_entrance_v1",
+  "sun": {
+   "azimuth_deg": 110,
+   "elevation_deg": 38.9,
+   "direction": "doğu-güneydoğu"
+  },
+  "characters": {
+   "davut": {
+    "wardrobe": "wardrobe_davut_ep001_v1",
+    "identity_lock": "char_davut_roster_v1",
+    "must_keep": ""
+   },
+   "fatos": {
+    "wardrobe": "wardrobe_fatos_ep001_v1",
+    "identity_lock": "char_fatos_roster_v1",
+    "must_keep": "başörtüsüz"
+   },
+   "emos": {
+    "wardrobe": "wardrobe_emos_ep001_v1",
+    "identity_lock": "char_emos_roster_v1",
+    "must_keep": ""
+   },
+   "berzan": {
+    "wardrobe": "wardrobe_berzan_ep001_v1",
+    "identity_lock": "char_berzan_roster_v1",
+    "must_keep": ""
+   },
+   "aras": {
+    "wardrobe": "wardrobe_aras_ep001_v1",
+    "identity_lock": "char_aras_roster_v1",
+    "must_keep": ""
+   },
+   "ramin": {
+    "wardrobe": "wardrobe_ramin_ep001_v1",
+    "identity_lock": "char_ramin_roster_v1",
+    "must_keep": ""
+   },
+   "aden": {
+    "wardrobe": "wardrobe_aden_ep001_v1",
+    "identity_lock": "char_aden_roster_v1",
+    "must_keep": "sarı yıldız toka + sol yanakta üç çil"
+   },
+   "kaan": {
+    "wardrobe": "wardrobe_kaan_ep001_v1",
+    "identity_lock": "char_kaan_roster_v1",
+    "must_keep": ""
+   },
+   "harun": {
+    "wardrobe": "wardrobe_harun_ep001_v1",
+    "identity_lock": "char_harun_roster_v1",
+    "must_keep": ""
+   }
+  },
+  "props": [
+   "prop_bebek_arabası_çift__v1",
+   "prop_tavşan_peluş_v1",
+   "prop_oyuncak_araba_v1",
+   "prop_park_giriş_kapısı_v1"
+  ]
+ },
+ {
+  "scene_id": "sc06",
+  "environment": "env_park_rules_sign_v1",
+  "sun": {
+   "azimuth_deg": 110,
+   "elevation_deg": 41.2,
+   "direction": "doğu-güneydoğu"
+  },
+  "characters": {
+   "harun": {
+    "wardrobe": "wardrobe_harun_ep001_v1",
+    "identity_lock": "char_harun_roster_v1",
+    "must_keep": ""
+   },
+   "esma": {
+    "wardrobe": "wardrobe_esma_ep001_v1",
+    "identity_lock": "char_esma_roster_v1",
+    "must_keep": "başörtülü"
+   },
+   "esra": {
+    "wardrobe": "wardrobe_esra_ep001_v1",
+    "identity_lock": "char_esra_roster_v1",
+    "must_keep": "başörtülü"
+   },
+   "ahmet": {
+    "wardrobe": "wardrobe_ahmet_ep001_v1",
+    "identity_lock": "char_ahmet_roster_v1",
+    "must_keep": ""
+   },
+   "veysel": {
+    "wardrobe": "wardrobe_veysel_ep001_v1",
+    "identity_lock": "char_veysel_roster_v1",
+    "must_keep": "mavi gözler"
+   },
+   "oznur": {
+    "wardrobe": "wardrobe_oznur_ep001_v1",
+    "identity_lock": "char_oznur_roster_v1",
+    "must_keep": "başörtülü"
+   },
+   "davut": {
+    "wardrobe": "wardrobe_davut_ep001_v1",
+    "identity_lock": "char_davut_roster_v1",
+    "must_keep": ""
+   },
+   "fatos": {
+    "wardrobe": "wardrobe_fatos_ep001_v1",
+    "identity_lock": "char_fatos_roster_v1",
+    "must_keep": "başörtüsüz"
+   },
+   "aden": {
+    "wardrobe": "wardrobe_aden_ep001_v1",
+    "identity_lock": "char_aden_roster_v1",
+    "must_keep": "sarı yıldız toka + sol yanakta üç çil"
+   },
+   "kaan": {
+    "wardrobe": "wardrobe_kaan_ep001_v1",
+    "identity_lock": "char_kaan_roster_v1",
+    "must_keep": ""
+   },
+   "salih": {
+    "wardrobe": "wardrobe_salih_ep001_v1",
+    "identity_lock": "char_salih_roster_v1",
+    "must_keep": ""
+   },
+   "emos": {
+    "wardrobe": "wardrobe_emos_ep001_v1",
+    "identity_lock": "char_emos_roster_v1",
+    "must_keep": ""
+   },
+   "berzan": {
+    "wardrobe": "wardrobe_berzan_ep001_v1",
+    "identity_lock": "char_berzan_roster_v1",
+    "must_keep": ""
+   },
+   "aras": {
+    "wardrobe": "wardrobe_aras_ep001_v1",
+    "identity_lock": "char_aras_roster_v1",
+    "must_keep": ""
+   },
+   "medine": {
+    "wardrobe": "wardrobe_medine_ep001_v1",
+    "identity_lock": "char_medine_roster_v1",
+    "must_keep": ""
+   },
+   "ramin": {
+    "wardrobe": "wardrobe_ramin_ep001_v1",
+    "identity_lock": "char_ramin_roster_v1",
+    "must_keep": ""
+   }
+  },
+  "props": [
+   "prop_kurallar_tabelası_v1",
+   "prop_dört_işaret_panosu_v1"
+  ]
+ },
+ {
+  "scene_id": "sc07",
+  "environment": "env_park_trash_walk_v1",
+  "sun": {
+   "azimuth_deg": 110,
+   "elevation_deg": 43.3,
+   "direction": "doğu-güneydoğu"
+  },
+  "characters": {
+   "berzan": {
+    "wardrobe": "wardrobe_berzan_ep001_v1",
+    "identity_lock": "char_berzan_roster_v1",
+    "must_keep": ""
+   },
+   "aras": {
+    "wardrobe": "wardrobe_aras_ep001_v1",
+    "identity_lock": "char_aras_roster_v1",
+    "must_keep": ""
+   },
+   "aden": {
+    "wardrobe": "wardrobe_aden_ep001_v1",
+    "identity_lock": "char_aden_roster_v1",
+    "must_keep": "sarı yıldız toka + sol yanakta üç çil"
+   },
+   "davut": {
+    "wardrobe": "wardrobe_davut_ep001_v1",
+    "identity_lock": "char_davut_roster_v1",
+    "must_keep": ""
+   },
+   "harun": {
+    "wardrobe": "wardrobe_harun_ep001_v1",
+    "identity_lock": "char_harun_roster_v1",
+    "must_keep": ""
+   },
+   "emos": {
+    "wardrobe": "wardrobe_emos_ep001_v1",
+    "identity_lock": "char_emos_roster_v1",
+    "must_keep": ""
+   }
+  },
+  "props": [
+   "prop_çöp_kutusu_v1",
+   "prop_elma_sapı_v1",
+   "prop_meyve_suyu_kutusu_v1",
+   "prop_çöp_torbası_v1"
+  ]
+ },
+ {
+  "scene_id": "sc08",
+  "environment": "env_park_flower_bed_v1",
+  "sun": {
+   "azimuth_deg": 110,
+   "elevation_deg": 45.6,
+   "direction": "doğu-güneydoğu"
+  },
+  "characters": {
+   "emos": {
+    "wardrobe": "wardrobe_emos_ep001_v1",
+    "identity_lock": "char_emos_roster_v1",
+    "must_keep": ""
+   },
+   "fatos": {
+    "wardrobe": "wardrobe_fatos_ep001_v1",
+    "identity_lock": "char_fatos_roster_v1",
+    "must_keep": "başörtüsüz"
+   },
+   "salih": {
+    "wardrobe": "wardrobe_salih_ep001_v1",
+    "identity_lock": "char_salih_roster_v1",
+    "must_keep": ""
+   },
+   "oznur": {
+    "wardrobe": "wardrobe_oznur_ep001_v1",
+    "identity_lock": "char_oznur_roster_v1",
+    "must_keep": "başörtülü"
+   },
+   "aden": {
+    "wardrobe": "wardrobe_aden_ep001_v1",
+    "identity_lock": "char_aden_roster_v1",
+    "must_keep": "sarı yıldız toka + sol yanakta üç çil"
+   },
+   "kaan": {
+    "wardrobe": "wardrobe_kaan_ep001_v1",
+    "identity_lock": "char_kaan_roster_v1",
+    "must_keep": ""
+   }
+  },
+  "props": [
+   "prop_çiçeklik_v1",
+   "prop_kelebek_v1",
+   "prop_kırmızı_laleler_v1"
+  ]
+ },
+ {
+  "scene_id": "sc09",
+  "environment": "env_park_slide_zone_v1",
+  "sun": {
+   "azimuth_deg": 110,
+   "elevation_deg": 47.7,
+   "direction": "doğu-güneydoğu"
+  },
+  "characters": {
+   "aden": {
+    "wardrobe": "wardrobe_aden_ep001_v1",
+    "identity_lock": "char_aden_roster_v1",
+    "must_keep": "sarı yıldız toka + sol yanakta üç çil"
+   },
+   "berzan": {
+    "wardrobe": "wardrobe_berzan_ep001_v1",
+    "identity_lock": "char_berzan_roster_v1",
+    "must_keep": ""
+   },
+   "salih": {
+    "wardrobe": "wardrobe_salih_ep001_v1",
+    "identity_lock": "char_salih_roster_v1",
+    "must_keep": ""
+   },
+   "emos": {
+    "wardrobe": "wardrobe_emos_ep001_v1",
+    "identity_lock": "char_emos_roster_v1",
+    "must_keep": ""
+   },
+   "harun": {
+    "wardrobe": "wardrobe_harun_ep001_v1",
+    "identity_lock": "char_harun_roster_v1",
+    "must_keep": ""
+   },
+   "kaan": {
+    "wardrobe": "wardrobe_kaan_ep001_v1",
+    "identity_lock": "char_kaan_roster_v1",
+    "must_keep": ""
+   },
+   "esra": {
+    "wardrobe": "wardrobe_esra_ep001_v1",
+    "identity_lock": "char_esra_roster_v1",
+    "must_keep": "başörtülü"
+   }
+  },
+  "props": [
+   "prop_kaydırak_v1",
+   "prop_merdiven_v1",
+   "prop_sıra_işareti_v1"
+  ]
+ },
+ {
+  "scene_id": "sc10",
+  "environment": "env_park_bike_pedestrian_v1",
+  "sun": {
+   "azimuth_deg": 110,
+   "elevation_deg": 50.1,
+   "direction": "doğu-güneydoğu"
+  },
+  "characters": {
+   "davut": {
+    "wardrobe": "wardrobe_davut_ep001_v1",
+    "identity_lock": "char_davut_roster_v1",
+    "must_keep": ""
+   },
+   "aden": {
+    "wardrobe": "wardrobe_aden_ep001_v1",
+    "identity_lock": "char_aden_roster_v1",
+    "must_keep": "sarı yıldız toka + sol yanakta üç çil"
+   },
+   "ahmet": {
+    "wardrobe": "wardrobe_ahmet_ep001_v1",
+    "identity_lock": "char_ahmet_roster_v1",
+    "must_keep": ""
+   },
+   "esma": {
+    "wardrobe": "wardrobe_esma_ep001_v1",
+    "identity_lock": "char_esma_roster_v1",
+    "must_keep": "başörtülü"
+   },
+   "harun": {
+    "wardrobe": "wardrobe_harun_ep001_v1",
+    "identity_lock": "char_harun_roster_v1",
+    "must_keep": ""
+   },
+   "emos": {
+    "wardrobe": "wardrobe_emos_ep001_v1",
+    "identity_lock": "char_emos_roster_v1",
+    "must_keep": ""
+   },
+   "berzan": {
+    "wardrobe": "wardrobe_berzan_ep001_v1",
+    "identity_lock": "char_berzan_roster_v1",
+    "must_keep": ""
+   }
+  },
+  "props": [
+   "prop_bisiklet_yolu_işareti_v1",
+   "prop_yaya_yolu_işareti_v1",
+   "prop_çocuk_bisikleti_v1",
+   "prop_zil_v1"
+  ]
+ },
+ {
+  "scene_id": "sc11",
+  "environment": "env_park_family_area_v1",
+  "sun": {
+   "azimuth_deg": 110,
+   "elevation_deg": 52.1,
+   "direction": "doğu-güneydoğu"
+  },
+  "characters": {
+   "harun": {
+    "wardrobe": "wardrobe_harun_ep001_v1",
+    "identity_lock": "char_harun_roster_v1",
+    "must_keep": ""
+   },
+   "aden": {
+    "wardrobe": "wardrobe_aden_ep001_v1",
+    "identity_lock": "char_aden_roster_v1",
+    "must_keep": "sarı yıldız toka + sol yanakta üç çil"
+   },
+   "emos": {
+    "wardrobe": "wardrobe_emos_ep001_v1",
+    "identity_lock": "char_emos_roster_v1",
+    "must_keep": ""
+   },
+   "salih": {
+    "wardrobe": "wardrobe_salih_ep001_v1",
+    "identity_lock": "char_salih_roster_v1",
+    "must_keep": ""
+   },
+   "berzan": {
+    "wardrobe": "wardrobe_berzan_ep001_v1",
+    "identity_lock": "char_berzan_roster_v1",
+    "must_keep": ""
+   },
+   "aras": {
+    "wardrobe": "wardrobe_aras_ep001_v1",
+    "identity_lock": "char_aras_roster_v1",
+    "must_keep": ""
+   },
+   "kaan": {
+    "wardrobe": "wardrobe_kaan_ep001_v1",
+    "identity_lock": "char_kaan_roster_v1",
+    "must_keep": ""
+   },
+   "esra": {
+    "wardrobe": "wardrobe_esra_ep001_v1",
+    "identity_lock": "char_esra_roster_v1",
+    "must_keep": "başörtülü"
+   },
+   "fatos": {
+    "wardrobe": "wardrobe_fatos_ep001_v1",
+    "identity_lock": "char_fatos_roster_v1",
+    "must_keep": "başörtüsüz"
+   }
+  },
+  "props": [
+   "prop_piknik_örtüsü_v1",
+   "prop_dört_işaret_panosu_v1",
+   "prop_meyve_tabağı_v1"
+  ]
+ },
+ {
+  "scene_id": "sc12",
+  "environment": "env_park_family_area_v1",
+  "sun": {
+   "azimuth_deg": 110,
+   "elevation_deg": 54.0,
+   "direction": "doğu-güneydoğu"
+  },
+  "characters": {
+   "aden": {
+    "wardrobe": "wardrobe_aden_ep001_v1",
+    "identity_lock": "char_aden_roster_v1",
+    "must_keep": "sarı yıldız toka + sol yanakta üç çil"
+   },
+   "kaan": {
+    "wardrobe": "wardrobe_kaan_ep001_v1",
+    "identity_lock": "char_kaan_roster_v1",
+    "must_keep": ""
+   },
+   "esra": {
+    "wardrobe": "wardrobe_esra_ep001_v1",
+    "identity_lock": "char_esra_roster_v1",
+    "must_keep": "başörtülü"
+   },
+   "ahmet": {
+    "wardrobe": "wardrobe_ahmet_ep001_v1",
+    "identity_lock": "char_ahmet_roster_v1",
+    "must_keep": ""
+   },
+   "esma": {
+    "wardrobe": "wardrobe_esma_ep001_v1",
+    "identity_lock": "char_esma_roster_v1",
+    "must_keep": "başörtülü"
+   },
+   "harun": {
+    "wardrobe": "wardrobe_harun_ep001_v1",
+    "identity_lock": "char_harun_roster_v1",
+    "must_keep": ""
+   },
+   "veysel": {
+    "wardrobe": "wardrobe_veysel_ep001_v1",
+    "identity_lock": "char_veysel_roster_v1",
+    "must_keep": "mavi gözler"
+   },
+   "oznur": {
+    "wardrobe": "wardrobe_oznur_ep001_v1",
+    "identity_lock": "char_oznur_roster_v1",
+    "must_keep": "başörtülü"
+   },
+   "salih": {
+    "wardrobe": "wardrobe_salih_ep001_v1",
+    "identity_lock": "char_salih_roster_v1",
+    "must_keep": ""
+   },
+   "medine": {
+    "wardrobe": "wardrobe_medine_ep001_v1",
+    "identity_lock": "char_medine_roster_v1",
+    "must_keep": ""
+   },
+   "davut": {
+    "wardrobe": "wardrobe_davut_ep001_v1",
+    "identity_lock": "char_davut_roster_v1",
+    "must_keep": ""
+   },
+   "fatos": {
+    "wardrobe": "wardrobe_fatos_ep001_v1",
+    "identity_lock": "char_fatos_roster_v1",
+    "must_keep": "başörtüsüz"
+   },
+   "emos": {
+    "wardrobe": "wardrobe_emos_ep001_v1",
+    "identity_lock": "char_emos_roster_v1",
+    "must_keep": ""
+   },
+   "berzan": {
+    "wardrobe": "wardrobe_berzan_ep001_v1",
+    "identity_lock": "char_berzan_roster_v1",
+    "must_keep": ""
+   },
+   "aras": {
+    "wardrobe": "wardrobe_aras_ep001_v1",
+    "identity_lock": "char_aras_roster_v1",
+    "must_keep": ""
+   },
+   "ramin": {
+    "wardrobe": "wardrobe_ramin_ep001_v1",
+    "identity_lock": "char_ramin_roster_v1",
+    "must_keep": ""
+   }
+  },
+  "props": [
+   "prop_piknik_örtüsü_v1",
+   "prop_uçurtma_v1",
+   "prop_balonlar_v1"
+  ]
+ }
+]

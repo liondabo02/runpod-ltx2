@@ -1,0 +1,111 @@
+{
+ "locations": {
+  "A": {
+   "id": "env_home_salon_v1",
+   "name": "Harun ve Esma'nın evi — salon",
+   "group": "home",
+   "ref": "studio/canon/(yeni)",
+   "notes": "Kanepe, sehpa, doğu penceresi, halı"
+  },
+  "B": {
+   "id": "env_home_kitchen_v1",
+   "name": "Aynı ev — mutfak",
+   "group": "home",
+   "notes": "Masa, tezgâh, doğu penceresi"
+  },
+  "C": {
+   "id": "env_home_entry_corridor_v1",
+   "name": "Aynı ev — giriş/koridor",
+   "group": "home",
+   "notes": "Ayakkabılık, ana kapı, aynı ev düzeni"
+  },
+  "D": {
+   "id": "env_park_entrance_v1",
+   "name": "Park girişi",
+   "group": "park",
+   "notes": "Kemer kapı, güney ucu"
+  },
+  "E": {
+   "id": "env_park_family_area_v1",
+   "name": "Park aile buluşma ve dinlenme alanı",
+   "group": "park",
+   "notes": "Piknik çimi, bank, büyük ağaç, merkez-batı"
+  },
+  "F": {
+   "id": "env_park_rules_sign_v1",
+   "name": "Kurallar tabelası",
+   "group": "park",
+   "notes": "Girişin sağında, ana yolda"
+  },
+  "G": {
+   "id": "env_park_trash_walk_v1",
+   "name": "Çöp kutusu ve yürüyüş alanı",
+   "group": "park",
+   "notes": "Ana yol boyunca, tabelanın kuzeyi"
+  },
+  "H": {
+   "id": "env_park_flower_bed_v1",
+   "name": "Çiçeklik",
+   "group": "park",
+   "notes": "Doğuda, kırmızı laleler, taş çerçeve"
+  },
+  "I": {
+   "id": "env_park_slide_zone_v1",
+   "name": "Kaydırak bölgesi",
+   "group": "park",
+   "notes": "Kuzeydoğuda, tek kaydırak, merdiven, yumuşak zemin"
+  },
+  "J": {
+   "id": "env_park_bike_pedestrian_v1",
+   "name": "Bisiklet ve yaya yolu",
+   "group": "park",
+   "notes": "Parkı çevreleyen halka; bisiklet ve yaya şeritleri yan yana"
+  }
+ },
+ "geography": {
+  "kuzey": "I (kaydırak) kuzeydoğu, H (çiçeklik) doğu",
+  "orta": "E (aile alanı) merkez-batı; G (çöp/yürüyüş) ana yol boyunca",
+  "güney": "D (giriş) güney ucu; F (tabela) girişin sağında",
+  "çevre": "J (bisiklet/yaya halkası) bütün parkı çevreler",
+  "güneş": "Sabah doğu-güneydoğuda (azimut ~110°), yükseklik sahne boyunca 30°→55°; gölgeler batı-kuzeybatıya düşer. Sahneler arasında sabit."
+ },
+ "props": [
+  "ayakkabılık",
+  "balonlar",
+  "battaniye",
+  "bebek arabası",
+  "bebek arabası (çift)",
+  "bebek taşıma koltuğu",
+  "bisiklet yolu işareti",
+  "dört işaret panosu",
+  "elma",
+  "elma sapı",
+  "güneş gözlüğü",
+  "kaydırak",
+  "kelebek",
+  "kurallar tabelası",
+  "kırmızı laleler",
+  "merdiven",
+  "meyve suyu kutusu",
+  "meyve tabağı",
+  "oyuncak araba",
+  "oyuncak ayı",
+  "park giriş kapısı",
+  "piknik sepeti",
+  "piknik örtüsü",
+  "sehpa",
+  "su şişesi",
+  "sıra işareti",
+  "tavşan peluş",
+  "uçurtma",
+  "yaya yolu işareti",
+  "zil",
+  "çanta",
+  "çiçekli kese",
+  "çiçeklik",
+  "çocuk bisikleti",
+  "çöp kutusu",
+  "çöp torbası"
+ ],
+ "rule": "Her mekân sabit environment ID; ağaç/tabela/çöp kutusu/oyun ekipmanı sahneler arası değişmez; yeni park tasarımı onay olmadan eski kanonun yerine geçmez"
+}

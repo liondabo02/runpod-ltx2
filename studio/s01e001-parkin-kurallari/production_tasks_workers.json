@@ -1,0 +1,123 @@
+[
+ {
+  "task_id": "T01",
+  "title": "Kanon doğrulama (poster sha256, onay durumu, Fatoş)",
+  "worker": "character_canon / s01e001_package",
+  "depends_on": [],
+  "status": "READY",
+  "note": "Bu paket içinde çalıştırıldı"
+ },
+ {
+  "task_id": "T02",
+  "title": "Senaryo → yapılandırılmış üretim formatı (60 çekim)",
+  "worker": "writers_room (sadık mod) / s01e001_package",
+  "depends_on": [
+   "T01"
+  ],
+  "status": "READY",
+  "note": "Paket üretildi; yaratıcı onay sahibin"
+ },
+ {
+  "task_id": "T03",
+  "title": "Ortam görselleri (A–J) arka plan üretimi",
+  "worker": "studio_2d (scenes2d) / visual_pipeline",
+  "depends_on": [
+   "T02"
+  ],
+  "status": "BLOCKED",
+  "note": "Onaylı park ortam varlığı yok; 2D motorda sahne/köy/oda/bahçe var, A–J birebir yok"
+ },
+ {
+  "task_id": "T04",
+  "title": "Karakter görsel/model sheet (poster kırpımından referans-korumalı)",
+  "worker": "character_worker / visual_pipeline",
+  "depends_on": [
+   "T01"
+  ],
+  "status": "BLOCKED",
+  "note": "Bağımsız model sheet yok; sahip onayı + GPU/yerel görüntü motoru gerekir"
+ },
+ {
+  "task_id": "T05",
+  "title": "Ses üretimi (TR) + viseme zamanları",
+  "worker": "voice_worker / audio_pipeline",
+  "depends_on": [
+   "T02"
+  ],
+  "status": "READY",
+  "note": "Yerel ses motoru var; native kalite onayı insan kulağıyla"
+ },
+ {
+  "task_id": "T06",
+  "title": "Animatik (ses + durağan/düşük hareket)",
+  "worker": "animatic_worker / studio_2d",
+  "depends_on": [
+   "T02",
+   "T05"
+  ],
+  "status": "READY",
+  "note": "Poster kırpımlarıyla 2D animatik yapılabilir (gerçek karakter animasyonu değil)"
+ },
+ {
+  "task_id": "T07",
+  "title": "Müzik + ambiyans + SFX",
+  "worker": "music_worker / audio_pipeline",
+  "depends_on": [
+   "T02"
+  ],
+  "status": "READY",
+  "note": "Prosedürel müzik; sahip kulak onayı"
+ },
+ {
+  "task_id": "T08",
+  "title": "Karakter rig/animasyon kütüphanesi (hareketli oyunculuk)",
+  "worker": "rig worker / studio_2d",
+  "depends_on": [
+   "T04"
+  ],
+  "status": "BLOCKED",
+  "note": "Rig ve mesh yok (0/16)"
+ },
+ {
+  "task_id": "T09",
+  "title": "Render (480 sn)",
+  "worker": "render_worker / studio_2d",
+  "depends_on": [
+   "T03",
+   "T04",
+   "T08"
+  ],
+  "status": "BLOCKED",
+  "note": "T03/T04/T08 tamamlanmadan gerçek karakter renderı yok"
+ },
+ {
+  "task_id": "T10",
+  "title": "Dublaj: DE/EN/AR/FR/ES/Kurmancî",
+  "worker": "localisation_worker",
+  "depends_on": [
+   "T05"
+  ],
+  "status": "PARTIAL",
+  "note": "EN doğrulandı; diğerleri denenmedi; Kurmancî ana dil incelemesi gerekir"
+ },
+ {
+  "task_id": "T11",
+  "title": "Video QA + yaratıcı kalite",
+  "worker": "studio_qa / video_qa",
+  "depends_on": [
+   "T09"
+  ],
+  "status": "BLOCKED",
+  "note": "Render yok"
+ },
+ {
+  "task_id": "T12",
+  "title": "Release gate + sahip onayı",
+  "worker": "release_gate",
+  "depends_on": [
+   "T11"
+  ],
+  "status": "BLOCKED",
+  "note": "Onay kaydı yok; yayın sahibin kararı"
+ }
+]

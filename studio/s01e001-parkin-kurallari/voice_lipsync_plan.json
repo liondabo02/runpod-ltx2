@@ -1,0 +1,878 @@
+{
+ "base_language": "tr",
+ "voice_identity_rule": "Her karakter aynı ses kimliğini (voice-profile.json) tüm dillerde korur",
+ "babies": "Medine ve Ramin: yalnız nefes/mırıltı; konuşma yok",
+ "kaan": "en çok 2 kelime",
+ "lip_sync_method": "fonem/viseme zaman çizelgesi; yakın planlarda ağız kontrolü zorunlu",
+ "lines": [
+  {
+   "line_id": "sc01_sh01_l1",
+   "character_id": "aden",
+   "text": "Günaydın! Bugün park var!",
+   "start_ms": 450,
+   "end_ms": 2430,
+   "shot_id": "sc01_sh01",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc01_sh02_l1",
+   "character_id": "aden",
+   "text": "Ben Aden. Üç yaşındayım.",
+   "start_ms": 7450,
+   "end_ms": 9430,
+   "shot_id": "sc01_sh02",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc01_sh03_l1",
+   "character_id": "kaan",
+   "text": "Aaa!",
+   "start_ms": 14450,
+   "end_ms": 15170,
+   "shot_id": "sc01_sh03",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc01_sh04_l1",
+   "character_id": "aden",
+   "text": "Bu da kardeşim Kaan.",
+   "start_ms": 21450,
+   "end_ms": 23430,
+   "shot_id": "sc01_sh04",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc01_sh04_l2",
+   "character_id": "kaan",
+   "text": "Abla!",
+   "start_ms": 23780,
+   "end_ms": 24500,
+   "shot_id": "sc01_sh04",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc01_sh05_l1",
+   "character_id": "esra",
+   "text": "Kahvaltı hazır, gelin bakalım!",
+   "start_ms": 28450,
+   "end_ms": 30110,
+   "shot_id": "sc01_sh05",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc02_sh01_l1",
+   "character_id": "esra",
+   "text": "Merhaba! Ben Esra, Aden'in annesiyim.",
+   "start_ms": 35450,
+   "end_ms": 37450,
+   "shot_id": "sc02_sh01",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc02_sh01_l2",
+   "character_id": "aden",
+   "text": "Annem!",
+   "start_ms": 37800,
+   "end_ms": 38520,
+   "shot_id": "sc02_sh01",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc02_sh02_l1",
+   "character_id": "ahmet",
+   "text": "Ben de Ahmet, babalarıyım. Tekerler tamam!",
+   "start_ms": 43450,
+   "end_ms": 45790,
+   "shot_id": "sc02_sh02",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc02_sh03_l1",
+   "character_id": "kaan",
+   "text": "Baba!",
+   "start_ms": 51450,
+   "end_ms": 52170,
+   "shot_id": "sc02_sh03",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc02_sh04_l1",
+   "character_id": "esra",
+   "text": "Bugün parkta hepimiz kurallara uyacağız.",
+   "start_ms": 59450,
+   "end_ms": 61450,
+   "shot_id": "sc02_sh04",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc02_sh04_l2",
+   "character_id": "aden",
+   "text": "Ben biliyorum!",
+   "start_ms": 61800,
+   "end_ms": 62940,
+   "shot_id": "sc02_sh04",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc02_sh05_l1",
+   "character_id": "aden",
+   "text": "Hadi gidelim!",
+   "start_ms": 67450,
+   "end_ms": 68590,
+   "shot_id": "sc02_sh05",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc02_sh05_l2",
+   "character_id": "ahmet",
+   "text": "Önce teyzeye uğrayalım.",
+   "start_ms": 68940,
+   "end_ms": 70260,
+   "shot_id": "sc02_sh05",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc03_sh01_l1",
+   "character_id": "esma",
+   "text": "Hoş geldiniz! Ben Esma, Aden ve Kaan'ın teyzesiyim.",
+   "start_ms": 75450,
+   "end_ms": 78470,
+   "shot_id": "sc03_sh01",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc03_sh02_l1",
+   "character_id": "harun",
+   "text": "Ben Harun, enişteniz. Bugün park lideriyim!",
+   "start_ms": 83450,
+   "end_ms": 85790,
+   "shot_id": "sc03_sh02",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc03_sh03_l1",
+   "character_id": "aden",
+   "text": "Teyze, içinde bebek var mı?",
+   "start_ms": 91450,
+   "end_ms": 93850,
+   "shot_id": "sc03_sh03",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc03_sh03_l2",
+   "character_id": "esma",
+   "text": "Evet, beş aylık.",
+   "start_ms": 94200,
+   "end_ms": 95520,
+   "shot_id": "sc03_sh03",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc03_sh04_l1",
+   "character_id": "kaan",
+   "text": "Hop!",
+   "start_ms": 99450,
+   "end_ms": 100170,
+   "shot_id": "sc03_sh04",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc03_sh04_l2",
+   "character_id": "harun",
+   "text": "Hop! Kaan uçuyor.",
+   "start_ms": 100520,
+   "end_ms": 101840,
+   "shot_id": "sc03_sh04",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc03_sh05_l1",
+   "character_id": "harun",
+   "text": "Herkes hazır mı? Parka!",
+   "start_ms": 108450,
+   "end_ms": 110110,
+   "shot_id": "sc03_sh05",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc03_sh05_l2",
+   "character_id": "esma",
+   "text": "Hadi bakalım!",
+   "start_ms": 110460,
+   "end_ms": 111440,
+   "shot_id": "sc03_sh05",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc03_sh06_l1",
+   "character_id": "aden",
+   "text": "Bizimle gelin!",
+   "start_ms": 117450,
+   "end_ms": 118590,
+   "shot_id": "sc03_sh06",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc04_sh01_l1",
+   "character_id": "veysel",
+   "text": "Günaydın! Ben Veysel.",
+   "start_ms": 125450,
+   "end_ms": 126770,
+   "shot_id": "sc04_sh01",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc04_sh01_l2",
+   "character_id": "harun",
+   "text": "Hoş geldiniz!",
+   "start_ms": 127120,
+   "end_ms": 128100,
+   "shot_id": "sc04_sh01",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc04_sh02_l1",
+   "character_id": "oznur",
+   "text": "Ben Öznur. Bu da bebeğimiz Medine, iki aylık.",
+   "start_ms": 134450,
+   "end_ms": 137470,
+   "shot_id": "sc04_sh02",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc04_sh02_l2",
+   "character_id": "medine",
+   "text": "[ince bebek mırıltısı]",
+   "start_ms": 137820,
+   "end_ms": 139020,
+   "shot_id": "sc04_sh02",
+   "non_speech": true
+  },
+  {
+   "line_id": "sc04_sh03_l1",
+   "character_id": "salih",
+   "text": "Ben Salih. İki!",
+   "start_ms": 143450,
+   "end_ms": 145010,
+   "shot_id": "sc04_sh03",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc04_sh03_l2",
+   "character_id": "aden",
+   "text": "Merhaba Salih!",
+   "start_ms": 145360,
+   "end_ms": 146500,
+   "shot_id": "sc04_sh03",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc04_sh04_l1",
+   "character_id": "veysel",
+   "text": "Hadi, park bizi bekliyor!",
+   "start_ms": 152450,
+   "end_ms": 154110,
+   "shot_id": "sc04_sh04",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc04_sh05_l1",
+   "character_id": "oznur",
+   "text": "Salih, elini bırakma.",
+   "start_ms": 161450,
+   "end_ms": 162770,
+   "shot_id": "sc04_sh05",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc05_sh01_l1",
+   "character_id": "davut",
+   "text": "Selam millet! Biz geldik!",
+   "start_ms": 170450,
+   "end_ms": 172110,
+   "shot_id": "sc05_sh01",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc05_sh02_l1",
+   "character_id": "davut",
+   "text": "Ben Davut, kocaman bir babayım!",
+   "start_ms": 179450,
+   "end_ms": 181450,
+   "shot_id": "sc05_sh02",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc05_sh02_l2",
+   "character_id": "fatos",
+   "text": "Ben Fatoş. Hoş geldiniz!",
+   "start_ms": 181800,
+   "end_ms": 183460,
+   "shot_id": "sc05_sh02",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc05_sh03_l1",
+   "character_id": "emos",
+   "text": "Ben Emoş. Dört yaşındayım!",
+   "start_ms": 188450,
+   "end_ms": 190430,
+   "shot_id": "sc05_sh03",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc05_sh03_l2",
+   "character_id": "aden",
+   "text": "Emoş!",
+   "start_ms": 190780,
+   "end_ms": 191500,
+   "shot_id": "sc05_sh03",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc05_sh04_l1",
+   "character_id": "fatos",
+   "text": "Bunlar ikizlerimiz Berzan ve Aras.",
+   "start_ms": 197450,
+   "end_ms": 199450,
+   "shot_id": "sc05_sh04",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc05_sh04_l2",
+   "character_id": "berzan",
+   "text": "Ben Berzan!",
+   "start_ms": 199800,
+   "end_ms": 200940,
+   "shot_id": "sc05_sh04",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc05_sh04_l3",
+   "character_id": "aras",
+   "text": "Aras.",
+   "start_ms": 201290,
+   "end_ms": 202010,
+   "shot_id": "sc05_sh04",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc05_sh05_l1",
+   "character_id": "fatos",
+   "text": "Bu da Ramin, bir aylık.",
+   "start_ms": 206450,
+   "end_ms": 208450,
+   "shot_id": "sc05_sh05",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc05_sh05_l2",
+   "character_id": "ramin",
+   "text": "[yeni doğan nefes ve minik ses]",
+   "start_ms": 208800,
+   "end_ms": 210000,
+   "shot_id": "sc05_sh05",
+   "non_speech": true
+  },
+  {
+   "line_id": "sc06_sh01_l1",
+   "character_id": "harun",
+   "text": "Bakın, parkın kuralları!",
+   "start_ms": 215450,
+   "end_ms": 216770,
+   "shot_id": "sc06_sh01",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc06_sh02_l1",
+   "character_id": "harun",
+   "text": "Bir: Çöpler çöp kutusuna!",
+   "start_ms": 223450,
+   "end_ms": 225110,
+   "shot_id": "sc06_sh02",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc06_sh02_l2",
+   "character_id": "aden",
+   "text": "Çöp kutusu!",
+   "start_ms": 225460,
+   "end_ms": 226600,
+   "shot_id": "sc06_sh02",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc06_sh03_l1",
+   "character_id": "harun",
+   "text": "İki: Çiçeklere bakarız, koparmayız.",
+   "start_ms": 231450,
+   "end_ms": 233110,
+   "shot_id": "sc06_sh03",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc06_sh03_l2",
+   "character_id": "emos",
+   "text": "Koparmayız!",
+   "start_ms": 233460,
+   "end_ms": 234180,
+   "shot_id": "sc06_sh03",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc06_sh04_l1",
+   "character_id": "harun",
+   "text": "Üç: Kaydırakta sıra bekleriz.",
+   "start_ms": 239450,
+   "end_ms": 241110,
+   "shot_id": "sc06_sh04",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc06_sh04_l2",
+   "character_id": "berzan",
+   "text": "Sıra!",
+   "start_ms": 241460,
+   "end_ms": 242180,
+   "shot_id": "sc06_sh04",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc06_sh05_l1",
+   "character_id": "harun",
+   "text": "Dört: İşaretlere bakar, güvenli yoldan yürürüz.",
+   "start_ms": 247450,
+   "end_ms": 249790,
+   "shot_id": "sc06_sh05",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc06_sh05_l2",
+   "character_id": "davut",
+   "text": "Yaşasın kurallar!",
+   "start_ms": 250140,
+   "end_ms": 251120,
+   "shot_id": "sc06_sh05",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc07_sh01_l1",
+   "character_id": "berzan",
+   "text": "Bitti!",
+   "start_ms": 255450,
+   "end_ms": 256170,
+   "shot_id": "sc07_sh01",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc07_sh02_l1",
+   "character_id": "aras",
+   "text": "Çöp. Kutu.",
+   "start_ms": 264450,
+   "end_ms": 265590,
+   "shot_id": "sc07_sh02",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc07_sh03_l1",
+   "character_id": "berzan",
+   "text": "Pardon!",
+   "start_ms": 273450,
+   "end_ms": 274170,
+   "shot_id": "sc07_sh03",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc07_sh03_l2",
+   "character_id": "aras",
+   "text": "Çöp kutusu!",
+   "start_ms": 274520,
+   "end_ms": 275660,
+   "shot_id": "sc07_sh03",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc07_sh04_l1",
+   "character_id": "davut",
+   "text": "Ben çöp avcısıyım! Hop, kutuya!",
+   "start_ms": 282450,
+   "end_ms": 284450,
+   "shot_id": "sc07_sh04",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc07_sh04_l2",
+   "character_id": "aden",
+   "text": "Ben de!",
+   "start_ms": 284800,
+   "end_ms": 285940,
+   "shot_id": "sc07_sh04",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc07_sh05_l1",
+   "character_id": "harun",
+   "text": "Aferin! Park tertemiz.",
+   "start_ms": 291450,
+   "end_ms": 292770,
+   "shot_id": "sc07_sh05",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc08_sh01_l1",
+   "character_id": "emos",
+   "text": "Güzel çiçek!",
+   "start_ms": 300450,
+   "end_ms": 301590,
+   "shot_id": "sc08_sh01",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc08_sh02_l1",
+   "character_id": "fatos",
+   "text": "Bakalım, koklayalım. Ama koparmayalım.",
+   "start_ms": 308450,
+   "end_ms": 310110,
+   "shot_id": "sc08_sh02",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc08_sh03_l1",
+   "character_id": "emos",
+   "text": "Mis gibi!",
+   "start_ms": 316450,
+   "end_ms": 317590,
+   "shot_id": "sc08_sh03",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc08_sh03_l2",
+   "character_id": "salih",
+   "text": "Mis!",
+   "start_ms": 317940,
+   "end_ms": 318660,
+   "shot_id": "sc08_sh03",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc08_sh04_l1",
+   "character_id": "kaan",
+   "text": "Kelebek!",
+   "start_ms": 324450,
+   "end_ms": 325170,
+   "shot_id": "sc08_sh04",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc08_sh04_l2",
+   "character_id": "oznur",
+   "text": "Sessiz, ürkütmeyelim.",
+   "start_ms": 325520,
+   "end_ms": 326500,
+   "shot_id": "sc08_sh04",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc08_sh05_l1",
+   "character_id": "aden",
+   "text": "Çiçekler yerinde!",
+   "start_ms": 332450,
+   "end_ms": 333590,
+   "shot_id": "sc08_sh05",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc09_sh01_l1",
+   "character_id": "berzan",
+   "text": "Ben ilk!",
+   "start_ms": 340450,
+   "end_ms": 341590,
+   "shot_id": "sc09_sh01",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc09_sh02_l1",
+   "character_id": "harun",
+   "text": "Dur bakalım. Sıra nerede?",
+   "start_ms": 349450,
+   "end_ms": 351110,
+   "shot_id": "sc09_sh02",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc09_sh03_l1",
+   "character_id": "aden",
+   "text": "Ben başta!",
+   "start_ms": 358450,
+   "end_ms": 359590,
+   "shot_id": "sc09_sh03",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc09_sh03_l2",
+   "character_id": "emos",
+   "text": "Ben arkada.",
+   "start_ms": 359940,
+   "end_ms": 361080,
+   "shot_id": "sc09_sh03",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc09_sh04_l1",
+   "character_id": "aden",
+   "text": "Yuppi!",
+   "start_ms": 367450,
+   "end_ms": 368170,
+   "shot_id": "sc09_sh04",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc09_sh05_l1",
+   "character_id": "berzan",
+   "text": "Sıra benim!",
+   "start_ms": 376450,
+   "end_ms": 377590,
+   "shot_id": "sc09_sh05",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc09_sh05_l2",
+   "character_id": "esra",
+   "text": "Aferin, güzel bekledin.",
+   "start_ms": 377940,
+   "end_ms": 379260,
+   "shot_id": "sc09_sh05",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc10_sh01_l1",
+   "character_id": "davut",
+   "text": "Ne güzel yol!",
+   "start_ms": 385450,
+   "end_ms": 386770,
+   "shot_id": "sc10_sh01",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc10_sh02_l1",
+   "character_id": "aden",
+   "text": "Amca, bu bisiklet yolu!",
+   "start_ms": 393450,
+   "end_ms": 395430,
+   "shot_id": "sc10_sh02",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc10_sh03_l1",
+   "character_id": "ahmet",
+   "text": "Yaya yolu yürüyenler için.",
+   "start_ms": 401450,
+   "end_ms": 403110,
+   "shot_id": "sc10_sh03",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc10_sh03_l2",
+   "character_id": "emos",
+   "text": "Yürüyenler!",
+   "start_ms": 403460,
+   "end_ms": 404180,
+   "shot_id": "sc10_sh03",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc10_sh04_l1",
+   "character_id": "harun",
+   "text": "Güvenli yol, güvenli adım.",
+   "start_ms": 409450,
+   "end_ms": 411110,
+   "shot_id": "sc10_sh04",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc10_sh05_l1",
+   "character_id": "davut",
+   "text": "Zil sesi duydum, kenardayım!",
+   "start_ms": 417450,
+   "end_ms": 419110,
+   "shot_id": "sc10_sh05",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc11_sh01_l1",
+   "character_id": "harun",
+   "text": "Hadi, kuralları tekrar edelim!",
+   "start_ms": 425450,
+   "end_ms": 427110,
+   "shot_id": "sc11_sh01",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc11_sh02_l1",
+   "character_id": "aden",
+   "text": "Çöp kutusuna!",
+   "start_ms": 432450,
+   "end_ms": 433590,
+   "shot_id": "sc11_sh02",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc11_sh03_l1",
+   "character_id": "emos",
+   "text": "Koklarız!",
+   "start_ms": 439450,
+   "end_ms": 440170,
+   "shot_id": "sc11_sh03",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc11_sh03_l2",
+   "character_id": "salih",
+   "text": "Mis!",
+   "start_ms": 440520,
+   "end_ms": 441240,
+   "shot_id": "sc11_sh03",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc11_sh04_l1",
+   "character_id": "berzan",
+   "text": "Sıra!",
+   "start_ms": 446450,
+   "end_ms": 447170,
+   "shot_id": "sc11_sh04",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc11_sh04_l2",
+   "character_id": "aras",
+   "text": "Bekle.",
+   "start_ms": 447520,
+   "end_ms": 448240,
+   "shot_id": "sc11_sh04",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc11_sh04_l3",
+   "character_id": "kaan",
+   "text": "Ben!",
+   "start_ms": 448590,
+   "end_ms": 449310,
+   "shot_id": "sc11_sh04",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc11_sh05_l1",
+   "character_id": "harun",
+   "text": "Süper! Hepsini biliyorsunuz.",
+   "start_ms": 453450,
+   "end_ms": 454770,
+   "shot_id": "sc11_sh05",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc11_sh05_l2",
+   "character_id": "esra",
+   "text": "Aferin bizim çocuklara!",
+   "start_ms": 455120,
+   "end_ms": 456440,
+   "shot_id": "sc11_sh05",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc12_sh01_l1",
+   "character_id": "aden",
+   "text": "Hepimiz buradayız!",
+   "start_ms": 460450,
+   "end_ms": 461590,
+   "shot_id": "sc12_sh01",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc12_sh02_l1",
+   "character_id": "davut",
+   "text": "Fotoğraf zamanı!",
+   "start_ms": 467450,
+   "end_ms": 468430,
+   "shot_id": "sc12_sh02",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc12_sh03_l1",
+   "character_id": "aden",
+   "text": "Güle güle! Yine gelin!",
+   "start_ms": 474450,
+   "end_ms": 476430,
+   "shot_id": "sc12_sh03",
+   "non_speech": false
+  },
+  {
+   "line_id": "sc12_sh03_l2",
+   "character_id": "harun",
+   "text": "Parkta görüşürüz!",
+   "start_ms": 476780,
+   "end_ms": 477760,
+   "shot_id": "sc12_sh03",
+   "non_speech": false
+  }
+ ],
+ "languages": {
+  "tr": {
+   "language": "Türkçe",
+   "duration_factor_estimate": 1.0,
+   "factor_is_estimate_not_measurement": true,
+   "needs_retiming": [],
+   "lines": 88,
+   "rule": "Çekim süreleri kilitli; dil uzarsa ses yeniden hizalanır/cümle kısaltılır, görüntü uzatılmaz"
+  },
+  "de": {
+   "language": "Almanca",
+   "duration_factor_estimate": 1.15,
+   "factor_is_estimate_not_measurement": true,
+   "needs_retiming": [],
+   "lines": 88,
+   "rule": "Çekim süreleri kilitli; dil uzarsa ses yeniden hizalanır/cümle kısaltılır, görüntü uzatılmaz"
+  },
+  "en": {
+   "language": "İngilizce",
+   "duration_factor_estimate": 0.95,
+   "factor_is_estimate_not_measurement": true,
+   "needs_retiming": [],
+   "lines": 88,
+   "rule": "Çekim süreleri kilitli; dil uzarsa ses yeniden hizalanır/cümle kısaltılır, görüntü uzatılmaz"
+  },
+  "ar": {
+   "language": "Arapça",
+   "duration_factor_estimate": 1.05,
+   "factor_is_estimate_not_measurement": true,
+   "needs_retiming": [],
+   "lines": 88,
+   "rule": "Çekim süreleri kilitli; dil uzarsa ses yeniden hizalanır/cümle kısaltılır, görüntü uzatılmaz"
+  },
+  "fr": {
+   "language": "Fransızca",
+   "duration_factor_estimate": 1.15,
+   "factor_is_estimate_not_measurement": true,
+   "needs_retiming": [],
+   "lines": 88,
+   "rule": "Çekim süreleri kilitli; dil uzarsa ses yeniden hizalanır/cümle kısaltılır, görüntü uzatılmaz"
+  },
+  "es": {
+   "language": "İspanyolca",
+   "duration_factor_estimate": 1.12,
+   "factor_is_estimate_not_measurement": true,
+   "needs_retiming": [],
+   "lines": 88,
+   "rule": "Çekim süreleri kilitli; dil uzarsa ses yeniden hizalanır/cümle kısaltılır, görüntü uzatılmaz"
+  },
+  "kmr": {
+   "language": "Kurmancî",
+   "duration_factor_estimate": 1.1,
+   "factor_is_estimate_not_measurement": true,
+   "needs_retiming": [],
+   "lines": 88,
+   "rule": "Çekim süreleri kilitli; dil uzarsa ses yeniden hizalanır/cümle kısaltılır, görüntü uzatılmaz"
+  }
+ },
+ "note": "Süreler kelime sayısından hesaplanan planlama tahminidir; gerçek ses üretilince ölçülüp güncellenir (yerel ses motoru: edge-tts/MMS; native kalite henüz doğrulanmadı)"
+}

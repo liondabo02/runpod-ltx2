@@ -1,0 +1,49 @@
+{
+ "ready_stages": [
+  "senaryo+shot manifest (taslak, sahip onayı bekler)",
+  "continuity matrix",
+  "ses/müzik/SFX planı",
+  "yerel TR ses sentezi",
+  "2D animatik"
+ ],
+ "not_ready": [
+  {
+   "dependency": "16 karakterin bağımsız model sheet/ifade sheet'i",
+   "state": "MISSING",
+   "why": "yalnız tek poster kırpımı var"
+  },
+  {
+   "dependency": "3D mesh + rig + animasyon kütüphanesi",
+   "state": "MISSING (0/16)",
+   "why": "Blender/GPU yok; sahip onayı gerekir"
+  },
+  {
+   "dependency": "Park ortamı A–J onaylı ortam varlıkları",
+   "state": "SPEC_ONLY",
+   "why": "park-kite spec dışında ortam yok"
+  },
+  {
+   "dependency": "Bebek (Medine, Ramin) ses referansı",
+   "state": "MISSING",
+   "why": "yalnız nefes/mırıltı SFX gerekir"
+  },
+  {
+   "dependency": "Sahip onay kayıtları (approvals.json)",
+   "state": "EMPTY",
+   "why": "hiçbir varlık biçimsel onay almadı"
+  },
+  {
+   "dependency": "Gerçek GPU / ücretli sağlayıcı",
+   "state": "NOT_APPROVED",
+   "why": "sahip onayı olmadan çağrılmaz"
+  },
+  {
+   "dependency": "Dublaj: 5 dil denenmedi, Kurmancî native inceleme",
+   "state": "PARTIAL",
+   "why": "bkz. T10"
+  }
+ ],
+ "missing_character_files": [],
+ "fatos_check_conflict": false,
+ "honesty": "Bu paket PLAN ve manifesttir. Video, 3D, gerçek karakter animasyonu veya 'tamamlandı' iddiası YOKTUR."
+}

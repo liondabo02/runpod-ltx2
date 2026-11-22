@@ -1,0 +1,10 @@
+{
+ "status": "PASSED",
+ "problems": [],
+ "scenes": 12,
+ "shots": 59,
+ "lines": 90,
+ "total_ms": 480000,
+ "generated": "2026-11-22 19:03",
+ "scope": "yalnız yapısal/offline doğrulama; yaratıcı kalite ve görsel üretim değerlendirilmedi"
+}

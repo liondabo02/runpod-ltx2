@@ -1,0 +1,85 @@
+{
+ "authority": "sahip: 'bazıları birbirine çok benziyor, ayar ver' (2026-11-22)",
+ "status": "PROPOSED_NOT_APPROVED",
+ "note": "Onaylı poster kırpımları değiştirilmedi; bunlar yeni üretimlerde uygulanacak ayrıştırma önerileridir",
+ "pairs": [
+  {
+   "group": [
+    "esra",
+    "esma",
+    "oznur"
+   ],
+   "problem": "Üçü de başörtülü, benzer yüz oranı ve ten rengi",
+   "proposals": {
+    "esra": "gül kurusu başörtü, yuvarlak yüz, hafif dolgun yanak, sakin kaşlar; ayırt edici silüet: bol üst",
+    "esma": "zeytin yeşili başörtü, ince oval yüz, uzun kirpikler, hamile silüet; zarif duruş, boyun dik",
+    "oznur": "mor başörtü, keskin çene ve ince burun, hafif sivri çene; sarı çiçek broş, mavi hırka"
+   },
+   "rule": "Üçünün yüz şekli (yuvarlak / ince oval / köşeli oval) ve başörtü rengi sabit kalır"
+  },
+  {
+   "group": [
+    "kaan",
+    "salih",
+    "berzan",
+    "aras"
+   ],
+   "problem": "Dört bebek/yürümeye başlayan çocuğun hepsi koyu kıvırcık saçlı",
+   "proposals": {
+    "kaan": "bebeksi oran, ince düz-dalgalı siyah saç, büyük baş; mercan tişört",
+    "salih": "açık kızıl-kestane kıvırcık saç, yuvarlak yanak; yeşil tulum",
+    "berzan": "koyu kıvırcık saç, sol tarafta tek tutam, çene gamzesi; turuncu araba tişörtü; hareketli ifade",
+    "aras": "koyu kıvırcık saç ama daha kısa ve düz kenar, yuvarlak sakin yüz; mavi üst, tavşan peluş"
+   },
+   "rule": "İkizler (Berzan/Aras) benzer kalır; Berzan'ı gamze ve tutam, Aras'ı peluş ve sakin ifade ayırır. Kaan ve Salih ikizlerden saç renk/dokusuyla ayrılır"
+  },
+  {
+   "group": [
+    "aden",
+    "emos"
+   ],
+   "problem": "İkisi de kahverengi saçlı kız çocuk",
+   "proposals": {
+    "aden": "koyu kahverengi dalgalı uzun saç, sarı yıldız toka, sol yanakta üç çil",
+    "emos": "kısa küt kesim kahverengi saç + kâhkül, kırmızı toka, çilsiz yanak, turuncu/turkuaz renkler"
+   },
+   "rule": "Aden: uzun dalgalı + yıldız + çil; Emoş: küt kesim + kâhkül + kırmızı toka"
+  },
+  {
+   "group": [
+    "ahmet",
+    "veysel"
+   ],
+   "problem": "İki baba tipi yetişkin",
+   "proposals": {
+    "ahmet": "ince yapı, koyu gözler, alın geride, saç ince, sakalsız; bordo kazak",
+    "veysel": "dolgun yapı, mavi gözler, açık kestane saç ve kısa sakal; turkuaz gömlek"
+   },
+   "rule": "Siluet (ince/dolgun) ve göz rengi ayırır"
+  },
+  {
+   "group": [
+    "harun",
+    "davut"
+   ],
+   "problem": "İkisi de uzun saçlı erkek",
+   "proposals": {
+    "harun": "uzun boylu, fit, sakallı, dalgalı uzun saç geriye; lacivert gömlek",
+    "davut": "iri, geniş vücutlu, dolgun yüz, kıvırcık uzun saç; kırmızı gömlek"
+   },
+   "rule": "Vücut tipi ve yüz dolgunluğu kesin ayırır; Harun fit ve uzun, Davut iri ve geniş"
+  },
+  {
+   "group": [
+    "medine",
+    "ramin"
+   ],
+   "problem": "İki bebek uyur pozda, benzer",
+   "proposals": {
+    "medine": "pembe fiyonk, pembe battaniye, 2 aylık; uzun kirpik",
+    "ramin": "nane yeşili ayıcık kulaklı bere, 1 aylık; daha küçük, kırmızı yüz"
+   },
+   "rule": "Renk kodu (pembe/nane) ve aksesuar (fiyonk/bere) ayırır"
+  }
+ ]
+}

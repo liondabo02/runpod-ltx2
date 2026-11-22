@@ -1,0 +1,345 @@
+{
+ "music": [
+  {
+   "scene_id": "sc01",
+   "cue": "Günaydın teması",
+   "style": "hafif, 96 bpm, ksilofon+pizzicato, majör",
+   "dynamics": "yumuşak giriş",
+   "rights": "özgün/prosedürel üretim (music_worker); telif sorunu yok, insan kulağıyla onay bekler",
+   "start_ms": 0,
+   "end_ms": 35000
+  },
+  {
+   "scene_id": "sc02",
+   "cue": "Aile mutfağı",
+   "style": "100 bpm, ukulele+hafif perküsyon",
+   "dynamics": "aynı tema, sıcak",
+   "rights": "özgün/prosedürel üretim (music_worker); telif sorunu yok, insan kulağıyla onay bekler",
+   "start_ms": 35000,
+   "end_ms": 75000
+  },
+  {
+   "scene_id": "sc03",
+   "cue": "Hazırlanma",
+   "style": "104 bpm, ana tema varyasyonu",
+   "dynamics": "hafif tempo artışı",
+   "rights": "özgün/prosedürel üretim (music_worker); telif sorunu yok, insan kulağıyla onay bekler",
+   "start_ms": 75000,
+   "end_ms": 125000
+  },
+  {
+   "scene_id": "sc04",
+   "cue": "Komşular geliyor",
+   "style": "100 bpm, akordeon+pizzicato",
+   "dynamics": "yeni renk, aynı tonalite",
+   "rights": "özgün/prosedürel üretim (music_worker); telif sorunu yok, insan kulağıyla onay bekler",
+   "start_ms": 125000,
+   "end_ms": 170000
+  },
+  {
+   "scene_id": "sc05",
+   "cue": "Park girişi",
+   "style": "108 bpm, flüt+gitar, açık gökyüzü hissi",
+   "dynamics": "enerji yükselir",
+   "rights": "özgün/prosedürel üretim (music_worker); telif sorunu yok, insan kulağıyla onay bekler",
+   "start_ms": 170000,
+   "end_ms": 215000
+  },
+  {
+   "scene_id": "sc06",
+   "cue": "Kurallar şarkısı",
+   "style": "112 bpm, 4 kısa motif (her kural bir motif)",
+   "dynamics": "öğretici, net ritim",
+   "rights": "özgün/prosedürel üretim (music_worker); telif sorunu yok, insan kulağıyla onay bekler",
+   "start_ms": 215000,
+   "end_ms": 255000
+  },
+  {
+   "scene_id": "sc07",
+   "cue": "Çöp avcıları",
+   "style": "116 bpm, komik fagot+pizzicato",
+   "dynamics": "oyun hissi",
+   "rights": "özgün/prosedürel üretim (music_worker); telif sorunu yok, insan kulağıyla onay bekler",
+   "start_ms": 255000,
+   "end_ms": 300000
+  },
+  {
+   "scene_id": "sc08",
+   "cue": "Çiçekler",
+   "style": "88 bpm, harp+flüt, yavaş",
+   "dynamics": "sakin, nazik",
+   "rights": "özgün/prosedürel üretim (music_worker); telif sorunu yok, insan kulağıyla onay bekler",
+   "start_ms": 300000,
+   "end_ms": 340000
+  },
+  {
+   "scene_id": "sc09",
+   "cue": "Kaydırak sırası",
+   "style": "120 bpm, ksilofon, merdiven motifi",
+   "dynamics": "oyun, kısa sıralı vurgu",
+   "rights": "özgün/prosedürel üretim (music_worker); telif sorunu yok, insan kulağıyla onay bekler",
+   "start_ms": 340000,
+   "end_ms": 385000
+  },
+  {
+   "scene_id": "sc10",
+   "cue": "Güvenli yol",
+   "style": "104 bpm, tempolu yürüyüş motifi",
+   "dynamics": "dengeli",
+   "rights": "özgün/prosedürel üretim (music_worker); telif sorunu yok, insan kulağıyla onay bekler",
+   "start_ms": 385000,
+   "end_ms": 425000
+  },
+  {
+   "scene_id": "sc11",
+   "cue": "Tekrar",
+   "style": "112 bpm, 4 kural motifi art arda",
+   "dynamics": "öğrenme pekiştirme",
+   "rights": "özgün/prosedürel üretim (music_worker); telif sorunu yok, insan kulağıyla onay bekler",
+   "start_ms": 425000,
+   "end_ms": 460000
+  },
+  {
+   "scene_id": "sc12",
+   "cue": "Aile finali",
+   "style": "100 bpm, tam ana tema, orkestra dokunuşu",
+   "dynamics": "kapanış, yavaşlayarak biter",
+   "rights": "özgün/prosedürel üretim (music_worker); telif sorunu yok, insan kulağıyla onay bekler",
+   "start_ms": 460000,
+   "end_ms": 480000
+  }
+ ],
+ "ambience": [
+  {
+   "scene_id": "sc01",
+   "bed": "iç mekân: hafif ev sessizliği, uzak sokak, saat tik",
+   "start_ms": 0,
+   "end_ms": 35000
+  },
+  {
+   "scene_id": "sc02",
+   "bed": "iç mekân: hafif ev sessizliği, uzak sokak, saat tik",
+   "start_ms": 35000,
+   "end_ms": 75000
+  },
+  {
+   "scene_id": "sc03",
+   "bed": "iç mekân: hafif ev sessizliği, uzak sokak, saat tik",
+   "start_ms": 75000,
+   "end_ms": 125000
+  },
+  {
+   "scene_id": "sc04",
+   "bed": "iç mekân: hafif ev sessizliği, uzak sokak, saat tik",
+   "start_ms": 125000,
+   "end_ms": 170000
+  },
+  {
+   "scene_id": "sc05",
+   "bed": "dış mekân: kuş cıvıltısı, uzak çocuk sesleri, hafif rüzgâr, yaprak",
+   "start_ms": 170000,
+   "end_ms": 215000
+  },
+  {
+   "scene_id": "sc06",
+   "bed": "dış mekân: kuş cıvıltısı, uzak çocuk sesleri, hafif rüzgâr, yaprak",
+   "start_ms": 215000,
+   "end_ms": 255000
+  },
+  {
+   "scene_id": "sc07",
+   "bed": "dış mekân: kuş cıvıltısı, uzak çocuk sesleri, hafif rüzgâr, yaprak",
+   "start_ms": 255000,
+   "end_ms": 300000
+  },
+  {
+   "scene_id": "sc08",
+   "bed": "dış mekân: kuş cıvıltısı, uzak çocuk sesleri, hafif rüzgâr, yaprak",
+   "start_ms": 300000,
+   "end_ms": 340000
+  },
+  {
+   "scene_id": "sc09",
+   "bed": "dış mekân: kuş cıvıltısı, uzak çocuk sesleri, hafif rüzgâr, yaprak",
+   "start_ms": 340000,
+   "end_ms": 385000
+  },
+  {
+   "scene_id": "sc10",
+   "bed": "dış mekân: kuş cıvıltısı, uzak çocuk sesleri, hafif rüzgâr, yaprak",
+   "start_ms": 385000,
+   "end_ms": 425000
+  },
+  {
+   "scene_id": "sc11",
+   "bed": "dış mekân: kuş cıvıltısı, uzak çocuk sesleri, hafif rüzgâr, yaprak",
+   "start_ms": 425000,
+   "end_ms": 460000
+  },
+  {
+   "scene_id": "sc12",
+   "bed": "dış mekân: kuş cıvıltısı, uzak çocuk sesleri, hafif rüzgâr, yaprak",
+   "start_ms": 460000,
+   "end_ms": 480000
+  }
+ ],
+ "sfx_cues": [
+  {
+   "shot_id": "sc01_sh01",
+   "start_ms": 0,
+   "sfx": "uçurtma kanat hışırtısı"
+  },
+  {
+   "shot_id": "sc01_sh02",
+   "start_ms": 7000,
+   "sfx": "uçurtma kanat hışırtısı"
+  },
+  {
+   "shot_id": "sc02_sh02",
+   "start_ms": 43000,
+   "sfx": "bebek arabası teker sesi"
+  },
+  {
+   "shot_id": "sc02_sh04",
+   "start_ms": 59000,
+   "sfx": "sepet kapağı/hışırtı"
+  },
+  {
+   "shot_id": "sc02_sh05",
+   "start_ms": 67000,
+   "sfx": "kapı açılma/kapanma"
+  },
+  {
+   "shot_id": "sc02_sh05",
+   "start_ms": 67000,
+   "sfx": "sepet kapağı/hışırtı"
+  },
+  {
+   "shot_id": "sc03_sh06",
+   "start_ms": 117000,
+   "sfx": "kapı açılma/kapanma"
+  },
+  {
+   "shot_id": "sc04_sh01",
+   "start_ms": 125000,
+   "sfx": "kapı açılma/kapanma"
+  },
+  {
+   "shot_id": "sc05_sh01",
+   "start_ms": 170000,
+   "sfx": "kapı açılma/kapanma"
+  },
+  {
+   "shot_id": "sc06_sh02",
+   "start_ms": 223000,
+   "sfx": "çöp kutusu kapağı, hafif metalik tık"
+  },
+  {
+   "shot_id": "sc06_sh04",
+   "start_ms": 239000,
+   "sfx": "kaydırak kayma sesi"
+  },
+  {
+   "shot_id": "sc06_sh05",
+   "start_ms": 247000,
+   "sfx": "çocuk ve yetişkin alkışı"
+  },
+  {
+   "shot_id": "sc06_sh05",
+   "start_ms": 247000,
+   "sfx": "ayak sesi (çimen/taş/ahşap yüzeye göre)"
+  },
+  {
+   "shot_id": "sc07_sh01",
+   "start_ms": 255000,
+   "sfx": "elma ısırığı / sap düşüşü"
+  },
+  {
+   "shot_id": "sc07_sh02",
+   "start_ms": 264000,
+   "sfx": "çöp kutusu kapağı, hafif metalik tık"
+  },
+  {
+   "shot_id": "sc07_sh03",
+   "start_ms": 273000,
+   "sfx": "çöp kutusu kapağı, hafif metalik tık"
+  },
+  {
+   "shot_id": "sc07_sh04",
+   "start_ms": 282000,
+   "sfx": "çöp kutusu kapağı, hafif metalik tık"
+  },
+  {
+   "shot_id": "sc07_sh05",
+   "start_ms": 291000,
+   "sfx": "ayak sesi (çimen/taş/ahşap yüzeye göre)"
+  },
+  {
+   "shot_id": "sc08_sh04",
+   "start_ms": 324000,
+   "sfx": "kelebek kanat çırpışı (hafif)"
+  },
+  {
+   "shot_id": "sc08_sh05",
+   "start_ms": 332000,
+   "sfx": "kelebek kanat çırpışı (hafif)"
+  },
+  {
+   "shot_id": "sc09_sh01",
+   "start_ms": 340000,
+   "sfx": "kaydırak kayma sesi"
+  },
+  {
+   "shot_id": "sc09_sh01",
+   "start_ms": 340000,
+   "sfx": "ayak sesi (çimen/taş/ahşap yüzeye göre)"
+  },
+  {
+   "shot_id": "sc09_sh04",
+   "start_ms": 367000,
+   "sfx": "kaydırak kayma sesi"
+  },
+  {
+   "shot_id": "sc09_sh05",
+   "start_ms": 376000,
+   "sfx": "kaydırak kayma sesi"
+  },
+  {
+   "shot_id": "sc10_sh03",
+   "start_ms": 401000,
+   "sfx": "ayak sesi (çimen/taş/ahşap yüzeye göre)"
+  },
+  {
+   "shot_id": "sc10_sh04",
+   "start_ms": 409000,
+   "sfx": "ayak sesi (çimen/taş/ahşap yüzeye göre)"
+  },
+  {
+   "shot_id": "sc10_sh05",
+   "start_ms": 417000,
+   "sfx": "bisiklet zili"
+  },
+  {
+   "shot_id": "sc11_sh02",
+   "start_ms": 432000,
+   "sfx": "çöp kutusu kapağı, hafif metalik tık"
+  },
+  {
+   "shot_id": "sc11_sh05",
+   "start_ms": 453000,
+   "sfx": "çocuk ve yetişkin alkışı"
+  },
+  {
+   "shot_id": "sc12_sh03",
+   "start_ms": 474000,
+   "sfx": "uçurtma kanat hışırtısı"
+  }
+ ],
+ "mix_rules": [
+  "Diyalog her zaman öncelikli; müzik diyalog sırasında otomatik kısılır (ducking)",
+  "Hedef: yaşa uygun, ani yüksek ses yok",
+  "Müzik motifi: Aile teması her bölümde geri döner (sc01 ve sc12)"
+ ],
+ "engine": "tools/music_worker.py (prosedürel, telifsiz) + insan kulağıyla onay",
+ "status": "PLANNED_NOT_RENDERED"
+}

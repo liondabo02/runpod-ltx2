@@ -1,0 +1,20 @@
+{
+ "sources_found": 2,
+ "hits": [
+  {
+   "file": "studio\\canon\\p7-owner-constraints.json",
+   "line": 15,
+   "reads_as": "UNCOVERED",
+   "text": "\"fatos\": \"30 yaş; BAŞÖRTÜSÜZ; ameliyat sonrası zayıflamış ve yüz görünümü değişmiş; doğal ve saygılı; Davut'un eşi\","
+  },
+  {
+   "file": "studio\\characters\\fatos\\portrait-design.json",
+   "line": 21,
+   "reads_as": "UNCOVERED",
+   "text": "\"prompt\": \"Single character portrait, Fatoş, age 30.0 years. 30 yaş; BAŞÖRTÜSÜZ; ameliyat sonrası zayıflamış ve yüz görünümü değişmiş; doğal ve saygılı; Davut'un eşi. narrow oval / softened tapered ja"
+  }
+ ],
+ "conflict": false,
+ "decision": "BAŞÖRTÜSÜZ (sahibin son beyanı: P7 2026-11-08 + onaylı poster kırpımı); çelişen kaynak varsa ESKİ kabul edilir",
+ "episode_rule": "Fatoş bu bölümde başörtüsüz, omuz hizası kestane saçlı çizilir; hastalık/ameliyat anlatılmaz, saygılı ve doğal."
+}
