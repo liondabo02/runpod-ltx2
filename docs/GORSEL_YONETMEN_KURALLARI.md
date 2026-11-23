@@ -43,4 +43,4 @@ Her sahne için işçi şunu üretir: mekân kimliği, ışık kaynağı+saat, 5
 - Konuşma: konuşmadan önce küçük nefes, vurgulu kelimede baş onayı + bir elin açılması, dinleyen karakterde tepki/baş eğme; ağız viseme ile eşleşir.
 - Hareketin 3 evresi: hazırlık (anticipation) → ana hareket → oturma/devam (follow-through). Zıplama, el sallama, şaşırma bu yapıdadır.
 - Bekleyen karakter donmaz: ağırlık kaydırma, ara sıra jest, merak bakışı.
-- Henüz yok (sıradaki iş): yan/üç-çeyrek bakış gövdeleri, parmak jestleri çeşitliliği, koşuda toz/hız çizgisi, gözleri duyguya göre şekillendirme.
+- Eklendi: koşuda toz/hız çizgisi, duygulu gözler, jest elleri (işaret/yumruk/başparmak). Henüz yok: yan/üç-çeyrek bakış gövdeleri.

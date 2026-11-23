@@ -28,3 +28,10 @@ def test_inspire_has_no_names(tmp_path):
     r = run(["--source-file", str(f), "--out", str(tmp_path / "o")]); assert r.returncode == 0
     j = open(tmp_path / "o" / "adaptation_plan.json", encoding="utf-8").read()
     assert "Veysel" not in j and "Salih" not in j and "özgünleştirme" in j
+
+
+def test_originality(tmp_path):
+    import originality_check as oc
+    insp = "Gargamel Şirine Papa Şirin ile bataklıkta karşılaştı ve mantarlı evi kovaladı."
+    assert oc.check("Gargamel Şirine Papa Şirin ile bataklıkta karşılaştı ve mantarlı evi kovaladı.", insp)["karar"] == "YENİDEN_YAZ"
+    assert oc.check("Mira kumsalda eski bir deniz feneri buldu ve ışığı yeniden yaktı.", insp)["karar"] == "GEÇTİ"
