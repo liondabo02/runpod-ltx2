@@ -145,7 +145,7 @@ def post(im, beat, t, lt, dur, total_s=480.0, first_of_scene=False):
     light = str(beat.get("light") or "").lower()
     outdoor = beat.get("scene") in ("garden", "path", "village", "park", "stage")
     seed = int(beat.get("i", 0)) // 6
-    im = _particles(im, "leaf" if outdoor else "pollen", t, seed, n=10 if outdoor else 22)
+    im = _particles(im, "leaf" if outdoor else "pollen", t, seed, n=0 if outdoor else 22)
     if re.search(r"güneş|sabah|öğle|parlak|altın", light):
         im = _rays(im, t, 1.0 if outdoor else 1.4)
     if first_of_scene and lt < 0.55:

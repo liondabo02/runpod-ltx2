@@ -135,6 +135,8 @@ def frame(plan, designs, t, bible_chars=None):
     if speaker and speaker in beat["cast"] and preset in ("close", "xclose"):
         fx = xs[beat["cast"].index(speaker)]
     zoom = ZOOM.get(preset, 1.5) * (1.0 + 0.05 * ph) * (1.0 + 0.18 * E if preset == "close" else 1.0)   # vurguda kamera içeri vurur
+    if preset in ("close", "xclose") and focus in designs and designs[focus]["height"] > 1.3:
+        zoom *= 0.78                                    # yetişkin yakın planda ekranı doldurmasın: kadraj biraz açılır
     cx = fx if preset in ("close", "xclose") else avg
     cy = {"wide": 0.95, "medium": min(0.85, fh * 0.62 + 0.25)}.get(preset, fh * 0.80)   # orta planda çocuk için kamera alçalır (bacak değil gövde+yüz)
     if preset in ("wide", "medium") and len(xs) > 1:            # kadraj güvenliği: tüm oyuncular kadraja sığsın
@@ -143,7 +145,7 @@ def frame(plan, designs, t, bible_chars=None):
     cam = sc.Cam(cx, cy, zoom)
     if preset == "insert" and beat.get("props"):
         ix, iy = props2d.place(beat["props"][0], xs, [designs[c]["height"] for c in beat["cast"]], t, lt, dur)
-        cam = sc.Cam(ix, max(0.55, iy - 0.35), 1.3)
+        cam = sc.Cam(ix, max(0.55, min(iy - 0.35, 1.0)), 1.05)      # ek plan: nesne + karakterler birlikte kadrajda (başsız/bacaksız kadraj yok)
     cv = pp.Cv()
     sc.scene_back(cv, beat["scene"], cam, t)
     if preset != "insert":
@@ -241,16 +243,26 @@ def render_window(plan, designs, out_dir, workers=None, progress=True):
     f0, f1 = int(round(plan["t0"] * fps)), int(round(plan["t1"] * fps))
     jobs = [(f, os.path.join(out_dir, "f%05d.png" % f), fps) for f in range(f0, f1)]
     t0 = time.time(); done = 0
-    workers = workers or max(1, (os.cpu_count() or 2) - 1)
-    if workers == 1:
-        _init(plan, designs)
-        for j in jobs:
-            done += _work(j)
-    else:
-        with ProcessPoolExecutor(workers, initializer=_init, initargs=(plan, designs)) as ex:
-            for i, r in enumerate(ex.map(_work, jobs, chunksize=4)):
-                done += r
-                if progress and (i + 1) % 48 == 0:
-                    print("PROGRESS kare=%d/%d  %.2f sn/kare" % (i + 1, len(jobs), (time.time() - t0) / (i + 1)), flush=True)
+    workers = workers or max(1, min(4, (os.cpu_count() or 2) - 1))          # bellek: işçi başına ~400 MB; en çok 4
+    from concurrent.futures.process import BrokenProcessPool
+    for attempt in range(3):                                                # işçi çökerse (ör. MemoryError) eksik kareleri daha az işçiyle tamamla
+        todo = [j for j in jobs if not os.path.exists(j[1])]
+        if not todo:
+            break
+        try:
+            if workers == 1:
+                _init(plan, designs)
+                for j in todo:
+                    done += _work(j)
+            else:
+                with ProcessPoolExecutor(workers, initializer=_init, initargs=(plan, designs)) as ex:
+                    for i, r in enumerate(ex.map(_work, todo, chunksize=2)):
+                        done += r
+                        if progress and (i + 1) % 48 == 0:
+                            print("PROGRESS kare=%d/%d  %.2f sn/kare" % (i + 1, len(todo), (time.time() - t0) / (i + 1)), flush=True)
+            break
+        except (BrokenProcessPool, MemoryError) as e:
+            print("UYARI: işçi çöktü (%s); %d kare eksik, işçi sayısı azaltılıyor" % (type(e).__name__, len([j for j in jobs if not os.path.exists(j[1])])), flush=True)
+            workers = max(1, workers // 2)
     el = time.time() - t0
     return {"rendered": done, "seconds": round(el, 1), "sec_per_frame": round(el / done, 3) if done else None, "engine": "puppet2d"}
