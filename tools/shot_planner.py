@@ -7,7 +7,7 @@ try:
 except ImportError:
     mood_engine = None
 
-SCENE_RULES = [("stage", r"sahne|stand-?up|tiyatro|stage|mikrofon|konser"), ("water", r"göl|gol\b|nehir|dere|deniz|su kenar|lake|river|sea|pond"), ("path", r"koridor|yol\b|patika|rüzgar|ruzgar|corridor|path|road|tepe|hill"), ("roof", r"çatı|cati|roof|tavan"), ("room", r"oda|ev\b|mutfak|salon|room|house|kitchen|sınıf"),
+SCENE_RULES = [("stage", r"sahne|stand-?up|tiyatro|stage|mikrofon|konser"), ("room", r"^home_|mutfak|salon|giriş koridoru|ev giriş"), ("water", r"göl|gol\b|nehir|dere|deniz|su kenar|lake|river|sea|pond"), ("path", r"koridor|yol\b|patika|rüzgar|ruzgar|corridor|path|road|tepe|hill"), ("roof", r"çatı|cati|roof|tavan"), ("room", r"oda|ev\b|mutfak|salon|room|house|kitchen|sınıf"),
                ("village", r"köy|koy\b|mahalle|sokak|meydan|çarşı|carsi|pazar|village|street|square|market"),
                ("garden", r"bahçe|bahce|park|orman|çayır|garden|forest|meadow")]
 
