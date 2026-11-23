@@ -166,5 +166,14 @@ PIECES = {
 
 
 def draw(cv, cam, loc, t=0.0):
+    try:
+        import style_profile
+        prof = style_profile.current()
+    except Exception:
+        prof = {}
     for fn, x in PIECES.get(loc or "", []):
+        if fn is wall_decor and not prof.get("decor", True):
+            continue
+        if fn is park_dressing and not prof.get("park_decor", True):
+            continue
         fn(cv, cam, x, t)

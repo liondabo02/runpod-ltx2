@@ -159,10 +159,24 @@ def draw_mouth(cv, mx, my, mw, mh, letter, ol=INK, emo="neutral"):
 
 
 # ---------------------------------------------------------------- eller
-def _hand(cv, pos, r, skin, sg, fwd, ow, t, emo):
+def _hand(cv, pos, r, skin, sg, fwd, ow, t, emo, g=None):
     """Beş parmaklı el: avuç + başparmak + 4 parmak. Açıklık eylemle (fwd) ve duyguyla değişir: kapalı yumruk <-> açık avuç."""
     openness = max(0.0, min(1.0, 0.55 + 0.35 * math.sin(abs(fwd) * 2.0 + t * 1.3) + (0.3 if emo in ("surprise", "laugh", "happy") else 0)))
     x, y = pos
+    if g in ("point", "thumb", "fist"):                  # jest elleri: işaret (tek parmak), başparmak yukarı, yumruk
+        cv.ellipse(x, y, r * 0.95, r * 0.9, skin, INK, ow * 0.9)
+        if g == "point":
+            cv.capsule((x, y - r * 0.3), (x - sg * r * 0.2, y - r * 1.9), r * 0.22, r * 0.18, skin, INK, ow * 0.7)
+            for i in range(3):
+                cv.ellipse(x + (i - 1) * r * 0.45, y + r * 0.2, r * 0.26, r * 0.3, skin, INK, ow * 0.6)
+        elif g == "thumb":
+            cv.capsule((x - sg * r * 0.2, y - r * 0.3), (x - sg * r * 0.25, y - r * 1.7), r * 0.3, r * 0.26, skin, INK, ow * 0.8)
+            for i in range(4):
+                cv.ellipse(x + (i - 1.5) * r * 0.38, y + r * 0.25, r * 0.22, r * 0.28, skin, INK, ow * 0.55)
+        else:
+            for i in range(4):
+                cv.ellipse(x + (i - 1.5) * r * 0.4, y - r * 0.05, r * 0.24, r * 0.3, skin, INK, ow * 0.55)
+        return
     cv.ellipse(x, y, r * 0.95, r * 0.9, skin, INK, ow * 0.9)
     cv.capsule((x - sg * r * 0.55, y - r * 0.05), (x - sg * r * 1.05, y - r * (0.25 + 0.5 * openness)), r * 0.28, r * 0.22, skin, INK, ow * 0.8)
     for i in range(4):
@@ -300,7 +314,7 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         cv.capsule(sh, hand, Hh * 0.036, Hh * 0.030, skin, INK, ow)
         mid = (sh[0] + (hand[0] - sh[0]) * 0.42, sh[1] + (hand[1] - sh[1]) * 0.42)
         cv.capsule(sh, mid, Hh * 0.045, Hh * 0.040, shirt, INK, ow)
-        _hand(cv, hand, Hh * 0.052, skin, sg, fwd, ow, t, st.get("emotion", "neutral"))
+        _hand(cv, hand, Hh * 0.052, skin, sg, fwd, ow, t, st.get("emotion", "neutral"), pose.get("hand") if pose.get("hand_side") == side else None)
     # ---- boyun + kafa
     cv.capsule((fx, torso_top + 2), (fx, torso_top - head_h * 0.1), Hh * 0.03, Hh * 0.03, skin, INK, ow)
     head_pts_c = (hx, head_cy)
@@ -336,11 +350,13 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         else:
             cv.ellipse(cx, eye_y, rx, ery, (255, 255, 255), INK, ow * 0.45)
             gx = cx + face * rx * 0.38 + st.get("gaze", 0) * rx * 0.25
-            pr = rx * 0.62
+            pr = rx * (0.46 if emo in ("surprise", "scared") else 0.62)           # korku/şaşkınlık: göz bebeği küçülür, beyaz görünür
             cv.ellipse(gx, eye_y + ery * 0.08, pr, pr * 1.25, des["iris"], None, 0)
             cv.ellipse(gx, eye_y + ery * 0.08, pr * 0.58, pr * 0.75, (15, 10, 15), None, 0)
             cv.ellipse(gx - pr * 0.28, eye_y - ery * 0.18, pr * 0.24, pr * 0.24, (255, 255, 255), None, 0)
-            lidk = {"angry": 0.34, "sly": 0.42, "sad": 0.22, "laugh": 0.0}.get(emo, des.get("lid", 0.0) and 0.0)
+            if emo in ("happy", "laugh"):                   # mutlu: alt göz kapağı yukarı kalkar (gülen göz)
+                cv.poly([(cx - rx * 1.05, eye_y + ery * 1.1), (cx + rx * 1.05, eye_y + ery * 1.1), (cx + rx * 0.95, eye_y + ery * 0.42), (cx - rx * 0.95, eye_y + ery * 0.42)], skin, None, 0)
+            lidk = {"angry": 0.34, "sly": 0.42, "sad": 0.22, "sleepy": 0.5, "laugh": 0.0}.get(emo, des.get("lid", 0.0) and 0.0)
             if lidk:
                 yl = eye_y - ery + 2 * ery * lidk
                 cv.poly([(cx - rx * 1.06, eye_y - ery * 1.1), (cx + rx * 1.06, eye_y - ery * 1.1), (cx + rx * 1.0, yl + (-sg * ery * 0.12 if emo == "angry" else 0)), (cx - rx * 1.0, yl + (sg * ery * 0.12 if emo == "angry" else 0))], skin, None, 0)

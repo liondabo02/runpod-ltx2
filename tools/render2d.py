@@ -19,6 +19,14 @@ EMO = {"laugh": "laugh", "surprise": "surprise", "jump": "happy", "dance": "happ
 ZOOM = {"wide": 1.0, "medium": 1.1, "close": 1.6, "xclose": 2.3}
 
 
+def _prof():
+    try:
+        import style_profile
+        return style_profile.current()
+    except Exception:
+        return {}
+
+
 def letter_at(cues, t):
     for c in cues:
         if c[0] <= t < c[1]:
@@ -146,7 +154,7 @@ def frame(plan, designs, t, bible_chars=None):
         except Exception:      # boyama katmanı kare üretimini asla düşürmesin
             pass
     for cid_, d_, p_, m_, _lk, _e in items:                          # koşu/yürüyüş: ayak tozu + hız çizgisi
-        if m_["kind"] in ("walk", "run") and lt / max(dur, 0.1) < 0.85 and abs(m_["x1"] - m_["x0"]) > 0.05:
+        if _prof().get("dust", True) and m_["kind"] in ("walk", "run") and lt / max(dur, 0.1) < 0.85 and abs(m_["x1"] - m_["x0"]) > 0.05:
             fx_layer.dust(cv, cam, p_["x"], 1.0 if m_["x1"] >= m_["x0"] else -1.0, t, m_["kind"] == "run", d_["height"])
     for cid, d, p, m, look, e in sorted(items, key=lambda it: it[2]["x"]):
         emo = EMO.get(m["kind"], "neutral")
