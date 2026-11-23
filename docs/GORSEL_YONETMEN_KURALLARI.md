@@ -36,3 +36,11 @@ Her sahne için işçi şunu üretir: mekân kimliği, ışık kaynağı+saat, 5
 
 ## 6. Yasaklar
 - Boş/tek renk arka plan, iç-dış mekân karışıklığı, düz tek renk gökyüzü, tüm planın aynı kadrajda kalması, karakter kesilmesi, referans karakter/müziğin kopyalanması.
+
+## 7. Yürüyüş, konuşma ve oyunculuk (hareket motoru kuralları — `shot_motion.py`'de uygulanır)
+- Yürüyüş kişiliğe göre ayrışır: çocuk kısa/hızlı/sekmeli; yetişkin uzun/ağır; dört yürüyüş tipi (normal, caka, ağır-sürtünerek, zıp zıp). Her karakter kimliğinden (seed) sabit bir tip alır → seyirci karakteri yürüyüşünden tanır.
+- Adımda omuz/kalça salınımı, başın adımla yalpalaması, adım temasında ezilme, kol-bacak ters salınımı.
+- Konuşma: konuşmadan önce küçük nefes, vurgulu kelimede baş onayı + bir elin açılması, dinleyen karakterde tepki/baş eğme; ağız viseme ile eşleşir.
+- Hareketin 3 evresi: hazırlık (anticipation) → ana hareket → oturma/devam (follow-through). Zıplama, el sallama, şaşırma bu yapıdadır.
+- Bekleyen karakter donmaz: ağırlık kaydırma, ara sıra jest, merak bakışı.
+- Henüz yok (sıradaki iş): yan/üç-çeyrek bakış gövdeleri, parmak jestleri çeşitliliği, koşuda toz/hız çizgisi, gözleri duyguya göre şekillendirme.

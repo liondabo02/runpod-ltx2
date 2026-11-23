@@ -100,6 +100,11 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
 
     if kind in ("walk", "run"):
         f = SPEED[kind]; amp = 0.5 if kind == "walk" else 0.95
+        kid = H < 1.25                                   # çocuk: kısa, hızlı, sekmeli adım; yetişkin: uzun, ağır adım
+        pers = seed % 4                                  # 0 normal, 1 caka (arkaya yaslı, omuz sallar), 2 sürtünerek/ağır, 3 zıp zıp
+        if kid: f *= 1.3; amp *= 0.9
+        if pers == 2: f *= 0.8; amp *= 0.7
+        if pers == 3: f *= 1.1
         mv = smooth(ph / 0.85)
         p["x"] = x0 + (x1 - x0) * mv
         direction = 1.0 if x1 >= x0 else -1.0
@@ -113,6 +118,12 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
         p["z"] = abs(sw) * (0.02 if kind == "walk" else 0.07) * H
         p["sq"] = 1.0 - (0.03 if kind == "walk" else 0.07) * (1.0 - abs(sw))            # adım temasında hafif ezilme
         p["lean"] = 0.04 if kind == "walk" else 0.20
+        if moving:
+            p["z"] += abs(sw) * H * (0.025 if kid else 0.0) + (abs(sw) * H * 0.03 if pers == 3 else 0.0)     # sekme
+            p["yaw"] += direction * 0.07 * sw * (2.0 if pers == 1 else 1.0)                                # omuz/kalça salınımı
+            p["head"][2] += 0.12 * math.sin(W * f * t) * (1.6 if pers == 1 else 1.0)                     # baş adımla yalpalar
+            p["head"][0] += (0.22 if pers == 2 else (-0.08 if pers == 1 else 0.0))                          # ağır: başı öne; caka: yukarı
+            p["lean"] += (-0.07 if pers == 1 else (0.08 if pers == 2 else 0.0))
     elif kind == "wave":
         pre = smooth(min(1.0, t / 0.35))                  # hazırlık: kol önce hafif aşağıdan gelir
         arm_out(p, "R", (2.4 + 0.35 * math.sin(W * 2.5 * t)) * pre)
@@ -176,6 +187,18 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
         if kind != "wave":
             arm_fwd(p, "R", 0.9 * g); arm_out(p, "R", 0.35 + 0.5 * g)
         p["z"] += 0.02 * H * max(0.0, math.sin(W * 2.3 * t))
+    # konuşma oyunculuğu: nefes alma, vurgu jesti (baş onayı + el), tepki
+    if speaking and kind not in ("walk", "run", "jump", "dance", "laugh", "surprise", "reach"):
+        if t < 0.18:                                     # konuşmadan önce küçük nefes: hafif geriye + yukarı
+            k_ = math.sin(math.pi * t / 0.18)
+            p["lean"] -= 0.05 * k_; p["z"] += 0.012 * H * k_
+        slot = int(t // 1.3); loc = (t % 1.3) / 1.3
+        h2 = ((slot * 2246822519 + seed * 3266489917) & 0xFFFF) / 65535.0
+        if h2 > 0.45 and loc < 0.5:                      # vurgu: baş vurur, bir el yukarı-öne açılır
+            e = math.sin(math.pi * loc / 0.5)
+            side = "R" if h2 > 0.72 else "L"
+            arm_out(p, side, 0.4 + 0.9 * e); arm_fwd(p, side, 0.6 * e)
+            p["head"][0] += 0.16 * e; p["lean"] += 0.04 * e; p["sq"] = p.get("sq", 1.0) + 0.01 * e
     # canlılık katmanı: bekleyen karakter de yaşar (ağırlık kaydırma, ara sıra jest, merak)
     if kind in ("idle", "look", "sit"):
         slot = int(t // 3.2); loc = (t % 3.2) / 3.2
