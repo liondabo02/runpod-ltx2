@@ -59,7 +59,7 @@ def draw(cv, cam, kind, wx, wy, t, k=0):
     elif kind == "leaves":
         for i in range(7):
             lx = ((t * 0.9 + i * 0.7) % 6.0) - 3.0 + wx
-            ly = 1.0 + 0.5 * math.sin(t * 2 + i) + i * 0.12
+            ly = 1.95 + 0.35 * math.sin(t * 2 + i) + i * 0.08            # başların üstünde süzülür, yüzleri kapatmaz
             cv.ellipse(cam.x(lx), cam.y(ly), 0.09 * s, 0.045 * s, (110 + i * 12, 190, 90), INK, ow * 0.5)
     elif kind == "mic":
         cv.line([(x, y - 0.95 * s), (x, y + 0.05 * s)], (90, 90, 100), max(3, int(ow * 1.6)))

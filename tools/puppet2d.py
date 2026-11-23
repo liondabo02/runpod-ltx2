@@ -208,6 +208,8 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
     sq_ = float(pose.get("sq", 1.0))
     squash *= sq_
     torso_w /= max(0.7, sq_) ** 0.5            # hacim korunur: ezilince genişler, uzayınca incelir
+    bturn = max(-1.0, min(1.0, pose.get("yaw", 0.0) * 1.25))   # gövde dönüşü: yürürken/dönerken üç-çeyrek görünüm
+    torso_w *= 1.0 - 0.30 * abs(bturn)                          # dönen gövde ekrana daha dar bakar
     pulse = float(st.get("pulse", 0.0))   # vurgu/şaşkınlıkta ezilip esneme (squash & stretch)
     if st.get("emotion") in ("surprise", "laugh"):
         pulse = max(pulse, 0.6 + 0.3 * math.sin(t * 9))
@@ -287,7 +289,7 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         else:
             cv.capsule(top, (foot[0], foot[1] - Hh * 0.03), Hh * 0.045, Hh * 0.04, skin if species != "hedgehog" else skin, INK, ow)
             cv.capsule(top, ((top[0] + foot[0]) / 2, (top[1] + foot[1]) / 2 - Hh * 0.01), Hh * 0.055, Hh * 0.05, shorts, INK, ow)
-        cv.ellipse(foot[0] + sg * Hh * 0.025, foot[1], Hh * 0.075, Hh * 0.04, shade(des["accent"], 0.9), INK, ow)
+        cv.ellipse(foot[0] + sg * Hh * 0.025 * (1 - abs(bturn)) + bturn * Hh * 0.045, foot[1], Hh * 0.075 * (1 + 0.15 * abs(bturn)), Hh * 0.04, shade(des["accent"], 0.9), INK, ow)
     # ---- gövde
     tpts = [(fx - torso_w * 0.5, torso_top + torso_h * 0.10), (fx - torso_w * 0.36, torso_top), (fx + torso_w * 0.36, torso_top),
             (fx + torso_w * 0.5, torso_top + torso_h * 0.10), (fx + torso_w * 0.55, torso_bot), (fx - torso_w * 0.55, torso_bot)]
@@ -297,7 +299,7 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         cv.poly([(fx - torso_w * 0.55, sk_top), (fx + torso_w * 0.55, sk_top), (fx + torso_w * 0.95, ank), (fx - torso_w * 0.95, ank)], shirt, INK, ow)
     if des.get("pregnant"):
         cv.ellipse(fx + torso_w * 0.12, torso_top + torso_h * 0.70, torso_w * 0.46, torso_h * 0.36, shade(shirt, 1.04), INK, ow)
-    cv.ellipse(fx, torso_top + torso_h * 0.52, torso_w * 0.13, torso_w * 0.13, des["accent"], INK, ow * 0.7)
+    cv.ellipse(fx + bturn * torso_w * 0.30, torso_top + torso_h * 0.52, torso_w * 0.13 * (1 - 0.3 * abs(bturn)), torso_w * 0.13, des["accent"], INK, ow * 0.7)
     if des.get("lowerwear") != "skirt":
         cv.poly([(fx - torso_w * 0.55, torso_bot - torso_h * 0.14), (fx + torso_w * 0.55, torso_bot - torso_h * 0.14),
                  (fx + torso_w * 0.55, torso_bot), (fx - torso_w * 0.55, torso_bot)], des.get("lower_color", shorts), None, 0)
