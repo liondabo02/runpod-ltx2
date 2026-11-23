@@ -80,6 +80,8 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
                 designs[ch["id"]] = pp2.derive_design(ch, json.load(open(spp, encoding="utf-8")) if os.path.exists(spp) else {})
             stats = r2.render_window(plan, designs, frames)
             json.dump(stats, open(os.path.join(frames, "render_stats.json"), "w"))
+            if stats.get("missing"):
+                return {"status": "BLOCKED", "error": "FRAMES_MISSING", "problems": problems + ["%s: %d kare eksik/bozuk (işçi çökmesi/zaman aşımı/iptal); yeniden çalıştırınca eksikler tamamlanır" % (loc, stats["missing"])], "render_stats": stats}
             continue
         script = os.path.join(HERE, "studio_backends", "shot_render_blender.py")
         for eng in dict.fromkeys([engine, "eevee", "workbench"]):

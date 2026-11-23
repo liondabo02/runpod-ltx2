@@ -59,8 +59,15 @@ def draw(cv, cam, kind, wx, wy, t, k=0):
     elif kind == "leaves":
         for i in range(7):
             lx = ((t * 0.9 + i * 0.7) % 6.0) - 3.0 + wx
-            ly = 1.95 + 0.35 * math.sin(t * 2 + i) + i * 0.08            # başların üstünde süzülür, yüzleri kapatmaz
-            cv.ellipse(cam.x(lx), cam.y(ly), 0.09 * s, 0.045 * s, (110 + i * 12, 190, 90), INK, ow * 0.5)
+            ly = 1.95 + 0.35 * math.sin(t * 2 + i) + i * 0.08
+            a = t * 1.4 + i
+            L = 0.11 * s
+            px, py = cam.x(lx), cam.y(ly)
+            ca, sa = math.cos(a), math.sin(a)
+            pts = [(px + ca * L, py + sa * L), (px + ca * L * 0.2 - sa * L * 0.45, py + sa * L * 0.2 + ca * L * 0.45), (px - ca * L, py - sa * L),
+                   (px + ca * L * 0.2 + sa * L * 0.45, py + sa * L * 0.2 - ca * L * 0.45)]
+            cv.poly(pts, (110 + i * 12, 175, 80), INK, ow * 0.5)
+            cv.line([(px - ca * L, py - sa * L), (px + ca * L * 0.8, py + sa * L * 0.8)], (60, 120, 50), max(1.5, ow * 0.3))
     elif kind == "mic":
         cv.line([(x, y - 0.95 * s), (x, y + 0.05 * s)], (90, 90, 100), max(3, int(ow * 1.6)))
         cv.ellipse(x, y + 0.08 * s, 0.22 * s, 0.05 * s, (70, 70, 80), INK, ow)
@@ -88,8 +95,10 @@ def place(kind, xs, heights, t, lt, dur):
     cx = sum(xs) / len(xs) if xs else 0.0
     h = max(heights) if heights else 1.1
     ph = lt / max(dur, 0.1)
+    own = max(range(len(heights)), key=lambda i: heights[i]) if heights and max(heights) > 1.3 else 0     # sahibi: yetişkin, yoksa ilk karakter
+    hat = (xs[own] if xs else cx, (heights[own] if heights else h) * 1.02 + 0.015 * math.sin(t * 3.0))   # BAŞTA durur (sahiplik sahne boyunca aynı)
     return {"seed": (cx + 0.15 * math.sin(t * 1.3), h * (0.62 + 0.12 * math.sin(t * 2.0))),
-            "stone": (cx + 0.9, -0.05), "hat": (cx + 1.6 * (ph - 0.5) * 2, h * 1.25 + 0.15 * math.sin(t * 5)),
+            "stone": (cx + 0.9, -0.05), "hat": hat,
             "flower": (cx - 0.7, 0.0), "bottle": (cx + 0.35, h * 0.35), "drops": (cx, 0.0),
             "leaves": (cx, 0.0), "shovel": (cx - 0.5, 0.1),
             "mic": (cx - 0.9, 0.0), "balloon": (cx + 0.7, h * 0.75), "lantern": (cx + 0.5, h * 0.55), "kite": (cx - 0.6, h * 0.9)}.get(kind, (cx, h * 0.5))

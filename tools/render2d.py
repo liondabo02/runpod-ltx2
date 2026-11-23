@@ -1,6 +1,7 @@
 """AHOS 2D kare çizici: plan + poz -> PNG kareleri (çok işlemcili, kaldığı yerden devam)."""
 import json, math, os, sys, time
 from concurrent.futures import ProcessPoolExecutor
+from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -16,6 +17,7 @@ except ImportError:      # arka plan boyama katmanı yoksa eski görünüm
     bg_art = None
 
 EMO = {"laugh": "laugh", "surprise": "surprise", "jump": "happy", "dance": "happy", "run": "happy", "wave": "happy"}
+BACK_PROPS = ("leaves", "drops")
 ZOOM = {"wide": 1.0, "medium": 1.1, "close": 1.6, "xclose": 2.3}
 
 
@@ -158,6 +160,10 @@ def frame(plan, designs, t, bible_chars=None):
     for cid_, d_, p_, m_, _lk, _e in items:                          # koşu/yürüyüş: ayak tozu + hız çizgisi
         if _prof().get("dust", True) and m_["kind"] in ("walk", "run") and lt / max(dur, 0.1) < 0.85 and abs(m_["x1"] - m_["x0"]) > 0.05:
             fx_layer.dust(cv, cam, p_["x"], 1.0 if m_["x1"] >= m_["x0"] else -1.0, t, m_["kind"] == "run", d_["height"])
+    for k_, kind in enumerate(beat.get("props") or []):             # arka katman nesneleri (yaprak, damla) karakterlerden ÖNCE çizilir: yüzlerin üstüne binmez
+        if kind in BACK_PROPS and preset != "insert":
+            wx, wy = props2d.place(kind, xs, [designs[c]["height"] for c in beat["cast"]], t, lt, dur)
+            props2d.draw(cv, cam, kind, wx, wy, t, k_)
     for cid, d, p, m, look, e in sorted(items, key=lambda it: it[2]["x"]):
         emo = EMO.get(m["kind"], "neutral")
         mood_ = spk_mood.get(cid) or beat.get("mood", "neutral")
@@ -171,6 +177,8 @@ def frame(plan, designs, t, bible_chars=None):
     if xs:
         fx_layer.icons(cv, cam, beat, xs, [designs[c]["height"] for c in beat["cast"]], t, lt)
     for k_, kind in enumerate(beat.get("props") or []):
+        if kind in BACK_PROPS:
+            continue
         wx, wy = props2d.place(kind, xs, [designs[c]["height"] for c in beat["cast"]], t, lt, dur)
         props2d.draw(cv, cam, kind, wx, wy, t, k_)
     if xs:
@@ -220,6 +228,67 @@ def grade(im, light, t):
 
 
 _G = {}
+ENGINE_FILES = ("render2d.py", "puppet2d.py", "scenes2d.py", "setpieces2d.py", "props2d.py", "fx_layer.py", "bg_art.py", "shot_motion.py",
+                "shot_planner.py", "style_profile.py", "mood_engine.py")
+
+
+def available_mem_mb():
+    """Kullanılabilir RAM (MB). Windows: GlobalMemoryStatusEx; Linux: /proc/meminfo. Okunamazsa None."""
+    try:
+        if os.name == "nt":
+            import ctypes
+
+            class MS(ctypes.Structure):
+                _fields_ = [("l", ctypes.c_ulong), ("load", ctypes.c_ulong), ("tp", ctypes.c_ulonglong), ("ap", ctypes.c_ulonglong),
+                            ("tpf", ctypes.c_ulonglong), ("apf", ctypes.c_ulonglong), ("tv", ctypes.c_ulonglong), ("av", ctypes.c_ulonglong), ("ae", ctypes.c_ulonglong)]
+            m = MS(); m.l = ctypes.sizeof(MS)
+            ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(m))
+            return int(m.ap / 1048576)
+        for ln in open("/proc/meminfo"):
+            if ln.startswith("MemAvailable:"):
+                return int(ln.split()[1]) // 1024
+    except Exception:
+        pass
+    return None
+
+
+def pick_workers(requested=None, per_worker_mb=450, reserve_mb=1200, mem_mb="auto"):
+    """İşçi sayısı = min(istenen/CPU-1, (boş RAM - rezerv) / işçi başı RAM), en az 1. AHOS_RENDER_WORKERS ortam değişkeni zorlar (1 = güvenli tek işçi yolu)."""
+    env = os.environ.get("AHOS_RENDER_WORKERS", "").strip()
+    if env.isdigit() and int(env) >= 1:
+        return int(env)
+    cap = requested or max(1, (os.cpu_count() or 2) - 1)
+    mem = available_mem_mb() if mem_mb == "auto" else mem_mb
+    if mem is None:
+        return max(1, min(cap, 2))                      # bellek bilinmiyorsa temkinli
+    return max(1, min(cap, int((mem - reserve_mb) // per_worker_mb)))
+
+
+def engine_stamp(plan, designs, fps):
+    """Önbellek damgası: motor kaynakları + karakter tasarımları + plan vuruşları + fps + üslup profili. Değişirse eski kareler kullanılmaz."""
+    import hashlib
+    h = hashlib.sha256()
+    here = os.path.dirname(os.path.abspath(__file__))
+    for fn in ENGINE_FILES:
+        p = os.path.join(here, fn)
+        if os.path.exists(p):
+            h.update(fn.encode()); h.update(open(p, "rb").read())
+    h.update(json.dumps(designs, sort_keys=True, default=str).encode())
+    h.update(json.dumps(plan.get("beats", []), sort_keys=True, default=str).encode())
+    h.update(str(fps).encode()); h.update(os.environ.get("AHOS_STYLE", "").encode())
+    return h.hexdigest()[:16]
+
+
+def valid_png(path, size=(1280, 720)):
+    try:
+        if os.path.getsize(path) < 2000:
+            return False
+        with Image.open(path) as im:
+            im.verify()
+        with Image.open(path) as im:
+            return im.size == size
+    except Exception:
+        return False
 
 
 def _init(plan, designs):
@@ -227,42 +296,123 @@ def _init(plan, designs):
 
 
 def _work(args):
+    """Kareyi geçici dosyaya yaz, doğrula, sonra nihai adına taşı (yarım/bozuk kare tamamlanmış sayılmaz)."""
     f, path, fps = args
-    if os.path.exists(path):
+    if valid_png(path):
         return 0
     im = frame(_G["plan"], _G["des"], f / float(fps))
     if im is None:
         return 0
-    im.save(path)
+    tmp = path + ".tmp.png"
+    im.save(tmp)
+    if not valid_png(tmp, im.size):
+        raise RuntimeError("kare doğrulanamadı: %s" % path)
+    os.replace(tmp, path)
     return 1
 
 
-def render_window(plan, designs, out_dir, workers=None, progress=True):
+def _acquire_lock(out_dir, stale_s=1200):
+    """Aynı sahne için ikinci çakışan iş başlatma. Başkasının canlı kilidini ASLA kırmaz/sonlandırmaz; yalnız bayat (kalp atışı yok) kilidi devralır."""
+    lp = os.path.join(out_dir, ".render.lock")
+    if os.path.exists(lp):
+        try:
+            j = json.load(open(lp, encoding="utf-8"))
+        except Exception:
+            j = {}
+        if time.time() - float(j.get("beat", 0)) < stale_s:
+            raise RuntimeError("AYNI SAHNE İÇİN BAŞKA İŞ ÇALIŞIYOR (pid=%s, %s). İkinci iş başlatılmadı; o işi kimliğini doğrulamadan sonlandırmıyorum." % (j.get("pid"), j.get("started")))
+    json.dump({"pid": os.getpid(), "started": time.strftime("%H:%M:%S"), "beat": time.time()}, open(lp, "w", encoding="utf-8"))
+    return lp
+
+
+def _beat_lock(lp):
+    try:
+        j = json.load(open(lp, encoding="utf-8")); j["beat"] = time.time()
+        json.dump(j, open(lp, "w", encoding="utf-8"))
+    except Exception:
+        pass
+
+
+def render_window(plan, designs, out_dir, workers=None, progress=True, frame_timeout=240, window_mult=3):
+    """Dayanıklı render: bellek-duyarlı işçi sayısı, sınırlı kuyruk (parça parça), kare zaman aşımı, çöken işçide yeniden deneme (az işçiyle,
+    en sonunda tek işçi), atomik kare yazımı, motor/varlık değişince bayat kare karantinası, kilit + iptal dosyası (.cancel)."""
+    from concurrent.futures import wait, FIRST_COMPLETED
+    from concurrent.futures.process import BrokenProcessPool
     os.makedirs(out_dir, exist_ok=True)
     fps = plan["fps"]
     f0, f1 = int(round(plan["t0"] * fps)), int(round(plan["t1"] * fps))
     jobs = [(f, os.path.join(out_dir, "f%05d.png" % f), fps) for f in range(f0, f1)]
-    t0 = time.time(); done = 0
-    workers = workers or max(1, min(4, (os.cpu_count() or 2) - 1))          # bellek: işçi başına ~400 MB; en çok 4
-    from concurrent.futures.process import BrokenProcessPool
-    for attempt in range(3):                                                # işçi çökerse (ör. MemoryError) eksik kareleri daha az işçiyle tamamla
-        todo = [j for j in jobs if not os.path.exists(j[1])]
-        if not todo:
-            break
+    lock = _acquire_lock(out_dir)
+    t0 = time.time(); done = 0; stats = {"retries": 0, "stale_moved": 0, "timeouts": 0, "cancelled": False}
+    try:
+        stamp = engine_stamp(plan, designs, fps); sp = os.path.join(out_dir, "_stamp_%d_%d.json" % (f0, f1))
+        old = json.load(open(sp, encoding="utf-8")).get("stamp") if os.path.exists(sp) else None
+        existing = [j for j in jobs if os.path.exists(j[1])]
+        if existing and old != stamp:                       # motor/varlık/plan değişti (veya damga yok): eski kareleri körlemesine kullanma
+            qd = out_dir + "_stale_" + time.strftime("%H%M%S"); os.makedirs(qd, exist_ok=True)
+            for j in existing:
+                os.replace(j[1], os.path.join(qd, os.path.basename(j[1])))
+            stats["stale_moved"] = len(existing)
+        json.dump({"stamp": stamp, "fps": fps, "created": time.strftime("%Y-%m-%d %H:%M:%S")}, open(sp, "w", encoding="utf-8"))
+        for fn in os.listdir(out_dir):                      # yarım kalmış geçici dosyalar
+            if fn.endswith(".tmp.png"):
+                os.replace(os.path.join(out_dir, fn), os.path.join(out_dir, fn + ".bad"))
+        w = pick_workers(workers)
+        stats["workers_start"] = w; stats["mem_mb"] = available_mem_mb()
+        cancel = os.path.join(out_dir, ".cancel")
+        for attempt in range(4):
+            todo = [j for j in jobs if not valid_png(j[1])]
+            if not todo or os.path.exists(cancel):
+                stats["cancelled"] = os.path.exists(cancel)
+                break
+            try:
+                if w == 1:                                  # güvenli tek işçi yolu: ayrı süreç yok
+                    _init(plan, designs)
+                    for j in todo:
+                        if os.path.exists(cancel):
+                            stats["cancelled"] = True; break
+                        done += _work(j); _beat_lock(lock)
+                else:
+                    ex = ProcessPoolExecutor(w, initializer=_init, initargs=(plan, designs))
+                    try:
+                        pending = set(); it = iter(todo); n = 0
+                        while True:
+                            while len(pending) < w * window_mult:       # sınırlı kuyruk: bellekte en çok w*3 görev
+                                try:
+                                    pending.add(ex.submit(_work, next(it)))
+                                except StopIteration:
+                                    break
+                            if not pending:
+                                break
+                            fin, pending = wait(pending, timeout=frame_timeout, return_when=FIRST_COMPLETED)
+                            if not fin:
+                                stats["timeouts"] += 1
+                                raise TimeoutError("kare zaman aşımı (%ds)" % frame_timeout)
+                            for fu in fin:
+                                done += fu.result(); n += 1
+                            _beat_lock(lock)
+                            if progress and n % 48 < len(fin):
+                                print("PROGRESS kare=%d/%d  %.2f sn/kare" % (n, len(todo), (time.time() - t0) / max(1, n)), flush=True)
+                            if os.path.exists(cancel):
+                                stats["cancelled"] = True; break
+                    finally:
+                        for p_ in list(getattr(ex, "_processes", {}).values()):
+                            try:
+                                p_.terminate()                    # yalnız KENDİ başlattığımız işçiler
+                            except Exception:
+                                pass
+                        ex.shutdown(wait=False, cancel_futures=True)
+                break
+            except (BrokenProcessPool, MemoryError, TimeoutError, RuntimeError) as e:
+                stats["retries"] += 1
+                print("UYARI: %s (%s); işçi sayısı %d -> %d" % (type(e).__name__, e, w, max(1, w // 2)), flush=True)
+                w = max(1, w // 2)
+        stats["workers_end"] = w
+    finally:
         try:
-            if workers == 1:
-                _init(plan, designs)
-                for j in todo:
-                    done += _work(j)
-            else:
-                with ProcessPoolExecutor(workers, initializer=_init, initargs=(plan, designs)) as ex:
-                    for i, r in enumerate(ex.map(_work, todo, chunksize=2)):
-                        done += r
-                        if progress and (i + 1) % 48 == 0:
-                            print("PROGRESS kare=%d/%d  %.2f sn/kare" % (i + 1, len(todo), (time.time() - t0) / (i + 1)), flush=True)
-            break
-        except (BrokenProcessPool, MemoryError) as e:
-            print("UYARI: işçi çöktü (%s); %d kare eksik, işçi sayısı azaltılıyor" % (type(e).__name__, len([j for j in jobs if not os.path.exists(j[1])])), flush=True)
-            workers = max(1, workers // 2)
+            os.remove(lock)
+        except Exception:
+            pass
+    missing = len([j for j in jobs if not valid_png(j[1])])
     el = time.time() - t0
-    return {"rendered": done, "seconds": round(el, 1), "sec_per_frame": round(el / done, 3) if done else None, "engine": "puppet2d"}
+    return {"rendered": done, "missing": missing, "seconds": round(el, 1), "sec_per_frame": round(el / done, 3) if done else None, "engine": "puppet2d", **stats}
