@@ -110,6 +110,8 @@ def frame(plan, designs, t, bible_chars=None):
         xs.append(p["x"])
     avg = sum(xs) / len(xs) if xs else 0.0
     focus = beat.get("focus")
+    if speaker and speaker in beat["cast"]:       # yakın planda kamera hep o an konuşana bakar (yüz + omuz kadrajda)
+        focus = speaker
     fh = designs[focus]["height"] if focus in designs else 1.1
     fx = xs[beat["cast"].index(focus)] if focus in beat["cast"] else avg
     SUB = 3.5                                          # kurgu: uzun vuruş 3,5 sn'lik çekimlere bölünür (kesme)
@@ -126,14 +128,14 @@ def frame(plan, designs, t, bible_chars=None):
         fx = xs[beat["cast"].index(speaker)]
     zoom = ZOOM.get(preset, 1.5) * (1.0 + 0.05 * ph) * (1.0 + 0.18 * E if preset == "close" else 1.0)   # vurguda kamera içeri vurur
     cx = fx if preset in ("close", "xclose") else avg
-    cy = {"wide": 0.95, "medium": 0.85}.get(preset, fh * 0.80)
+    cy = {"wide": 0.95, "medium": min(0.85, fh * 0.62 + 0.25)}.get(preset, fh * 0.80)   # orta planda çocuk için kamera alçalır (bacak değil gövde+yüz)
     if preset in ("wide", "medium") and len(xs) > 1:            # kadraj güvenliği: tüm oyuncular kadraja sığsın
         lo, hi = min(xs), max(xs); half = (hi - lo) / 2 + 0.7
         zoom = max(0.8, min(zoom, 5.12 / (2 * half))); cx = (lo + hi) / 2
     cam = sc.Cam(cx, cy, zoom)
     if preset == "insert" and beat.get("props"):
         ix, iy = props2d.place(beat["props"][0], xs, [designs[c]["height"] for c in beat["cast"]], t, lt, dur)
-        cam = sc.Cam(ix, iy, 2.0)
+        cam = sc.Cam(ix, max(0.55, iy - 0.35), 1.3)
     cv = pp.Cv()
     sc.scene_back(cv, beat["scene"], cam, t)
     if preset != "insert":
