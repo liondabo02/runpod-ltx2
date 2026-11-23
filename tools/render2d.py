@@ -145,6 +145,9 @@ def frame(plan, designs, t, bible_chars=None):
             bg_art.enhance(cv, beat["scene"], beat.get("light"), t)
         except Exception:      # boyama katmanı kare üretimini asla düşürmesin
             pass
+    for cid_, d_, p_, m_, _lk, _e in items:                          # koşu/yürüyüş: ayak tozu + hız çizgisi
+        if m_["kind"] in ("walk", "run") and lt / max(dur, 0.1) < 0.85 and abs(m_["x1"] - m_["x0"]) > 0.05:
+            fx_layer.dust(cv, cam, p_["x"], 1.0 if m_["x1"] >= m_["x0"] else -1.0, t, m_["kind"] == "run", d_["height"])
     for cid, d, p, m, look, e in sorted(items, key=lambda it: it[2]["x"]):
         emo = EMO.get(m["kind"], "neutral")
         mood_ = spk_mood.get(cid) or beat.get("mood", "neutral")
@@ -163,6 +166,8 @@ def frame(plan, designs, t, bible_chars=None):
     if xs:
         hy = max(designs[c]["height"] for c in beat["cast"]) * 1.1
         for kind in beat.get("fx") or []:
+            if kind == "speed":      # eski üst-katman hız çizgisi yüzlerin üstüne biniyordu; yerine fx_layer.dust (arkada) var
+                continue
             props2d.draw_fx(cv, cam, kind, sum(xs) / len(xs), hy if kind != "speed" else 0.1, t, lt)
     sc.scene_front(cv, beat["scene"], cam, t)
     im = grade(cv.done(), beat.get("light") or "", t)

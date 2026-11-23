@@ -154,3 +154,22 @@ def post(im, beat, t, lt, dur, total_s=480.0, first_of_scene=False):
         k = max(0.0, min(1.0, (total_s - t) / 1.2))
         im = Image.blend(Image.new("RGB", im.size, (20, 16, 26)), im, k)
     return im
+
+
+def dust(cv, cam, x, direction, t, run=False, H=1.0):
+    """Koşu/yürüyüşte ayak tozu ve (koşuda) hız çizgileri. Dünya koordinatı: x metre, zemin y=0. Karakterin ARKASINDA kalır."""
+    n = 5 if run else 3
+    for k in range(n):
+        ph = ((t * (2.6 if run else 1.5)) + k / n) % 1.0
+        bx = x - direction * (0.18 + 0.9 * ph * (1.4 if run else 0.8)) * H
+        by = 0.03 * H + 0.16 * H * ph
+        r = (0.035 + 0.07 * ph) * H
+        a = 1.0 - ph
+        col = (int(215 + 30 * (1 - a)), int(205 + 35 * (1 - a)), int(185 + 45 * (1 - a)))
+        cv.ellipse(cam.x(bx), cam.y(by), r * cam.s, r * 0.8 * cam.s, col, None, 0)
+    if run:
+        for k in range(3):
+            ly = (0.35 + 0.28 * k) * H
+            ph = ((t * 3.1) + k * 0.37) % 1.0
+            x0 = x - direction * (0.45 + 0.5 * ph) * H
+            cv.line([(cam.x(x0), cam.y(ly)), (cam.x(x0 - direction * 0.55 * H), cam.y(ly))], (255, 255, 255), max(2.0, 0.02 * cam.s))
