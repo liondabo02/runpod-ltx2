@@ -117,7 +117,7 @@ def duck_envelope(total_s, speech, floor=0.3):
     return env
 
 
-def compose(sheet, series_id, speech=(), music_gain=0.5, sfx_gain=0.7):
+def _compose_old(sheet, series_id, speech=(), music_gain=0.5, sfx_gain=0.7):
     total = float(sheet["beats"][-1]["t_end"])
     buf = array.array("f", [0.0]) * int(total * SR + SR)
     th = theme(series_id); rnd = random.Random(seed_of(series_id) ^ 7)
@@ -154,6 +154,30 @@ def compose(sheet, series_id, speech=(), music_gain=0.5, sfx_gain=0.7):
         x = (music[k] * music_gain * env[k] + sfx[k] * sfx_gain)
         out[k] = int(max(-1.0, min(1.0, x)) * 20000)
     return out
+
+
+def compose(sheet, series_id, speech=(), music_gain=0.55, sfx_gain=0.7):
+    """Yeni skor motoru (score_engine: besteli tema, akorlar, ritim, yankı) + eylem efektleri. numpy yoksa eski üretici."""
+    try:
+        import numpy as np
+        import score_engine as se
+    except ImportError:
+        return _compose_old(sheet, series_id, speech, music_gain, sfx_gain)
+    music = se.compose(sheet, series_id, speech)
+    sfx = np.zeros(len(music), dtype=np.float32); rnd = random.Random(seed_of(series_id) ^ 7)
+    for b in sheet["beats"]:
+        t0, t1 = float(b["t_start"]), float(b["t_end"]); act = str(b.get("action", "")).lower(); placed = set()
+        for keys, kind in SFX_RULES:
+            if kind in placed or not any(k in act for k in keys): continue
+            placed.add(kind); w = np.array(sfx_wave(kind, rnd), dtype=np.float32)
+            if not len(w): continue
+            tts = [t0 + 0.5 + i * (0.28 if kind == "run" else 0.5) for i in range(int(3.5 / (0.28 if kind == "run" else 0.5)))] if kind in ("run", "step") else [t0 + 0.4]
+            for tt in tts:
+                if tt >= t1: break
+                i0 = int(tt * SR); n_ = min(len(w), len(sfx) - i0)
+                if n_ > 0: sfx[i0:i0 + n_] += w[:n_] * (0.5 if kind in ("run", "step") else 0.8)
+    x = music * music_gain + sfx * sfx_gain * 0.6
+    return (np.clip(x, -1, 1) * 20000).astype("<i2")
 
 
 def write_wav(path, samples):

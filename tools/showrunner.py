@@ -363,8 +363,15 @@ def main():
     p.add_argument("--render-seconds", type=int, default=12, help="0=render yok, -1=tüm bölüm")
     p.add_argument("--script-file", help="sahibin senaryo metni (sadık mod)")
     p.add_argument("--beats-file", help="hazır beat_sheet.json (LLM yazımı atlanır)")
+    p.add_argument("--enrich", action="store_true", help="sahip senaryosunu bozmadan görsel yaşam ekle (tepki, arka plan, şaka, ses); öneriler ayrı belgeye yazılır")
+    p.add_argument("--no-llm-enrich", action="store_true")
     a = p.parse_args()
     bs = json.load(open(a.beats_file, encoding="utf-8")) if a.beats_file else None
+    if bs and a.enrich:
+        import script_enrich as se_
+        _b = json.load(open(os.path.join(ROOT, "series", a.series_id, "series-bible.json"), encoding="utf-8"))
+        bs, _rep = se_.enrich(bs, _b, use_llm=not a.no_llm_enrich)
+        se_.write_report(_rep, os.path.splitext(a.beats_file)[0] + "_ENRICHMENT.md")
     txt = open(a.script_file, encoding="utf-8").read() if a.script_file else None
     print(tell(run(a.command, a.series_id, a.seconds, render_seconds=a.render_seconds, script_text=txt, beats_sheet=bs)))
 

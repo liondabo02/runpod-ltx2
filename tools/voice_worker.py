@@ -35,6 +35,9 @@ def pick_voice(char, lang="tr"):
     if age <= 8:   pitch, rate = "+35Hz", "+5%"      # çocuk tınısı
     elif age >= 60: pitch, rate = "-8Hz", "-10%"     # yaşlı
     else:          pitch, rate = "+0Hz", "+0%"
+    v_ = char.get("voice") or {}
+    if v_.get("pitch_hz") is not None and v_.get("rate_pct") is not None:      # bible'da açıkça tanımlı ses kimliği (kalıcı, dizi boyunca aynı)
+        return voice, "%+d%%" % int(v_["rate_pct"]), "%+dHz" % int(v_["pitch_hz"])
     # karakter başına kalıcı ses kimliği: aynı cinsiyet/yaştaki iki karakter farklı duyulsun
     h = int(hashlib.sha1(str(char.get("id") or char.get("name") or "").encode("utf-8")).hexdigest()[:6], 16)
     dp, dr = (h % 25) - 12, ((h >> 5) % 13) - 6
@@ -208,6 +211,11 @@ def run(episode_dir, bible, tts=tts_real, visemes=visemes_real, margin=0.3, lang
             wav = os.path.join(adir, name + ".wav"); vj = os.path.join(vdir, name + ".json")
             try:
                 tts(text, voice, rate, pitch, wav)
+                try:                                   # baş/son sessizliği kırp + seviye eşitle (ölü boşluk ve kayık senkron kaynağı)
+                    import audio_polish
+                    audio_polish.polish_wav(wav)
+                except ImportError:
+                    pass
                 dur = wav_duration(wav)
                 cues = visemes(wav, vj)
             except Exception as e:
