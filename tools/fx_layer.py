@@ -113,8 +113,8 @@ def _particles(im, kind, t, seed, n=22):
             x = (r0 + t * sp * 1.6 + 0.02 * math.sin(t * 1.3 + i)) % 1.0 * w
             y = (r1 + t * sp * 1.1) % 1.0 * h
             ang = t * (1.5 + r2 * 2) + i
-            ln = 6 + 7 * r2
-            col = (255, 200, 215, 170) if i % 3 == 0 else (150, 200, 110, 150)
+            ln = 3 + 3.5 * r2
+            col = (255, 200, 215, 130) if i % 3 == 0 else (150, 200, 110, 110)
             dx, dy = math.cos(ang) * ln, math.sin(ang) * ln * 0.45
             d.ellipse([x - abs(dx), y - abs(dy) - 2, x + abs(dx), y + abs(dy) + 2], fill=col)
     return Image.alpha_composite(im.convert("RGBA"), ov).convert("RGB")
@@ -145,7 +145,7 @@ def post(im, beat, t, lt, dur, total_s=480.0, first_of_scene=False):
     light = str(beat.get("light") or "").lower()
     outdoor = beat.get("scene") in ("garden", "path", "village", "park", "stage")
     seed = int(beat.get("i", 0)) // 6
-    im = _particles(im, "leaf" if outdoor else "pollen", t, seed, n=18 if outdoor else 22)
+    im = _particles(im, "leaf" if outdoor else "pollen", t, seed, n=10 if outdoor else 22)
     if re.search(r"güneş|sabah|öğle|parlak|altın", light):
         im = _rays(im, t, 1.0 if outdoor else 1.4)
     if first_of_scene and lt < 0.55:

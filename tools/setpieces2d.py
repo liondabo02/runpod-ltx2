@@ -137,10 +137,31 @@ def wall_decor(cv, cam, x=0.0, t=0.0):
     _poly(cv, cam, [(x + 3.1, 0.0), (x + 3.1, 2.5), (x + 3.5, 2.5), (x + 3.4, 0.0)], (190, 90, 100), _o(cam) * 0.6)  # perde
 
 
+def park_dressing(cv, cam, x=0.0, t=0.0):
+    """Park mekânı yaşam izleri: bank, sokak lambası, uzakta ev silueti, kuş evi, çöp kutusu (referans: dış mekân da dolu)."""
+    for hx, hw, col in ((-6.5, 1.3, (226, 170, 140)), (7.2, 1.5, (170, 190, 226))):          # uzak ev silueti (soluk)
+        _rect(cv, cam, x + hx - hw / 2, 1.1, x + hx + hw / 2, 2.0, col, _o(cam) * 0.5)
+        _poly(cv, cam, [(x + hx - hw / 2 - 0.1, 2.0), (x + hx + hw / 2 + 0.1, 2.0), (x + hx, 2.6)], shade(col, 0.82), _o(cam) * 0.5)
+        _rect(cv, cam, x + hx - 0.18, 1.35, x + hx + 0.18, 1.7, (255, 238, 170), _o(cam) * 0.4)
+    bx = x - 3.6                                                                              # bank
+    _rect(cv, cam, bx - 0.7, 0.30, bx + 0.7, 0.38, (150, 100, 60))
+    _rect(cv, cam, bx - 0.7, 0.38, bx + 0.7, 0.72, (170, 115, 70))
+    for lx in (-0.6, 0.6):
+        _rect(cv, cam, bx + lx - 0.04, 0.0, bx + lx + 0.04, 0.30, (70, 70, 80))
+    lx0 = x + 4.4                                                                             # sokak lambası
+    _rect(cv, cam, lx0 - 0.04, 0.0, lx0 + 0.04, 2.3, (70, 75, 90))
+    _poly(cv, cam, [(lx0 - 0.22, 2.3), (lx0 + 0.22, 2.3), (lx0 + 0.15, 2.55), (lx0 - 0.15, 2.55)], (255, 232, 150))
+    _ell(cv, cam, lx0, 2.28, 0.34, 0.14, (255, 245, 190), 0)
+    _rect(cv, cam, x + 5.6, 0.0, x + 5.68, 1.5, (130, 90, 55))                                # kuş evi direği
+    _rect(cv, cam, x + 5.36, 1.5, x + 5.92, 1.9, (220, 120, 90))
+    _poly(cv, cam, [(x + 5.3, 1.9), (x + 5.98, 1.9), (x + 5.64, 2.2)], (150, 70, 60))
+    _ell(cv, cam, x + 5.64, 1.68, 0.07, 0.07, (40, 30, 30), 0)
+
+
 PIECES = {
-    "park_slide_zone": [(slide, 1.55)], "park_rules_sign": [(rules_sign, 0.0)], "park_trash_walk": [(bins, 1.3)],
-    "park_flower_bed": [(flower_bed, 0.0)], "park_bike_pedestrian": [(bike_lane, 0.0)], "park_entrance": [(gate, 0.0)],
-    "park_family_area": [(picnic, -0.2)], "home_kitchen": [(wall_decor, 0.0), (kitchen, 0.0)], "home_entry_corridor": [(wall_decor, 0.0), (corridor, 0.0)], "home_salon": [(wall_decor, 0.0), (salon, 0.0)],
+    "park_slide_zone": [(park_dressing, 0.0), (slide, 1.55)], "park_rules_sign": [(park_dressing, 0.0), (rules_sign, 0.0)], "park_trash_walk": [(park_dressing, 0.0), (bins, 1.3)],
+    "park_flower_bed": [(park_dressing, 0.0), (flower_bed, 0.0)], "park_bike_pedestrian": [(park_dressing, 0.0), (bike_lane, 0.0)], "park_entrance": [(park_dressing, 0.0), (gate, 0.0)],
+    "park_family_area": [(park_dressing, 0.0), (picnic, -0.2)], "home_kitchen": [(wall_decor, 0.0), (kitchen, 0.0)], "home_entry_corridor": [(wall_decor, 0.0), (corridor, 0.0)], "home_salon": [(wall_decor, 0.0), (salon, 0.0)],
 }
 
 
