@@ -20,6 +20,11 @@ WORKERS = [
     ("finance", "Finans", "bölüm başı 1 EUR sınırı denetimi", True), ("research", "Araştırma", "referans/fikir notları (web gezmez)", True),
     ("analytics", "Analiz", "teknik ölçüm (izleyici verisi yok)", True), ("distribution", "Dağıtım", "yayın paketi taslağı, yükleme yapmaz", True),
     ("task_observer", "Gözlemci", "sürtünme gözlemi -> öneri", True), ("agent_doctor", "Ajan Doktoru", "işçileri sınar, bozukları bildirir", True),
+    ("score_engine", "Müzik Bestecisi", "ana tema, akor, ritim, yankı; sahneye göre skor", True),
+    ("fx_layer", "Efekt Sanatçısı", "geçiş, parçacık, ışık huzmesi, duygu simgeleri", True),
+    ("audio_polish", "Ses Mühendisi", "TTS sessizlik kırpma, seviye eşitleme, senkron", True),
+    ("script_enrich", "Senaryo Zenginleştirici", "senaryoyu bozmadan tepki/şaka/arka plan ekler (onaya sunar)", True),
+    ("standards", "Kalite Standardı Denetçisi", "2D kalite kapıları: yüz, ses, senkron, müzik, kurgu", True),
 ]
 
 def jobs():

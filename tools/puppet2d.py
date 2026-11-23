@@ -69,6 +69,17 @@ class Cv:
         self.ellipse(p0[0], p0[1], r0, r0, fill, None, 0)
         self.ellipse(p1[0], p1[1], r1, r1, fill, None, 0)
 
+    def ellipse_cel(self, cx, cy, rx, ry, fill, ol=INK, ow=3.0, rot=0.0, k=0.80, n=44):
+        """Cel gölge: koyu zemin + ışık yönüne (sol-üst) kayık, küçültülmüş açık ton => alt-sağda tek gölge ayı."""
+        self.ellipse(cx, cy, rx, ry, shade(fill, k), ol, ow, rot, n)
+        self.ellipse(cx - rx * 0.10, cy - ry * 0.11, rx * 0.89, ry * 0.88, fill, None, 0, rot, n)
+
+    def poly_cel(self, pts, fill, ol=INK, ow=3.0, k=0.80):
+        cx = sum(p[0] for p in pts) / len(pts); cy = sum(p[1] for p in pts) / len(pts)
+        w = max(p[0] for p in pts) - min(p[0] for p in pts); h = max(p[1] for p in pts) - min(p[1] for p in pts)
+        self.poly(pts, shade(fill, k), ol, ow)
+        self.poly([(cx + (x - cx) * 0.90 - w * 0.035, cy + (y - cy) * 0.90 - h * 0.035) for x, y in pts], fill, None, 0)
+
     def line(self, pts, fill, w=3.0):
         self.d.line(self.P(pts), fill=fill, width=max(1, int(w * self.ss)), joint="curve")
 
@@ -111,7 +122,15 @@ def derive_design(ch, spec):
     iris = (60, 40, 20) if h % 2 else (30, 60, 110)
     return {"id": ch["id"], "species": species, "hair_style": style, "accessory": acc, "hair": hair, "skin": skin,
             "shirt": shirt, "shorts": shorts, "accent": accent, "class": cls, "height": float(spec.get("height_m", 1.1)),
-            "iris": iris, "female": female, "age": age, "scarf": col("scarf", accent)}
+            "iris": (rgb(spec["eye_color"]) if "eye_color" in spec else iris), "female": female, "age": age, "scarf": col("scarf", accent),
+            "build": float(spec.get("build", 1.0)), "face_w": float(spec.get("face_w", 1.0)), "eye_scale": float(spec.get("eye_scale", 1.0)),
+            "freckles": int(spec.get("freckles", 0)), "beard": spec.get("beard", "none"), "lashes": bool(spec.get("lashes", False)),
+            "earrings": bool(spec.get("earrings", False)), "pregnant": bool(spec.get("pregnant", False)),
+            "lowerwear": spec.get("lowerwear") or ("shorts" if cls in ("infant", "toddler", "child") else "pants"),
+            "lower_color": col("lower", shorts), "dimple": bool(spec.get("dimple", False)), "brow_w": float(spec.get("brow_w", 1.0)),
+            "eye_shape": spec.get("eye_shape", "round"), "eye_dist": float(spec.get("eye_dist", 1.0)), "brow_shape": spec.get("brow_shape", "flat"),
+            "nose": spec.get("nose", "line"), "mouth_w": float(spec.get("mouth_w", 1.0)), "blush": float(spec.get("blush", 1.0)),
+            "eyebags": bool(spec.get("eyebags", False)), "lid": float(spec.get("lid", 0.0))}
 
 
 # ---------------------------------------------------------------- ağız şekilleri (Rhubarb A-H, X)
@@ -132,6 +151,22 @@ def draw_mouth(cv, mx, my, mw, mh, letter, ol=INK):
                  (mx + mw * ww * 0.34, my + hh * mh * 0.28), (mx - mw * ww * 0.34, my + hh * mh * 0.28)], (255, 255, 255), None, 0)
 
 
+# ---------------------------------------------------------------- eller
+def _hand(cv, pos, r, skin, sg, fwd, ow, t, emo):
+    """Beş parmaklı el: avuç + başparmak + 4 parmak. Açıklık eylemle (fwd) ve duyguyla değişir: kapalı yumruk <-> açık avuç."""
+    openness = max(0.0, min(1.0, 0.55 + 0.35 * math.sin(abs(fwd) * 2.0 + t * 1.3) + (0.3 if emo in ("surprise", "laugh", "happy") else 0)))
+    x, y = pos
+    cv.ellipse(x, y, r * 0.95, r * 0.9, skin, INK, ow * 0.9)
+    cv.capsule((x - sg * r * 0.55, y - r * 0.05), (x - sg * r * 1.05, y - r * (0.25 + 0.5 * openness)), r * 0.28, r * 0.22, skin, INK, ow * 0.8)
+    for i in range(4):
+        a = math.radians(-100 + i * 24) if sg > 0 else math.radians(-80 - i * 24)
+        L = r * (0.55 + 0.65 * openness) * (1.0 - 0.1 * abs(i - 1.5))
+        base = (x + math.cos(a) * r * 0.72, y + math.sin(a) * r * 0.62)
+        tip = (x + math.cos(a) * (r * 0.72 + L), y + math.sin(a) * (r * 0.62 + L * (0.75 if openness > 0.4 else 0.35)) + (r * 0.25 if openness < 0.35 else 0))
+        cv.capsule(base, tip, r * 0.20, r * 0.17, skin, INK, ow * 0.7)
+    cv.ellipse(x - sg * r * 0.05, y + r * 0.08, r * 0.78, r * 0.7, skin, None, 0)
+
+
 # ---------------------------------------------------------------- karakter çizimi
 def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
     """fx,fy: ayak ortası (ekran px). ppm: piksel/metre. st: {'mouth':harf,'blink':0/1,'emotion':str,'dir':-1..1}"""
@@ -143,11 +178,15 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
     head_w = head_h * 1.12
     torso_w = Hh * {"infant": 0.30, "toddler": 0.28, "child": 0.25, "adult": 0.22}[cls]
     skin, shirt, shorts, hair = des["skin"], des["shirt"], des["shorts"], des["hair"]
-    ow = max(2.2, Hh * 0.014)
+    torso_w *= des.get("build", 1.0)
+    ow = max(3.0, Hh * 0.019)
     jump = pose["z"] * ppm
     sit = max(0.0, -pose["z"]) * ppm
     by = fy - jump                       # gövde tabanı (ayak) y
     squash = 1.0 + max(0.0, jump) / (Hh * 3.0) + 0.014 * math.sin(t * 2.4 + des["age"])
+    sq_ = float(pose.get("sq", 1.0))
+    squash *= sq_
+    torso_w /= max(0.7, sq_) ** 0.5            # hacim korunur: ezilince genişler, uzayınca incelir
     pulse = float(st.get("pulse", 0.0))   # vurgu/şaşkınlıkta ezilip esneme (squash & stretch)
     if st.get("emotion") in ("surprise", "laugh"):
         pulse = max(pulse, 0.6 + 0.3 * math.sin(t * 9))
@@ -155,6 +194,7 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         squash *= 1.0 - 0.10 * pulse
         head_h *= 1.0 + 0.12 * pulse
         head_w = head_h * 1.12
+    head_w *= des.get("face_w", 1.0)
     face = max(-1.0, min(1.0, pose["head"][2] * 0.7 + pose["yaw"] * 0.55))     # bakış/dönüş yönü
     tilt = pose["head"][1] * 0.9 + pose["lean"] * 0.4
     nod = pose["head"][0]
@@ -188,6 +228,20 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         cv.ellipse(px, head_cy + head_h * 0.18, head_w * 0.17, head_h * 0.34, hair, INK, ow, rot=-0.3)
     if style == "bob":
         cv.ellipse(hx, head_cy + head_h * 0.1, head_w * 0.60, head_h * 0.62, hair, INK, ow)
+    if style == "wavy_long":      # uzun dalgalı saç: omuza dökülür, ucu dalgalı
+        wv = math.sin(t * 1.7 + des["age"]) * head_w * 0.02
+        pts = [(hx - head_w * 0.58, head_cy - head_h * 0.1), (hx - head_w * 0.66 + wv, head_cy + head_h * 0.45), (hx - head_w * 0.50 - wv, head_cy + head_h * 0.95),
+               (hx - head_w * 0.28 + wv, head_cy + head_h * 0.82), (hx, head_cy + head_h * 1.0), (hx + head_w * 0.28 - wv, head_cy + head_h * 0.82),
+               (hx + head_w * 0.50 + wv, head_cy + head_h * 0.95), (hx + head_w * 0.66 - wv, head_cy + head_h * 0.45), (hx + head_w * 0.58, head_cy - head_h * 0.1)]
+        cv.poly(pts, hair, INK, ow)
+    if style == "curly":          # kıvırcık: saç çevresinde yumak halkası
+        for i in range(11):
+            a = math.radians(160 + i * 22)
+            cv.ellipse(hx + math.cos(a) * head_w * 0.52, head_cy + math.sin(a) * head_h * 0.50 + head_h * 0.06, head_w * 0.17, head_w * 0.17, hair, INK, ow * 0.9)
+        if des.get("class") == "adult":      # uzun kıvırcık: omuz hizası yumaklar
+            for sg in (-1, 1):
+                for k in range(3):
+                    cv.ellipse(hx + sg * head_w * (0.56 + 0.04 * (k % 2)), head_cy + head_h * (0.28 + 0.2 * k), head_w * 0.15, head_w * 0.15, hair, INK, ow * 0.9)
     if style == "hijab":      # başörtüsü: arka katman + omuza dökülen kumaş
         sc_ = des["scarf"]
         cv.ellipse(hx, head_cy + head_h * 0.50, head_w * 0.66, head_h * 0.34, shade(sc_, 0.88), INK, ow)
@@ -204,17 +258,29 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
             top = (x0, torso_bot)
         else:
             foot = (x0 + swing * leg_h * 0.22 * sg * 0.3, fy - Hh * 0.01 - lift - max(0, jump))
-        cv.capsule(top, (foot[0], foot[1] - Hh * 0.03), Hh * 0.045, Hh * 0.04, skin if species != "hedgehog" else skin, INK, ow)
-        cv.capsule(top, ((top[0] + foot[0]) / 2, (top[1] + foot[1]) / 2 - Hh * 0.01), Hh * 0.055, Hh * 0.05, shorts, INK, ow)
+        lw = des.get("lowerwear", "shorts"); lc = des.get("lower_color", shorts)
+        if lw == "pants":      # yetişkin: bacak tamamen pantolon
+            cv.capsule(top, (foot[0], foot[1] - Hh * 0.025), Hh * 0.058, Hh * 0.047, lc, INK, ow)
+        elif lw == "skirt":    # uzun etek/elbise: bacak görünmez, yalnız ayak ucu
+            pass
+        else:
+            cv.capsule(top, (foot[0], foot[1] - Hh * 0.03), Hh * 0.045, Hh * 0.04, skin if species != "hedgehog" else skin, INK, ow)
+            cv.capsule(top, ((top[0] + foot[0]) / 2, (top[1] + foot[1]) / 2 - Hh * 0.01), Hh * 0.055, Hh * 0.05, shorts, INK, ow)
         cv.ellipse(foot[0] + sg * Hh * 0.025, foot[1], Hh * 0.075, Hh * 0.04, shade(des["accent"], 0.9), INK, ow)
     # ---- gövde
     tpts = [(fx - torso_w * 0.5, torso_top + torso_h * 0.10), (fx - torso_w * 0.36, torso_top), (fx + torso_w * 0.36, torso_top),
             (fx + torso_w * 0.5, torso_top + torso_h * 0.10), (fx + torso_w * 0.55, torso_bot), (fx - torso_w * 0.55, torso_bot)]
-    cv.poly(tpts, shirt, INK, ow)
+    cv.poly_cel(tpts, shirt, INK, ow)
+    if des.get("lowerwear") == "skirt":
+        sk_top = torso_bot - torso_h * 0.10; ank = by - Hh * 0.05
+        cv.poly([(fx - torso_w * 0.55, sk_top), (fx + torso_w * 0.55, sk_top), (fx + torso_w * 0.95, ank), (fx - torso_w * 0.95, ank)], shirt, INK, ow)
+    if des.get("pregnant"):
+        cv.ellipse(fx + torso_w * 0.12, torso_top + torso_h * 0.70, torso_w * 0.46, torso_h * 0.36, shade(shirt, 1.04), INK, ow)
     cv.ellipse(fx, torso_top + torso_h * 0.52, torso_w * 0.13, torso_w * 0.13, des["accent"], INK, ow * 0.7)
-    cv.poly([(fx - torso_w * 0.55, torso_bot - torso_h * 0.14), (fx + torso_w * 0.55, torso_bot - torso_h * 0.14),
-             (fx + torso_w * 0.55, torso_bot), (fx - torso_w * 0.55, torso_bot)], shorts, None, 0)
-    cv.line([(fx - torso_w * 0.55, torso_bot - torso_h * 0.14), (fx + torso_w * 0.55, torso_bot - torso_h * 0.14)], INK, ow * 0.8)
+    if des.get("lowerwear") != "skirt":
+        cv.poly([(fx - torso_w * 0.55, torso_bot - torso_h * 0.14), (fx + torso_w * 0.55, torso_bot - torso_h * 0.14),
+                 (fx + torso_w * 0.55, torso_bot), (fx - torso_w * 0.55, torso_bot)], des.get("lower_color", shorts), None, 0)
+        cv.line([(fx - torso_w * 0.55, torso_bot - torso_h * 0.14), (fx + torso_w * 0.55, torso_bot - torso_h * 0.14)], INK, ow * 0.8)
     # ---- kollar
     arm_len = Hh * 0.27
     for side, sg in (("L", -1), ("R", 1)):
@@ -227,7 +293,7 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         cv.capsule(sh, hand, Hh * 0.036, Hh * 0.030, skin, INK, ow)
         mid = (sh[0] + (hand[0] - sh[0]) * 0.42, sh[1] + (hand[1] - sh[1]) * 0.42)
         cv.capsule(sh, mid, Hh * 0.045, Hh * 0.040, shirt, INK, ow)
-        cv.ellipse(hand[0], hand[1], Hh * 0.05, Hh * 0.05, skin, INK, ow)
+        _hand(cv, hand, Hh * 0.052, skin, sg, fwd, ow, t, st.get("emotion", "neutral"))
     # ---- boyun + kafa
     cv.capsule((fx, torso_top + 2), (fx, torso_top - head_h * 0.1), Hh * 0.03, Hh * 0.03, skin, INK, ow)
     head_pts_c = (hx, head_cy)
@@ -236,58 +302,120 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         cv.ellipse(hx - head_w * 0.42, head_cy - head_h * 0.38, head_w * 0.12, head_h * 0.12, skin, INK, ow)
         cv.ellipse(hx + head_w * 0.42, head_cy - head_h * 0.38, head_w * 0.12, head_h * 0.12, skin, INK, ow)
     else:
-        for sg in (-1, 1):   # kulaklar
-            cv.ellipse(hx + sg * head_w * 0.50, head_cy + head_h * 0.04, head_w * 0.09, head_h * 0.12, skin, INK, ow)
-        cv.ellipse(hx, head_cy, head_w * 0.52, head_h * 0.52, skin, INK, ow, rot=tilt * 0.3)
+        for sg in (-1, 1):   # kulaklar (dönüşte uzak kulak kafanın arkasında kalır)
+            if sg * face < -0.55:
+                continue
+            cv.ellipse(hx + sg * head_w * 0.50 * (1 - 0.25 * abs(face)), head_cy + head_h * 0.04, head_w * 0.09, head_h * 0.12, skin, INK, ow)
+        cv.ellipse_cel(hx - face * head_w * 0.03, head_cy, head_w * 0.52 * (1.0 - 0.07 * abs(face)), head_h * 0.52, skin, INK, ow, rot=tilt * 0.3, k=0.86)
     # ---- yüz
     emo = st.get("emotion", "neutral")
     eye_y = head_cy - head_h * 0.04
     ex = head_w * 0.205
-    erx, ery = head_w * 0.135, head_h * 0.185
+    es_ = des.get("eye_scale", 1.0) * (0.84 if des.get("class") == "adult" else 1.0)     # yetişkinde göz yüze göre daha küçük
+    erx, ery = head_w * 0.135 * es_, head_h * 0.185 * es_
+    shp = des.get("eye_shape", "round")
+    erx *= {"round": 1.0, "almond": 1.12, "wide": 1.08, "narrow": 0.92, "sleepy": 1.05}.get(shp, 1.0)
+    ery *= {"round": 1.0, "almond": 0.74, "wide": 1.12, "narrow": 0.80, "sleepy": 0.80}.get(shp, 1.0)
+    ex = ex * des.get("eye_dist", 1.0)
     if emo == "surprise":
         erx *= 1.12; ery *= 1.2
     for sg in (-1, 1):
-        cx = hx + sg * ex + face * head_w * 0.12
+        cx = hx + sg * ex * (1.0 - 0.16 * abs(face)) + face * head_w * 0.19
         far = (sg * face) < -0.2
         rx = erx * (0.82 if far else 1.0)
         if st.get("blink") or emo == "laugh":
             cv.line(cv.arc_pts(cx, eye_y + ery * 0.1, rx, ery * 0.6, math.pi * 1.1, math.pi * 1.9), INK, ow * 1.1) if emo == "laugh" else \
                 cv.line([(cx - rx, eye_y + ery * 0.15), (cx + rx, eye_y + ery * 0.15)], INK, ow * 1.2)
         else:
-            cv.ellipse(cx, eye_y, rx, ery, (255, 255, 255), INK, ow * 0.9)
+            cv.ellipse(cx, eye_y, rx, ery, (255, 255, 255), INK, ow * 0.45)
             gx = cx + face * rx * 0.38 + st.get("gaze", 0) * rx * 0.25
             pr = rx * 0.62
             cv.ellipse(gx, eye_y + ery * 0.08, pr, pr * 1.25, des["iris"], None, 0)
             cv.ellipse(gx, eye_y + ery * 0.08, pr * 0.58, pr * 0.75, (15, 10, 15), None, 0)
             cv.ellipse(gx - pr * 0.28, eye_y - ery * 0.18, pr * 0.24, pr * 0.24, (255, 255, 255), None, 0)
-            cv.line([(cx - rx * 1.05, eye_y - ery * 0.9), (cx + rx * 1.05, eye_y - ery * 0.9)], skin, 0.1)
+            lidk = {"angry": 0.34, "sly": 0.42, "sad": 0.22, "laugh": 0.0}.get(emo, des.get("lid", 0.0) and 0.0)
+            if lidk:
+                yl = eye_y - ery + 2 * ery * lidk
+                cv.poly([(cx - rx * 1.06, eye_y - ery * 1.1), (cx + rx * 1.06, eye_y - ery * 1.1), (cx + rx * 1.0, yl + (-sg * ery * 0.12 if emo == "angry" else 0)), (cx - rx * 1.0, yl + (sg * ery * 0.12 if emo == "angry" else 0))], skin, None, 0)
+            cv.line(cv.arc_pts(cx, eye_y + ery * 0.05, rx * 1.04, ery * 1.04, math.pi * 1.06, math.pi * 1.94, 14), INK, ow * 0.95)
+            if des.get("lid", 0) > 0:      # düşük üst göz kapağı: yorgun/uykulu bakış
+                y_l = eye_y - ery + 2 * ery * des["lid"]
+                cv.poly([(cx - rx * 1.04, eye_y - ery * 1.08), (cx + rx * 1.04, eye_y - ery * 1.08), (cx + rx * 0.95, y_l), (cx - rx * 0.95, y_l)], skin, None, 0)
+                cv.line([(cx - rx * 0.97, y_l), (cx + rx * 0.97, y_l)], INK, ow * 0.9)
+        if des.get("eyebags"):
+            cv.line(cv.arc_pts(cx, eye_y + ery * 1.30, rx * 0.95, ery * 0.5, math.pi * 0.15, math.pi * 0.85), shade(skin, 0.74), 2.4)
+        if des.get("lashes"):
+            for k_ in (-1, 0, 1):
+                lx = cx + sg * rx * (0.55 + 0.25 * k_ * 0.8)
+                cv.line([(lx, eye_y - ery * 0.85), (lx + sg * rx * 0.28, eye_y - ery * 1.28)], INK, ow * 0.8)
         # kaş
         by_ = eye_y - ery * 1.45
-        slope = {"angry": -0.45, "sad": 0.45, "surprise": 0.0, "laugh": -0.1}.get(emo, 0.08)
+        slope = {"angry": -0.65, "sly": -0.25, "sad": 0.55, "surprise": 0.0, "laugh": -0.1}.get(emo, 0.08)
         lift = (-ery * 0.35 if emo == "surprise" else 0) - ery * 0.5 * st.get("brow", 0)
-        cv.line([(cx - rx * 0.9, by_ + lift + slope * sg * rx * -1 * 0.5), (cx + rx * 0.9, by_ + lift + slope * sg * rx * 0.5)], shade(hair, 0.85) if species != "hedgehog" else hair, ow * 1.4)
+        p0 = (cx - rx * 0.9, by_ + lift + slope * sg * rx * -1 * 0.5); p1 = (cx + rx * 0.9, by_ + lift + slope * sg * rx * 0.5)
+        bw_ = ow * 1.7 * des.get("brow_w", 1.0); bs_ = des.get("brow_shape", "flat")
+        if bs_ == "arched":
+            pts_ = [p0, ((p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2 - ery * 0.30), p1]
+        elif bs_ == "soft":
+            pts_ = [p0, ((p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2 - ery * 0.14), p1]
+        elif bs_ == "thick":
+            pts_ = [(p0[0], p0[1] + ery * 0.12), p1]; bw_ *= 1.7
+        else:
+            pts_ = [p0, p1]
+        cv.line(pts_, shade(hair, 0.85) if species != "hedgehog" else hair, bw_)
     # yanak
     for sg in (-1, 1):
-        cv.ellipse(hx + sg * head_w * 0.33 + face * head_w * 0.1, head_cy + head_h * 0.20, head_w * 0.07, head_h * 0.045, (255, 150, 150), None, 0)
+        bl_ = des.get("blush", 1.0); cc_ = tuple(int(skin[i_] + ((255, 150, 150)[i_] - skin[i_]) * bl_) for i_ in range(3))
+        cv.ellipse(hx + sg * head_w * 0.33 + face * head_w * 0.1, head_cy + head_h * 0.20, head_w * 0.07, head_h * 0.045, cc_, None, 0)
+    for k_ in range(des.get("freckles", 0)):       # çiller: sol yanak (izleyiciye göre sağ)
+        cv.ellipse(hx - head_w * (0.30 - 0.05 * k_) + face * head_w * 0.1, head_cy + head_h * (0.12 + 0.025 * (k_ % 2)) + head_h * 0.02, head_w * 0.018, head_w * 0.018, shade(skin, 0.68), None, 0)
+    if des.get("earrings"):
+        for sg in (-1, 1):
+            cv.ellipse(hx + sg * head_w * 0.50, head_cy + head_h * 0.20, head_w * 0.035, head_w * 0.035, (240, 200, 80), INK, ow * 0.5)
+    bd = des.get("beard", "none")
+    if bd in ("short", "full", "stubble"):      # sakal: çene hattı boyunca (stubble = kirli sakal, çizgisiz)
+        depth = head_h * (0.20 if bd in ("short", "stubble") else 0.34)
+        jaw = cv.arc_pts(hx, head_cy + head_h * 0.02, head_w * 0.50, head_h * 0.50, math.pi * 0.08, math.pi * 0.92, 20)
+        inner = [(x, y - depth * (0.35 + 0.65 * abs(math.sin((x - hx) / (head_w * 0.5 + 1e-6) * 1.2)) )) for x, y in reversed(jaw)]
+        bcol = tuple(int(skin[i_] * 0.62 + hair[i_] * 0.38) for i_ in range(3)) if bd == "stubble" else shade(hair, 0.9)
+        cv.poly(jaw + inner, bcol, INK if bd == "full" else None, ow * 0.8)
     # burun
     if species == "hedgehog":
         cv.ellipse(hx + face * head_w * 0.17, head_cy + head_h * 0.10, head_w * 0.075, head_h * 0.06, (40, 30, 30), None, 0)
     else:
-        cv.line(cv.arc_pts(hx + face * head_w * 0.14, head_cy + head_h * 0.08, head_w * 0.035, head_h * 0.04, 0.3, math.pi - 0.3), shade(skin, 0.62), 2.6)
+        nx_, ny_ = hx + face * head_w * 0.22, head_cy + head_h * 0.08; nt_ = des.get("nose", "line")
+        if nt_ == "dot":
+            cv.ellipse(nx_, ny_ + head_h * 0.02, head_w * 0.022, head_h * 0.022, shade(skin, 0.72), None, 0)
+        elif nt_ == "button":
+            cv.ellipse(nx_, ny_ + head_h * 0.015, head_w * 0.04, head_h * 0.035, shade(skin, 0.95), shade(skin, 0.64), 1.6)
+        elif nt_ == "round":
+            cv.ellipse(nx_, ny_ + head_h * 0.02, head_w * 0.062, head_h * 0.05, shade(skin, 0.94), shade(skin, 0.6), 2.0)
+        elif nt_ == "long":
+            cv.line([(nx_ - face * head_w * 0.01, ny_ - head_h * 0.12), (nx_, ny_ + head_h * 0.02)], shade(skin, 0.66), 2.2)
+            cv.line(cv.arc_pts(nx_, ny_ + head_h * 0.03, head_w * 0.05, head_h * 0.035, 0.2, math.pi - 0.2), shade(skin, 0.62), 2.6)
+        else:
+            cv.line(cv.arc_pts(nx_, ny_, head_w * 0.035, head_h * 0.04, 0.3, math.pi - 0.3), shade(skin, 0.62), 2.6)
     # ağız
     mouth_letter = st.get("mouth", "X")
     if emo == "laugh" and mouth_letter == "X":
         mouth_letter = "D"
-    draw_mouth(cv, hx + face * head_w * 0.14, head_cy + head_h * 0.26, head_w * 0.26, head_h * 0.16, mouth_letter)
+    draw_mouth(cv, hx + face * head_w * 0.20, head_cy + head_h * 0.26, head_w * 0.26 * des.get("mouth_w", 1.0), head_h * 0.16, mouth_letter)
+    if des.get("dimple"):
+        cv.line(cv.arc_pts(hx + face * head_w * 0.14 + head_w * 0.17, head_cy + head_h * 0.27, head_w * 0.03, head_h * 0.03, -1.2, 1.2), shade(skin, 0.6), 2.4)
     # ---- saç (ön)
     top = head_cy - head_h * 0.50
-    if style in ("short", "bob", "ponytail", "bun") and species != "hedgehog":
+    if style in ("short", "bob", "ponytail", "bun", "wavy_long", "curly", "bangs") and species != "hedgehog":
         pts = cv.arc_pts(hx, head_cy, head_w * 0.545, head_h * 0.54, math.pi * 1.0, math.pi * 2.0, 24)
         fr = [(hx + head_w * 0.54, head_cy - head_h * 0.18), (hx + head_w * 0.36, head_cy - head_h * 0.34), (hx + head_w * 0.16, head_cy - head_h * 0.27),
               (hx - head_w * 0.04, head_cy - head_h * 0.38), (hx - head_w * 0.26, head_cy - head_h * 0.28), (hx - head_w * 0.54, head_cy - head_h * 0.18)]
         cv.poly(pts + fr, hair, INK, ow)
         if style == "bun":
             cv.ellipse(hx, top - head_h * 0.06, head_w * 0.17, head_w * 0.15, hair, INK, ow)
+    if style in ("bob", "bangs") and des.get("class") in ("toddler", "child") and des["female"]:   # küt kâhkül
+        cv.poly([(hx - head_w * 0.52, head_cy - head_h * 0.20), (hx - head_w * 0.30, head_cy - head_h * 0.08), (hx + head_w * 0.30, head_cy - head_h * 0.08),
+                 (hx + head_w * 0.52, head_cy - head_h * 0.20), (hx + head_w * 0.40, head_cy - head_h * 0.45), (hx - head_w * 0.40, head_cy - head_h * 0.45)], hair, INK, ow * 0.8)
+    if des.get("hat_kind") == "beanie":
+        pass
     if style == "spiky" and species != "hedgehog":
         for i in range(7):
             a = math.radians(205 + i * 21.6)
@@ -307,6 +435,12 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         outer = cv.arc_pts(hx, head_cy - head_h * 0.02, head_w * 0.60, head_h * 0.58, math.pi * 1.04, math.pi * 1.96, 26)
         inner = cv.arc_pts(hx, head_cy + head_h * 0.02, head_w * 0.46, head_h * 0.44, math.pi * 1.96, math.pi * 1.04, 26)
         cv.poly(outer + inner, sc_, INK, ow * 0.9)
+    if acc == "flower_pin":   # sarı çiçek iğnesi (başörtüsünde)
+        fx_, fy_, fr_ = hx + head_w * 0.46, head_cy + head_h * 0.34, head_w * 0.075
+        for k_ in range(5):
+            a_ = k_ * 2 * math.pi / 5
+            cv.ellipse(fx_ + math.cos(a_) * fr_ * 0.8, fy_ + math.sin(a_) * fr_ * 0.8, fr_ * 0.55, fr_ * 0.55, (255, 214, 60), INK, ow * 0.5)
+        cv.ellipse(fx_, fy_, fr_ * 0.45, fr_ * 0.45, (230, 120, 40), INK, ow * 0.4)
     if acc == "star":         # sarı yıldız toka
         cx_, cy_, r_ = hx - head_w * 0.30, top + head_h * 0.16, head_w * 0.12
         pts = []
@@ -322,6 +456,12 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
     if acc == "hat":
         cv.ellipse(hx, top + head_h * 0.06, head_w * 0.62, head_h * 0.10, shade(des["accent"], 0.85), INK, ow)
         cv.poly(cv.arc_pts(hx, top + head_h * 0.06, head_w * 0.42, head_h * 0.42, math.pi, 2 * math.pi, 20), des["accent"], INK, ow)
+    if acc == "beanie":       # ayıcık kulaklı bere
+        bc = des["accent"]
+        for sg in (-1, 1):
+            cv.ellipse(hx + sg * head_w * 0.36, top + head_h * 0.02, head_w * 0.11, head_w * 0.11, bc, INK, ow)
+            cv.ellipse(hx + sg * head_w * 0.36, top + head_h * 0.03, head_w * 0.05, head_w * 0.05, shade(bc, 0.8), None, 0)
+        cv.poly(cv.arc_pts(hx, head_cy - head_h * 0.02, head_w * 0.56, head_h * 0.56, math.pi * 1.0, math.pi * 2.0, 24), bc, INK, ow)
     if acc == "bow":
         cv.ellipse(hx - head_w * 0.38, top + head_h * 0.1, head_w * 0.12, head_w * 0.08, des["accent"], INK, ow)
         cv.ellipse(hx - head_w * 0.22, top + head_h * 0.1, head_w * 0.12, head_w * 0.08, des["accent"], INK, ow)

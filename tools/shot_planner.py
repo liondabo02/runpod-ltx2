@@ -44,12 +44,22 @@ def load_cues(episode_dir, item):
     return [[c["start"], c["end"], sm.VISEME_OPEN.get(c["value"], 0.3), c["value"]] for c in raw]
 
 
-def plan(episode_dir, bible, assets_dir, t0, t1, fps=12, size=(1280, 720)):
+def _icons(action):
+    try:
+        import fx_layer
+        return fx_layer.kinds_for(action)
+    except ImportError:
+        return []
+
+
+def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
+    fps = int(fps or os.environ.get("AHOS_FPS", "12"))
     sheet = json.load(open(os.path.join(episode_dir, "beat_sheet.json"), encoding="utf-8"))
     vm_path = os.path.join(episode_dir, "voice_manifest.json")
     items = assign_offsets(json.load(open(vm_path, encoding="utf-8"))["items"]) if os.path.exists(vm_path) else []
     names = {c["id"]: c.get("name", c["id"]) for c in bible["characters"]}
-    out = {"fps": fps, "width": size[0], "height": size[1], "t0": t0, "t1": t1, "characters": {}, "beats": []}
+    out = {"fps": fps, "width": size[0], "height": size[1], "t0": t0, "t1": t1, "characters": {}, "beats": [],
+           "total_s": float(sheet["beats"][-1]["t_end"]) if sheet.get("beats") else 480.0}
     for ch in bible["characters"]:
         glb = os.path.join(assets_dir, "character-model", f"{ch['id']}-model.glb")
         spec_p = os.path.join(assets_dir, f"{ch['id']}.spec.json")
@@ -86,6 +96,9 @@ def plan(episode_dir, bible, assets_dir, t0, t1, fps=12, size=(1280, 720)):
         focus = lines[0]["char"] if lines else (cast[0] if cast else None)
         out["beats"].append({"i": bi, "t_start": ts, "t_end": te, "scene": scene_type(b.get("location"), bible.get("locations")),
                              "cast": cast, "motion": mot, "lines": lines, "camera": preset, "focus": focus,
+                             "loc": b.get("location"), "light": b.get("light_time", ""), "shot_id": b.get("shot_id"),
+                             "icons": _icons(b.get("action", "")), "scene_id": b.get("scene_id"),
+                             "first_of_scene": bi == 0 or sheet["beats"][bi - 1].get("scene_id") != b.get("scene_id"),
                              "props": props2d.extract(str(b.get("action", "")) + " " + str(b.get("camera", ""))),
                              "fx": props2d.fx_kinds([m_["kind"] for m_ in mot.values()])})
         if out["beats"][-1]["props"] and not lines and bi % 3 == 2 and preset != "close":  # nesne ara planı (kesme)

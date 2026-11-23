@@ -111,8 +111,9 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
         except Exception as e:  # noqa: BLE001
             problems.append(f"music: {e}")
     out = os.path.join(rdir, f"clip_{int(t0)}_{int(t1)}.mp4")
-    f0 = int(round(t0 * 12))
-    cmd = [shutil.which("ffmpeg") or "ffmpeg", "-y", "-loglevel", "error", "-framerate", "12", "-start_number", str(f0),
+    FPS_ = int(os.environ.get("AHOS_FPS", "12"))
+    f0 = int(round(t0 * FPS_))
+    cmd = [shutil.which("ffmpeg") or "ffmpeg", "-y", "-loglevel", "error", "-framerate", str(FPS_), "-start_number", str(f0),
            "-i", os.path.join(frames, "f%05d.png")]
     if os.path.exists(wav):
         cmd += ["-ss", str(t0), "-i", wav]
@@ -140,7 +141,10 @@ def main():
     ap.add_argument("--episode-dir", required=True); ap.add_argument("--series", required=True)
     ap.add_argument("--from", dest="t0", type=float, default=0.0); ap.add_argument("--to", dest="t1", type=float, default=10.0)
     ap.add_argument("--engine", default="2d", help="2d (varsayılan) | toon | eevee | workbench"); ap.add_argument("--samples", type=int, default=16)
+    ap.add_argument("--fps", type=int, default=None, help="kare hızı (12 varsayılan, 24 akıcı)")
     a = ap.parse_args()
+    if a.fps:
+        os.environ["AHOS_FPS"] = str(a.fps)
     bible = json.load(open(a.series, encoding="utf-8"))
     m = run(a.episode_dir, bible, a.t0, a.t1, os.path.dirname(os.path.abspath(a.series)), a.engine, a.samples)
     print(json.dumps(m, ensure_ascii=False, indent=2))

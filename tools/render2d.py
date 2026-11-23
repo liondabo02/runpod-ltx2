@@ -7,7 +7,13 @@ sys.path.insert(0, HERE)
 import shot_motion as sm  # noqa: E402
 import puppet2d as pp  # noqa: E402
 import scenes2d as sc  # noqa: E402
-import props2d  # noqa: E402
+import props2d
+import setpieces2d  # noqa: E402
+import fx_layer  # noqa: E402
+try:
+    import bg_art  # noqa: E402
+except ImportError:      # arka plan boyama katmanı yoksa eski görünüm
+    bg_art = None
 
 EMO = {"laugh": "laugh", "surprise": "surprise", "jump": "happy", "dance": "happy", "run": "happy", "wave": "happy"}
 ZOOM = {"wide": 1.0, "medium": 1.1, "close": 1.6, "xclose": 2.3}
@@ -17,6 +23,24 @@ def letter_at(cues, t):
     for c in cues:
         if c[0] <= t < c[1]:
             return c[3] if len(c) > 3 else "C"
+    return "X"
+
+
+def letter_window(cues, lt, frame_dt, lead=0.03):
+    """Kare penceresine göre ağız harfi: 12 fps'te kısa görüntü birimleri (viseme) kaçmasın; ağız sesten ~30 ms önce hareket eder (animasyon geleneği)."""
+    a, b = lt + lead, lt + lead + frame_dt
+    best, bo, bx = None, 0.0, 0.0
+    for c in cues:
+        ov = min(b, c[1]) - max(a, c[0])
+        if ov <= 0:
+            continue
+        v = c[3] if len(c) > 3 else "C"
+        if v == "X":
+            bx = max(bx, ov)
+        elif ov > bo:
+            best, bo = v, ov
+    if best is not None and bo >= 0.30 * frame_dt:
+        return best
     return "X"
 
 
@@ -53,7 +77,7 @@ def frame(plan, designs, t, bible_chars=None):
     for ln in beat["lines"]:
         if ln["start"] <= t < ln["end"]:
             speaker = ln["char"]
-            letters[ln["char"]] = letter_at(ln["cues"], t - ln["start"]) if ln["cues"] else "CBDX"[int(t * 9) % 4]
+            letters[ln["char"]] = letter_window(ln["cues"], t - ln["start"], 1.0 / float(plan.get("fps", 12))) if ln["cues"] else "CBDX"[int(t * 9) % 4]
     items, xs = [], []
     sp_cues = next((ln["cues"] for ln in beat["lines"] if ln["char"] == speaker and ln["start"] <= t < ln["end"]), [])
     sp_start = next((ln["start"] for ln in beat["lines"] if ln["char"] == speaker and ln["start"] <= t < ln["end"]), 0)
@@ -101,12 +125,22 @@ def frame(plan, designs, t, bible_chars=None):
     zoom = ZOOM.get(preset, 1.5) * (1.0 + 0.05 * ph) * (1.0 + 0.18 * E if preset == "close" else 1.0)   # vurguda kamera içeri vurur
     cx = fx if preset in ("close", "xclose") else avg
     cy = {"wide": 0.95, "medium": 0.85}.get(preset, fh * 0.80)
+    if preset in ("wide", "medium") and len(xs) > 1:            # kadraj güvenliği: tüm oyuncular kadraja sığsın
+        lo, hi = min(xs), max(xs); half = (hi - lo) / 2 + 0.7
+        zoom = max(0.8, min(zoom, 5.12 / (2 * half))); cx = (lo + hi) / 2
     cam = sc.Cam(cx, cy, zoom)
     if preset == "insert" and beat.get("props"):
         ix, iy = props2d.place(beat["props"][0], xs, [designs[c]["height"] for c in beat["cast"]], t, lt, dur)
         cam = sc.Cam(ix, iy, 2.0)
     cv = pp.Cv()
     sc.scene_back(cv, beat["scene"], cam, t)
+    if preset != "insert":
+        setpieces2d.draw(cv, cam, beat.get("loc"), t)
+    if bg_art is not None:
+        try:
+            bg_art.enhance(cv, beat["scene"], beat.get("light"), t)
+        except Exception:      # boyama katmanı kare üretimini asla düşürmesin
+            pass
     for cid, d, p, m, look, e in sorted(items, key=lambda it: it[2]["x"]):
         emo = EMO.get(m["kind"], "neutral")
         slot = int(t / 1.6 + m["seed"])
@@ -114,6 +148,8 @@ def frame(plan, designs, t, bible_chars=None):
         st = {"mouth": letters.get(cid, "X"), "blink": blink_at(t, m["seed"]), "emotion": emo,
               "gaze": look * 0.9 + (0 if look else dart), "brow": e, "pulse": e}
         pp.draw_character(cv, d, p, st, cam.x(p["x"]), cam.y(0.0), cam.s, t)
+    if xs:
+        fx_layer.icons(cv, cam, beat, xs, [designs[c]["height"] for c in beat["cast"]], t, lt)
     for k_, kind in enumerate(beat.get("props") or []):
         wx, wy = props2d.place(kind, xs, [designs[c]["height"] for c in beat["cast"]], t, lt, dur)
         props2d.draw(cv, cam, kind, wx, wy, t, k_)
@@ -122,7 +158,43 @@ def frame(plan, designs, t, bible_chars=None):
         for kind in beat.get("fx") or []:
             props2d.draw_fx(cv, cam, kind, sum(xs) / len(xs), hy if kind != "speed" else 0.1, t, lt)
     sc.scene_front(cv, beat["scene"], cam, t)
-    return cv.done()
+    im = grade(cv.done(), beat.get("light") or "", t)
+    try:
+        return fx_layer.post(im, beat, t, lt, dur, float(plan.get("total_s", 480.0)), bool(beat.get("first_of_scene")))
+    except Exception:          # efekt katmanı asla kare üretimini düşürmesin
+        return im
+
+
+_VIG = {}
+
+
+def grade(im, light, t):
+    """Işık/atmosfer: sahne ışığına göre renk tonu + hafif vinyet (derinlik hissi). Yazıdaki ışık notundan türetilir."""
+    from PIL import Image, ImageChops
+    l = str(light).lower()
+    if any(k in l for k in ("gün batım", "akşam", "altın", "kızıl")):
+        tint, k = (255, 200, 150), 0.30
+    elif any(k_ in l for k_ in ("sabah", "doğu")):
+        tint, k = (255, 232, 200), 0.22
+    elif any(k_ in l for k_ in ("bulut", "kapalı", "gölge")):
+        tint, k = (215, 225, 245), 0.20
+    elif any(k_ in l for k_ in ("öğle", "güneşli", "parlak")):
+        tint, k = (255, 248, 230), 0.10
+    else:
+        tint, k = (255, 245, 225), 0.12
+    sz = im.size
+    tinted = ImageChops.multiply(im, Image.new("RGB", sz, tint))
+    im = Image.blend(im, tinted, k)
+    m = _VIG.get(sz)
+    if m is None:
+        w, h = sz; small = Image.new("L", (64, 36), 255)
+        px = small.load()
+        for y in range(36):
+            for x in range(64):
+                d = (((x - 31.5) / 32) ** 2 + ((y - 17.5) / 18) ** 2) ** 0.5
+                px[x, y] = int(255 - 70 * max(0.0, d - 0.55) / 0.9)
+        m = _VIG[sz] = small.resize(sz, Image.BILINEAR)
+    return ImageChops.multiply(im, Image.merge("RGB", (m, m, m)))
 
 
 _G = {}

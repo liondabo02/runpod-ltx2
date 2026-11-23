@@ -9,7 +9,8 @@ Kullanım: python tools/animatic_worker.py --episode-dir series/<id>/episodes/e0
 """
 import argparse, datetime, hashlib, json, os, shutil, subprocess, sys, textwrap, wave, struct
 
-W, H, FPS = 1280, 720, 12
+W, H = 1280, 720
+FPS = int(os.environ.get("AHOS_FPS", "12"))
 PALETTE = ["#8ecae6", "#ffb703", "#a7c957", "#f4a6c0", "#cdb4db", "#ffd6a5", "#bde0fe", "#caffbf"]
 FONTS = [r"C:\Windows\Fonts\arial.ttf", r"C:\Windows\Fonts\segoeui.ttf",
          "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"]

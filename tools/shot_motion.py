@@ -85,6 +85,7 @@ def arm_fwd(p, side, a):
 
 def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
     p = base_pose(x0)
+    p["sq"] = 1.0
     ph = 0.0 if dur <= 0 else min(1.0, max(0.0, t / dur))
     s = (seed % 7) * 0.9
     for side in "LR":
@@ -110,16 +111,29 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
             arm_fwd(p, side, sg * amp * 0.7 * sw + (0.5 if kind == "run" else 0.0))
             arm_out(p, side, 0.12)
         p["z"] = abs(sw) * (0.02 if kind == "walk" else 0.07) * H
+        p["sq"] = 1.0 - (0.03 if kind == "walk" else 0.07) * (1.0 - abs(sw))            # adım temasında hafif ezilme
         p["lean"] = 0.04 if kind == "walk" else 0.20
     elif kind == "wave":
-        arm_out(p, "R", 2.4 + 0.35 * math.sin(W * 2.5 * t))
+        pre = smooth(min(1.0, t / 0.35))                  # hazırlık: kol önce hafif aşağıdan gelir
+        arm_out(p, "R", (2.4 + 0.35 * math.sin(W * 2.5 * t)) * pre)
+        p["lean"] = -0.05 * (1.0 - pre)
         p["head"][1] = 0.12; p["yaw"] = 0.15 * math.sin(W * 0.3 * t)
     elif kind == "jump":
-        j = max(0.0, math.sin(math.pi * ph * 3))
+        cyc = (ph * 3.0) % 1.0
+        j = max(0.0, math.sin(math.pi * min(1.0, max(0.0, (cyc - 0.22) / 0.62))))        # havada kalma
         p["z"] = 0.22 * H * j
-        a = 2.5 if j > 0.1 else 0.3
-        arm_out(p, "L", a); arm_out(p, "R", a)
-        p["lL"] = p["lR"] = 0.25 * j
+        if cyc < 0.22:                                   # HAZIRLIK: çömel, kollar geriye
+            c = smooth(cyc / 0.22)
+            p["sq"] = 1.0 - 0.16 * c; p["lean"] = 0.10 * c
+            arm_out(p, "L", 0.2); arm_out(p, "R", 0.2); arm_fwd(p, "L", -0.6 * c); arm_fwd(p, "R", -0.6 * c)
+        elif cyc < 0.84:                                 # HAVA: uzama, kollar yukarı
+            p["sq"] = 1.0 + 0.10 * j
+            arm_out(p, "L", 2.5); arm_out(p, "R", 2.5)
+            p["lL"] = p["lR"] = 0.25 * j
+        else:                                            # İNİŞ: ezilme + sekme
+            c = math.sin(math.pi * (cyc - 0.84) / 0.16)
+            p["sq"] = 1.0 - 0.14 * c; p["lean"] = 0.08 * c
+            arm_out(p, "L", 0.5); arm_out(p, "R", 0.5)
     elif kind == "dance":
         p["z"] = 0.03 * H * abs(math.sin(W * 2 * t))
         p["yaw"] = 0.5 * math.sin(W * 1.0 * t)
@@ -132,6 +146,7 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
         arm_fwd(p, "L", 0.5); arm_fwd(p, "R", 0.5)
     elif kind == "surprise":
         k = math.exp(-3.0 * t)
+        p["sq"] = 1.0 + 0.12 * k if t > 0.08 else 1.0 - 0.10 * (1.0 - t / 0.08)   # önce küçük çömelme, sonra uzama
         p["z"] = 0.12 * H * k
         arm_out(p, "L", 0.3 + 1.6 * k); arm_out(p, "R", 0.3 + 1.6 * k)
         p["head"][0] = -0.15 * k; p["lean"] = -0.12 * k

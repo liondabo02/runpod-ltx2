@@ -40,7 +40,11 @@ def tree(cv, cam, wx, base_y, h, p, ow, light=1.0):
     s = cam.s
     tw = 0.16 * s * 0.5
     th = h * 0.55
+    cv.ellipse(x + 0.35 * h * s * 0.5, yb + 0.02 * s, h * s * 0.42, 0.07 * s, (70, 130, 60), None, 0)      # yere düşen ağaç gölgesi
     cv.poly([(x - tw, yb), (x - tw * 0.7, yb - th * s), (x + tw * 0.7, yb - th * s), (x + tw, yb)], (150, 105, 70), INK, ow)
+    cv.poly([(x + tw * 0.15, yb), (x + tw * 0.2, yb - th * s), (x + tw * 0.7, yb - th * s), (x + tw, yb)], (118, 80, 52), None, 0)   # gövde gölge yüzü
+    for k in range(4):
+        cv.line([(x - tw * 0.4, yb - th * s * (0.2 + 0.2 * k)), (x - tw * 0.1, yb - th * s * (0.28 + 0.2 * k))], (110, 74, 48), max(2, ow * 0.7))
     r = h * s * 0.36
     cy = yb - th * s - r * 0.35
     for dx, dy, k in ((-0.55, 0.15, 0.80), (0.55, 0.12, 0.80), (0.0, -0.1, 1.0)):
@@ -142,8 +146,13 @@ def scene_back(cv, kind, cam, t=0.0, seed=1):
         hills(cv, cam, 1.05, 0.35, (125, 196, 120), 0.45, 5)
         for i, wx in enumerate((-11, -7.5, -4.2, -1.0, 2.4, 5.8, 9.2, 12.5)):
             tree(cv, cam, wx + (i % 3) * 0.4, 1.05, 1.5 + (i % 3) * 0.3, 0.65, ow)
+        for i, wx in enumerate((-9.0, -5.6, -2.3, 1.2, 4.6, 8.0, 11.3)):         # orta plan çalı sırası (derinlik)
+            bush(cv, cam, wx + (i % 2) * 0.5, 1.0, 0.5 + 0.1 * (i % 3), ow * 0.8)
         gy = cam.y(1.1)
         gradient(cv, (118, 200, 92), (88, 168, 70), gy, H)
+        for i in range(-12, 14):                                                    # çit gölgeleri çimene düşer
+            xs_ = cam.x(i * 0.62)
+            cv.poly([(xs_, cam.y(0.65)), (xs_ + 0.5 * cam.s, cam.y(0.52)), (xs_ + 0.55 * cam.s, cam.y(0.5)), (xs_ + 0.06 * cam.s, cam.y(0.65))], (80, 150, 68), None, 0)
         for i in range(-12, 14):
             x = cam.x(i * 0.62)
             cv.poly([(x - 0.045 * cam.s, cam.y(0.65)), (x - 0.04 * cam.s, cam.y(1.35)), (x + 0.04 * cam.s, cam.y(1.4)), (x + 0.045 * cam.s, cam.y(0.65))], (246, 232, 205), INK, ow)
@@ -207,6 +216,16 @@ def scene_back(cv, kind, cam, t=0.0, seed=1):
         cv.poly([(x - 0.7 * cam.s, y + 0.1 * cam.s), (x + 0.7 * cam.s, y + 0.1 * cam.s), (x + 0.7 * cam.s, y + 1.2 * cam.s), (x - 0.7 * cam.s, y + 1.2 * cam.s)], (160, 215, 250), None, 0)
         cv.line([(x, y + 0.1 * cam.s), (x, y + 1.2 * cam.s)], INK, ow)
         cv.line([(x - 0.7 * cam.s, y + 0.65 * cam.s), (x + 0.7 * cam.s, y + 0.65 * cam.s)], INK, ow)
+        cv.poly([(cam.x(1.2), fy + 0.05 * cam.s), (cam.x(2.8), fy + 0.05 * cam.s), (cam.x(3.3), H), (cam.x(0.3), H)], (240, 205, 150), None, 0)   # pencere ışığı zeminde
+        cv.poly([(0, fy - 0.07 * cam.s), (W, fy - 0.07 * cam.s), (W, fy), (0, fy)], (150, 108, 76), INK, ow * 0.6)                             # süpürgelik
+        for fx_, fy_, cw_ in ((-1.9, 3.1, 0.55), (-3.9, 3.2, 0.4)):                                                                            # duvar tabloları
+            cv.poly([(cam.x(fx_), cam.y(fy_)), (cam.x(fx_ + cw_), cam.y(fy_)), (cam.x(fx_ + cw_), cam.y(fy_ - 0.7 * cw_ * 1.2)), (cam.x(fx_), cam.y(fy_ - 0.7 * cw_ * 1.2))], (150, 100, 70), INK, ow)
+            cv.poly([(cam.x(fx_ + 0.05), cam.y(fy_ - 0.05)), (cam.x(fx_ + cw_ - 0.05), cam.y(fy_ - 0.05)), (cam.x(fx_ + cw_ - 0.05), cam.y(fy_ - 0.7 * cw_ * 1.2 + 0.05)), (cam.x(fx_ + 0.05), cam.y(fy_ - 0.7 * cw_ * 1.2 + 0.05))], (255, 205, 130), None, 0)
+        px_, py_ = cam.x(3.6), cam.y(1.2)                                                                                                       # saksı bitkisi
+        cv.poly([(px_ - 0.2 * cam.s, py_), (px_ + 0.2 * cam.s, py_), (px_ + 0.15 * cam.s, py_ + 0.35 * cam.s), (px_ - 0.15 * cam.s, py_ + 0.35 * cam.s)], (200, 100, 70), INK, ow)
+        for k_ in range(5):
+            a_ = math.radians(200 + k_ * 35)
+            cv.ellipse(px_ + math.cos(a_) * 0.3 * cam.s, py_ + math.sin(a_) * 0.4 * cam.s - 0.1 * cam.s, 0.17 * cam.s, 0.08 * cam.s, (70, 160, 85), INK, ow * 0.7, rot=a_ + 1.2)
         tx, ty = cam.x(-2.6), cam.y(1.2)
         cv.poly([(tx - 0.8 * cam.s, ty), (tx + 0.8 * cam.s, ty), (tx + 0.8 * cam.s, ty + 0.12 * cam.s), (tx - 0.8 * cam.s, ty + 0.12 * cam.s)], (160, 110, 70), INK, ow)
         for sg in (-1, 1):

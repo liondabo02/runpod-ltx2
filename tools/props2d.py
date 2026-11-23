@@ -108,11 +108,12 @@ def draw_fx(cv, cam, kind, wx, wy, t, lt):
     ow = _o(cam); s = cam.s
     if kind == "burst" and lt < 1.6:
         k = min(1.0, lt / 0.25) * (1.0 - max(0.0, (lt - 1.0) / 0.6))
-        x, y = cam.x(wx), cam.y(wy)
+        se = min(s, 300.0)
+        x, y = cam.x(wx) + 0.55 * se, cam.y(wy) - 0.1 * se
         pts = []
         for i in range(16):
             a = i * math.pi / 8
-            r = (0.42 if i % 2 == 0 else 0.2) * s * k
+            r = (0.32 if i % 2 == 0 else 0.15) * se * k
             pts.append((x + math.cos(a) * r, y + math.sin(a) * r))
         cv.poly(pts, (255, 235, 70), INK, ow)
     elif kind == "stars":
