@@ -2,6 +2,10 @@
 import json, os, re
 import shot_motion as sm
 import props2d
+try:
+    import mood_engine
+except ImportError:
+    mood_engine = None
 
 SCENE_RULES = [("stage", r"sahne|stand-?up|tiyatro|stage|mikrofon|konser"), ("water", r"göl|gol\b|nehir|dere|deniz|su kenar|lake|river|sea|pond"), ("path", r"koridor|yol\b|patika|rüzgar|ruzgar|corridor|path|road|tepe|hill"), ("roof", r"çatı|cati|roof|tavan"), ("room", r"oda|ev\b|mutfak|salon|room|house|kitchen|sınıf"),
                ("village", r"köy|koy\b|mahalle|sokak|meydan|çarşı|carsi|pazar|village|street|square|market"),
@@ -71,7 +75,8 @@ def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
             continue
         cast = [c for c in b.get("characters", []) if c in out["characters"]]
         lines = [{"char": it["char"], "start": ts + it["start_s"], "end": ts + it["start_s"] + float(it["duration_s"]),
-                  "cues": load_cues(episode_dir, it)} for it in items if it["beat"] == bi and it["char"] in out["characters"]]
+                  "cues": load_cues(episode_dir, it), "mood": mood_engine.mood_for(it.get("text")) if mood_engine else "neutral"}
+                 for it in items if it["beat"] == bi and it["char"] in out["characters"]]
         for l in lines:
             if l["char"] not in cast:
                 cast.append(l["char"])
@@ -97,6 +102,7 @@ def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
         out["beats"].append({"i": bi, "t_start": ts, "t_end": te, "scene": scene_type(b.get("location"), bible.get("locations")),
                              "cast": cast, "motion": mot, "lines": lines, "camera": preset, "focus": focus,
                              "loc": b.get("location"), "light": b.get("light_time", ""), "shot_id": b.get("shot_id"),
+                             "mood": (mood_engine.mood_for(b.get("action", ""), (b.get("emotion") or {}).get("valence")) if mood_engine else "neutral"),
                              "icons": _icons(b.get("action", "")), "scene_id": b.get("scene_id"),
                              "first_of_scene": bi == 0 or sheet["beats"][bi - 1].get("scene_id") != b.get("scene_id"),
                              "props": props2d.extract(str(b.get("action", "")) + " " + str(b.get("camera", ""))),

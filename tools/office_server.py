@@ -102,8 +102,8 @@ class H(BaseHTTPRequestHandler):
         self.send_response(code); self.send_header("Content-Type", "application/json; charset=utf-8"); self.send_header("Content-Length", str(len(b))); self.end_headers(); self.wfile.write(b)
     def do_GET(self):
         u = urlparse(self.path)
-        if u.path in ("/", "/index.html"):
-            b = open(os.path.join(ROOT, "studio", "office", "index.html"), "rb").read()
+        if u.path in ("/", "/index.html", "/insan"):
+            b = open(os.path.join(ROOT, "studio", "office", "index_insan.html" if u.path == "/insan" else "index.html"), "rb").read()
             self.send_response(200); self.send_header("Content-Type", "text/html; charset=utf-8"); self.send_header("Content-Length", str(len(b))); self.end_headers(); self.wfile.write(b)
         elif u.path == "/api/status": self._json(status())
         elif u.path == "/api/report":

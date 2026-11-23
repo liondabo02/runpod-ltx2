@@ -142,6 +142,10 @@ def scene_back(cv, kind, cam, t=0.0, seed=1):
             cx, cy = cam.x(wx, 0.15), cam.y(3.2 + (i % 3) * 0.45)
             for dx, k in ((-0.5, 0.7), (0, 1.0), (0.55, 0.75)):
                 cv.ellipse(cx + dx * cam.s * 0.5, cy, 0.38 * cam.s * k, 0.2 * cam.s * k, (255, 255, 255), None, 0)
+        for i in range(-14, 15):                                                    # en uzak ağaç hattı: soluk silüet (atmosferik derinlik)
+            fx_ = cam.x(i * 1.15, 0.12); fy_ = cam.y(1.2)
+            rr_ = (0.34 + 0.08 * ((i * 5) % 3)) * cam.s
+            cv.ellipse(fx_, fy_ - rr_ * 0.6, rr_, rr_ * 0.95, (150, 196, 170), None, 0)
         hills(cv, cam, 1.15, 0.5, (160, 212, 150), 0.25, 3)
         hills(cv, cam, 1.05, 0.35, (125, 196, 120), 0.45, 5)
         for i, wx in enumerate((-11, -7.5, -4.2, -1.0, 2.4, 5.8, 9.2, 12.5)):
@@ -254,9 +258,22 @@ def birds(cv, cam, t):
         cv.line([(x - w, y + fl), (x, y), (x + w, y + fl)], INK, max(2, int(0.02 * cam.s)))
 
 
+def _grass_fringe(cv, cam, t):
+    """Kadrajın altında öndeki çim otları: derinlik hissi ve çerçeveleme (karakterlerin önünden geçer)."""
+    s = cam.s
+    for i in range(-40, 41):
+        x = cam.x(i * 0.22)
+        sw = math.sin(t * 1.4 + i * 0.7) * 0.025 * s
+        hgt = (0.16 + 0.10 * ((i * 7) % 4) / 3.0) * s
+        col = ((52, 128, 56), (66, 148, 62), (40, 108, 52))[i % 3]
+        cv.poly([(x - 0.05 * s, H + 4), (x + sw, H - hgt), (x + 0.05 * s, H + 4)], col, None, 0)
+
+
 def scene_front(cv, kind, cam, t=0.0):
     if kind in ("garden", "path", "water", "village"):
         birds(cv, cam, t)
+    if kind in ("garden", "path", "water") and cam.z < 2.4:
+        _grass_fringe(cv, cam, t)
     if kind in ("garden", "path", "water") and cam.z < 1.8:
         ow = max(1.6, 0.012 * cam.s)
         for wx, wy, r in ((-3.0, -0.95, 0.75), (3.1, -1.0, 0.7), (-4.8, -0.8, 0.5), (4.9, -0.8, 0.5)):   # ön plan katmanı (derinlik)

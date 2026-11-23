@@ -134,11 +134,18 @@ def derive_design(ch, spec):
 
 
 # ---------------------------------------------------------------- ağız şekilleri (Rhubarb A-H, X)
-def draw_mouth(cv, mx, my, mw, mh, letter, ol=INK):
+def draw_mouth(cv, mx, my, mw, mh, letter, ol=INK, emo="neutral"):
     dark, tongue = (110, 30, 45), (235, 110, 120)
     L = letter if letter in "ABCDEFGHX" else "X"
     if L == "X":
-        cv.line(cv.arc_pts(mx, my - mh * 0.4, mw * 0.5, mh * 0.55, 0.2, math.pi - 0.2), ol, 3.2); return
+        if emo == "sad":        # somurtma: ağız aşağı kıvrık
+            cv.line(cv.arc_pts(mx, my + mh * 0.55, mw * 0.4, mh * 0.45, math.pi + 0.3, 2 * math.pi - 0.3), ol, 3.2); return
+        if emo == "angry":      # sıkılı dudak
+            cv.line([(mx - mw * 0.4, my + mh * 0.1), (mx + mw * 0.4, my + mh * 0.1)], ol, 4.0); return
+        if emo == "sly":        # yan sırıtma
+            cv.line([(mx - mw * 0.35, my + mh * 0.12), (mx + mw * 0.05, my + mh * 0.2), (mx + mw * 0.45, my - mh * 0.1)], ol, 3.4); return
+        k = 0.8 if emo in ("happy", "laugh") else 0.55
+        cv.line(cv.arc_pts(mx, my - mh * 0.4, mw * (0.62 if emo in ("happy", "laugh") else 0.5), mh * k, 0.2, math.pi - 0.2), ol, 3.2); return
     if L == "A":
         cv.line([(mx - mw * 0.42, my), (mx + mw * 0.42, my)], ol, 3.6); return
     shapes = {"B": (0.50, 0.30), "C": (0.60, 0.62), "D": (0.78, 0.95), "E": (0.45, 0.55), "F": (0.26, 0.40), "G": (0.55, 0.32), "H": (0.60, 0.70)}
@@ -351,7 +358,9 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         # kaş
         by_ = eye_y - ery * 1.45
         slope = {"angry": -0.65, "sly": -0.25, "sad": 0.55, "surprise": 0.0, "laugh": -0.1}.get(emo, 0.08)
-        lift = (-ery * 0.35 if emo == "surprise" else 0) - ery * 0.5 * st.get("brow", 0)
+        lift = (-ery * 0.35 if emo == "surprise" else (-ery * 0.28 if emo in ("curious", "happy") else 0)) - ery * 0.5 * st.get("brow", 0)
+        if emo == "curious" and sg > 0:
+            lift -= ery * 0.25          # tek kaş daha yukarıda (merak)
         p0 = (cx - rx * 0.9, by_ + lift + slope * sg * rx * -1 * 0.5); p1 = (cx + rx * 0.9, by_ + lift + slope * sg * rx * 0.5)
         bw_ = ow * 1.7 * des.get("brow_w", 1.0); bs_ = des.get("brow_shape", "flat")
         if bs_ == "arched":
@@ -399,7 +408,7 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
     mouth_letter = st.get("mouth", "X")
     if emo == "laugh" and mouth_letter == "X":
         mouth_letter = "D"
-    draw_mouth(cv, hx + face * head_w * 0.20, head_cy + head_h * 0.26, head_w * 0.26 * des.get("mouth_w", 1.0), head_h * 0.16, mouth_letter)
+    draw_mouth(cv, hx + face * head_w * 0.20, head_cy + head_h * 0.26, head_w * 0.26 * des.get("mouth_w", 1.0), head_h * 0.16, mouth_letter, INK, emo)
     if des.get("dimple"):
         cv.line(cv.arc_pts(hx + face * head_w * 0.14 + head_w * 0.17, head_cy + head_h * 0.27, head_w * 0.03, head_h * 0.03, -1.2, 1.2), shade(skin, 0.6), 2.4)
     # ---- saç (ön)

@@ -74,9 +74,11 @@ def frame(plan, designs, t, bible_chars=None):
         return None
     lt, dur = t - beat["t_start"], beat["t_end"] - beat["t_start"]
     speaker, letters = None, {}
+    spk_mood = {}
     for ln in beat["lines"]:
         if ln["start"] <= t < ln["end"]:
             speaker = ln["char"]
+            spk_mood[ln["char"]] = ln.get("mood", "neutral")
             letters[ln["char"]] = letter_window(ln["cues"], t - ln["start"], 1.0 / float(plan.get("fps", 12))) if ln["cues"] else "CBDX"[int(t * 9) % 4]
     items, xs = [], []
     sp_cues = next((ln["cues"] for ln in beat["lines"] if ln["char"] == speaker and ln["start"] <= t < ln["end"]), [])
@@ -143,6 +145,9 @@ def frame(plan, designs, t, bible_chars=None):
             pass
     for cid, d, p, m, look, e in sorted(items, key=lambda it: it[2]["x"]):
         emo = EMO.get(m["kind"], "neutral")
+        mood_ = spk_mood.get(cid) or beat.get("mood", "neutral")
+        if emo == "neutral" and mood_ != "neutral":
+            emo = mood_
         slot = int(t / 1.6 + m["seed"])
         dart = (_hash(slot, m["seed"], 3) - 0.5) * 1.4
         st = {"mouth": letters.get(cid, "X"), "blink": blink_at(t, m["seed"]), "emotion": emo,
