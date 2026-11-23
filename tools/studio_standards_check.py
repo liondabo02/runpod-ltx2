@@ -90,6 +90,17 @@ def check(series_id, episode):
         gate("kurgu: ortalama çekim (gerçek kesme)", eff <= 6.0, {"ortalama_sn": round(eff, 2), "vuruş_ort_sn": round(sum(durs) / len(durs), 2), "kesme_sayısı": cuts}, "<= 6 sn")
         enr = sum(1 for b in sheet["beats"] if (b.get("enrichment") or {}).get("added"))
         gate("senaryo zenginleştirme", enr >= 0.5 * len(sheet["beats"]), {"zenginleşen_çekim": enr, "toplam": len(sheet["beats"])}, ">= %50 çekim")
+        n = max(1, len(sheet["beats"]))
+        lt = sum(1 for b in sheet["beats"] if str(b.get("light_time") or "").strip())
+        gate("görsel yönetmen: ışık bilgisi", lt >= 0.9 * n, {"ışık_yazılı_çekim": lt, "toplam": n}, ">= %90 çekimde ışık/saat yazılı (docs/GORSEL_YONETMEN_KURALLARI.md)")
+        try:
+            import shot_planner as _sp
+            bad = [b.get("location") for b in sheet["beats"] if str(b.get("location") or "").startswith("home_") and _sp.scene_type(b.get("location"), bible.get("locations")) != "room"]
+        except Exception:
+            bad = ["kontrol_edilemedi"]
+        gate("görsel yönetmen: iç mekân tutarlılığı", not bad, {"iç_mekân_dışarı_çizilen": bad[:5]}, "home_* mekânlar iç mekân çizilir")
+        cams = sum(1 for b in sheet["beats"] if str(b.get("camera") or "").strip())
+        gate("görsel yönetmen: kamera planı", cams >= 0.9 * n, {"kamera_yazılı_çekim": cams, "toplam": n}, ">= %90 çekimde kamera planı")
     fid = _jl(os.path.join(ep, "script_fidelity.json"))
     if fid: gate("senaryo sadakati", fid.get("coverage", 0) >= 0.85, {"kapsam": fid.get("coverage")}, ">= 0.85")
     rep = {"episode": episode, "status": "PASS" if all(g["status"] == "PASS" for g in gates) else "NEEDS_WORK", "gates": gates,
