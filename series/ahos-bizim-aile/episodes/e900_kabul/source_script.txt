@@ -1,0 +1,14 @@
+Harun ve Aden park yolunda yürür. Harun yerdeki şişeyi gösterir; Aden şişeye doğru yürür.
+harun: Aden, bak! Yerde bir şişe var. | aden: Ben alırım!
+
+Aden eğilir ve şişeyi yerden alır.
+aden: Tuttum!
+
+Aden şişeyi taşıyarak çöp kutularına yürür; Harun yanında yürür ve ona bakar.
+aden: Çöp kutusuna götürüyorum! | harun: Aferin sana!
+
+Çöp kutusunun yanında Aden şişeyi Harun'a uzatır. Harun alır ve şaşırır: şişe ağır, içinde su var.
+aden: Al, sen at! | harun: Aa! İçinde su var!
+
+Harun şişeyi çöp kutusuna atar. Aden güler ve el çırpar.
+harun: Çöpler çöp kutusuna! | aden: Hihi! Aferin bana!

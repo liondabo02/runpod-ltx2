@@ -22,7 +22,7 @@ KINDS = [  # öncelik sırasıyla (ilk eşleşen kazanır)
     ("walk", r"yürü|git|gider|gel|yaklaş|ilerle|in(er|ip)\b|dolaş|takip|çık|geç|tırman|süzül|yuvarlan|peşin"),
 ]
 KIND_RE = [(k, re.compile(p, re.I)) for k, p in KINDS]
-SPEED = {"run": 3.0, "walk": 1.6}
+SPEED = {"run": 3.0, "walk": 1.6, "carry": 1.4}
 
 
 def classify(text):
@@ -91,6 +91,9 @@ except Exception:       # profil yoksa varsayılan davranış
 
 def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
     prof = _stp.current() if _stp else {"gait": True, "speak_acting": True, "energy": 1.0}
+    carry = (kind == "carry")                          # nesne taşıyarak yürüme: yürüyüş + kollar önde, daha ağır adım
+    if carry:
+        kind = "walk"
     p = base_pose(x0)
     p["sq"] = 1.0
     ph = 0.0 if dur <= 0 else min(1.0, max(0.0, t / dur))
@@ -117,7 +120,24 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
         direction = 1.0 if x1 >= x0 else -1.0
         moving = ph < 0.85
         p["yaw"] = direction * (0.75 if moving else 0.2)
-        sw = math.sin(W * f * t) if moving else 0.0
+        # ADIM = KAT EDİLEN MESAFE: temas eden ayak dünyada sabit kalır (ayak kayması yok). Faz süreden değil gidilen yoldan gelir.
+        run_ = (kind == "run")
+        D = (1.05 if run_ else 0.62) * H * (0.88 if kid else 1.0) * (0.85 if pers == 2 else 1.0)      # bir adım çevrimi (sol+sağ) boyu, m
+        stance = 0.38 if run_ else 0.62
+        total = abs(x1 - x0)
+        D = total / max(1, round(total / D)) if total > 1e-6 else D                                    # yol, tam sayıda çevrime bölünür: duruşta iki ayak da yerde biter
+        a_ = stance * D / 2.0                                                                         # temas ayağının gövdeye göre ±uzaklığı, m
+        dpath = abs(p["x"] - x0)
+        for key, off_ in (("L", 0.0), ("R", 0.5)):
+            th = (dpath / D + off_) % 1.0
+            if th < stance:
+                fo = a_ - 2 * a_ * (th / stance); lf = 0.0
+            else:
+                u = (th - stance) / (1 - stance); fo = -a_ + 2 * a_ * (0.5 - 0.5 * math.cos(math.pi * u))
+                lf = math.sin(math.pi * u) * (0.18 if run_ else 0.10) * H
+            p["f" + key] = direction * fo / H          # H'ye göre oran (puppet piksele çevirir)
+            p["h" + key] = lf / H
+        sw = math.sin(W * (dpath / D))
         p["lL"], p["lR"] = -amp * sw, amp * sw
         for side, sg in (("L", 1), ("R", -1)):
             arm_fwd(p, side, sg * amp * 0.7 * sw + (0.5 if kind == "run" else 0.0))
@@ -125,6 +145,10 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
         p["z"] = abs(sw) * (0.02 if kind == "walk" else 0.07) * H
         p["sq"] = 1.0 - (0.03 if kind == "walk" else 0.07) * (1.0 - abs(sw))            # adım temasında hafif ezilme
         p["lean"] = 0.04 if kind == "walk" else 0.20
+        if carry:
+            for side_ in "LR":
+                arm_fwd(p, side_, 0.95); arm_out(p, side_, 0.30)
+            p["lean"] = -0.05; p["head"][0] += 0.10
         if moving:
             p["z"] += abs(sw) * H * (0.025 if kid else 0.0) + (abs(sw) * H * 0.03 if pers == 3 else 0.0)     # sekme
             p["yaw"] += direction * 0.07 * sw * (2.0 if pers == 1 else 1.0)                                # omuz/kalça salınımı

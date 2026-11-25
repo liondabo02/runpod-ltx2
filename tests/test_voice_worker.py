@@ -7,7 +7,8 @@ def fake_tts(text, voice, rate, pitch, out):
     dur = max(0.4, len(text) * 0.06)
     with wave.open(out, "wb") as w:
         w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000)
-        w.writeframes(b"".join(struct.pack("<h", int(3000 * math.sin(i / 20))) for i in range(int(16000 * dur))))
+        n = int(16000 * dur); fd = 800                      # gerçek TTS gibi: uçlarda yumuşak giriş/çıkış (ses denetimi kesik dosyayı reddeder)
+        w.writeframes(b"".join(struct.pack("<h", int(3000 * math.sin(i / 20) * min(1.0, i / fd, (n - i) / fd))) for i in range(n)))
 
 
 def fake_vis(wav, out):
@@ -86,3 +87,15 @@ class TestExpressive(unittest.TestCase):
         self.assertNotEqual(a, b)
         r, p = v.expressive("x", "+0%", "+0Hz", 3)
         self.assertTrue(r.endswith("%") and p.endswith("Hz"))
+
+
+class TGuard(unittest.TestCase):
+    def test_silent_tts_is_not_success(self):
+        def silent(text, voice, rate, pitch, out):
+            with wave.open(out, "wb") as w:
+                w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000); w.writeframes(b"\x00\x00" * 32000)
+        d = tempfile.mkdtemp(); json.dump(sheet(["pelin: Bak bakalım"]), open(os.path.join(d, "beat_sheet.json"), "w"))
+        m = vw.run(d, BIBLE, silent, fake_vis)
+        self.assertNotEqual(m["status"], "PASSED"); self.assertEqual(m["lines"], 0)
+        self.assertTrue(any("SESSİZ" in p for p in m["problems"]))
+        self.assertEqual(m["lang"], "tr")

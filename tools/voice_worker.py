@@ -211,6 +211,11 @@ def run(episode_dir, bible, tts=tts_real, visemes=visemes_real, margin=0.3, lang
             wav = os.path.join(adir, name + ".wav"); vj = os.path.join(vdir, name + ".json")
             try:
                 tts(text, voice, rate, pitch, wav)
+                import audio_qa                            # HAM TTS çıktısı denetlenir (cila uçlara fade ekler, kesilmeyi gizler)
+                _x, _sr = audio_qa.read_wav(wav)
+                _bad, _st = audio_qa.validate_speech(_x, _sr, text, lang)
+                if _bad:                                   # sessiz/kesik/eksik/clipping dosya BAŞARILI sayılmaz
+                    problems.append(f"beat[{bi}] {cid}: ses denetimi: {'; '.join(_bad)}"); continue
                 try:                                   # baş/son sessizliği kırp + seviye eşitle (ölü boşluk ve kayık senkron kaynağı)
                     import audio_polish
                     audio_polish.polish_wav(wav)
@@ -231,7 +236,7 @@ def run(episode_dir, bible, tts=tts_real, visemes=visemes_real, margin=0.3, lang
     status = "PASSED" if items and not problems else "NEEDS_REVISION"
     man = {"stage": "voice+lipsync", "status": status, "cost_eur": 0, "licence_status": "review_required",
            "licence_note": "edge-tts Microsoft hizmet şartlarına bağlı; ticari kullanım sahibin kararına kadar kapalı",
-           "lines": len(items), "problems": problems, "items": items,
+           "lang": lang, "lines": len(items), "problems": problems, "items": items,
            "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds")}
     with open(os.path.join(episode_dir, "voice_manifest.json"), "w", encoding="utf-8") as f:
         json.dump(man, f, ensure_ascii=False, indent=2)

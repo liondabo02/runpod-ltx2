@@ -21,8 +21,8 @@ def _o(cam, ow=None):
     return ow or max(1.6, 0.012 * cam.s)
 
 
-def draw(cv, cam, kind, wx, wy, t, k=0):
-    ow = _o(cam); s = cam.s
+def draw(cv, cam, kind, wx, wy, t, k=0, scale=1.0):
+    ow = _o(cam); s = cam.s * scale
     x, y = cam.x(wx), cam.y(wy)
     if kind == "seed":
         pulse = 0.5 + 0.5 * math.sin(t * 4 + k)

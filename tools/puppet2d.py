@@ -280,7 +280,10 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
             foot = (x0 + sg * torso_w * 0.15, fy - Hh * 0.01 - lift)
             top = (x0, torso_bot)
         else:
-            foot = (x0 + swing * leg_h * 0.22 * sg * 0.3, fy - Hh * 0.01 - lift - max(0, jump))
+            if ("f" + side) in pose:      # mesafeye bağlı adım: temas ayağı dünyada sabit
+                foot = (x0 + pose["f" + side] * Hh, fy - Hh * 0.01 - pose["h" + side] * Hh - max(0, jump))
+            else:
+                foot = (x0 + swing * leg_h * 0.22 * sg * 0.3, fy - Hh * 0.01 - lift - max(0, jump))
         lw = des.get("lowerwear", "shorts"); lc = des.get("lower_color", shorts)
         if lw == "pants":      # yetişkin: bacak tamamen pantolon
             cv.capsule(top, (foot[0], foot[1] - Hh * 0.025), Hh * 0.058, Hh * 0.047, lc, INK, ow)

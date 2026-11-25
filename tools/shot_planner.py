@@ -90,6 +90,11 @@ def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
             if kind == "idle" and i > 0 and lines:
                 kind = "look" if seed % 2 else "idle"
             mot[c] = {"kind": kind, "x0": sl[i], "x1": sm.move_target(kind, sl[i], seed), "seed": seed}
+        ch_ = b.get("choreo") or {}                      # yönetmen koreografisi: açık hareket/hedef/nesne izi/bakış (planlayıcı tahminini ezer)
+        for c_, spec_ in (ch_.get("motion") or {}).items():
+            if c_ in mot:
+                mot[c_] = {"kind": spec_.get("kind", mot[c_]["kind"]), "x0": float(spec_.get("x0", mot[c_]["x0"])),
+                           "x1": float(spec_.get("x1", spec_.get("x0", mot[c_]["x1"]))), "seed": mot[c_]["seed"]}
         cam_text = (b.get("camera") or "").lower()
         preset = "close" if re.search(r"yakın|close|detay", cam_text) else "medium" if re.search(r"orta|omuz|medium", cam_text) \
             else "wide" if re.search(r"genel|geniş|wide", cam_text) else None
@@ -99,13 +104,14 @@ def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
         if preset == "wide" and lines and bi % 3 != 0:
             preset = "medium" if bi % 3 == 1 else "close"
         focus = lines[0]["char"] if lines else (cast[0] if cast else None)
-        out["beats"].append({"i": bi, "t_start": ts, "t_end": te, "scene": scene_type(b.get("location"), bible.get("locations")),
+        out["beats"].append({"i": bi, "t_start": ts, "t_end": te, "scene": b.get("scene_kind") or scene_type(b.get("location"), bible.get("locations")),
                              "cast": cast, "motion": mot, "lines": lines, "camera": preset, "focus": focus,
                              "loc": b.get("location"), "light": b.get("light_time", ""), "shot_id": b.get("shot_id"),
                              "mood": (mood_engine.mood_for(b.get("action", ""), (b.get("emotion") or {}).get("valence")) if mood_engine else "neutral"),
-                             "icons": _icons(b.get("action", "")), "scene_id": b.get("scene_id"),
+                             "choreo": {"objects": ch_.get("objects", []), "gaze": ch_.get("gaze", {}), "react": ch_.get("react", {})},
+                             "icons": (ch_.get("icons", []) if ch_ else _icons(b.get("action", ""))), "scene_id": b.get("scene_id"),
                              "first_of_scene": bi == 0 or sheet["beats"][bi - 1].get("scene_id") != b.get("scene_id"),
-                             "props": props2d.extract(str(b.get("action", "")) + " " + str(b.get("camera", ""))),
+                             "props": ([] if ch_ else props2d.extract(str(b.get("action", "")) + " " + str(b.get("camera", "")))),
                              "fx": props2d.fx_kinds([m_["kind"] for m_ in mot.values()])})
         if out["beats"][-1]["props"] and not lines and bi % 3 == 2 and preset != "close":  # nesne ara planı (kesme)
             out["beats"][-1]["camera"] = "insert"

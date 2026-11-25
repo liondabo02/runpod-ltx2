@@ -1,5 +1,5 @@
 """AHOS 2D kare çizici: plan + poz -> PNG kareleri (çok işlemcili, kaldığı yerden devam)."""
-import json, math, os, sys, time
+import json, math, multiprocessing, os, sys, time
 from concurrent.futures import ProcessPoolExecutor
 from PIL import Image
 
@@ -78,6 +78,67 @@ def emphasis(cues, lt):
     return min(1.0, e)
 
 
+
+def _x_at(px, cid, m):
+    return px.get(cid, m["x1"])
+
+
+def _hold_pos(cid, items, designs, beat, lt):
+    """Nesnenin bir karakterin elindeki dünya konumu: gövde önünde, karşıdaki kişiye doğru hafif yanda (el-nesne teması)."""
+    for cid_, d_, p_, m_, _lk, _e in items:
+        if cid_ == cid:
+            H = d_["height"]
+            others = [q["x"] for c2, _d, q, _m, _l, _e2 in items if c2 != cid]
+            side = 1.0 if (others and others[0] > p_["x"]) else -1.0
+            if m_["kind"] in ("walk", "carry", "run") and abs(m_["x1"] - m_["x0"]) > 0.05:
+                side = 1.0 if m_["x1"] > m_["x0"] else -1.0
+            reach = 0.14 + (0.10 if m_["kind"] == "reach" else 0.0)
+            return p_["x"] + side * (reach + 0.10) * H, p_["z"] + 0.12 * H, H          # nesne gövde yanında, belde (yüze/ağza değil)
+    return None
+
+
+def _draw_objects(cv, cam, beat, items, designs, lt):
+    """Koreografideki nesne izi: yerde -> elde (A) -> el değiştirme (yay çizerek) -> elde (B) -> yerde/çöp kutusunda. Sahiplik anahtar karelerle açık."""
+    for ob in (beat.get("choreo") or {}).get("objects", []):
+        tr = ob.get("track") or []
+        if not tr:
+            continue
+        def pos(kf):
+            if kf.get("holder"):
+                h = _hold_pos(kf["holder"], items, designs, beat, lt)
+                return (h[0], h[1], h[2]) if h else (0.0, 0.0, 1.0)
+            at = kf["at"]
+            if isinstance(at, str):                       # adlandırılmış hedef (örn. bin_green): konum çizimle aynı sabitten gelir
+                at = setpieces2d.TARGETS[at]
+            return (at[0], at[1], 1.0)
+        k0 = tr[0]; k1 = tr[-1]
+        for a, b in zip(tr, tr[1:]):
+            if a["t"] <= lt <= b["t"]:
+                k0, k1 = a, b
+                break
+        else:
+            k0 = k1 = tr[0] if lt < tr[0]["t"] else tr[-1]
+        pa, pb = pos(k0), pos(k1)
+        u = 0.0 if k1["t"] == k0["t"] else min(1.0, max(0.0, (lt - k0["t"]) / (k1["t"] - k0["t"])))
+        u = u * u * (3 - 2 * u)
+        moving = (k0.get("holder") != k1.get("holder")) or (k0.get("at") != k1.get("at"))
+        x = pa[0] + (pb[0] - pa[0]) * u; y = pa[1] + (pb[1] - pa[1]) * u + (0.12 * math.sin(math.pi * u) if moving else 0.0)
+        if k1.get("hide") and lt >= k1["t"]:                    # hedefe (örn. çöp kutusuna) varınca nesne kaybolur; kutunun ağzında asılı kalmaz
+            continue
+        H = max(pa[2], pb[2]) if (k0.get("holder") or k1.get("holder")) else 1.0
+        props2d.draw(cv, cam, ob["prop"], x, y, 0.0, 0, scale=ob.get("scale", 0.55))
+
+
+def _head_cropped(cam, x, H):
+    """Başın/saçın/omzun ekran sınırında KISMEN kesilip kesilmediği (tamamen içerde/tamamen dışarıda sorun değil).
+    Çocukta baş büyük (çene ~0.50H), yetişkinde çene ~0.70H; alt kenarda ön plan çimi (y>640) yüzü örter."""
+    hw = 0.30 * H * cam.s; cx = cam.x(x); top = cam.y(H * 1.02); bot = cam.y(H * (0.50 if H < 1.3 else 0.70))
+    inside_x = (cx - hw >= 0) and (cx + hw <= 1280)
+    outside_x = (cx + hw <= 0) or (cx - hw >= 1280)
+    inside_y = (top >= 0) and (bot <= 640)
+    outside_y = bot <= 0 or top >= 720
+    return not ((inside_x and inside_y) or outside_x or outside_y)
+
 def frame(plan, designs, t, bible_chars=None):
     beat = next((b for b in plan["beats"] if b["t_start"] <= t < b["t_end"]), None)
     if beat is None:
@@ -101,15 +162,24 @@ def frame(plan, designs, t, bible_chars=None):
     for cid in beat["cast"]:
         m, d = beat["motion"][cid], designs[cid]
         Hm = d["height"]
-        args = (m["kind"], 0, dur, m["seed"], m["x0"], m["x1"], Hm, Hm * 0.45)
+        rc = ((beat.get("choreo") or {}).get("react") or {}).get(cid)           # yönetmen tepkisi: belirli andan sonra (ör. şaşırma)
+        lte, kind_e = lt, m["kind"]
+        if rc and lt >= float(rc["t"]):
+            lte, kind_e = lt - float(rc["t"]), rc["kind"]
+            m = dict(m); m["kind"] = kind_e; m["x0"] = m["x1"] = _x_at(px, cid, m)
+        args = (kind_e, 0, dur, m["seed"], m["x0"], m["x1"], Hm, Hm * 0.45)
         spk = (cid == speaker)
-        p = sm.pose_at(args[0], lt, *args[2:], speaking=spk)
+        p = sm.pose_at(args[0], lte, *args[2:], speaking=spk)
         # takip (follow-through): kollar gövdeden, kafa da biraz geriden gelir
-        pa = sm.pose_at(args[0], max(0.0, lt - 0.11), *args[2:], speaking=spk)
-        ph_ = sm.pose_at(args[0], max(0.0, lt - 0.05), *args[2:], speaking=spk)
+        pa = sm.pose_at(args[0], max(0.0, lte - 0.11), *args[2:], speaking=spk)
+        ph_ = sm.pose_at(args[0], max(0.0, lte - 0.05), *args[2:], speaking=spk)
         p["aL"], p["aR"], p["head"] = list(pa["aL"]), list(pa["aR"]), list(ph_["head"])
         look = 0.0
-        if speaker and cid != speaker and speaker in px:            # dinleyen konuşana bakar
+        gz = ((beat.get("choreo") or {}).get("gaze") or {}).get(cid)       # yönetmen bakışı: konuşulan kişiye/nesneye
+        if gz in px and gz != cid:
+            look = 1.0 if px[gz] > px[cid] else -1.0
+            p["head"][2] += 0.8 * look
+        elif speaker and cid != speaker and speaker in px:            # dinleyen konuşana bakar
             look = 1.0 if px[speaker] > px[cid] else -1.0
             p["head"][2] += 0.7 * look
         if spk:                                                      # vurgulu hecede baş, kaş, el
@@ -149,7 +219,7 @@ def frame(plan, designs, t, bible_chars=None):
         ix, iy = props2d.place(beat["props"][0], xs, [designs[c]["height"] for c in beat["cast"]], t, lt, dur)
         cam = sc.Cam(ix, max(0.55, min(iy - 0.35, 1.0)), 1.05)      # ek plan: nesne + karakterler birlikte kadrajda (başsız/bacaksız kadraj yok)
     cv = pp.Cv()
-    sc.scene_back(cv, beat["scene"], cam, t)
+    sc.scene_back(cv, beat["scene"], cam, t, light=beat.get("light", ""))
     if preset != "insert":
         setpieces2d.draw(cv, cam, beat.get("loc"), t)
     if bg_art is not None:
@@ -165,6 +235,8 @@ def frame(plan, designs, t, bible_chars=None):
             wx, wy = props2d.place(kind, xs, [designs[c]["height"] for c in beat["cast"]], t, lt, dur)
             props2d.draw(cv, cam, kind, wx, wy, t, k_)
     for cid, d, p, m, look, e in sorted(items, key=lambda it: it[2]["x"]):
+        if preset in ("close", "xclose") and cid != focus and _head_cropped(cam, p["x"], d["height"]):
+            continue                                        # yakın planda odak dışı karakterin yüzü kenarda yarım kesilecekse çizilmez (kazara kesik yüz yok)
         emo = EMO.get(m["kind"], "neutral")
         mood_ = spk_mood.get(cid) or beat.get("mood", "neutral")
         if emo == "neutral" and mood_ != "neutral":
@@ -176,6 +248,7 @@ def frame(plan, designs, t, bible_chars=None):
         pp.draw_character(cv, d, p, st, cam.x(p["x"]), cam.y(0.0), cam.s, t)
     if xs:
         fx_layer.icons(cv, cam, beat, xs, [designs[c]["height"] for c in beat["cast"]], t, lt)
+    _draw_objects(cv, cam, beat, items, designs, lt)
     for k_, kind in enumerate(beat.get("props") or []):
         if kind in BACK_PROPS:
             continue
@@ -300,6 +373,11 @@ def _work(args):
     f, path, fps = args
     if valid_png(path):
         return 0
+    if os.environ.get("AHOS_TEST_FAULT") and multiprocessing.current_process().name != "MainProcess":   # yalnız testler: gerçek işçi ölümü / takılma
+        if os.environ["AHOS_TEST_FAULT"] == "crash":
+            os._exit(3)
+        if os.environ["AHOS_TEST_FAULT"] == "hang":
+            time.sleep(60)
     im = frame(_G["plan"], _G["des"], f / float(fps))
     if im is None:
         return 0

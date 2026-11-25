@@ -127,7 +127,7 @@ def _village(cv, cam, t, ow):
         cv.poly([(x, fy - 0.45 * s), (x + 0.12 * s, fy - 0.45 * s), (x + 0.12 * s, fy), (x, fy)], (225, 200, 160), INK, ow * 0.6)
 
 
-def scene_back(cv, kind, cam, t=0.0, seed=1):
+def scene_back(cv, kind, cam, t=0.0, seed=1, light=""):
     ow = max(1.6, 0.012 * cam.s)
     rnd = random.Random(seed)
     if kind == "stage":
@@ -170,7 +170,8 @@ def scene_back(cv, kind, cam, t=0.0, seed=1):
         for i in range(36):
             flower(cv, cam, rnd.uniform(-9, 9), rnd.uniform(-0.1, 1.0), cols[i % 4], t, 1.0)
     elif kind in ("path", "water"):
-        dusk = kind == "path"
+        import re as _re
+        dusk = (kind == "path") and bool(_re.search(r"akşam|gün batım|kızıl|altın|alacakaranlık", str(light or ""), _re.I))      # ışık metni belirler (öğle sahnesi mor gün batımı olmasın)
         gradient(cv, (150, 110, 200) if dusk else (110, 190, 245), (255, 190, 140) if dusk else (215, 240, 255))
         cv.ellipse(cam.x(-2.2, 0.1), cam.y(2.5), 0.7 * cam.s, 0.7 * cam.s, (255, 235, 170), None, 0)
         hills(cv, cam, 1.3, 0.7, (120, 100, 160) if dusk else (150, 205, 170), 0.2, 11)

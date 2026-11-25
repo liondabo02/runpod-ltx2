@@ -42,6 +42,10 @@ def rules_sign(cv, cam, x=0.0, t=0.0):
     cv.line([(cam.x(x - 0.6), cam.y(1.78)), (cam.x(x + 0.6), cam.y(1.78))], (80, 80, 80), max(2.0, 0.012 * cam.s))
 
 
+BIN_X = 1.3
+TARGETS = {"bin_green": (BIN_X, 0.9), "bin_yellow": (BIN_X + 0.55, 0.9), "bin_blue": (BIN_X + 1.1, 0.9)}   # çöp kutusu ağızları (bins() ile aynı sabitten)
+
+
 def bins(cv, cam, x=1.2, t=0.0):
     for k, c in enumerate([(70, 160, 90), (240, 200, 60), (70, 120, 200)]):
         bx = x + k * 0.55
@@ -159,7 +163,7 @@ def park_dressing(cv, cam, x=0.0, t=0.0):
 
 
 PIECES = {
-    "park_slide_zone": [(park_dressing, 0.0), (slide, 1.55)], "park_rules_sign": [(park_dressing, 0.0), (rules_sign, 0.0)], "park_trash_walk": [(park_dressing, 0.0), (bins, 1.3)],
+    "park_slide_zone": [(park_dressing, 0.0), (slide, 1.55)], "park_rules_sign": [(park_dressing, 0.0), (rules_sign, 0.0)], "park_trash_walk": [(park_dressing, 0.0), (bins, BIN_X)],
     "park_flower_bed": [(park_dressing, 0.0), (flower_bed, 0.0)], "park_bike_pedestrian": [(park_dressing, 0.0), (bike_lane, 0.0)], "park_entrance": [(park_dressing, 0.0), (gate, 0.0)],
     "park_family_area": [(park_dressing, 0.0), (picnic, -0.2)], "home_kitchen": [(wall_decor, 0.0), (kitchen, 0.0)], "home_entry_corridor": [(wall_decor, 0.0), (corridor, 0.0)], "home_salon": [(wall_decor, 0.0), (salon, 0.0)],
 }

@@ -1,0 +1,930 @@
+{
+ "version": 1,
+ "owner": "claude-s7",
+ "note": "Yüzde yok; kaç ölçüt doğrulandı sayılır. Kendi dosyası; başka ajanların panolarına yazmaz.",
+ "tasks": [
+  {
+   "id": "A1",
+   "area": "A",
+   "priority": "P0",
+   "title": "Ses motoru araştırması ve seçimi",
+   "state": "çalışılıyor",
+   "current": "Yalnız edge-tts (2 tr-TR ses) kullanılıyor. 'Voice Studio' büyük olasılıkla debpalash/OmniVoice-Studio (AGPL-3.0, ağırlıklar CC-BY-NC) — kurulu değil, depoda bağlantısı yok.",
+   "change": "Resmî belgelerden aday karşılaştırma tablosu; uygun ücretsiz aday varsa izole ortamda kur",
+   "deps": [],
+   "criteria": [
+    {
+     "text": "Voice Studio'nun hangi depo olduğu resmî kaynaktan doğrulandı",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Adaylar: gerçek Türkçe desteği belgelendi",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Kod/ağırlık/ses lisansları ayrı ayrı kaydedildi",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Ticari kullanım şartı kaydedildi",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Donanım ihtiyacı kaydedildi",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Uygun aday izole ortamda kuruldu ya da kurulamama nedeni kaydedildi",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "docs/SES_MOTORU_KARSILASTIRMA.md"
+  },
+  {
+   "id": "A2",
+   "area": "A",
+   "priority": "P0",
+   "title": "Ses adaptörü, karakter ses profili, telaffuz sözlüğü, hata koruması",
+   "state": "bekliyor",
+   "current": "voice_worker edge-tts'e bağlı; karakter başına sabit profil ve telaffuz sözlüğü yok; başarısız ses 'başarılı' sayılma riski denetlenmedi.",
+   "change": "Motor-bağımsız adaptör; profil dosyası; sözlük; cümle bazlı yeniden üretim; boş/yanlış dil/kesik dosyayı reddet",
+   "deps": [
+    "A1"
+   ],
+   "criteria": [
+    {
+     "text": "Motor adaptörü: edge-tts + aday motor aynı arayüzle",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Karakter başına kalıcı profil dosyası",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Telaffuz sözlüğü ve cümle bazlı yeniden üretim",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Sessiz/kesik/yanlış dilli dosya BAŞARISIZ sayılıyor (test)",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Normal, soru, şaşırma, üzüntü, sevinç, özel isim örnekleri üretildi",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "tests/test_voice_guard.py"
+  },
+  {
+   "id": "A3",
+   "area": "A",
+   "priority": "P0",
+   "title": "Ses dinleme değerlendirmesi (A/B örnekler)",
+   "state": "engelli",
+   "current": "Ses hiç dinlenmedi.",
+   "change": "A/B örnek seti hazırla; ASR+seviye+sessizlik ölçümü; insan dinleme formu",
+   "deps": [
+    "A2"
+   ],
+   "criteria": [
+    {
+     "text": "A/B örnekler Harun'a sunuldu",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "ASR geri-okuma metin eksilmesi göstermedi",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "İnsan dinleme sonucu kaydedildi",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "qa/ses_dinleme_formu.md",
+   "blocker": "Ben sesi dinleyemem; doğallık ve duygu kararını insan dinlemesi verecek.",
+   "alternative": "ASR, sessizlik, seviye, kesilme ölçümleri + kısa A/B örnekler hazırlanır."
+  },
+  {
+   "id": "A4",
+   "area": "A",
+   "priority": "P1",
+   "title": "Müzik/SFX lisans kaydı ve konuşma altı otomatik kısma",
+   "state": "bekliyor",
+   "current": "Doğrulanmış lisanslı müzik/SFX varlığı yok.",
+   "change": "Kaynak+lisans kaydı; ducking",
+   "deps": [],
+   "criteria": [
+    {
+     "text": "Her varlık için kaynak ve lisans kaydı",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Konuşma sırasında müzik otomatik kısılıyor (ölçüm)",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Lisansı doğrulanmamış varlık karışıma girmiyor (test)",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "studio/audio/LISANS_KAYDI.json"
+  },
+  {
+   "id": "A5",
+   "area": "A",
+   "priority": "P1",
+   "title": "Sahne olaylarını adım/temas/kapı/nesne seslerine bağlama",
+   "state": "bekliyor",
+   "current": "Olay-ses bağı yok.",
+   "change": "Olay zaman damgasından SFX izi",
+   "deps": [
+    "A4"
+   ],
+   "criteria": [
+    {
+     "text": "Adım, temas, nesne alma/verme olayları SFX izine dönüşüyor",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "SFX zamanlaması olaydan ±2 kare",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "qa/sfx_zaman_testi.json"
+  },
+  {
+   "id": "A6",
+   "area": "A",
+   "priority": "P0",
+   "title": "Ses teknik denetimi: seviye, clipping, anlaşılabilirlik, müzik altında konuşma",
+   "state": "çalışılıyor",
+   "current": "Yalnız ortalama/tepe dB ölçüldü (e900: ort −20,4, tepe −1,1).",
+   "change": "Ayrı clipping, LUFS-benzeri seviye, konuşma/müzik oranı kontrolleri",
+   "deps": [],
+   "criteria": [
+    {
+     "text": "Clipping ayrı kontrol (test: bilerek kırpılmış ses yakalanıyor)",
+     "verified": true,
+     "evidence": "qa/pytest_pc.txt (Windows-11, py3.12.7, 34 passed, 2026-11-25 21:03)"
+    },
+    {
+     "text": "Konuşma/müzik oranı kontrolü",
+     "verified": true,
+     "evidence": "qa/pytest_pc.txt (Windows-11, py3.12.7, 34 passed, 2026-11-25 21:03)"
+    },
+    {
+     "text": "Sessizlik ve kesilme kontrolü",
+     "verified": true,
+     "evidence": "qa/pytest_pc.txt (Windows-11, py3.12.7, 34 passed, 2026-11-25 21:03)"
+    }
+   ],
+   "evidence": "tests/test_audio_qa.py"
+  },
+  {
+   "id": "A7",
+   "area": "A",
+   "priority": "P0",
+   "title": "Dudak senkronu",
+   "state": "bekliyor",
+   "current": "Rhubarb visemeleri var; yakın planda zamanlama/ifade uyumu doğrulanmadı.",
+   "change": "Ağız şekli kontrolü; başlangıç/bitiş/sessizlik; yakın plan sesli örnek",
+   "deps": [
+    "A2"
+   ],
+   "criteria": [
+    {
+     "text": "Ağız şekilleri karakterin gerçek ağız kontrollerine bağlı",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Konuşma başı/sonu/sessizlikte ağız kapanıyor (ölçüm)",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Yakın plan sesli örnek incelendi",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "qa/dudak_senkron.md"
+  },
+  {
+   "id": "B1",
+   "area": "B",
+   "priority": "P0",
+   "title": "Hedef dil listesini yapılandırmadan bul",
+   "state": "doğrulandı",
+   "current": "10 dil hedefi kullanıcı sözünde var; dosyadaki liste henüz doğrulanmadı.",
+   "change": "series-bible/config'te dil listesini ara; yoksa eksik olarak kaydet",
+   "deps": [],
+   "criteria": [
+    {
+     "text": "Dil listesi yapılandırma dosyasından alındı (yol kaydedildi) ya da eksik olduğu kaydedildi",
+     "verified": true,
+     "evidence": "studio/pipeline/languages.json (10 etkin dil: tr,de,es,fr,ar,pt,ru,hi,kmr,en; kmr MMS, ticari değil)"
+    }
+   ],
+   "evidence": "studio/standards/diller.json"
+  },
+  {
+   "id": "B2",
+   "area": "B",
+   "priority": "P1",
+   "title": "Yerelleştirme yapısı, ad sözlüğü, dil etiketi koruması",
+   "state": "bekliyor",
+   "current": "Yalnız İngilizce altyazı dosyası var.",
+   "change": "Ortak yerelleştirme şeması; karakter/yer adı sözlüğü; dil etiketi denetimi",
+   "deps": [
+    "B1"
+   ],
+   "criteria": [
+    {
+     "text": "Çeviri/ses/altyazı/ekran yazısı ortak şema",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Ad sözlüğü",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Türkçe video başka dil etiketiyle teslim edilemiyor (test)",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Uzayan çeviride metin/zamanlama uyarlanıyor (hızlandırma yok)",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "tests/test_localisation.py"
+  },
+  {
+   "id": "B3",
+   "area": "B",
+   "priority": "P1",
+   "title": "İkinci dil kabul örneği (Kapı 3)",
+   "state": "bekliyor",
+   "current": "Yok.",
+   "change": "Kabul sahnesinin ikinci dil sürümü",
+   "deps": [
+    "A2",
+    "B2",
+    "K2"
+   ],
+   "criteria": [
+    {
+     "text": "Seçilen dilde ses+altyazı+dudak doğrulandı",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "series/ahos-bizim-aile/episodes/e900_kabul/lang/"
+  },
+  {
+   "id": "B4",
+   "area": "B",
+   "priority": "P2",
+   "title": "Diğer hedef diller (Kapı 5) ayrı ayrı",
+   "state": "bekliyor",
+   "current": "Yok.",
+   "change": "Her dil için ayrı kabul örneği",
+   "deps": [
+    "B3"
+   ],
+   "criteria": [
+    {
+     "text": "Her hedef dil ayrı doğrulandı veya açıkça 'engelli' işaretlendi",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "studio/standards/diller.json"
+  },
+  {
+   "id": "C1",
+   "area": "C",
+   "priority": "P0",
+   "title": "Ayak kayması ölçümü",
+   "state": "doğrulandı",
+   "current": "Ölçüm aracı yazıldı (tools/foot_slide.py). Eski yürüyüş boyun 0,75–1,2 katı/sn kayıyordu; mesafeye bağlı yeni adım motoru 0 kayma. PC pytest ve kabul sahnesi ölçümü bekliyor.",
+   "change": "Dünya koordinatında temas ayağı hızı; kamera/karakter hareketi ayrık; karakter boyuna göre sınır",
+   "deps": [],
+   "criteria": [
+    {
+     "text": "Bilerek kaydırılan örnek testi BAŞARISIZ",
+     "verified": true,
+     "evidence": "qa/pytest_pc.txt (Windows-11, py3.12.7, 34 passed, 2026-11-25 21:03)"
+    },
+    {
+     "text": "Doğru yürüyüş örneği BAŞARILI",
+     "verified": true,
+     "evidence": "qa/pytest_pc.txt (Windows-11, py3.12.7, 34 passed, 2026-11-25 21:03)"
+    },
+    {
+     "text": "Kabul sahnesi ölçümü raporlandı",
+     "verified": true,
+     "evidence": "e900_kabul plan_0.json yürüyüş vuruşları (beat0 aden walk, beat2 harun walk, beat2 aden carry): p95 kayma 0 H/s (poz hesabı; boy varsayılanı 1.0/1.7 — piksel ölçümü değil)"
+    }
+   ],
+   "evidence": "tests/test_foot_slide.py"
+  },
+  {
+   "id": "C2",
+   "area": "C",
+   "priority": "P1",
+   "title": "Ön/yan/üç-çeyrek dönüş pozları",
+   "state": "bekliyor",
+   "current": "Gövde dönüşü yalnız hafif (yaw*1,25, gövde genişliği −%30).",
+   "change": "Yan/üç-çeyrek poz desteği",
+   "deps": [],
+   "criteria": [
+    {
+     "text": "Ön, yan, üç-çeyrek karede karakter oranı/yüz/kıyafet korunuyor",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Dönüş sırasında sıçrama yok",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "qa/donus_kareleri.png"
+  },
+  {
+   "id": "C3",
+   "area": "C",
+   "priority": "P0",
+   "title": "El–nesne durumları: al, tut, ver, bırak, el değiştirme",
+   "state": "çalışılıyor",
+   "current": "Choreo ile alma/taşıma/verme çalışıyor; şişe konumu bel hizasına indirildi (bulut önizleme).",
+   "change": "Durum makinesi; el değiştirmede sıçrama yok; ağırlık tepkisi",
+   "deps": [],
+   "criteria": [
+    {
+     "text": "Alma/tutma/verme/bırakma durumları testli",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "El değiştirmede nesne sıçramıyor (ölçüm)",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Yeni render karelerinde temas doğrulandı",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "tests/test_object_states.py"
+  },
+  {
+   "id": "C4",
+   "area": "C",
+   "priority": "P1",
+   "title": "Oyunculuk: hazırlık/toparlanma, bakış-kaş-göz-ağız uyumu, döngü ayrışması",
+   "state": "bekliyor",
+   "current": "Yürüyüş kişiliği, konuşma jesti, bakış var; koşma/durma/şaşırma hazırlığı sistemli değil.",
+   "change": "Hareket evreleri; yüz uyumu; döngü fazı kaydırma",
+   "deps": [],
+   "criteria": [
+    {
+     "text": "Koşma/durma/yön değiştirme hazırlık+toparlanma",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Karakterler farklı fazda (ölçüm)",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Temsilî sahnede belirgin duygu tepkisi görüldü",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "qa/oyunculuk_kareleri.png"
+  },
+  {
+   "id": "D1",
+   "area": "D",
+   "priority": "P2",
+   "title": "Bölümün ihtiyaç duyduğu mekânlar",
+   "state": "bekliyor",
+   "current": "Ev ve park dekorları var.",
+   "change": "Önce hedef bölümün mekân listesi",
+   "deps": [
+    "E1"
+   ],
+   "criteria": [
+    {
+     "text": "Bölüm mekân listesi çıkarıldı ve hepsi çizildi",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "studio/standards/mekan_listesi.json"
+  },
+  {
+   "id": "D2",
+   "area": "D",
+   "priority": "P2",
+   "title": "Gece/gündüz/iç mekân ışık-renk ayarları",
+   "state": "bekliyor",
+   "current": "Işık ipucuna bağlı gün batımı ayrımı var.",
+   "change": "Yeniden kullanılabilir ışık presetleri",
+   "deps": [],
+   "criteria": [
+    {
+     "text": "Presetler dosyada, sahneden seçiliyor",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Karakter ölçeği/perspektif tutarlılığı kontrolü",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "tools/style_profile.py"
+  },
+  {
+   "id": "D3",
+   "area": "D",
+   "priority": "P0",
+   "title": "Kadraj sınırı + önceki hatalar için regresyon örnekleri",
+   "state": "çalışılıyor",
+   "current": "_head_cropped var (saç/toka kısmen kesilebiliyor); yeşil oval/şapka kaynakları düzeltildi; regresyon örneği yok. | Yeni bulgu: 34. sn yakın planda tutan karakter çizilmezken şişe havada asılı kaldı → düzeltme kodlandı (_hidden) + regresyon testi; yeniden render DİSK nedeniyle bekliyor. | v7: kesik yüz/saç şeridi/şişe asılı kalması giderildi. Yakın planda odak dışı karakter çizilmiyor → dinleyici tepki planı gerekiyor.",
+   "change": "Aksesuar dahil sınır; kasıtlı kesme ayrımı; yeşil oval, havada şapka, katman sırası testleri",
+   "deps": [],
+   "criteria": [
+    {
+     "text": "Yeşil oval regresyon testi",
+     "verified": true,
+     "evidence": "tests/test_visual_regress.py + tests/test_render_guard.py (bulut: 119→ geçti)"
+    },
+    {
+     "text": "Havada şapka regresyon testi",
+     "verified": true,
+     "evidence": "tests/test_visual_regress.py + tests/test_render_guard.py (bulut: 119→ geçti)"
+    },
+    {
+     "text": "Katman sırası testi",
+     "verified": true,
+     "evidence": "tests/test_visual_regress.py + tests/test_render_guard.py (bulut: 119→ geçti)"
+    },
+    {
+     "text": "Yanlışlıkla kesilen yüz testi (farklı karakter/açı)",
+     "verified": true,
+     "evidence": "tests/test_render_guard.py::test_head_crop_check_includes_hair_and_bottom_edge + v7 render kontrol sayfası (8/11/31 sn: şerit ve kesik yüz yok)"
+    },
+    {
+     "text": "Kasıtlı yakın plan kesmesi ayrı işaretli",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "tests/test_visual_regress.py"
+  },
+  {
+   "id": "E1",
+   "area": "E",
+   "priority": "P1",
+   "title": "Kısa klip ve 8 dk bölüm için ayrı anlatı yapıları",
+   "state": "bekliyor",
+   "current": "Tek yapı.",
+   "change": "İki şablon: amaç-engel-gelişme-sonuç",
+   "deps": [],
+   "criteria": [
+    {
+     "text": "Kısa klip şablonu",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "8 dk bölüm şablonu",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Kontrol aracı amaç/engel/gelişme/sonuç arıyor",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "tools/story_structure.py"
+  },
+  {
+   "id": "E2",
+   "area": "E",
+   "priority": "P2",
+   "title": "Konuşma hızı yapılandırması (yaş/dil/sahne)",
+   "state": "bekliyor",
+   "current": "Sabit kural yok.",
+   "change": "Yapılandırılabilir hız",
+   "deps": [],
+   "criteria": [
+    {
+     "text": "Hız değerleri yapılandırmada",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Evrensel kural olarak kodlanmadı",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "studio/standards/speech_rate.json"
+  },
+  {
+   "id": "E3",
+   "area": "E",
+   "priority": "P0",
+   "title": "Storyboard → geçici ses → animatik → nihai zinciri",
+   "state": "çalışılıyor",
+   "current": "e900_kabul için animatic.mp4 üretildi.",
+   "change": "Zincir kontrolü",
+   "deps": [
+    "A2"
+   ],
+   "criteria": [
+    {
+     "text": "Animatik izlenip olay anlaşılırlığı doğrulandı",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Hedef süre tekrarsız karşılandı",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "series/ahos-bizim-aile/episodes/e900_kabul/animatic.mp4"
+  },
+  {
+   "id": "F1",
+   "area": "F",
+   "priority": "P0",
+   "title": "Windows'ta odaklı testler",
+   "state": "doğrulandı",
+   "current": "Pytest yalnız bulutta (105 geçti).",
+   "change": "PC'de kuyruk işi olarak pytest",
+   "deps": [],
+   "criteria": [
+    {
+     "text": "PC'de testler çalıştı ve çıktısı kaydedildi",
+     "verified": true,
+     "evidence": "qa/pytest_pc.txt (Windows-11, py3.12.7, 34 passed, 2026-11-25 21:03)"
+    }
+   ],
+   "evidence": "studio/queue/*.log"
+  },
+  {
+   "id": "F2",
+   "area": "F",
+   "priority": "P0",
+   "title": "Çökme/zaman aşımı/iptal/yeniden başlatma (izole)",
+   "state": "doğrulandı",
+   "current": "Kod ve bulut testleri var; PC'de yalnız normal çalışma doğrulandı.",
+   "change": "İzole test işçisi",
+   "deps": [
+    "F1"
+   ],
+   "criteria": [
+    {
+     "text": "Belleğe göre işçi sayısı (PC gerçek ölçüm)",
+     "verified": true,
+     "evidence": "PC gerçek render: series/.../e900_kabul/render/frames/render_stats.json (workers_start=1, mem_mb=993; önceki koşuda 2 işçi @2438 MB)"
+    },
+    {
+     "text": "Çöken işçi senaryosu PC",
+     "verified": true,
+     "evidence": "qa/pytest_pc.txt (Windows-11, py3.12.7, 34 passed, 2026-11-25 21:03)"
+    },
+    {
+     "text": "Zaman aşımı PC",
+     "verified": true,
+     "evidence": "qa/pytest_pc.txt (Windows-11, py3.12.7, 34 passed, 2026-11-25 21:03)"
+    },
+    {
+     "text": "İptal PC",
+     "verified": true,
+     "evidence": "qa/pytest_pc.txt (Windows-11, py3.12.7, 34 passed, 2026-11-25 21:03)"
+    },
+    {
+     "text": "Yeniden başlatma PC",
+     "verified": true,
+     "evidence": "qa/pytest_pc.txt (Windows-11, py3.12.7, 34 passed, 2026-11-25 21:03)"
+    },
+    {
+     "text": "Yarım/bozuk kare tamamlanmış sayılmıyor (birim testi)",
+     "verified": true,
+     "evidence": "qa/pytest_pc.txt (Windows-11, py3.12.7, 34 passed, 2026-11-25 21:03)"
+    },
+    {
+     "text": "Motor sürümü değişince önbellek geçersiz (birim testi)",
+     "verified": true,
+     "evidence": "PC gerçek render: render_stats.json stale_moved=912 (motor sürümü değişti, eski kareler frames_stale_190055 klasörüne alındı)"
+    },
+    {
+     "text": "İkinci çakışan iş engelleniyor",
+     "verified": true,
+     "evidence": "qa/pytest_pc.txt (Windows-11, py3.12.7, 34 passed, 2026-11-25 21:03)"
+    }
+   ],
+   "evidence": "tests/test_render_guard.py"
+  },
+  {
+   "id": "F3",
+   "area": "F",
+   "priority": "P1",
+   "title": "Kaynak ölçümlerini kaydet: süre, tepe RAM, VRAM, disk, ücret",
+   "state": "bekliyor",
+   "current": "render_stats.json süre/işçi/yeniden deneme tutuyor; tepe RAM/disk yok.",
+   "change": "Ölçüm ekle",
+   "deps": [],
+   "criteria": [
+    {
+     "text": "Süre",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Tepe RAM",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Disk",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Ücretli kullanım=0 kaydı",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "render/frames/render_stats.json"
+  },
+  {
+   "id": "F4",
+   "area": "F",
+   "priority": "P1",
+   "title": "Yalnız kendi dosyalarımı kapsayan commit",
+   "state": "bekliyor",
+   "current": "Choreo/render değişiklikleri commit edilmedi.",
+   "change": "Dosya listesiyle commit",
+   "deps": [],
+   "criteria": [
+    {
+     "text": "Commit yalnız belirtilen dosyaları içeriyor",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "git log"
+  },
+  {
+   "id": "G1",
+   "area": "G",
+   "priority": "P0",
+   "title": "Teknik QA raporu",
+   "state": "doğrulandı",
+   "current": "e900 için ölçüm yapıldı, rapor biçimi ayrı değil.",
+   "change": "Dosya/süre/çözünürlük/kare bütünlüğü/ses/altyazı",
+   "deps": [],
+   "criteria": [
+    {
+     "text": "Rapor üretildi, zaman kodlu",
+     "verified": true,
+     "evidence": "qa/teknik_qa_e900_v3.md"
+    }
+   ],
+   "evidence": "qa/teknik_qa_e900.md"
+  },
+  {
+   "id": "G2",
+   "area": "G",
+   "priority": "P0",
+   "title": "Yaratıcı QA raporu",
+   "state": "bekliyor",
+   "current": "Yok.",
+   "change": "Hikâye/oyunculuk/kadraj/süreklilik/ses/ritim, zaman kodlu",
+   "deps": [],
+   "criteria": [
+    {
+     "text": "Rapor üretildi; değerlendirilemeyen maddeler 'geçti' sayılmadı",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "qa/yaratici_qa_e900.md"
+  },
+  {
+   "id": "G3",
+   "area": "G",
+   "priority": "P1",
+   "title": "Operasyonel QA raporu",
+   "state": "bekliyor",
+   "current": "Yok.",
+   "change": "İstekten teslimata görev dağılımı/hata yönetimi/devam",
+   "deps": [],
+   "criteria": [
+    {
+     "text": "Rapor üretildi",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "qa/operasyonel_qa.md"
+  },
+  {
+   "id": "G4",
+   "area": "G",
+   "priority": "P0",
+   "title": "Önce/sonra karşılaştırması (aynı sahne, aynı ölçüt)",
+   "state": "bekliyor",
+   "current": "Eski: e001_sahne2, yeni: e900_kabul — sahneler FARKLI.",
+   "change": "Aynı sahne için eski ve yeni sürüm",
+   "deps": [],
+   "criteria": [
+    {
+     "text": "Aynı sahne iki sürüm",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Her kusur için zaman kodu/düzeltme/doğrulama/kalan",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "qa/once_sonra.md"
+  },
+  {
+   "id": "K1",
+   "area": "K",
+   "priority": "P0",
+   "title": "Kapı 1: hata senaryoları ve motor bağlantıları",
+   "state": "bekliyor",
+   "current": "—",
+   "change": "—",
+   "deps": [
+    "F2",
+    "A2"
+   ],
+   "criteria": [
+    {
+     "text": "F2 ve A2 doğrulandı",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "—"
+  },
+  {
+   "id": "K2",
+   "area": "K",
+   "priority": "P0",
+   "title": "Kapı 2: 30–60 sn sahne (diyalog, yürüyüş, dönüş, nesne, tepki, dublaj, dudak, SFX)",
+   "state": "bekliyor",
+   "current": "—",
+   "change": "—",
+   "deps": [
+    "K1",
+    "A7",
+    "C1",
+    "C3",
+    "G4"
+   ],
+   "criteria": [
+    {
+     "text": "Kabul sahnesi tüm bileşenlerle tamamlandı",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "—"
+  },
+  {
+   "id": "K3",
+   "area": "K",
+   "priority": "P1",
+   "title": "Kapı 3: ikinci dil sürümü",
+   "state": "bekliyor",
+   "current": "—",
+   "change": "—",
+   "deps": [
+    "K2",
+    "B3"
+   ],
+   "criteria": [
+    {
+     "text": "İkinci dil doğrulandı",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "—"
+  },
+  {
+   "id": "K4",
+   "area": "K",
+   "priority": "P1",
+   "title": "Kapı 4: 8–10 dk bölüm, gerçek süre ve maliyet",
+   "state": "bekliyor",
+   "current": "—",
+   "change": "—",
+   "deps": [
+    "K3"
+   ],
+   "criteria": [
+    {
+     "text": "Bölüm üretildi",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "Gerçek süre ve maliyet ölçüldü",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "—"
+  },
+  {
+   "id": "K5",
+   "area": "K",
+   "priority": "P2",
+   "title": "Kapı 5: diğer diller",
+   "state": "bekliyor",
+   "current": "—",
+   "change": "—",
+   "deps": [
+    "K4",
+    "B4"
+   ],
+   "criteria": [
+    {
+     "text": "Her dil ayrı doğrulandı",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "—"
+  },
+  {
+   "id": "F5",
+   "area": "F",
+   "priority": "P0",
+   "title": "PC disk doluluğu (render ENOSPC ile düştü)",
+   "state": "engelli",
+   "current": "PC diski %100; boş alan ~136 MB. Yeniden render ~800 MB boş alan ister.",
+   "change": "Boş alan açılacak; render çıktısı için en az ~2 GB boş alan şart. Ek: render öncesi boş disk denetimi (ENOSPC'yi erken yakala).",
+   "deps": [],
+   "criteria": [
+    {
+     "text": "Render başlamadan boş disk denetimi (yetersizse net hata)",
+     "verified": false,
+     "evidence": ""
+    },
+    {
+     "text": "PC'de en az 5 GB boş alan",
+     "verified": false,
+     "evidence": ""
+    }
+   ],
+   "evidence": "studio/queue/z2_render_e900_v3.log",
+   "blocker": "PC diski %100 dolu; benim silme iznim yok ve içeriğin çoğu bana ait değil.",
+   "alternative": "Bulutta geliştirmeye ve testlere devam; PC'ye yazma ve render disk açılınca."
+  }
+ ]
+}

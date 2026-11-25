@@ -1,0 +1,347 @@
+{
+ "schema": "ahos.beat_sheet.v1",
+ "status": "ACCEPTANCE_SCENE_DESIGNED",
+ "series_id": "ahos-bizim-aile",
+ "title": "Kabul Sahnesi — Şişeyi Çöpe Götür",
+ "logline": "Aden yerdeki şişeyi alır, çöp kutusuna taşır, Harun'a verir; şaşırma ve gülme.",
+ "total_seconds": 38.0,
+ "beats": [
+  {
+   "t_start": 0,
+   "t_end": 8,
+   "scene_id": "SC01",
+   "location": "park_trash_walk",
+   "light_time": "öğle öncesi, güneş yüksek, gölgeler kısa, sıcak ve parlak",
+   "characters": [
+    "harun",
+    "aden"
+   ],
+   "action": "Harun ve Aden park yolunda yürür. Harun yerdeki şişeyi gösterir; Aden şişeye doğru yürür.",
+   "dialogue": "harun: Aden, bak! Yerde bir şişe var. | aden: Ben alırım!",
+   "emotion": {
+    "valence": 0.6,
+    "arousal": 0.5,
+    "intensity": 0.6
+   },
+   "camera": "geniş",
+   "sound": "ortam sesi: kuş, hafif rüzgâr; adım",
+   "safety_note": "",
+   "shot_id": "sc01_sh01",
+   "choreo": {
+    "motion": {
+     "harun": {
+      "kind": "idle",
+      "x0": 0.0
+     },
+     "aden": {
+      "kind": "walk",
+      "x0": -0.3,
+      "x1": -1.3
+     }
+    },
+    "objects": [
+     {
+      "prop": "bottle",
+      "track": [
+       {
+        "t": 0,
+        "at": [
+         -1.3,
+         0.0
+        ]
+       },
+       {
+        "t": 8,
+        "at": [
+         -1.3,
+         0.0
+        ]
+       }
+      ]
+     }
+    ],
+    "gaze": {
+     "harun": "aden"
+    },
+    "icons": []
+   },
+   "enrichment": {
+    "status": "NONE"
+   },
+   "scene_kind": "garden"
+  },
+  {
+   "t_start": 8,
+   "t_end": 13,
+   "scene_id": "SC01",
+   "location": "park_trash_walk",
+   "light_time": "öğle öncesi, güneş yüksek, gölgeler kısa, sıcak ve parlak",
+   "characters": [
+    "harun",
+    "aden"
+   ],
+   "action": "Aden eğilir ve şişeyi yerden alır.",
+   "dialogue": "aden: Tuttum!",
+   "emotion": {
+    "valence": 0.6,
+    "arousal": 0.5,
+    "intensity": 0.6
+   },
+   "camera": "yakın",
+   "sound": "ortam sesi: kuş, hafif rüzgâr; adım",
+   "safety_note": "",
+   "shot_id": "sc01_sh02",
+   "choreo": {
+    "motion": {
+     "harun": {
+      "kind": "idle",
+      "x0": 0.6
+     },
+     "aden": {
+      "kind": "reach",
+      "x0": -1.3,
+      "x1": -1.3
+     }
+    },
+    "objects": [
+     {
+      "prop": "bottle",
+      "track": [
+       {
+        "t": 0,
+        "at": [
+         -1.3,
+         0.0
+        ]
+       },
+       {
+        "t": 1.6,
+        "at": [
+         -1.3,
+         0.0
+        ]
+       },
+       {
+        "t": 2.8,
+        "holder": "aden"
+       },
+       {
+        "t": 5,
+        "holder": "aden"
+       }
+      ]
+     }
+    ],
+    "gaze": {
+     "harun": "aden"
+    },
+    "icons": []
+   },
+   "enrichment": {
+    "status": "NONE"
+   },
+   "scene_kind": "garden"
+  },
+  {
+   "t_start": 13,
+   "t_end": 22,
+   "scene_id": "SC01",
+   "location": "park_trash_walk",
+   "light_time": "öğle öncesi, güneş yüksek, gölgeler kısa, sıcak ve parlak",
+   "characters": [
+    "harun",
+    "aden"
+   ],
+   "action": "Aden şişeyi taşıyarak çöp kutularına yürür; Harun yanında yürür ve ona bakar.",
+   "dialogue": "aden: Çöp kutusuna götürüyorum! | harun: Aferin sana!",
+   "emotion": {
+    "valence": 0.6,
+    "arousal": 0.5,
+    "intensity": 0.6
+   },
+   "camera": "geniş",
+   "sound": "ortam sesi: kuş, hafif rüzgâr; adım",
+   "safety_note": "",
+   "shot_id": "sc01_sh03",
+   "choreo": {
+    "motion": {
+     "harun": {
+      "kind": "walk",
+      "x0": -0.4,
+      "x1": 1.4
+     },
+     "aden": {
+      "kind": "carry",
+      "x0": -1.3,
+      "x1": 0.2
+     }
+    },
+    "objects": [
+     {
+      "prop": "bottle",
+      "track": [
+       {
+        "t": 0,
+        "holder": "aden"
+       },
+       {
+        "t": 9,
+        "holder": "aden"
+       }
+      ]
+     }
+    ],
+    "gaze": {
+     "harun": "aden"
+    },
+    "icons": []
+   },
+   "enrichment": {
+    "status": "NONE"
+   },
+   "scene_kind": "garden"
+  },
+  {
+   "t_start": 22,
+   "t_end": 31,
+   "scene_id": "SC01",
+   "location": "park_trash_walk",
+   "light_time": "öğle öncesi, güneş yüksek, gölgeler kısa, sıcak ve parlak",
+   "characters": [
+    "harun",
+    "aden"
+   ],
+   "action": "Çöp kutusunun yanında Aden şişeyi Harun'a uzatır. Harun alır ve şaşırır: şişe ağır, içinde su var.",
+   "dialogue": "aden: Al, sen at! | harun: Aa! İçinde su var!",
+   "emotion": {
+    "valence": 0.6,
+    "arousal": 0.5,
+    "intensity": 0.6
+   },
+   "camera": "orta",
+   "sound": "ortam sesi: kuş, hafif rüzgâr; adım",
+   "safety_note": "",
+   "shot_id": "sc01_sh04",
+   "choreo": {
+    "motion": {
+     "harun": {
+      "kind": "idle",
+      "x0": 1.4,
+      "x1": 1.4
+     },
+     "aden": {
+      "kind": "reach",
+      "x0": 0.2,
+      "x1": 0.2
+     }
+    },
+    "objects": [
+     {
+      "prop": "bottle",
+      "track": [
+       {
+        "t": 0,
+        "holder": "aden"
+       },
+       {
+        "t": 2.0,
+        "holder": "aden"
+       },
+       {
+        "t": 3.4,
+        "holder": "harun"
+       },
+       {
+        "t": 9,
+        "holder": "harun"
+       }
+      ]
+     }
+    ],
+    "gaze": {
+     "aden": "harun",
+     "harun": "aden"
+    },
+    "react": {
+     "harun": {
+      "t": 3.6,
+      "kind": "surprise"
+     },
+     "aden": {
+      "t": 5.2,
+      "kind": "laugh"
+     }
+    },
+    "icons": []
+   },
+   "enrichment": {
+    "status": "NONE"
+   },
+   "scene_kind": "garden"
+  },
+  {
+   "t_start": 31,
+   "t_end": 38,
+   "scene_id": "SC01",
+   "location": "park_trash_walk",
+   "light_time": "öğle öncesi, güneş yüksek, gölgeler kısa, sıcak ve parlak",
+   "characters": [
+    "harun",
+    "aden"
+   ],
+   "action": "Harun şişeyi çöp kutusuna atar. Aden güler ve el çırpar.",
+   "dialogue": "harun: Çöpler çöp kutusuna! | aden: Hihi! Aferin bana!",
+   "emotion": {
+    "valence": 0.6,
+    "arousal": 0.5,
+    "intensity": 0.6
+   },
+   "camera": "yakın",
+   "sound": "ortam sesi: kuş, hafif rüzgâr; adım",
+   "safety_note": "",
+   "shot_id": "sc01_sh05",
+   "choreo": {
+    "motion": {
+     "harun": {
+      "kind": "reach",
+      "x0": 1.4,
+      "x1": 1.4
+     },
+     "aden": {
+      "kind": "laugh",
+      "x0": 0.2,
+      "x1": 0.2
+     }
+    },
+    "objects": [
+     {
+      "prop": "bottle",
+      "track": [
+       {
+        "t": 0,
+        "holder": "harun"
+       },
+       {
+        "t": 2.0,
+        "holder": "harun"
+       },
+       {
+        "t": 3.2,
+        "at": "bin_green",
+        "hide": true
+       }
+      ]
+     }
+    ],
+    "gaze": {
+     "aden": "harun"
+    },
+    "icons": []
+   },
+   "enrichment": {
+    "status": "NONE"
+   },
+   "scene_kind": "garden"
+  }
+ ]
+}

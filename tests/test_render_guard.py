@@ -80,3 +80,41 @@ def test_worker_crash_falls_back_to_fewer_workers(tmp_path, monkeypatch):
     # işçi çökünce yedek yol: önce 2 -> 1; tek işçi yolunda da flaky olduğu için sonunda eksik kalır ve rapor eder
     r = r2.render_window(PLAN, DES, str(tmp_path), frame_timeout=20)
     assert r["retries"] >= 1 and r["workers_end"] == 1 and r["missing"] == 12
+
+
+def test_real_worker_death_is_survived_and_reported(tmp_path, monkeypatch):
+    """Gerçek süreç ölümü (os._exit): havuz bozulur, işçi sayısı düşer, tek işçide kareler tamamlanır."""
+    monkeypatch.setenv("AHOS_RENDER_WORKERS", "2")
+    monkeypatch.setenv("AHOS_TEST_FAULT", "crash")
+    r = r2.render_window(PLAN, DES, str(tmp_path), frame_timeout=30)
+    assert r["retries"] >= 1 and r["workers_end"] == 1
+
+
+def test_real_hang_times_out_and_does_not_hang_forever(tmp_path, monkeypatch):
+    monkeypatch.setenv("AHOS_RENDER_WORKERS", "2")
+    monkeypatch.setenv("AHOS_TEST_FAULT", "hang")
+    t0 = time.time()
+    r = r2.render_window(PLAN, DES, str(tmp_path), frame_timeout=2)
+    assert r["timeouts"] >= 1 and r["retries"] >= 1
+    assert time.time() - t0 < 50                      # takılan işçi sonsuza dek beklenmedi
+
+
+
+def test_hidden_object_disappears_after_reaching_target(monkeypatch):
+    """Regresyon: şişe çöp kutusuna atıldıktan sonra kutu ağzında/Harun'un önünde asılı kalıyordu."""
+    calls = []
+    monkeypatch.setattr(r2.props2d, "draw", lambda *a, **k: calls.append(a))
+    beat = {"choreo": {"objects": [{"prop": "bottle", "track": [{"t": 0, "at": [0.0, 0.0]}, {"t": 2.0, "at": "bin_green", "hide": True}]}]}}
+    r2._draw_objects(None, None, beat, [], {}, 1.0)
+    assert len(calls) == 1                         # uçuş sırasında görünür
+    calls.clear(); r2._draw_objects(None, None, beat, [], {}, 2.5)
+    assert calls == []                             # vardıktan sonra yok
+
+
+def test_head_crop_check_includes_hair_and_bottom_edge():
+    class Cam:
+        s = 250.0
+        def x(self, v): return 640 + v * 250.0
+        def y(self, v): return 700 - v * 250.0 * 1.6      # yakın plan ölçeği
+    assert r2._head_cropped(Cam(), 3.5, 1.7) is False      # tamamen dışarıda: sorun değil
+    assert r2._head_cropped(Cam(), 0.0, 2.0) is True       # başı üstten kesilen uzun boylu karakter
