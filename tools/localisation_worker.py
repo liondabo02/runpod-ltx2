@@ -102,8 +102,11 @@ def build_lang_dir(episode_dir, bible, code, lang_info, llm=None, tts=vw.tts_rea
             b["dialogue"] = " | ".join(per_beat[bi])
     json.dump(out, open(os.path.join(ldir, "beat_sheet.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=2)
     if lang_info.get("tts") == "mms":
-        import tts_mms
-        if tts_mms.available():
+        import tts_mms, voice_licence
+        _ok, _msg = voice_licence.check("mms_tts")
+        if not _ok:                                      # CC-BY-NC ses ticari teslimde kullanılmaz: yalnız metin/altyazı
+            lang_info = dict(lang_info, tts="none", tts_note=_msg)
+        elif tts_mms.available():
             mid = lang_info["mms_model"]
             tts = lambda text, voice, rate, pitch, out_wav, _m=mid: tts_mms.synth(text, _m, out_wav)  # noqa: E731
         else:

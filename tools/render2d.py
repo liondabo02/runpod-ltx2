@@ -1,5 +1,5 @@
 """AHOS 2D kare çizici: plan + poz -> PNG kareleri (çok işlemcili, kaldığı yerden devam)."""
-import json, math, multiprocessing, os, sys, time
+import json, math, multiprocessing, os, shutil, sys, time
 from concurrent.futures import ProcessPoolExecutor
 from PIL import Image
 
@@ -139,6 +139,30 @@ def _head_cropped(cam, x, H):
     outside_y = bot <= 0 or top >= 720
     return not ((inside_x and inside_y) or outside_x or outside_y)
 
+REACT_AFTER = 1.0      # replik bittikten sonra dinleyene kesme süresi (sn)
+REACT_MID = 0.9        # uzun replikin ortasında tepki süresi (sn)
+REACT_MIN_LINE = 3.0   # bu süreden uzun replikte orta tepki
+
+
+def reaction_target(beat, t):
+    """Tepki planında kamera kimde olmalı? Yalnız >1 karakter varsa; konuşan olmayan (dinleyen) karakter döner, yoksa None."""
+    cast = beat.get("cast") or []
+    if len(cast) < 2 or not beat.get("lines"):
+        return None
+    lines = beat["lines"]
+    for ln in lines:
+        d = ln["end"] - ln["start"]
+        others = [c for c in cast if c != ln["char"]]
+        if not others:
+            continue
+        if ln["end"] <= t < ln["end"] + REACT_AFTER and not any(l["start"] <= t < l["end"] for l in lines):
+            return others[0]                              # replik bitti, kimse konuşmuyor: dinleyen yüz
+        mid = ln["start"] + 0.62 * d
+        if d >= REACT_MIN_LINE and mid <= t < mid + REACT_MID:
+            return others[0]                              # uzun replikte araya tepki
+    return None
+
+
 def frame(plan, designs, t, bible_chars=None):
     beat = next((b for b in plan["beats"] if b["t_start"] <= t < b["t_end"]), None)
     if beat is None:
@@ -190,7 +214,10 @@ def frame(plan, designs, t, bible_chars=None):
         xs.append(p["x"])
     avg = sum(xs) / len(xs) if xs else 0.0
     focus = beat.get("focus")
-    if speaker and speaker in beat["cast"]:       # yakın planda kamera hep o an konuşana bakar (yüz + omuz kadrajda)
+    reaction = reaction_target(beat, t)               # tepki planı: replik bitince / uzun replikin ortasında dinleyene kesilir
+    if reaction:
+        focus = reaction
+    elif speaker and speaker in beat["cast"]:       # yakın planda kamera hep o an konuşana bakar (yüz + omuz kadrajda)
         focus = speaker
     fh = designs[focus]["height"] if focus in designs else 1.1
     fx = xs[beat["cast"].index(focus)] if focus in beat["cast"] else avg
@@ -204,7 +231,9 @@ def frame(plan, designs, t, bible_chars=None):
             preset = "insert"
     if lt < 1.4 and any(m_["kind"] == "surprise" for m_ in beat["motion"].values()):
         preset = "xclose"                               # şaşırma anında aşırı yakın plan (yüz dolsun)
-    if speaker and speaker in beat["cast"] and preset in ("close", "xclose"):
+    if reaction:
+        preset = "close"                                # tepki planı her zaman yakın plan
+    if speaker and speaker in beat["cast"] and preset in ("close", "xclose") and not reaction:
         fx = xs[beat["cast"].index(speaker)]
     zoom = ZOOM.get(preset, 1.5) * (1.0 + 0.05 * ph) * (1.0 + 0.18 * E if preset == "close" else 1.0)   # vurguda kamera içeri vurur
     if preset in ("close", "xclose") and focus in designs and designs[focus]["height"] > 1.3:
@@ -435,6 +464,16 @@ def render_window(plan, designs, out_dir, workers=None, progress=True, frame_tim
         for fn in os.listdir(out_dir):                      # yarım kalmış geçici dosyalar
             if fn.endswith(".tmp.png"):
                 os.replace(os.path.join(out_dir, fn), os.path.join(out_dir, fn + ".bad"))
+        need_n = len([j for j in jobs if not valid_png(j[1])])
+        sizes = [os.path.getsize(j[1]) for j in jobs[:200] if os.path.exists(j[1])][:30]
+        avg = (sum(sizes) / len(sizes)) if sizes else 1.3e6                  # ölçülmüş kare boyutu yoksa 1,3 MB varsay
+        need = int(need_n * avg * 1.3 + 200e6)                                # %30 pay + klip/geçici dosya payı
+        free = shutil.disk_usage(out_dir).free
+        stats["disk_free_mb"] = int(free / 1e6); stats["disk_need_mb"] = int(need / 1e6)
+        if need_n and free < need:                                            # alan yetmiyorsa işi BAŞLATMA (yarım kare ve ENOSPC çöküşü yok)
+            stats["disk_blocked"] = True
+            print("DUR: disk yetersiz: boş %d MB < gereken %d MB" % (free / 1e6, need / 1e6), flush=True)
+            return {"rendered": 0, "missing": need_n, "seconds": 0.0, "sec_per_frame": None, "engine": "puppet2d", **stats}
         w = pick_workers(workers)
         stats["workers_start"] = w; stats["mem_mb"] = available_mem_mb()
         cancel = os.path.join(out_dir, ".cancel")

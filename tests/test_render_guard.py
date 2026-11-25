@@ -118,3 +118,26 @@ def test_head_crop_check_includes_hair_and_bottom_edge():
         def y(self, v): return 700 - v * 250.0 * 1.6      # yakın plan ölçeği
     assert r2._head_cropped(Cam(), 3.5, 1.7) is False      # tamamen dışarıda: sorun değil
     assert r2._head_cropped(Cam(), 0.0, 2.0) is True       # başı üstten kesilen uzun boylu karakter
+
+
+def test_reaction_shot_goes_to_listener():
+    beat = {"cast": ["a", "b"], "lines": [{"char": "a", "start": 0.0, "end": 4.0}, {"char": "b", "start": 6.0, "end": 7.0}]}
+    assert r2.reaction_target(beat, 1.0) is None                 # replik başı: konuşana
+    assert r2.reaction_target(beat, 0.62 * 4.0 + 0.1) == "b"     # uzun replikin ortasında dinleyene (b) kes
+    assert r2.reaction_target(beat, 4.3) == "b"                  # a bitti, kimse konuşmuyor → dinleyen b
+    assert r2.reaction_target(beat, 6.5) is None                 # b konuşuyor
+    assert r2.reaction_target({"cast": ["a"], "lines": beat["lines"]}, 4.3) is None   # tek karakter: tepki yok
+
+
+def test_render_does_not_start_when_disk_is_insufficient(tmp_path, monkeypatch):
+    import shutil, collections
+    DU = collections.namedtuple("du", "total used free")
+    monkeypatch.setattr(shutil, "disk_usage", lambda p: DU(100e9, 100e9 - 50e6, 50e6))      # 50 MB boş
+    r = r2.render_window(PLAN, DES, str(tmp_path))
+    assert r["disk_blocked"] and r["missing"] == 12 and r["rendered"] == 0
+    assert not [f for f in os.listdir(tmp_path) if f.endswith(".png")]                  # hiçbir kare yazılmadı
+
+
+def test_render_starts_when_disk_is_sufficient(tmp_path, monkeypatch):
+    r = r2.render_window(PLAN, DES, str(tmp_path))
+    assert not r.get("disk_blocked") and r["missing"] == 0 and r["disk_need_mb"] > 0

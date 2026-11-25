@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Piper Türkçe ses modellerini indirir (MIT lisanslı açık kaynak). Kullanım: python tools/get_piper_voice.py [model_adı]"""
+"""Piper Türkçe ses modellerini indirir. DİKKAT: piper kodu MIT, ama SES VERİSİ lisansı sese göre değişir (dfki = CC BY-NC-SA, ticari DEĞİL; bkz. tools/voice_licence.py). Kullanım: python tools/get_piper_voice.py [model_adı]"""
 import os, sys, urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
