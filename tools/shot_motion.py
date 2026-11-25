@@ -115,11 +115,23 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
         if kid: f *= 1.3; amp *= 0.9
         if pers == 2: f *= 0.8; amp *= 0.7
         if pers == 3: f *= 1.1
-        mv = smooth(ph / 0.85)
+        # EVRELER: hazırlık (geri çekil, çömel, gövdeyi yöne çevir) → ana aksiyon → toparlanma (aşma, yaylanma, yüz yönü dönüşü).
+        # Süreler boya, kişiliğe ve hıza göre değişir (çocuk kısa/çevik, ağır yürüyüş uzun, koşu daha uzun hazırlanır ve durur).
+        te = 0.85 * dur
+        ta = (0.26 if kind == "run" else 0.16) * (0.8 if kid else 1.0) * (1.35 if pers == 2 else 1.0)
+        tr = (0.50 if kind == "run" else 0.30) * (0.85 if kid else 1.0) * (1.3 if pers == 2 else 1.0)
+        ta = min(ta, 0.2 * te); tr = min(tr, max(0.05, dur - te))
+        mv = smooth((t - ta) / max(1e-6, te - ta))
         p["x"] = x0 + (x1 - x0) * mv
         direction = 1.0 if x1 >= x0 else -1.0
-        moving = ph < 0.85
-        p["yaw"] = direction * (0.75 if moving else 0.2)
+        moving = ta <= t < te
+        if t < ta:
+            yaw_k = 0.2 + 0.55 * smooth(t / ta)                 # gövde gidilecek yöne dönmeye başlar
+        elif t < te:
+            yaw_k = 0.75
+        else:
+            yaw_k = 0.2 + 0.55 * (1.0 - smooth((t - te) / tr))  # durunca yüzünü sahneye çevirir
+        p["yaw"] = direction * yaw_k
         # ADIM = KAT EDİLEN MESAFE: temas eden ayak dünyada sabit kalır (ayak kayması yok). Faz süreden değil gidilen yoldan gelir.
         run_ = (kind == "run")
         D = (1.05 if run_ else 0.62) * H * (0.88 if kid else 1.0) * (0.85 if pers == 2 else 1.0)      # bir adım çevrimi (sol+sağ) boyu, m
@@ -145,6 +157,23 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
         p["z"] = abs(sw) * (0.02 if kind == "walk" else 0.07) * H
         p["sq"] = 1.0 - (0.03 if kind == "walk" else 0.07) * (1.0 - abs(sw))            # adım temasında hafif ezilme
         p["lean"] = 0.04 if kind == "walk" else 0.20
+        run_k = 1.0 if run_ else 0.5
+        if t < ta:                                           # hazırlık: geri yaslan, çömel, kollar geri — sonra bırakılır
+            a_ant = smooth(t / ta)
+        else:
+            a_ant = math.exp(-(t - ta) / 0.22)
+        p["lean"] -= 0.12 * run_k * a_ant; p["sq"] -= 0.05 * run_k * a_ant
+        if not carry:
+            for k_ in ("aL", "aR"):
+                p[k_][0] += 0.45 * run_k * a_ant              # kollar geriye (arm_fwd'un tersi, eklemeli)
+        if t >= te:                                          # toparlanma: ileri aşma, gövde yaylanması, kol/baş takibi
+            u = min(1.0, (t - te) / tr)
+            p["lean"] = p["lean"] * (1.0 - smooth(u)) - 0.07 * run_k * math.sin(math.pi * u)
+            p["sq"] = 1.0 - 0.06 * run_k * math.sin(math.pi * u)
+            p["head"][0] += 0.10 * run_k * math.sin(math.pi * u)
+            if not carry:
+                for k_ in ("aL", "aR"):
+                    p[k_][0] -= 0.45 * run_k * math.sin(math.pi * u) * (1.0 - u)   # kollar öne savrulur, yatışır
         if carry:
             for side_ in "LR":
                 arm_fwd(p, side_, 0.95); arm_out(p, side_, 0.30)

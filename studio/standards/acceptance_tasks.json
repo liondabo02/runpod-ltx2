@@ -358,7 +358,7 @@
    "priority": "P1",
    "title": "Ön/yan/üç-çeyrek dönüş pozları",
    "state": "bekliyor",
-   "current": "Gövde dönüşü yalnız hafif (yaw*1,25, gövde genişliği −%30).",
+   "current": "Kafa: ön + yaklaşık üç-çeyrek (uzak göz/öznitelik kayması) VAR; gövde yalnız dar (−%30) = tam dönüş SAYILMAZ; yan (profil) varlığı YOK: yeni varlık/rig gerekir.",
    "change": "Yan/üç-çeyrek poz desteği",
    "deps": [],
    "criteria": [
@@ -409,7 +409,7 @@
    "priority": "P1",
    "title": "Oyunculuk: hazırlık/toparlanma, bakış-kaş-göz-ağız uyumu, döngü ayrışması",
    "state": "bekliyor",
-   "current": "Yürüyüş kişiliği, konuşma jesti, bakış var; koşma/durma/şaşırma hazırlığı sistemli değil.",
+   "current": "Yürüme/koşma: hazırlık+toparlanma+kişiye göre süre eklendi (tests/test_motion_phases.py, 6 test; yaw sıçraması 0.55→≤0.26). Yön değiştirme/şaşırma/durma-dönme hazırlığı ve kayıtlı sahnede izleme YOK.",
    "change": "Hareket evreleri; yüz uyumu; döngü fazı kaydırma",
    "deps": [],
    "criteria": [
@@ -420,8 +420,8 @@
     },
     {
      "text": "Karakterler farklı fazda (ölçüm)",
-     "verified": false,
-     "evidence": ""
+     "verified": true,
+     "evidence": "tests/test_motion_phases.py::test_blinks_are_desynchronised_between_characters (4 tohum, göz kırpma çakışması <%50; yalnız göz kırpma ölçüldü)"
     },
     {
      "text": "Temsilî sahnede belirgin duygu tepkisi görüldü",
