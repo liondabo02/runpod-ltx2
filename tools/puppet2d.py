@@ -3,7 +3,7 @@
 Vektör karakterler (büyük gözler, ifade, 9 Rhubarb ağız şekli), boyalı arka planlar, kalın kenar çizgisi.
 Poz girdisi shot_motion.pose_at çıktısıdır. Her şey 'spec' ve 'sahne türü'nden üretilir; belirli bir diziye bağlı değildir.
 """
-import colorsys, hashlib, math, random
+import colorsys, hashlib, math, random, sys
 from PIL import Image, ImageDraw
 
 W, H = 1280, 720
@@ -189,8 +189,20 @@ def _hand(cv, pos, r, skin, sg, fwd, ow, t, emo, g=None):
 
 
 # ---------------------------------------------------------------- karakter çizimi
+def view_of(pose):
+    """Görünüş sınıfı: 'front' | 'three_quarter' | 'side'. Gövde dönüşü = yaw*1.25."""
+    if pose.get("view") in ("front", "three_quarter", "side"):
+        return pose["view"]                    # hareket motoru açıkça seçtiyse (salınım görünüşü titretmesin)
+    b = abs(max(-1.0, min(1.0, pose.get("yaw", 0.0) * 1.25)))
+    if b >= 0.95: return "side"
+    return "three_quarter" if b >= 0.45 else "front"
+
+
 def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
     """fx,fy: ayak ortası (ekran px). ppm: piksel/metre. st: {'mouth':harf,'blink':0/1,'emotion':str,'dir':-1..1}"""
+    if view_of(pose) == "side":
+        import puppet_side
+        return puppet_side.draw_profile(cv, des, pose, st, fx, fy, ppm, t, sys.modules[__name__])
     Hh = des["height"] * ppm
     cls = des["class"]
     leg_h = Hh * {"infant": 0.20, "toddler": 0.24, "child": 0.28, "adult": 0.38}[cls]

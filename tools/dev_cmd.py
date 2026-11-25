@@ -1,5 +1,5 @@
 """Güvenli geliştirici komutları (yalnız izin listesindeki git/pytest işlemleri). Yasak: force push, reset --hard, clean, rm.
-Kullanım: dev_cmd.py audit | test | commit "<mesaj>" <dosya...> | push | sha"""
+Kullanım: dev_cmd.py audit | test | commit "<mesaj>" <dosya...> | push | sha (yerel HEAD = uzak dal mı)"""
 import os, subprocess, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CORE = os.path.join(ROOT, "ahos_core")
@@ -36,6 +36,13 @@ def main():
         if br in ("main", "master", ""):
             sys.exit("main/master'a push yasak")
         sys.exit(run(["git", "push", "origin", br]))                # normal push; force yok
+    elif cmd == "sha":      # yerel HEAD ile uzak dal SHA'sı aynı mı (push doğrulaması)
+        br = subprocess.run(["git", "branch", "--show-current"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+        loc = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+        r = subprocess.run(["git", "ls-remote", "origin", "refs/heads/" + br], cwd=ROOT, capture_output=True, text=True)
+        rem = r.stdout.split()[0] if r.stdout.strip() else ""
+        print(f"dal={br} yerel={loc} uzak={rem or 'YOK'} -> {'ESLESTI' if loc and loc == rem else 'ESLESMEDI'}")
+        sys.exit(0 if loc and loc == rem else 3)
     else:
         sys.exit("bilinmeyen komut")
 

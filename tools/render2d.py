@@ -330,7 +330,7 @@ def grade(im, light, t):
 
 
 _G = {}
-ENGINE_FILES = ("render2d.py", "puppet2d.py", "scenes2d.py", "setpieces2d.py", "props2d.py", "fx_layer.py", "bg_art.py", "shot_motion.py",
+ENGINE_FILES = ("render2d.py", "puppet2d.py", "scenes2d.py", "setpieces2d.py", "props2d.py", "fx_layer.py", "bg_art.py", "shot_motion.py", "puppet_side.py",
                 "shot_planner.py", "style_profile.py", "mood_engine.py")
 
 

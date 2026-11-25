@@ -358,7 +358,7 @@
    "priority": "P1",
    "title": "Ön/yan/üç-çeyrek dönüş pozları",
    "state": "bekliyor",
-   "current": "Kafa: ön + yaklaşık üç-çeyrek (uzak göz/öznitelik kayması) VAR; gövde yalnız dar (−%30) = tam dönüş SAYILMAZ; yan (profil) varlığı YOK: yeni varlık/rig gerekir.",
+   "current": "Yan (profil) rig'i EKLENDİ: tools/puppet_side.py (burun, tek göz/kulak, yan gövde, ön/arka kol, dünya konumlu ayak, saç/aksesuar). Koşu=profil, yürüyüş=üç-çeyrek (yaklaşık: yalnız kafa kayması + dar gövde). Otomatik: oran/ayna/titreme testleri. Görsel: 4 karakter bakıldı (qa/donus_kareleri.png), diğerleri bakılmadı; sahnede ve ön→yan geçiş silüeti kaydedilmemiş.",
    "change": "Yan/üç-çeyrek poz desteği",
    "deps": [],
    "criteria": [

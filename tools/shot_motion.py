@@ -117,6 +117,7 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
         if pers == 3: f *= 1.1
         # EVRELER: hazırlık (geri çekil, çömel, gövdeyi yöne çevir) → ana aksiyon → toparlanma (aşma, yaylanma, yüz yönü dönüşü).
         # Süreler boya, kişiliğe ve hıza göre değişir (çocuk kısa/çevik, ağır yürüyüş uzun, koşu daha uzun hazırlanır ve durur).
+        run_ = (kind == "run")
         te = 0.85 * dur
         ta = (0.26 if kind == "run" else 0.16) * (0.8 if kid else 1.0) * (1.35 if pers == 2 else 1.0)
         tr = (0.50 if kind == "run" else 0.30) * (0.85 if kid else 1.0) * (1.3 if pers == 2 else 1.0)
@@ -126,12 +127,13 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
         direction = 1.0 if x1 >= x0 else -1.0
         moving = ta <= t < te
         if t < ta:
-            yaw_k = 0.2 + 0.55 * smooth(t / ta)                 # gövde gidilecek yöne dönmeye başlar
+            yaw_k = 0.2 + (0.60 if run_ else 0.55) * smooth(t / ta)    # gövde gidilecek yöne dönmeye başlar
         elif t < te:
-            yaw_k = 0.75
+            yaw_k = 0.80 if run_ else 0.75                       # koşu: tam profil, yürüyüş: üç-çeyrek
         else:
-            yaw_k = 0.2 + 0.55 * (1.0 - smooth((t - te) / tr))  # durunca yüzünü sahneye çevirir
+            yaw_k = 0.2 + (0.60 if run_ else 0.55) * (1.0 - smooth((t - te) / tr))  # durunca yüzünü sahneye çevirir
         p["yaw"] = direction * yaw_k
+        p["view"] = "side" if yaw_k * 1.25 >= 0.95 else ("three_quarter" if yaw_k * 1.25 >= 0.45 else "front")   # görünüş, adım salınımından bağımsız (kare kare titremez)
         # ADIM = KAT EDİLEN MESAFE: temas eden ayak dünyada sabit kalır (ayak kayması yok). Faz süreden değil gidilen yoldan gelir.
         run_ = (kind == "run")
         D = (1.05 if run_ else 0.62) * H * (0.88 if kid else 1.0) * (0.85 if pers == 2 else 1.0)      # bir adım çevrimi (sol+sağ) boyu, m
