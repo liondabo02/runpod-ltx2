@@ -141,3 +141,12 @@ def test_render_does_not_start_when_disk_is_insufficient(tmp_path, monkeypatch):
 def test_render_starts_when_disk_is_sufficient(tmp_path, monkeypatch):
     r = r2.render_window(PLAN, DES, str(tmp_path))
     assert not r.get("disk_blocked") and r["missing"] == 0 and r["disk_need_mb"] > 0
+
+
+def test_render_worker_blocks_invalid_object_track(tmp_path):
+    import json, render_worker as rw
+    ep = tmp_path / "ep"; ep.mkdir()
+    bad = {"beats": [{"id": "b1", "t_start": 0, "t_end": 5, "characters": ["a"], "choreo": {"objects": [{"prop": "bottle", "track": [{"t": 0, "holder": "a"}, {"t": 3, "at": [1.7, 0.7], "hide": True}]}]}}]}
+    json.dump(bad, open(ep / "beat_sheet.json", "w"))
+    r = rw.run(str(ep), {"characters": []}, 0, 5, str(tmp_path))
+    assert r["status"] == "BLOCKED" and r["error"] == "NESNE_IZI_GECERSIZ" and "imha" in r["problems"][0]

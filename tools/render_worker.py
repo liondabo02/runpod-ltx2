@@ -64,6 +64,16 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
     assets = os.path.join(series_dir, "assets")
     sheet = json.load(open(os.path.join(episode_dir, "beat_sheet.json"), encoding="utf-8"))
     rdir = os.path.join(episode_dir, "render"); os.makedirs(rdir, exist_ok=True)
+    import object_state, setpieces2d
+    bad = []                                            # ön kontrol: geçersiz nesne izi (ışınlanma, havada bırakma, tanımsız imha...) sessizce çizilmez; planlamaya geri bildirilir
+    for bi, b in enumerate(sheet.get("beats", [])):
+        if float(b.get("t_end", 0)) <= t0 or float(b.get("t_start", 0)) >= t1:
+            continue
+        for oi, ob in enumerate((b.get("choreo") or {}).get("objects", [])):
+            for pr in object_state.validate(ob.get("track") or [], b.get("characters") or None, setpieces2d.TARGETS, setpieces2d.SINKS):
+                bad.append(f"vuruş {b.get('id', bi)} nesne {oi} ({ob.get('prop')}): {pr}")
+    if bad:
+        return {"status": "BLOCKED", "error": "NESNE_IZI_GECERSIZ", "problems": bad}
     blender = find_blender() if engine != "2d" else "n/a"
     if not blender:
         return {"status": "BLOCKED", "error": "BLENDER_MISSING"}
@@ -78,6 +88,9 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
             for ch in bible["characters"]:
                 spp = os.path.join(assets, f"{ch['id']}.spec.json")
                 designs[ch["id"]] = pp2.derive_design(ch, json.load(open(spp, encoding="utf-8")) if os.path.exists(spp) else {})
+            hp = r2.handoff_problems(plan, designs)
+            if hp:
+                return {"status": "BLOCKED", "error": "EL_DEGISTIRME_ULASILAMAZ", "problems": problems + hp}
             stats = r2.render_window(plan, designs, frames)
             json.dump(stats, open(os.path.join(frames, "render_stats.json"), "w"))
             if stats.get("disk_blocked"):
@@ -109,7 +122,7 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
         wav = aw.build_timeline(episode_dir, items, sheet["beats"], float(sheet["beats"][-1]["t_end"]))
         try:  # müzik/efekt yatağı (yerel, telifsiz); başarısız olursa diyalog tek başına kalır
             import music_worker as mw
-            if not os.path.exists(os.path.join(episode_dir, "audio", "bed.wav")):
+            if mw.needs_refresh(episode_dir):          # beat_sheet değiştiyse yatak (müzik + temas efektleri) yeniden üretilir; eski yatak körlemesine kullanılmaz
                 mw.run(episode_dir, os.path.basename(os.path.dirname(os.path.abspath(episode_dir))) or "ahos")
             wav = mw.mix(episode_dir, wav)
         except Exception as e:  # noqa: BLE001

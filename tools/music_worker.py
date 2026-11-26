@@ -176,6 +176,13 @@ def compose(sheet, series_id, speech=(), music_gain=0.55, sfx_gain=0.7):
                 if tt >= t1: break
                 i0 = int(tt * SR); n_ = min(len(w), len(sfx) - i0)
                 if n_ > 0: sfx[i0:i0 + n_] += w[:n_] * (0.5 if kind in ("run", "step") else 0.8)
+    try:                                                   # temas olayları (al/ver/bırak/imha): animasyonla AYNI olay kaynağından, her olay tek kez
+        import sfx_events as _se
+        _cues = _se.cues_from_beats(sheet, series_id)
+        sfx += _se.render(_cues, len(sfx))
+        compose.last_cues = _cues
+    except ImportError:
+        compose.last_cues = []
     x = music * music_gain + sfx * sfx_gain * 0.6
     return (np.clip(x, -1, 1) * 20000).astype("<i2")
 
@@ -194,13 +201,34 @@ def speech_intervals(episode_dir):
     return [(float(i.get("start_s", 0)), float(i.get("start_s", 0)) + float(i.get("duration_s", 0))) for i in items]
 
 
+def _sheet_sha(episode_dir):
+    return hashlib.sha1(open(os.path.join(episode_dir, "beat_sheet.json"), "rb").read()).hexdigest()
+
+
+def needs_refresh(episode_dir):
+    """Yatak yoksa, ya da üretildiği beat_sheet'ten farklıysa (hash) yeniden üretilmeli."""
+    man = os.path.join(episode_dir, "audio", "music_manifest.json")
+    if not os.path.exists(os.path.join(episode_dir, "audio", "bed.wav")) or not os.path.exists(man):
+        return True
+    try:
+        return json.load(open(man, encoding="utf-8")).get("sheet_sha") != _sheet_sha(episode_dir)
+    except Exception:  # noqa: BLE001
+        return True
+
+
 def run(episode_dir, series_id):
     sheet = json.load(open(os.path.join(episode_dir, "beat_sheet.json"), encoding="utf-8"))
     sp_iv = speech_intervals(episode_dir)
     samples = compose(sheet, series_id, sp_iv)
     path = os.path.join(episode_dir, "audio", "bed.wav")
     write_wav(path, samples)
-    man = {"status": "PASSED", "bed": path, "seconds": round(len(samples) / SR, 1), "theme": theme(series_id),
+    cues = getattr(compose, "last_cues", [])
+    try:
+        import sfx_events as _se
+        _se.write_manifest(os.path.join(episode_dir, "audio", "sfx_cues.json"), cues)
+    except ImportError:
+        pass
+    man = {"sheet_sha": _sheet_sha(episode_dir), "sfx_cues": len(cues), "status": "PASSED", "bed": path, "seconds": round(len(samples) / SR, 1), "theme": theme(series_id),
            "licence": "kodla üretildi, telifsiz", "cost_eur": 0}
     json.dump(man, open(os.path.join(episode_dir, "audio", "music_manifest.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=2)
     return man

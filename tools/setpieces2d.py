@@ -44,6 +44,7 @@ def rules_sign(cv, cam, x=0.0, t=0.0):
 
 BIN_X = 1.3
 TARGETS = {"bin_green": (BIN_X, 0.9), "bin_yellow": (BIN_X + 0.55, 0.9), "bin_blue": (BIN_X + 1.1, 0.9)}   # çöp kutusu ağızları (bins() ile aynı sabitten)
+SINKS = {"bin_green", "bin_yellow", "bin_blue"}          # nesnenin içine girip kaybolabildiği hedefler (açık imha olayı yalnız burada)
 
 
 def bins(cv, cam, x=1.2, t=0.0):
