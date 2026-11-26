@@ -84,40 +84,79 @@ def _x_at(px, cid, m):
     return px.get(cid, m["x1"])
 
 
-def _hold_pos(cid, items, designs, beat, lt, hand=None):
-    """Nesnenin bir karakterin ELİNDEKİ dünya konumu: çizilen elin gerçek yeri (pp.hand_offset). Hangi el: açıkça verilmişse o, yoksa karşıdaki kişiye/yürüyüş yönüne yakın olan."""
+def pick_hand(beat, holder, hand=None):
+    """Hangi el tutacak: açık 'hand' varsa o; yoksa vuruşun BAŞLANGIÇ konumlarından (zamandan bağımsız => el sıçramaz): yürüyorsa gidiş yönü, değilse karşıdaki kişiye yakın el."""
+    if hand in ("L", "R"):
+        return hand
+    mo = beat.get("motion") or (beat.get("choreo") or {}).get("motion") or {}; m = mo.get(holder) or {}
+    cast = beat.get("cast") or beat.get("characters") or list(mo)
+    others = [mo[c]["x0"] for c in cast if c != holder and c in mo]
+    if m.get("kind") in ("walk", "carry", "run") and abs(m.get("x1", 0) - m.get("x0", 0)) > 0.05:
+        side = 1.0 if m["x1"] > m["x0"] else -1.0
+    elif others:
+        side = 1.0 if others[0] > m.get("x0", 0.0) else -1.0
+    else:
+        side = 1.0
+    return "R" if side > 0 else "L"
+
+
+def _hold_pos(cid, items, designs, beat, lt, hand=None, grip=0.12):
+    """Nesne TABANININ dünya konumu: çizilen elin gerçek yeri (pp.hand_offset) eksi tutuş yüksekliği (nesne elin içinde, el tutuş noktasında)."""
     for cid_, d_, p_, m_, _lk, _e in items:
         if cid_ == cid:
-            H = d_["height"]
-            if hand is None:
-                others = [q["x"] for c2, _d, q, _m, _l, _e2 in items if c2 != cid]
-                side = 1.0 if (others and others[0] > p_["x"]) else -1.0
-                if m_["kind"] in ("walk", "carry", "run") and abs(m_["x1"] - m_["x0"]) > 0.05:
-                    side = 1.0 if m_["x1"] > m_["x0"] else -1.0
-                hand = "R" if side > 0 else "L"
-            dx, h = pp.hand_offset(d_, p_, hand)
-            return p_["x"] + dx, max(0.0, h - 0.08), H           # şişe tabanı avucun biraz altında: nesne elin içinde
-
-
+            dx, h = pp.hand_offset(d_, p_, pick_hand(beat, cid, hand))
+            return p_["x"] + dx, max(0.0, h - grip), d_["height"]
     return None
 
 
-def _draw_objects(cv, cam, beat, items, designs, lt):
-    """Koreografideki nesne izi, object_state durum makinesi üzerinden: yerde -> AL -> elde -> VER (yay) -> elde -> BIRAK/İMHA."""
+def object_owner(st):
+    """Çizim sırası için nesnenin o an hangi karaktere ait çizildiği (None = serbest: yerde/uçuşta)."""
+    s = st["state"]
+    if s == "held":
+        return st["holder"]
+    if s == "transfer":
+        return st["holder"] if st["u"] < 0.5 else st["to"]
+    if s == "put":
+        return st["holder"] if st["u"] < 0.5 else None
+    if s == "pickup":
+        return st["to"] if st["u"] >= 0.5 else None
+    return None
+
+
+def _objects_now(beat, items, lt):
+    """[(ob, x, y, state, owner, hand)] — her nesne için konum (tutuş noktası dahil) ve çizim sahibi."""
+    out = []
     for ob in (beat.get("choreo") or {}).get("objects", []):
         tr = ob.get("track") or []
         if not tr:
             continue
-        def hold(holder, t_, hand=None):
-            h = _hold_pos(holder, items, designs, beat, t_, hand)
+        sc = ob.get("scale", 0.55); grip = object_state.grip_of(ob["prop"], sc)
+        def hold(holder, t_, hand=None, _g=grip):
+            h = _hold_pos(holder, items, None, beat, t_, hand, _g)
             return (h[0], h[1]) if h else (0.0, 0.0)
         def target(at):
             at = setpieces2d.TARGETS[at] if isinstance(at, str) else at
             return (at[0], at[1])
         x, y, st = object_state.position(tr, lt, hold, target)
-        if x is None:                                           # imha edildi (örn. çöp kutusuna girdi): kutunun ağzında asılı kalmaz
+        if x is None:
+            continue                                            # imha (açık hide olayı, yalnız tanımlı hedefte): kutunun ağzında asılı kalmaz
+        own = object_owner(st)
+        out.append((ob, x, y, st, own, pick_hand(beat, own) if own else None))
+    return out
+
+
+def _draw_objects(cv, cam, beat, items, designs, lt, owner="__free__"):
+    """Nesneleri çizer. owner='__free__': serbest nesneler (yerde, uçuşta); owner=cid: o karakterin elindekiler (karakterden HEMEN sonra, parmaklar önde)."""
+    by = {i[0]: i for i in items}
+    for ob, x, y, st, own, hand in _objects_now(beat, items, lt):
+        late = st["state"] == "transfer"                        # el değiştirirken nesne iki karakterin de ÖNÜNDE (alıcı karakter vericiyi örtüp nesneyi gizlemesin)
+        slot = "__late__" if late else ("__free__" if own is None else own)
+        if slot != owner:
             continue
         props2d.draw(cv, cam, ob["prop"], x, y, 0.0, 0, scale=ob.get("scale", 0.55))
+        if own is not None and own in by:                       # parmaklar nesnenin ÖNÜNDE: avuç nesneyi kavrar
+            _c, d_, p_, _m, _l, _e = by[own]
+            pp.draw_grip(cv, d_, p_, hand, cam.x(p_["x"]), cam.y(0.0), cam.s)
 
 
 def object_effects(beat, cid, lt):
@@ -135,6 +174,84 @@ def object_effects(beat, cid, lt):
         if st["state"] in ("held", "put") and st["holder"] == cid or (st["state"] == "transfer" and cid in (st["holder"], st["to"])):
             weight = max(weight, object_state.weight_of(ob.get("prop")))
     return reach, weight
+
+
+def handoff_problems(plan, designs):
+    """Planlama ön kontrolü: her EL DEĞİŞTİRME için iki karakterin kolu buluşma noktasına yetişiyor mu? Yetişmiyorsa plana geri bildirilir
+    (yaklaşma ekle ya da atma olarak tanımla); motor eli sessizce 'ışınlamaz'."""
+    probs = []
+    for b in plan.get("beats", []):
+        mo = b.get("motion") or {}; dur = b["t_end"] - b["t_start"]
+        for oi, ob in enumerate((b.get("choreo") or {}).get("objects", [])):
+            for e in object_state.events(ob.get("track") or []):
+                if e["type"] != "handoff" or e["by"] not in mo or e["to"] not in mo or e["by"] not in designs or e["to"] not in designs:
+                    continue
+                xs = {}
+                for c in (e["by"], e["to"]):
+                    m = mo[c]
+                    xs[c] = sm.pose_at(m["kind"], e["t"], dur, m.get("seed", 0), m["x0"], m["x1"], designs[c]["height"], designs[c]["height"] * 0.45)["x"]
+                ratio = pp.handoff_reach_ratio(designs[e["by"]], xs[e["by"]], designs[e["to"]], xs[e["to"]], pick_hand(b, e["by"]), pick_hand(b, e["to"]))
+                if ratio > 1.0:
+                    probs.append("vuruş %s nesne %d: %s -> %s el değiştirme t=%.1f: kollar buluşamıyor (erişim oranı %.2f, x=%.2f/%.2f); karakterler yaklaşmalı veya atma olarak tanımlanmalı"
+                                 % (b.get("id", "?"), oi, e["by"], e["to"], e["t"], ratio, xs[e["by"]], xs[e["to"]]))
+    return probs
+
+
+def apply_handoff_reach(beat, items, lt):
+    """El değiştirme penceresinde iki karakterin kolu buluşma noktasına uzanır (yönlü uzanma). Zarf: yaklaşma -> tutma -> bırakma."""
+    by = {i[0]: i for i in items}
+    for ob in (beat.get("choreo") or {}).get("objects", []):
+        for e in object_state.events(ob.get("track") or []):
+            if e["type"] != "handoff" or e["by"] not in by or e["to"] not in by:
+                continue
+            ts, tc = e["t_start"], e["t"]; D = max(0.2, tc - ts)
+            t0, t1 = ts - 0.4, tc + 0.4
+            if not (t0 <= lt <= t1):
+                continue
+            if lt < ts + 0.3 * D:
+                w = pp_smooth((lt - t0) / (0.4 + 0.3 * D))
+            elif lt <= tc - 0.3 * D:
+                w = 1.0
+            else:
+                w = 1.0 - pp_smooth((lt - (tc - 0.3 * D)) / (0.3 * D + 0.4))
+            ga, ra = by[e["by"]], by[e["to"]]
+            xg, xr = ga[2]["x"], ra[2]["x"]
+            sg_, sr_ = pick_hand(beat, e["by"]), pick_hand(beat, e["to"])
+            tall = ga if ga[1]["height"] >= ra[1]["height"] else ra                    # boy farkı: uzun olan eğilir/çömelir (buluşma noktası alçalır)
+            if tall[1]["height"] > 1.25 * min(ga[1]["height"], ra[1]["height"]):
+                tall[2]["sq"] = tall[2].get("sq", 1.0) - 0.07 * w; tall[2]["lean"] += 0.10 * w; tall[2]["head"][0] += 0.12 * w
+            gx, gh = pp.shoulder_offset(ga[1], ga[2], sg_); rx, rh = pp.shoulder_offset(ra[1], ra[2], sr_)
+            mx, mh = pp.meeting_point(ga[1], (xg + gx, gh), ra[1], (xr + rx, rh))
+            for (cid, des, p, *_), side, xs_ in ((ga, sg_, xg), (ra, sr_, xr)):
+                if pp.view_of(p) == "side":
+                    continue
+                old = list(p["aL"]) if side == "L" else list(p["aR"])
+                pp.arm_toward(des, p, side, mx - xs_, mh)
+                key = "aL" if side == "L" else "aR"
+                p[key] = [old[0] + (p[key][0] - old[0]) * w, old[1] + (p[key][1] - old[1]) * w]
+
+
+def pp_smooth(x):
+    x = min(1.0, max(0.0, x)); return x * x * (3 - 2 * x)
+
+
+def carry_info(beat, cid, lt):
+    """Karakter şu an bir nesne taşıyorsa {'prop','weight','style','hand','reach'} (ağırlık merkezi: yük gövdeden ne kadar önde), yoksa None."""
+    best = None
+    for ob in (beat.get("choreo") or {}).get("objects", []):
+        tr = ob.get("track") or []
+        if not tr:
+            continue
+        st = object_state.state_at(tr, lt)
+        mine = (st["state"] in ("held", "put") and st["holder"] == cid) or (st["state"] == "transfer" and cid in (st["holder"], st["to"]))
+        if not mine:
+            continue
+        w = object_state.weight_of(ob["prop"])
+        if best is None or w > best["weight"]:
+            sty = object_state.carry_style(ob["prop"])
+            best = {"prop": ob["prop"], "weight": w, "style": sty, "hand": pick_hand(beat, cid),
+                    "reach": 0.25 if sty == "two_hand_front" else 0.15}
+    return best
 
 
 def _head_cropped(cam, x, H):
@@ -211,9 +328,21 @@ def frame(plan, designs, t, bible_chars=None):
         pa = sm.pose_at(args[0], max(0.0, lte - 0.11), *args[2:], speaking=spk)
         ph_ = sm.pose_at(args[0], max(0.0, lte - 0.05), *args[2:], speaking=spk)
         p["aL"], p["aR"], p["head"] = list(pa["aL"]), list(pa["aR"]), list(ph_["head"])
-        if carry_w:                                                # taşınan ağırlık: ağır nesne geri yaslanma, ezilme, baş eğme
-            adj = object_state.carry_adjust(carry_w)
+        ci = carry_info(beat, cid, lt)
+        if ci:                                                     # taşıma: ağırlık + taşıma biçimi (yük önde/yanda/omuzda) -> denge, kol pozu
+            adj = object_state.carry_adjust(ci["weight"], ci["style"], ci["reach"])
             p["lean"] += adj["lean"]; p["sq"] = p.get("sq", 1.0) + adj["sq"]; p["head"][0] += adj["head_nod"]
+            if kind_e in ("idle", "look", "walk", "carry", "run"):
+                ha = "aL" if ci["hand"] == "L" else "aR"; sg_ = 1 if ci["hand"] == "L" else -1
+                if adj["arms"] == "both_front":
+                    for a_ in ("aL", "aR"):
+                        p[a_][0] = -0.95
+                    p["aL"][1] = 0.30; p["aR"][1] = -0.30
+                elif adj["arms"] == "one_up":
+                    p[ha][0] = -0.40; p[ha][1] = sg_ * 1.6
+                else:
+                    p[ha][0] = -0.35; p[ha][1] = sg_ * 0.25
+                    p["head"][1] += -sg_ * adj["side_tilt"]
         look = 0.0
         gz = ((beat.get("choreo") or {}).get("gaze") or {}).get(cid)       # yönetmen bakışı: konuşulan kişiye/nesneye
         if gz in px and gz != cid:
@@ -228,6 +357,7 @@ def frame(plan, designs, t, bible_chars=None):
             p["aR"][1] = (p["aR"][1] if p["aR"][1] else -0.2) - 0.5 * E
         items.append((cid, d, p, m, look, E if spk else 0.0))
         xs.append(p["x"])
+    apply_handoff_reach(beat, items, lt)                 # el değiştirmede eller buluşma noktasına uzanır
     avg = sum(xs) / len(xs) if xs else 0.0
     focus = beat.get("focus")
     reaction = reaction_target(beat, t)               # tepki planı: replik bitince / uzun replikin ortasında dinleyene kesilir
@@ -291,9 +421,11 @@ def frame(plan, designs, t, bible_chars=None):
         st = {"mouth": letters.get(cid, "X"), "blink": blink_at(t, m["seed"]), "emotion": emo,
               "gaze": look * 0.9 + (0 if look else dart), "brow": e, "pulse": e}
         pp.draw_character(cv, d, p, st, cam.x(p["x"]), cam.y(0.0), cam.s, t)
+        _draw_objects(cv, cam, beat, items, designs, lt, owner=cid)      # elindeki nesne: karakterden hemen sonra, parmaklar önde
     if xs:
         fx_layer.icons(cv, cam, beat, xs, [designs[c]["height"] for c in beat["cast"]], t, lt)
-    _draw_objects(cv, cam, beat, items, designs, lt)
+    _draw_objects(cv, cam, beat, items, designs, lt)             # serbest nesneler (yerde, uçuşta)
+    _draw_objects(cv, cam, beat, items, designs, lt, owner="__late__")   # el değiştiren nesne: tüm karakterlerden sonra
     for k_, kind in enumerate(beat.get("props") or []):
         if kind in BACK_PROPS:
             continue

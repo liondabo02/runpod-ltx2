@@ -5,17 +5,46 @@ Yasak: sırasız zaman, bilinmeyen sahip, aynı sahibe ikinci kez 'al', yerden y
 Motorlar: render (konum), hareket (uzanma pencereleri, ağırlık pozu), ses (temas olayları SFX'e), QA (süreklilik ölçümü)."""
 import math
 
-WEIGHT = {"bottle": 0.4, "stone": 2.5, "shovel": 1.8, "hat": 0.1, "flower": 0.1, "seed": 0.05, "mic": 0.3, "balloon": 0.02, "lantern": 0.8, "kite": 0.1}
+# Nesne kataloğu: ağırlık (kg-benzeri), boy (m, çizim ölçeği 0.55 ile), tutuş yüksekliği (tabandan, m), taşıma biçimi ipucu
+PROPS = {
+    "bottle": {"w": 0.4, "len": 0.31, "grip": 0.12}, "stone": {"w": 2.5, "len": 0.25, "grip": 0.08}, "shovel": {"w": 1.8, "len": 1.30, "grip": 0.55},
+    "hat": {"w": 0.1, "len": 0.20, "grip": 0.02}, "flower": {"w": 0.1, "len": 0.40, "grip": 0.10}, "seed": {"w": 0.05, "len": 0.12, "grip": 0.05},
+    "mic": {"w": 0.3, "len": 0.25, "grip": 0.08}, "balloon": {"w": 0.02, "len": 0.50, "grip": 0.02}, "lantern": {"w": 0.8, "len": 0.35, "grip": 0.25},
+    "kite": {"w": 0.1, "len": 0.80, "grip": 0.05},
+}
+WEIGHT = {k: v["w"] for k, v in PROPS.items()}
 
 
 def weight_of(prop):
-    return WEIGHT.get(prop, 0.5)
+    return PROPS.get(prop, {}).get("w", 0.5)
 
 
-def carry_adjust(weight):
-    """Ağırlığa göre taşıyıcı poz farkı (puppet pose alanlarına EKLENİR). Hafif: hemen hiç; ağır: geri yaslanma, ezilme, yavaş adım."""
+def grip_of(prop, scale=0.55):
+    """Tutuş noktasının nesne tabanından yüksekliği (m), çizim ölçeğiyle."""
+    return PROPS.get(prop, {}).get("grip", 0.1) * scale / 0.55
+
+
+def carry_style(prop, hand_count=1):
+    """Taşıma biçimi: ağırlık ve boydan. 'one_hand' (yan), 'two_hand_front' (önde iki el, ağır), 'shoulder' (uzun alet omuzda/yanda)."""
+    p = PROPS.get(prop, {"w": 0.5, "len": 0.3})
+    if p["len"] >= 0.9:
+        return "shoulder"
+    if p["w"] >= 1.5:
+        return "two_hand_front"
+    return "one_hand"
+
+
+def carry_adjust(weight, style="one_hand", reach=0.25):
+    """Ağırlık merkezi ve denge: yük gövdeden ne kadar önde/yanda (reach, m) ve ne kadar ağır -> karşı denge.
+    one_hand: yük yanda -> gövde karşı yana yaslanır (lean küçük, omuz çökmesi sq), tek kol dolu;
+    two_hand_front: yük önde -> belirgin geri yaslanma + iki kol önde + yavaşlama;
+    shoulder: yük omuzda -> hafif öne eğilme, kol yukarıda. Dönen alanlar puppet pose'una EKLENİR; 'arms' hangi kol pozunun uygulanacağını söyler."""
     k = max(0.0, min(1.0, weight / 3.0))
-    return {"lean": -0.10 * k, "sq": -0.04 * k, "arm_fwd": 0.0 + 0.25 * k, "speed": 1.0 - 0.30 * k, "head_nod": 0.06 * k}
+    if style == "two_hand_front":
+        return {"lean": -0.16 * k * (reach / 0.25), "sq": -0.05 * k, "head_nod": 0.08 * k, "speed": 1.0 - 0.35 * k, "arms": "both_front", "side_tilt": 0.0}
+    if style == "shoulder":
+        return {"lean": 0.05 * k, "sq": -0.02 * k, "head_nod": 0.02 * k, "speed": 1.0 - 0.15 * k, "arms": "one_up", "side_tilt": 0.0}
+    return {"lean": -0.04 * k, "sq": -0.03 * k, "head_nod": 0.03 * k, "speed": 1.0 - 0.18 * k, "arms": "one_side", "side_tilt": 0.10 * k}
 
 
 def _same_place(a, b, targets, tol=0.05):
@@ -29,9 +58,9 @@ def _same_place(a, b, targets, tol=0.05):
     return abs(pa[0] - pb[0]) <= tol and abs(pa[1] - pb[1]) <= tol
 
 
-def validate(track, cast=None, targets=None):
+def validate(track, cast=None, targets=None, sinks=None):
     """Sorun listesi döner (boş = geçerli)."""
-    targets = targets or {}; probs = []
+    targets = targets or {}; sinks = sinks or set(); probs = []
     if not track:
         return ["iz boş"]
     ts = [k.get("t") for k in track]
@@ -54,6 +83,10 @@ def validate(track, cast=None, targets=None):
             hidden_at = k["t"]
             if "at" not in k:
                 probs.append("hide yalnız hedef (at) anahtarında")
+            elif not (isinstance(k["at"], str) and k["at"] in sinks):
+                probs.append(f"anahtar {i}: imha yalnız tanımlı bir hedefte (çöp kutusu vb.) olabilir; '{k['at']}' imha hedefi değil")
+        elif "at" in k and not isinstance(k["at"], str) and not k.get("surface") and len(k["at"]) > 1 and k["at"][1] > 0.05:
+            probs.append(f"anahtar {i}: nesne havada bırakılıyor (y={k['at'][1]}) ve yüzey tanımı yok")
         if i:
             a = track[i - 1]
             if "at" in a and "at" in k and not _same_place(a, k, targets) and not k.get("hide"):
@@ -151,3 +184,43 @@ def max_jump(track, hold_fn, target_fn, fps=24, t0=None, t1=None):
             if d > worst: worst, at = d, t
         prev = (x, y)
     return worst, at
+
+
+def continuity(track, hold_fn, target_fn, fps=24, margin=1.25):
+    """Hız/konum sürekliliği (FPS, mesafe ve süreye göre): her aralıkta kare başına adım, o aralığın beklenen hız sınırıyla karşılaştırılır.
+    Sınır = (iki uç noktanın en yüksek hızı + 1.6 * yol/süre + yay payı) * margin. Anahtar karelerde dünya hızı süreksizliği de ölçülür.
+    Dönen: {'ok', 'worst_ratio', 'at', 'key_vel_jump'} — worst_ratio 1'i aşarsa o aralıkta sıçrama var."""
+    def P(k, t):
+        return hold_fn(k["holder"], t, k.get("hand")) if "holder" in k else target_fn(k["at"])
+    dt = 1.0 / fps; worst = 0.0; at = 0.0; vel = {}
+    for a, b in zip(track, track[1:]):
+        D = b["t"] - a["t"]
+        if D <= 0:
+            continue
+        n = max(2, int(D * fps)); ts = [a["t"] + D * i / n for i in range(n + 1)]
+        pa = [P(a, t) for t in ts]; pb = [P(b, t) for t in ts]
+        hs = max(max(math.hypot(q[0] - p[0], q[1] - p[1]) for p, q in zip(s, s[1:])) / (D / n) for s in (pa, pb))
+        L = max(math.hypot(x[0] - y[0], x[1] - y[1]) for x, y in zip(pa, pb))
+        moving = ("holder" in a) != ("holder" in b) or a.get("holder") != b.get("holder") or ("at" in a and "at" in b and a["at"] != b["at"])
+        arc = (min(0.12, 0.25 * L + 0.03) * 2.0 / D) if moving else 0.0
+        bound = ((hs + (1.6 * L / D if moving else 0.0) + arc) * margin) * (D / n) + 1e-6
+        prev = None
+        for t in ts:
+            x, y, st = position(track, t, hold_fn, target_fn)
+            if x is None:
+                prev = None; continue
+            if prev is not None:
+                r = math.hypot(x - prev[0], y - prev[1]) / bound
+                if r > worst:
+                    worst, at = r, t
+            prev = (x, y)
+    kvj = 0.0
+    for k in track[1:-1]:
+        t = k["t"]
+        p0 = position(track, t - 2 * dt, hold_fn, target_fn); p1 = position(track, t - dt, hold_fn, target_fn)
+        p2 = position(track, t + dt, hold_fn, target_fn); p3 = position(track, t + 2 * dt, hold_fn, target_fn)
+        if None in (p0[0], p1[0], p2[0], p3[0]):
+            continue
+        v_in = math.hypot(p1[0] - p0[0], p1[1] - p0[1]) / dt; v_out = math.hypot(p3[0] - p2[0], p3[1] - p2[1]) / dt
+        kvj = max(kvj, abs(v_out - v_in))
+    return {"ok": worst <= 1.0, "worst_ratio": round(worst, 3), "at": round(at, 3), "key_vel_jump": round(kvj, 3)}

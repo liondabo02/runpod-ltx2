@@ -3,7 +3,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "tools"))
 import object_state as O, render2d as r2, shot_motion as sm, setpieces2d, turn_sheet as T
 BIBLE = os.path.join(os.path.dirname(__file__), "..", "series", "ahos-bizim-aile", "series-bible.json")
 DES = T.design_set(BIBLE)
-TG = setpieces2d.TARGETS
+TG = setpieces2d.TARGETS; SK = setpieces2d.SINKS
 
 PICK = [{"t": 0, "at": [-1.3, 0.0]}, {"t": 1.6, "at": [-1.3, 0.0]}, {"t": 2.8, "holder": "aden"}, {"t": 5, "holder": "aden"}]
 GIVE = [{"t": 0, "holder": "aden"}, {"t": 2.0, "holder": "aden"}, {"t": 3.4, "holder": "harun"}, {"t": 9, "holder": "harun"}]
@@ -25,21 +25,21 @@ def test_events_and_reach_windows_for_sfx_and_motion():
 
 def test_validation_catches_bad_tracks():
     cast = ["aden", "harun"]
-    assert O.validate(PICK, cast, TG) == [] and O.validate(GIVE, cast, TG) == [] and O.validate(TOSS, cast, TG) == [] and O.validate(DROP, cast, TG) == []
-    assert any("sırasız" in p for p in O.validate([{"t": 2, "at": [0, 0]}, {"t": 1, "at": [0, 0]}], cast, TG))
-    assert any("bilinmeyen sahip" in p for p in O.validate([{"t": 0, "holder": "ghost"}], cast, TG))
-    assert any("bilinmeyen hedef" in p for p in O.validate([{"t": 0, "at": "bin_pink"}], cast, TG))
-    assert any("ışınlanma" in p for p in O.validate([{"t": 0, "at": [0, 0]}, {"t": 1, "at": [2, 0]}], cast, TG))       # elde olmadan yerden yere gidemez
-    assert any("çok kısa" in p for p in O.validate([{"t": 0, "holder": "aden"}, {"t": 0.05, "holder": "harun"}], cast, TG))
-    assert any("hide sonrası" in p for p in O.validate(TOSS + [{"t": 4, "at": "bin_green"}], cast, TG))
-    assert any("tam olarak biri" in p for p in O.validate([{"t": 0, "holder": "aden", "at": [0, 0]}], cast, TG))
+    assert O.validate(PICK, cast, TG, SK) == [] and O.validate(GIVE, cast, TG, SK) == [] and O.validate(TOSS, cast, TG, SK) == [] and O.validate(DROP, cast, TG, SK) == []
+    assert any("sırasız" in p for p in O.validate([{"t": 2, "at": [0, 0]}, {"t": 1, "at": [0, 0]}], cast, TG, SK))
+    assert any("bilinmeyen sahip" in p for p in O.validate([{"t": 0, "holder": "ghost"}], cast, TG, SK))
+    assert any("bilinmeyen hedef" in p for p in O.validate([{"t": 0, "at": "bin_pink"}], cast, TG, SK))
+    assert any("ışınlanma" in p for p in O.validate([{"t": 0, "at": [0, 0]}, {"t": 1, "at": [2, 0]}], cast, TG, SK))       # elde olmadan yerden yere gidemez
+    assert any("çok kısa" in p for p in O.validate([{"t": 0, "holder": "aden"}, {"t": 0.05, "holder": "harun"}], cast, TG, SK))
+    assert any("hide sonrası" in p for p in O.validate(TOSS + [{"t": 4, "at": "bin_green"}], cast, TG, SK))
+    assert any("tam olarak biri" in p for p in O.validate([{"t": 0, "holder": "aden", "at": [0, 0]}], cast, TG, SK))
 
 def test_e900_beat_tracks_are_valid():
     bs = json.load(open(os.path.join(os.path.dirname(__file__), "..", "series", "ahos-bizim-aile", "episodes", "e900_kabul", "beat_sheet.json"), encoding="utf-8"))
     n = 0
     for b in bs["beats"]:
         for ob in (b.get("choreo") or {}).get("objects", []):
-            assert O.validate(ob["track"], b.get("characters") or ["aden", "harun"], TG) == [], (b.get("id"), ob)
+            assert O.validate(ob["track"], b.get("characters") or ["aden", "harun"], TG, SK) == [], (b.get("id"), ob)
             n += 1
     assert n >= 4
 

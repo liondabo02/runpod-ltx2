@@ -198,6 +198,73 @@ def view_of(pose):
     return "three_quarter" if b >= 0.45 else "front"
 
 
+def _elbow(sh, hand, arm_len, sg):
+    """Omuz ile el arasında dirsek noktası: iki parça (üst kol + ön kol, her biri arm_len/2); dirsek aşağı/dışa doğru bükülür."""
+    dx, dy = hand[0] - sh[0], hand[1] - sh[1]; d = math.hypot(dx, dy) or 1e-6
+    half = arm_len / 2.0; hgt = math.sqrt(max(0.0, half * half - (d / 2.0) ** 2))
+    nx, ny = -dy / d, dx / d
+    if ny < 0:
+        nx, ny = -nx, -ny                                  # dirsek aşağı yönde
+    if nx * sg < 0 and abs(ny) < 0.3:
+        nx, ny = -nx, -ny
+    return ((sh[0] + hand[0]) / 2 + nx * hgt, (sh[1] + hand[1]) / 2 + ny * hgt)
+
+
+def shoulder_offset(des, pose, side):
+    """Omzun ayağa göre konumu (metre): (dx, yükseklik). hand_offset ile aynı geometri."""
+    if view_of(pose) == "side":
+        Hh = des["height"]; cls = des["class"]
+        leg_h = Hh * {"infant": 0.20, "toddler": 0.24, "child": 0.28, "adult": 0.38}[cls]
+        torso_h = Hh * {"infant": 0.22, "toddler": 0.25, "child": 0.27, "adult": 0.30}[cls]
+        top = -pose["z"] - leg_h - max(0.0, -pose["z"]) - torso_h * float(pose.get("sq", 1.0))
+        d = 1.0 if pose.get("yaw", 0.0) >= 0 else -1.0
+        return pose.get("lean", 0.0) * torso_h * 0.5 * d * 0.8, -(top + torso_h * 0.16)
+    Hh = des["height"]; cls = des["class"]
+    leg_h = Hh * {"infant": 0.20, "toddler": 0.24, "child": 0.28, "adult": 0.38}[cls]
+    torso_h = Hh * {"infant": 0.22, "toddler": 0.25, "child": 0.27, "adult": 0.30}[cls]
+    torso_w = Hh * {"infant": 0.30, "toddler": 0.28, "child": 0.25, "adult": 0.22}[cls] * des.get("build", 1.0)
+    sq_ = float(pose.get("sq", 1.0)); jump = pose["z"]; sit = max(0.0, -pose["z"])
+    squash = (1.0 + max(0.0, jump) / (Hh * 3.0)) * sq_
+    torso_w /= max(0.7, sq_) ** 0.5
+    bturn = max(-1.0, min(1.0, pose.get("yaw", 0.0) * 1.25)); torso_w *= 1.0 - 0.30 * abs(bturn)
+    torso_top = -jump - leg_h - sit - torso_h * squash
+    sg = -1 if side == "L" else 1
+    return sg * torso_w * 0.52, -(torso_top + torso_h * 0.14)
+
+
+def arm_toward(des, pose, side, tx, th):
+    """Yönlü uzanma (hafif IK, ön görünüş): elin hedefe (ayağa göre dx, yükseklik) gitmesi için kol açısını ayarlar (pose'u yerinde değiştirir).
+    Dönen: ulaşılabilirlik oranı = (omuz->hedef mesafe) / (kol boyu); ≤1 ise el hedefe ulaşır, >1 ise kısa kalır (kol uzayamaz)."""
+    sg = -1 if side == "L" else 1
+    shx, shh = shoulder_offset(des, pose, side)
+    vx, vdown = tx - shx, -(th - shh)
+    ln = des["height"] * 0.27
+    ang = max(0.0, min(3.0, math.atan2(sg * vx, vdown)))
+    ratio = math.hypot(vx, vdown) / ln
+    key = "aL" if side == "L" else "aR"
+    pose[key][0] = 0.0; pose[key][1] = ang if side == "L" else -ang
+    pose["d" + side] = min(math.hypot(vx, vdown), ln)                                   # el mesafesi: hedefe kadar; yakınsa dirsek bükülür, uzaksa kol tam gerilir
+    return ratio
+
+
+def handoff_reach_ratio(des_a, xa, des_b, xb, side_a=None, side_b=None):
+    """İki karakter x konumlarında el değiştirebilir mi? Buluşma noktası (ortada, omuz yüksekliklerinin ortası); iki kol da yetişmeli. Dönen: en kötü ulaşılabilirlik oranı (≤1 uygun)."""
+    pa = {"x": xa, "z": 0.0, "yaw": 0.0, "lean": 0.0, "sq": 1.0}; pb = {"x": xb, "z": 0.0, "yaw": 0.0, "lean": 0.0, "sq": 1.0}
+    sa = side_a or ("R" if xb > xa else "L"); sb = side_b or ("R" if xa > xb else "L")
+    ax, ah = shoulder_offset(des_a, pa, sa); bx, bh = shoulder_offset(des_b, pb, sb)
+    mx, mh = meeting_point(des_a, (xa + ax, ah), des_b, (xb + bx, bh))
+    ra = math.hypot(mx - (xa + ax), mh - ah) / (des_a["height"] * 0.27)
+    rb = math.hypot(mx - (xb + bx), mh - bh) / (des_b["height"] * 0.27)
+    return max(ra, rb)
+
+
+def meeting_point(des_a, sh_a, des_b, sh_b):
+    """Buluşma noktası: omuzlar arası doğru üzerinde, kol boylarıyla orantılı (kısa kollu çocuk daha az, uzun kollu yetişkin daha çok uzanır). sh_*: (dünya x, yükseklik)."""
+    la, lb = des_a["height"] * 0.27, des_b["height"] * 0.27
+    f = la / (la + lb)
+    return sh_a[0] + (sh_b[0] - sh_a[0]) * f, sh_a[1] + (sh_b[1] - sh_a[1]) * f
+
+
 def hand_offset(des, pose, side):
     """Elin ayağa göre konumu METRE olarak: (dx, yükseklik). Çizimle aynı geometri (ppm=1); nesne ele gerçekten bağlansın diye.
     side: 'L' | 'R' (ekranda sol/sağ el, ön görünüşte). Profilde puppet_side kullanılır."""
@@ -218,8 +285,26 @@ def hand_offset(des, pose, side):
     ang = abs(out) * 1.0 if out * (1 if side == "L" else -1) >= 0 else -abs(out) * 0.4
     ang = max(-0.5, ang)
     ln = Hh * 0.27 * (1.0 - 0.28 * min(1.0, abs(fwd) / 1.3))
+    if ("d" + side) in pose:
+        ln = min(Hh * 0.27, pose["d" + side])
     shx, shy = sg * torso_w * 0.52, torso_top + torso_h * 0.14
     return shx + sg * math.sin(ang) * ln, -(shy + math.cos(ang) * ln)
+
+
+def draw_grip(cv, des, pose, side, fx, fy, ppm):
+    """Elin nesneyi kavradığı parmak katmanı: nesne çizildikten SONRA, elin gerçek konumunda 3 kısa parmak + başparmak üstte çizilir (nesne parmakların arkasında kalır)."""
+    dx, h = hand_offset(des, pose, side)
+    x, y = fx + dx * ppm, fy - h * ppm
+    Hh = des["height"] * ppm; r = Hh * 0.052; ow = max(2.0, Hh * 0.012); skin = des["skin"]
+    sg = -1 if side == "L" else 1
+    if view_of(pose) == "side":
+        d = 1.0 if pose.get("yaw", 0.0) >= 0 else -1.0
+        for i in range(3):
+            cv.capsule((x - d * r * 0.1, y - r * 0.5 + i * r * 0.5), (x + d * r * 0.85, y - r * 0.45 + i * r * 0.5), r * 0.19, r * 0.17, skin, INK, ow * 0.6)
+        return
+    for i in range(3):
+        cv.capsule((x - sg * r * 0.05, y - r * 0.55 + i * r * 0.5), (x + sg * r * 0.95, y - r * 0.45 + i * r * 0.5), r * 0.19, r * 0.17, skin, INK, ow * 0.6)
+    cv.capsule((x - sg * r * 0.2, y - r * 0.8), (x + sg * r * 0.5, y - r * 0.95), r * 0.21, r * 0.18, skin, INK, ow * 0.6)       # başparmak üstte
 
 
 def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
@@ -351,10 +436,18 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         ang = max(-0.5, ang)
         ln = arm_len * (1.0 - 0.28 * min(1.0, abs(fwd) / 1.3))
         sh = (fx + sg * torso_w * 0.52, torso_top + torso_h * 0.14)
+        bent = ("d" + side) in pose                                  # yönlü uzanma: gerçek dirsek bükülmesi (kısa menzilde kol kısalmaz, bükülür)
+        if bent:
+            ln = min(arm_len, pose["d" + side] * ppm)
         hand = (sh[0] + sg * math.sin(ang) * ln, sh[1] + math.cos(ang) * ln)
-        cv.capsule(sh, hand, Hh * 0.036, Hh * 0.030, skin, INK, ow)
-        mid = (sh[0] + (hand[0] - sh[0]) * 0.42, sh[1] + (hand[1] - sh[1]) * 0.42)
-        cv.capsule(sh, mid, Hh * 0.045, Hh * 0.040, shirt, INK, ow)
+        if bent and ln < arm_len * 0.985:
+            elb = _elbow(sh, hand, arm_len, sg)
+            cv.capsule(sh, elb, Hh * 0.036, Hh * 0.032, skin, INK, ow); cv.capsule(elb, hand, Hh * 0.032, Hh * 0.030, skin, INK, ow)
+            cv.capsule(sh, ((sh[0] + elb[0]) / 2, (sh[1] + elb[1]) / 2), Hh * 0.045, Hh * 0.040, shirt, INK, ow)
+        else:
+            cv.capsule(sh, hand, Hh * 0.036, Hh * 0.030, skin, INK, ow)
+            mid = (sh[0] + (hand[0] - sh[0]) * 0.42, sh[1] + (hand[1] - sh[1]) * 0.42)
+            cv.capsule(sh, mid, Hh * 0.045, Hh * 0.040, shirt, INK, ow)
         _hand(cv, hand, Hh * 0.052, skin, sg, fwd, ow, t, st.get("emotion", "neutral"), pose.get("hand") if pose.get("hand_side") == side else None)
     # ---- boyun + kafa
     cv.capsule((fx, torso_top + 2), (fx, torso_top - head_h * 0.1), Hh * 0.03, Hh * 0.03, skin, INK, ow)
