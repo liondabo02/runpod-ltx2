@@ -91,7 +91,15 @@ def pick_hand(beat, holder, hand=None):
     mo = beat.get("motion") or (beat.get("choreo") or {}).get("motion") or {}; m = mo.get(holder) or {}
     cast = beat.get("cast") or beat.get("characters") or list(mo)
     others = [mo[c]["x0"] for c in cast if c != holder and c in mo]
-    if m.get("kind") in ("walk", "carry", "run") and abs(m.get("x1", 0) - m.get("x0", 0)) > 0.05:
+    tgt_x = None
+    for ob in (beat.get("choreo") or {}).get("objects", []):                    # atılacak/bırakılacak hedef varsa tutan el hedefe yakın olan (atış kolu hedefe doğru savrulur)
+        tr = ob.get("track") or []
+        for a_, b_ in zip(tr, tr[1:]):
+            if a_.get("holder") == holder and isinstance(b_.get("at"), str) and b_["at"] in setpieces2d.TARGETS:
+                tgt_x = setpieces2d.TARGETS[b_["at"]][0]
+    if tgt_x is not None:
+        side = 1.0 if tgt_x > m.get("x0", 0.0) else -1.0
+    elif m.get("kind") in ("walk", "carry", "run") and abs(m.get("x1", 0) - m.get("x0", 0)) > 0.05:
         side = 1.0 if m["x1"] > m["x0"] else -1.0
     elif others:
         side = 1.0 if others[0] > m.get("x0", 0.0) else -1.0
@@ -231,6 +239,35 @@ def apply_handoff_reach(beat, items, lt):
                 p[key] = [old[0] + (p[key][0] - old[0]) * w, old[1] + (p[key][1] - old[1]) * w]
 
 
+def apply_throw_swing(beat, items, lt):
+    """Atış/bırakma kolu: bırakmadan önce geri salınım, bırakma anında hedefe doğru ileri savurma (kol nesneyi gerçekten fırlatır), sonra gevşeme."""
+    by = {i[0]: i for i in items}
+    for ob in (beat.get("choreo") or {}).get("objects", []):
+        for e in object_state.events(ob.get("track") or []):
+            if e["type"] not in ("dispose", "drop") or e["by"] not in by:
+                continue
+            ts = e["t_start"]; tgt = None
+            for k in ob["track"]:
+                if isinstance(k.get("at"), str) and k["t"] == e["t"]:
+                    tgt = setpieces2d.TARGETS.get(k["at"])
+            if tgt is None or not (ts - 0.45 <= lt <= ts + 0.5):
+                continue
+            cid, des, p, *_ = by[e["by"]]
+            if pp.view_of(p) == "side":
+                continue
+            side = pick_hand(beat, cid); dirn = 1.0 if tgt[0] >= p["x"] else -1.0
+            sx, sh = pp.shoulder_offset(des, p, side); ln = des["height"] * 0.27
+            if lt < ts - 0.1:
+                w = pp_smooth((lt - (ts - 0.45)) / 0.35); tx, th = sx - dirn * 0.5 * ln, sh - 0.9 * ln       # geri salınım (aşağı-geri)
+            elif lt <= ts + 0.15:
+                w = 1.0; u = pp_smooth((lt - (ts - 0.1)) / 0.25); tx = sx + dirn * (-0.5 + 1.5 * u) * ln; th = sh - (0.9 - 1.3 * u) * ln   # ileri-yukarı savurma
+            else:
+                w = 1.0 - pp_smooth((lt - (ts + 0.15)) / 0.35); tx, th = sx + dirn * 1.0 * ln, sh + 0.4 * ln
+            key = "aL" if side == "L" else "aR"; old = list(p[key])
+            pp.arm_toward(des, p, side, tx, th)
+            p[key] = [old[0] + (p[key][0] - old[0]) * w, old[1] + (p[key][1] - old[1]) * w]
+
+
 def pp_smooth(x):
     x = min(1.0, max(0.0, x)); return x * x * (3 - 2 * x)
 
@@ -357,6 +394,7 @@ def frame(plan, designs, t, bible_chars=None):
             p["aR"][1] = (p["aR"][1] if p["aR"][1] else -0.2) - 0.5 * E
         items.append((cid, d, p, m, look, E if spk else 0.0))
         xs.append(p["x"])
+    apply_throw_swing(beat, items, lt)                   # atışta kol savurma
     apply_handoff_reach(beat, items, lt)                 # el değiştirmede eller buluşma noktasına uzanır
     avg = sum(xs) / len(xs) if xs else 0.0
     focus = beat.get("focus")

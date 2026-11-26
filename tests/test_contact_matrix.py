@@ -163,3 +163,42 @@ def test_transfer_object_drawn_after_all_characters():
     items = [("a", {"height": 1.0, "class": "child"}, {"x": 0.0}, None, None, None)]
     st = r2.object_state.state_at(beat["choreo"]["objects"][0]["track"], 1.5)
     assert st["state"] == "transfer"
+
+
+def test_throw_distance_preflight():
+    import object_state as O
+    tr = [{"t": 0, "holder": "h"}, {"t": 2, "holder": "h"}, {"t": 3, "at": "bin_green", "hide": True}]
+    T = {"bin_green": (1.3, 0.9)}
+    assert any("atış mesafesi" in p for p in O.throw_problems(tr, lambda c, t: 1.4, T))
+    assert O.throw_problems(tr, lambda c, t: 0.5, T) == []
+    assert any("menzil" in p for p in O.throw_problems(tr, lambda c, t: -2.5, T))
+
+
+def test_pick_hand_prefers_throw_target_side_and_swing_moves_arm():
+    beat = {"characters": ["h"], "choreo": {"motion": {"h": {"kind": "reach", "x0": 0.5, "x1": 0.5}},
+            "objects": [{"prop": "bottle", "track": [{"t": 0, "holder": "h"}, {"t": 2, "holder": "h"}, {"t": 3, "at": "bin_green", "hide": True}]}]}}
+    assert r2.pick_hand(beat, "h") == "R"                       # hedef sağda -> sağ el
+    des = {"height": 1.8, "class": "adult"}
+    mk = lambda: {"x": 0.5, "z": 0.0, "yaw": 0.0, "sq": 1.0, "lean": 0.0, "head": [0.0, 0.0], "aL": [0.0, 0.1], "aR": [0.0, -0.1]}
+    p_idle, p_sw = mk(), mk()
+    r2.apply_throw_swing(beat, [("h", des, p_idle)], 0.5)      # pencere dışı
+    r2.apply_throw_swing(beat, [("h", des, p_sw)], 2.1)        # savurma
+    assert p_idle["aR"] == [0.0, -0.1] and p_sw["aR"] != [0.0, -0.1]
+
+
+def test_staging_resolver_is_generic_and_reports():
+    import staging
+    T = {"bin_a": (1.3, 0.9), "bin_b": (1.85, 0.9)}
+    mot = {"x": {"kind": "idle", "x0": 1.4, "x1": 1.4}, "y": {"kind": "idle", "x0": 0.2, "x1": 0.2}}
+    ob = [{"prop": "bottle", "track": [{"t": 0, "holder": "y"}, {"t": 1, "holder": "y"}, {"t": 2.5, "holder": "x"}, {"t": 3, "holder": "x"}, {"t": 4, "at": "bin_a", "hide": True}]}]
+    notes = staging.resolve(mot, ob, {"x": 1.9, "y": 0.98}, T)
+    rules = {n["rule"] for n in notes}
+    assert rules == {"handoff_separation", "throw_distance"} or "handoff_separation" in rules
+    gap = abs(mot["x"]["x0"] - mot["y"]["x0"]); assert 0.5 < gap < 0.9      # 0.85*0.27*(1.9+0.98)=0.66
+    # ikinci çağrı: zaten çözülmüş -> değişiklik yok (kararlı)
+    mot2 = {k: dict(v) for k, v in mot.items()}
+    assert [n for n in staging.resolve(mot2, ob, {"x": 1.9, "y": 0.98}, T) if n["rule"] == "handoff_separation"] == []
+    # farklı boy (iki yetişkin) -> daha uzak mesafe
+    m3 = {"x": {"kind": "idle", "x0": 0.0, "x1": 0.0}, "y": {"kind": "idle", "x0": 0.1, "x1": 0.1}}
+    staging.resolve(m3, [{"prop": "b", "track": [{"t": 0, "holder": "y"}, {"t": 1, "holder": "y"}, {"t": 2, "holder": "x"}]}], {"x": 1.7, "y": 1.7}, T)
+    assert abs(m3["x"]["x0"] - m3["y"]["x0"]) > 0.7

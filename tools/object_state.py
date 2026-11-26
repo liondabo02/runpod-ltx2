@@ -96,6 +96,21 @@ def validate(track, cast=None, targets=None, sinks=None):
     return probs
 
 
+def throw_problems(track, holder_x, targets, min_dx=0.5, max_dx=3.0):
+    """Atış okunabilirliği: bırakan kişi ile hedef arasındaki yatay mesafe çok kısaysa (nesne gövdenin önünde 'asılı' görünür) ya da menzil dışıysa sorun listesi.
+    holder_x: {karakter: x_at(t)} çağrılabilir (kimlik, t) -> x."""
+    probs = []
+    for i, k in enumerate(track):
+        if i and "holder" in track[i - 1] and "at" in k and isinstance(k["at"], str) and k["at"] in targets:
+            hx = holder_x(track[i - 1]["holder"], track[i - 1]["t"])
+            dx = abs(targets[k["at"]][0] - hx)
+            if dx < min_dx:
+                probs.append(f"anahtar {i}: atış mesafesi {dx:.2f} m < {min_dx} m (hedef kişinin yanında; atış okunmaz)")
+            elif dx > max_dx:
+                probs.append(f"anahtar {i}: atış mesafesi {dx:.2f} m > {max_dx} m (menzil dışı)")
+    return probs
+
+
 def state_at(track, lt):
     """O andaki durum: {'state': ground|held|transfer|put|hidden, 'holder', 'to', 'u'}."""
     if lt < track[0]["t"]:

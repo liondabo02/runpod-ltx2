@@ -2,6 +2,8 @@
 import json, os, re
 import shot_motion as sm
 import props2d
+import staging
+import setpieces2d
 try:
     import mood_engine
 except ImportError:
@@ -95,6 +97,7 @@ def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
             if c_ in mot:
                 mot[c_] = {"kind": spec_.get("kind", mot[c_]["kind"]), "x0": float(spec_.get("x0", mot[c_]["x0"])),
                            "x1": float(spec_.get("x1", spec_.get("x0", mot[c_]["x1"]))), "seed": mot[c_]["seed"]}
+        stg_notes = staging.resolve(mot, ch_.get("objects", []), {c: out["characters"][c]["height"] for c in cast if c in out["characters"]}, setpieces2d.TARGETS)
         cam_text = (b.get("camera") or "").lower()
         preset = "close" if re.search(r"yakın|close|detay", cam_text) else "medium" if re.search(r"orta|omuz|medium", cam_text) \
             else "wide" if re.search(r"genel|geniş|wide", cam_text) else None
@@ -108,7 +111,7 @@ def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
                              "cast": cast, "motion": mot, "lines": lines, "camera": preset, "focus": focus,
                              "loc": b.get("location"), "light": b.get("light_time", ""), "shot_id": b.get("shot_id"),
                              "mood": (mood_engine.mood_for(b.get("action", ""), (b.get("emotion") or {}).get("valence")) if mood_engine else "neutral"),
-                             "choreo": {"objects": ch_.get("objects", []), "gaze": ch_.get("gaze", {}), "react": ch_.get("react", {})},
+                             "staging_notes": stg_notes, "choreo": {"objects": ch_.get("objects", []), "gaze": ch_.get("gaze", {}), "react": ch_.get("react", {})},
                              "icons": (ch_.get("icons", []) if ch_ else _icons(b.get("action", ""))), "scene_id": b.get("scene_id"),
                              "first_of_scene": bi == 0 or sheet["beats"][bi - 1].get("scene_id") != b.get("scene_id"),
                              "props": ([] if ch_ else props2d.extract(str(b.get("action", "")) + " " + str(b.get("camera", "")))),
