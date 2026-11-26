@@ -7,7 +7,7 @@ DES = T.design_set(BIBLE); TG = setpieces2d.TARGETS; SK = setpieces2d.SINKS
 PROPS = ("bottle", "stone", "shovel", "hat", "balloon")
 
 def _beat(a_kind="idle", h_kind="idle", prop="bottle", track=None, a_x=(0.2, 0.2), h_x=(1.4, 1.4)):
-    return {"cast": ["aden", "harun"], "motion": {"aden": {"kind": a_kind, "x0": a_x[0], "x1": a_x[1], "seed": 0}, "harun": {"kind": h_kind, "x0": h_x[0], "x1": h_x[1], "seed": 1}},
+    return {"targets": TG, "cast": ["aden", "harun"], "motion": {"aden": {"kind": a_kind, "x0": a_x[0], "x1": a_x[1], "seed": 0}, "harun": {"kind": h_kind, "x0": h_x[0], "x1": h_x[1], "seed": 1}},
             "choreo": {"objects": [{"prop": prop, "track": track or [{"t": 0, "holder": "aden"}, {"t": 9, "holder": "aden"}]}]}}
 
 def _items(beat, t, dur=9.0, yaw_a=None, view=None):
@@ -175,7 +175,7 @@ def test_throw_distance_preflight():
 
 
 def test_pick_hand_prefers_throw_target_side_and_swing_moves_arm():
-    beat = {"characters": ["h"], "choreo": {"motion": {"h": {"kind": "reach", "x0": 0.5, "x1": 0.5}},
+    beat = {"targets": {"bin_green": (1.3, 0.9)}, "characters": ["h"], "choreo": {"motion": {"h": {"kind": "reach", "x0": 0.5, "x1": 0.5}},
             "objects": [{"prop": "bottle", "track": [{"t": 0, "holder": "h"}, {"t": 2, "holder": "h"}, {"t": 3, "at": "bin_green", "hide": True}]}]}}
     assert r2.pick_hand(beat, "h") == "R"                       # hedef sağda -> sağ el
     des = {"height": 1.8, "class": "adult"}

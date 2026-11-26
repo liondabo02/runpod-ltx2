@@ -104,7 +104,7 @@ def test_hidden_object_disappears_after_reaching_target(monkeypatch):
     """Regresyon: şişe çöp kutusuna atıldıktan sonra kutu ağzında/Harun'un önünde asılı kalıyordu."""
     calls = []
     monkeypatch.setattr(r2.props2d, "draw", lambda *a, **k: calls.append(a))
-    beat = {"choreo": {"objects": [{"prop": "bottle", "track": [{"t": 0, "at": [0.0, 0.0]}, {"t": 2.0, "at": "bin_green", "hide": True}]}]}}
+    beat = {"targets": {"bin_green": (1.3, 0.9)}, "choreo": {"objects": [{"prop": "bottle", "track": [{"t": 0, "at": [0.0, 0.0]}, {"t": 2.0, "at": "bin_green", "hide": True}]}]}}
     r2._draw_objects(None, None, beat, [], {}, 1.0)
     assert len(calls) == 1                         # uçuş sırasında görünür
     calls.clear(); r2._draw_objects(None, None, beat, [], {}, 2.5)

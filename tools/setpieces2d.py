@@ -42,9 +42,24 @@ def rules_sign(cv, cam, x=0.0, t=0.0):
     cv.line([(cam.x(x - 0.6), cam.y(1.78)), (cam.x(x + 0.6), cam.y(1.78))], (80, 80, 80), max(2.0, 0.012 * cam.s))
 
 
-BIN_X = 1.3
-TARGETS = {"bin_green": (BIN_X, 0.9), "bin_yellow": (BIN_X + 0.55, 0.9), "bin_blue": (BIN_X + 1.1, 0.9)}   # çöp kutusu ağızları (bins() ile aynı sabitten)
-SINKS = {"bin_green", "bin_yellow", "bin_blue"}          # nesnenin içine girip kaybolabildiği hedefler (açık imha olayı yalnız burada)
+# Etkileşim çapaları: bir dekor parçası, kendi içinde nesnenin hedef alabileceği noktaları (ve içinde kaybolabilen 'lavabo' noktalarını) TANIMLAR.
+# Parçanın yerleştirildiği x'e göre dünya konumuna çevrilir; böylece hedefler mekân/proje verisinden gelir, motor koduna gömülmez.
+ANCHORS = {"bins": [("bin_green", 0.0, 0.9, True), ("bin_yellow", 0.55, 0.9, True), ("bin_blue", 1.1, 0.9, True)]}      # (ad, dx, yükseklik, nesne içinde kaybolabilir mi)
+DEFAULT_BIN_X = 1.3
+
+
+def anchors_for(pieces):
+    """pieces: [(parça_adı, x), ...] -> (TARGETS {ad: (x, y)}, SINKS {ad})."""
+    targets, sinks = {}, set()
+    for name, x in pieces or []:
+        for aname, dx, y, sink in ANCHORS.get(name, []):
+            targets[aname] = (round(float(x) + dx, 3), y)
+            if sink:
+                sinks.add(aname)
+    return targets, sinks
+
+
+TARGETS, SINKS = anchors_for([("bins", DEFAULT_BIN_X)])     # yalnız geriye dönük varsayılan (parça yerleşimi verilmemişse); gerçek kaynak: mekân verisi (anchors_for)
 
 
 def bins(cv, cam, x=1.2, t=0.0):
@@ -163,20 +178,33 @@ def park_dressing(cv, cam, x=0.0, t=0.0):
     _ell(cv, cam, x + 5.64, 1.68, 0.07, 0.07, (40, 30, 30), 0)
 
 
-PIECES = {
-    "park_slide_zone": [(park_dressing, 0.0), (slide, 1.55)], "park_rules_sign": [(park_dressing, 0.0), (rules_sign, 0.0)], "park_trash_walk": [(park_dressing, 0.0), (bins, BIN_X)],
-    "park_flower_bed": [(park_dressing, 0.0), (flower_bed, 0.0)], "park_bike_pedestrian": [(park_dressing, 0.0), (bike_lane, 0.0)], "park_entrance": [(park_dressing, 0.0), (gate, 0.0)],
-    "park_family_area": [(park_dressing, 0.0), (picnic, -0.2)], "home_kitchen": [(wall_decor, 0.0), (kitchen, 0.0)], "home_entry_corridor": [(wall_decor, 0.0), (corridor, 0.0)], "home_salon": [(wall_decor, 0.0), (salon, 0.0)],
-}
+CATALOG = {"park_dressing": park_dressing, "slide": slide, "rules_sign": rules_sign, "bins": bins, "flower_bed": flower_bed, "bike_lane": bike_lane, "gate": gate,
+           "picnic": picnic, "kitchen": kitchen, "corridor": corridor, "salon": salon, "wall_decor": wall_decor}
 
 
-def draw(cv, cam, loc, t=0.0):
+def load_locations(series_dir):
+    """Proje verisi: series/<id>/locations.json  {mekan_id: {"pieces": [[parça, x], ...]}}. Yoksa boş (motor mekân bilmez)."""
+    import json, os
+    p = os.path.join(series_dir, "locations.json")
+    return json.load(open(p, encoding="utf-8")) if os.path.exists(p) else {}
+
+
+def pieces_of(spec):
+    return [(n, float(x)) for n, x in (spec or {}).get("pieces", []) if n in CATALOG]
+
+
+def unknown_pieces(spec):
+    return [n for n, _x in (spec or {}).get("pieces", []) if n not in CATALOG]
+
+
+def draw(cv, cam, loc, t=0.0, pieces=None):
     try:
         import style_profile
         prof = style_profile.current()
     except Exception:
         prof = {}
-    for fn, x in PIECES.get(loc or "", []):
+    for name, x in pieces or []:
+        fn = CATALOG[name]
         if fn is wall_decor and not prof.get("decor", True):
             continue
         if fn is park_dressing and not prof.get("park_decor", True):

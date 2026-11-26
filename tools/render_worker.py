@@ -66,20 +66,22 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
     rdir = os.path.join(episode_dir, "render"); os.makedirs(rdir, exist_ok=True)
     import object_state, setpieces2d
     _H = {c['id']: json.load(open(os.path.join(assets, c['id'] + '.spec.json'), encoding='utf-8')).get('height_m', 1.2) if os.path.exists(os.path.join(assets, c['id'] + '.spec.json')) else 1.2 for c in bible['characters']}
+    locs_ = setpieces2d.load_locations(series_dir)
     bad = []                                            # ön kontrol: geçersiz nesne izi (ışınlanma, havada bırakma, tanımsız imha...) sessizce çizilmez; planlamaya geri bildirilir
     for bi, b in enumerate(sheet.get("beats", [])):
         if float(b.get("t_end", 0)) <= t0 or float(b.get("t_start", 0)) >= t1:
             continue
+        tg_, sk_ = setpieces2d.anchors_for(setpieces2d.pieces_of(locs_.get(b.get("location") or "", {})))       # hedefler mekân verisinden (motor sabiti değil)
         for oi, ob in enumerate((b.get("choreo") or {}).get("objects", [])):
-            for pr in object_state.validate(ob.get("track") or [], b.get("characters") or None, setpieces2d.TARGETS, setpieces2d.SINKS):
+            for pr in object_state.validate(ob.get("track") or [], b.get("characters") or None, tg_, sk_):
                 bad.append(f"vuruş {b.get('id', bi)} nesne {oi} ({ob.get('prop')}): {pr}")
             import copy, staging                              # yerleşim çözücü planlayıcıda da uygulanır: ön kontrol, ÇÖZÜLMÜŞ konumlarla yapılır
             mo = copy.deepcopy((b.get("choreo") or {}).get("motion") or {})
-            staging.resolve(mo, (b.get("choreo") or {}).get("objects", []), {c: _H.get(c, 1.2) for c in (b.get("characters") or [])}, setpieces2d.TARGETS)
+            staging.resolve(mo, (b.get("choreo") or {}).get("objects", []), {c: _H.get(c, 1.2) for c in (b.get("characters") or [])}, tg_)
             def hx(cid, t_, _m=mo):
                 m_ = _m.get(cid) or {}; d_ = max(0.1, float(b.get("t_end", 0)) - float(b.get("t_start", 0)))
                 return float(m_.get("x0", 0)) + (float(m_.get("x1", m_.get("x0", 0))) - float(m_.get("x0", 0))) * min(1.0, max(0.0, t_ / d_))
-            for pr in object_state.throw_problems(ob.get("track") or [], hx, setpieces2d.TARGETS):
+            for pr in object_state.throw_problems(ob.get("track") or [], hx, tg_):
                 bad.append(f"vuruş {b.get('id', bi)} nesne {oi} ({ob.get('prop')}): {pr}")
     if bad:
         return {"status": "BLOCKED", "error": "NESNE_IZI_GECERSIZ", "problems": bad}

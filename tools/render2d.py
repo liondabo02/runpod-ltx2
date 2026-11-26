@@ -84,6 +84,11 @@ def _x_at(px, cid, m):
     return px.get(cid, m["x1"])
 
 
+def _tg(beat):
+    """Bu planın nesne hedefleri: mekân verisindeki dekor parçalarından türetilmiş (plan['targets']); yoksa boş — motor hedef uydurmaz."""
+    return beat.get("targets") or {}
+
+
 def pick_hand(beat, holder, hand=None):
     """Hangi el tutacak: açık 'hand' varsa o; yoksa vuruşun BAŞLANGIÇ konumlarından (zamandan bağımsız => el sıçramaz): yürüyorsa gidiş yönü, değilse karşıdaki kişiye yakın el."""
     if hand in ("L", "R"):
@@ -95,8 +100,8 @@ def pick_hand(beat, holder, hand=None):
     for ob in (beat.get("choreo") or {}).get("objects", []):                    # atılacak/bırakılacak hedef varsa tutan el hedefe yakın olan (atış kolu hedefe doğru savrulur)
         tr = ob.get("track") or []
         for a_, b_ in zip(tr, tr[1:]):
-            if a_.get("holder") == holder and isinstance(b_.get("at"), str) and b_["at"] in setpieces2d.TARGETS:
-                tgt_x = setpieces2d.TARGETS[b_["at"]][0]
+            if a_.get("holder") == holder and isinstance(b_.get("at"), str) and b_["at"] in _tg(beat):
+                tgt_x = _tg(beat)[b_["at"]][0]
     if tgt_x is not None:
         side = 1.0 if tgt_x > m.get("x0", 0.0) else -1.0
     elif m.get("kind") in ("walk", "carry", "run") and abs(m.get("x1", 0) - m.get("x0", 0)) > 0.05:
@@ -143,7 +148,7 @@ def _objects_now(beat, items, lt):
             h = _hold_pos(holder, items, None, beat, t_, hand, _g)
             return (h[0], h[1]) if h else (0.0, 0.0)
         def target(at):
-            at = setpieces2d.TARGETS[at] if isinstance(at, str) else at
+            at = _tg(beat)[at] if isinstance(at, str) else at
             return (at[0], at[1])
         x, y, st = object_state.position(tr, lt, hold, target)
         if x is None:
@@ -249,7 +254,7 @@ def apply_throw_swing(beat, items, lt):
             ts = e["t_start"]; tgt = None
             for k in ob["track"]:
                 if isinstance(k.get("at"), str) and k["t"] == e["t"]:
-                    tgt = setpieces2d.TARGETS.get(k["at"])
+                    tgt = _tg(beat).get(k["at"])
             if tgt is None or not (ts - 0.45 <= lt <= ts + 0.5):
                 continue
             cid, des, p, *_ = by[e["by"]]
@@ -446,7 +451,7 @@ def frame(plan, designs, t, bible_chars=None):
     cv = pp.Cv()
     sc.scene_back(cv, beat["scene"], cam, t, light=beat.get("light", ""))
     if preset != "insert":
-        setpieces2d.draw(cv, cam, beat.get("loc"), t)
+        setpieces2d.draw(cv, cam, beat.get("loc"), t, pieces=beat.get("pieces"))
     if bg_art is not None:
         try:
             bg_art.enhance(cv, beat["scene"], beat.get("light"), t)
