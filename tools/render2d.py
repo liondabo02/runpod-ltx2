@@ -9,6 +9,7 @@ import shot_motion as sm  # noqa: E402
 import puppet2d as pp  # noqa: E402
 import scenes2d as sc  # noqa: E402
 import props2d
+import object_state  # noqa: E402
 import setpieces2d  # noqa: E402
 import fx_layer  # noqa: E402
 try:
@@ -83,50 +84,57 @@ def _x_at(px, cid, m):
     return px.get(cid, m["x1"])
 
 
-def _hold_pos(cid, items, designs, beat, lt):
-    """Nesnenin bir karakterin elindeki dünya konumu: gövde önünde, karşıdaki kişiye doğru hafif yanda (el-nesne teması)."""
+def _hold_pos(cid, items, designs, beat, lt, hand=None):
+    """Nesnenin bir karakterin ELİNDEKİ dünya konumu: çizilen elin gerçek yeri (pp.hand_offset). Hangi el: açıkça verilmişse o, yoksa karşıdaki kişiye/yürüyüş yönüne yakın olan."""
     for cid_, d_, p_, m_, _lk, _e in items:
         if cid_ == cid:
             H = d_["height"]
-            others = [q["x"] for c2, _d, q, _m, _l, _e2 in items if c2 != cid]
-            side = 1.0 if (others and others[0] > p_["x"]) else -1.0
-            if m_["kind"] in ("walk", "carry", "run") and abs(m_["x1"] - m_["x0"]) > 0.05:
-                side = 1.0 if m_["x1"] > m_["x0"] else -1.0
-            reach = 0.14 + (0.10 if m_["kind"] == "reach" else 0.0)
-            return p_["x"] + side * (reach + 0.10) * H, p_["z"] + 0.12 * H, H          # nesne gövde yanında, belde (yüze/ağza değil)
+            if hand is None:
+                others = [q["x"] for c2, _d, q, _m, _l, _e2 in items if c2 != cid]
+                side = 1.0 if (others and others[0] > p_["x"]) else -1.0
+                if m_["kind"] in ("walk", "carry", "run") and abs(m_["x1"] - m_["x0"]) > 0.05:
+                    side = 1.0 if m_["x1"] > m_["x0"] else -1.0
+                hand = "R" if side > 0 else "L"
+            dx, h = pp.hand_offset(d_, p_, hand)
+            return p_["x"] + dx, max(0.0, h - 0.08), H           # şişe tabanı avucun biraz altında: nesne elin içinde
+
+
     return None
 
 
 def _draw_objects(cv, cam, beat, items, designs, lt):
-    """Koreografideki nesne izi: yerde -> elde (A) -> el değiştirme (yay çizerek) -> elde (B) -> yerde/çöp kutusunda. Sahiplik anahtar karelerle açık."""
+    """Koreografideki nesne izi, object_state durum makinesi üzerinden: yerde -> AL -> elde -> VER (yay) -> elde -> BIRAK/İMHA."""
     for ob in (beat.get("choreo") or {}).get("objects", []):
         tr = ob.get("track") or []
         if not tr:
             continue
-        def pos(kf):
-            if kf.get("holder"):
-                h = _hold_pos(kf["holder"], items, designs, beat, lt)
-                return (h[0], h[1], h[2]) if h else (0.0, 0.0, 1.0)
-            at = kf["at"]
-            if isinstance(at, str):                       # adlandırılmış hedef (örn. bin_green): konum çizimle aynı sabitten gelir
-                at = setpieces2d.TARGETS[at]
-            return (at[0], at[1], 1.0)
-        k0 = tr[0]; k1 = tr[-1]
-        for a, b in zip(tr, tr[1:]):
-            if a["t"] <= lt <= b["t"]:
-                k0, k1 = a, b
-                break
-        else:
-            k0 = k1 = tr[0] if lt < tr[0]["t"] else tr[-1]
-        pa, pb = pos(k0), pos(k1)
-        u = 0.0 if k1["t"] == k0["t"] else min(1.0, max(0.0, (lt - k0["t"]) / (k1["t"] - k0["t"])))
-        u = u * u * (3 - 2 * u)
-        moving = (k0.get("holder") != k1.get("holder")) or (k0.get("at") != k1.get("at"))
-        x = pa[0] + (pb[0] - pa[0]) * u; y = pa[1] + (pb[1] - pa[1]) * u + (0.12 * math.sin(math.pi * u) if moving else 0.0)
-        if k1.get("hide") and lt >= k1["t"]:                    # hedefe (örn. çöp kutusuna) varınca nesne kaybolur; kutunun ağzında asılı kalmaz
+        def hold(holder, t_, hand=None):
+            h = _hold_pos(holder, items, designs, beat, t_, hand)
+            return (h[0], h[1]) if h else (0.0, 0.0)
+        def target(at):
+            at = setpieces2d.TARGETS[at] if isinstance(at, str) else at
+            return (at[0], at[1])
+        x, y, st = object_state.position(tr, lt, hold, target)
+        if x is None:                                           # imha edildi (örn. çöp kutusuna girdi): kutunun ağzında asılı kalmaz
             continue
-        H = max(pa[2], pb[2]) if (k0.get("holder") or k1.get("holder")) else 1.0
         props2d.draw(cv, cam, ob["prop"], x, y, 0.0, 0, scale=ob.get("scale", 0.55))
+
+
+def object_effects(beat, cid, lt):
+    """Nesne olaylarından oyuncu etkisi: (uzanma yerel zamanı, uzanma süresi) veya None; ve taşınan ağırlık (kg-benzeri) -> poz farkı.
+    Alma/verme/bırakma'da karakter temastan ÖNCE uzanır (hazırlık), temas anında kol en uzakta (tepe)."""
+    reach = None; weight = 0.0
+    for ob in (beat.get("choreo") or {}).get("objects", []):
+        tr = ob.get("track") or []
+        if not tr:
+            continue
+        for w in object_state.reach_windows(tr):
+            if w["actor"] == cid and w["t0"] <= lt <= w["t1"] + (w["t1"] - w["t0"]):
+                reach = (lt - w["t0"], 2.0 * max(0.3, w["t1"] - w["t0"]))
+        st = object_state.state_at(tr, lt)
+        if st["state"] in ("held", "put") and st["holder"] == cid or (st["state"] == "transfer" and cid in (st["holder"], st["to"])):
+            weight = max(weight, object_state.weight_of(ob.get("prop")))
+    return reach, weight
 
 
 def _head_cropped(cam, x, H):
@@ -191,13 +199,21 @@ def frame(plan, designs, t, bible_chars=None):
         if rc and lt >= float(rc["t"]):
             lte, kind_e = lt - float(rc["t"]), rc["kind"]
             m = dict(m); m["kind"] = kind_e; m["x0"] = m["x1"] = _x_at(px, cid, m)
-        args = (kind_e, 0, dur, m["seed"], m["x0"], m["x1"], Hm, Hm * 0.45)
+        reach_w, carry_w = object_effects(beat, cid, lt)
+        dur_e = dur
+        if reach_w and kind_e in ("idle", "look") and not rc:      # nesne teması yaklaşıyor ve karakter boşta: uzanma hazırlığı otomatik
+            lte, dur_e, kind_e = reach_w[0], reach_w[1], "reach"
+            m = dict(m); m["kind"] = "reach"; m["x0"] = m["x1"] = _x_at(px, cid, m)
+        args = (kind_e, 0, dur_e, m["seed"], m["x0"], m["x1"], Hm, Hm * 0.45)
         spk = (cid == speaker)
         p = sm.pose_at(args[0], lte, *args[2:], speaking=spk)
         # takip (follow-through): kollar gövdeden, kafa da biraz geriden gelir
         pa = sm.pose_at(args[0], max(0.0, lte - 0.11), *args[2:], speaking=spk)
         ph_ = sm.pose_at(args[0], max(0.0, lte - 0.05), *args[2:], speaking=spk)
         p["aL"], p["aR"], p["head"] = list(pa["aL"]), list(pa["aR"]), list(ph_["head"])
+        if carry_w:                                                # taşınan ağırlık: ağır nesne geri yaslanma, ezilme, baş eğme
+            adj = object_state.carry_adjust(carry_w)
+            p["lean"] += adj["lean"]; p["sq"] = p.get("sq", 1.0) + adj["sq"]; p["head"][0] += adj["head_nod"]
         look = 0.0
         gz = ((beat.get("choreo") or {}).get("gaze") or {}).get(cid)       # yönetmen bakışı: konuşulan kişiye/nesneye
         if gz in px and gz != cid:
@@ -330,7 +346,7 @@ def grade(im, light, t):
 
 
 _G = {}
-ENGINE_FILES = ("render2d.py", "puppet2d.py", "scenes2d.py", "setpieces2d.py", "props2d.py", "fx_layer.py", "bg_art.py", "shot_motion.py", "puppet_side.py",
+ENGINE_FILES = ("render2d.py", "puppet2d.py", "scenes2d.py", "setpieces2d.py", "props2d.py", "fx_layer.py", "bg_art.py", "shot_motion.py", "puppet_side.py", "object_state.py",
                 "shot_planner.py", "style_profile.py", "mood_engine.py")
 
 

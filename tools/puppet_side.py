@@ -153,3 +153,19 @@ def draw_profile(cv, des, pose, st, fx, fy, ppm, t, P):
             a_ = k_ * 2 * math.pi / 5
             cv.ellipse(hx - d * head_w * 0.10 + math.cos(a_) * fr_ * 0.8, head_cy + head_h * 0.30 + math.sin(a_) * fr_ * 0.8, fr_ * 0.55, fr_ * 0.55, (255, 214, 60), INK, ow * 0.5)
     return {"head": (hx, head_cy), "nose_x": hx + d * head_w * 0.58}
+
+
+def hand_offset(des, pose, side):
+    """Profilde elin ayağa göre konumu (metre): (dx dünya x, yükseklik). draw_profile.arm ile aynı geometri."""
+    Hh = des["height"]; cls = des["class"]
+    leg_h = Hh * {"infant": 0.20, "toddler": 0.24, "child": 0.28, "adult": 0.38}[cls]
+    torso_h = Hh * {"infant": 0.22, "toddler": 0.25, "child": 0.27, "adult": 0.30}[cls]
+    d = facing(pose); sq_ = float(pose.get("sq", 1.0))
+    jump = pose["z"]; sit = max(0.0, -pose["z"])
+    torso_top = -jump - leg_h - sit - torso_h * sq_
+    lean = pose.get("lean", 0.0) * torso_h * 0.5 * d
+    fwd, out = pose["aL"] if side == "L" else pose["aR"]
+    ang = max(-1.2, min(2.6, -fwd * 0.9 + abs(out) * 0.35))
+    ln = Hh * 0.27 * (1.0 - 0.22 * min(1.0, abs(fwd) / 1.3))
+    shx, shy = lean * 0.8, torso_top + torso_h * 0.16
+    return shx + d * math.sin(ang) * ln, -(shy + math.cos(ang) * ln)

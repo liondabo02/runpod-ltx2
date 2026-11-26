@@ -381,19 +381,19 @@
    "priority": "P0",
    "title": "El–nesne durumları: al, tut, ver, bırak, el değiştirme",
    "state": "çalışılıyor",
-   "current": "Choreo ile alma/taşıma/verme çalışıyor; şişe konumu bel hizasına indirildi (bulut önizleme).",
+   "current": "object_state.py (durum makinesi, doğrulama, olaylar, uzanma pencereleri, ağırlık) + puppet2d.hand_offset (çizilen elle ≤3px) render'a bağlı. Render karelerinde temas gözle DOĞRULANMADI; olaylar SFX'e ve uzanma pencereleri hareket motoruna henüz bağlı değil.",
    "change": "Durum makinesi; el değiştirmede sıçrama yok; ağırlık tepkisi",
    "deps": [],
    "criteria": [
     {
      "text": "Alma/tutma/verme/bırakma durumları testli",
-     "verified": false,
-     "evidence": ""
+     "verified": true,
+     "evidence": "tests/test_object_states.py: durum geçişleri, olaylar, doğrulama (8 test)"
     },
     {
      "text": "El değiştirmede nesne sıçramıyor (ölçüm)",
-     "verified": false,
-     "evidence": ""
+     "verified": true,
+     "evidence": "tests/test_object_states.py::test_handoff_object_does_not_jump_between_hands (gerçek poz/el konumları, <12 cm/kare)"
     },
     {
      "text": "Yeni render karelerinde temas doğrulandı",

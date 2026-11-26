@@ -198,6 +198,30 @@ def view_of(pose):
     return "three_quarter" if b >= 0.45 else "front"
 
 
+def hand_offset(des, pose, side):
+    """Elin ayağa göre konumu METRE olarak: (dx, yükseklik). Çizimle aynı geometri (ppm=1); nesne ele gerçekten bağlansın diye.
+    side: 'L' | 'R' (ekranda sol/sağ el, ön görünüşte). Profilde puppet_side kullanılır."""
+    if view_of(pose) == "side":
+        import puppet_side
+        return puppet_side.hand_offset(des, pose, side)
+    Hh = des["height"]; cls = des["class"]
+    leg_h = Hh * {"infant": 0.20, "toddler": 0.24, "child": 0.28, "adult": 0.38}[cls]
+    torso_h = Hh * {"infant": 0.22, "toddler": 0.25, "child": 0.27, "adult": 0.30}[cls]
+    torso_w = Hh * {"infant": 0.30, "toddler": 0.28, "child": 0.25, "adult": 0.22}[cls] * des.get("build", 1.0)
+    sq_ = float(pose.get("sq", 1.0)); jump = pose["z"]; sit = max(0.0, -pose["z"])
+    squash = (1.0 + max(0.0, jump) / (Hh * 3.0)) * sq_
+    torso_w /= max(0.7, sq_) ** 0.5
+    bturn = max(-1.0, min(1.0, pose.get("yaw", 0.0) * 1.25)); torso_w *= 1.0 - 0.30 * abs(bturn)
+    by = -jump; torso_top = by - leg_h - sit - torso_h * squash
+    sg = -1 if side == "L" else 1
+    fwd, out = pose["aL"] if side == "L" else pose["aR"]
+    ang = abs(out) * 1.0 if out * (1 if side == "L" else -1) >= 0 else -abs(out) * 0.4
+    ang = max(-0.5, ang)
+    ln = Hh * 0.27 * (1.0 - 0.28 * min(1.0, abs(fwd) / 1.3))
+    shx, shy = sg * torso_w * 0.52, torso_top + torso_h * 0.14
+    return shx + sg * math.sin(ang) * ln, -(shy + math.cos(ang) * ln)
+
+
 def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
     """fx,fy: ayak ortası (ekran px). ppm: piksel/metre. st: {'mouth':harf,'blink':0/1,'emotion':str,'dir':-1..1}"""
     if view_of(pose) == "side":
