@@ -74,3 +74,33 @@ def render(cues, n_samples):
 def write_manifest(path, cues):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     json.dump({"provenance": PROVENANCE, "count": len(cues), "cues": cues}, open(path, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+
+
+def verify_bed(buf, cues, tol_s=0.005, min_peak=0.03, max_peak=0.95):
+    """Bağımsız kontrol (QA kullanır): her cue için doğru zaman (±tol), süre (dalga boyu), seviye; cue dışı enerji (kaymış/çift/fazla ses) ve kırpılma.
+    Dönüş: sorun listesi [{'cue','problem','detail'}] — boş = temiz."""
+    import numpy as np
+    probs = []; covered = np.zeros(len(buf), dtype=bool); seen = set()
+    for c in cues:
+        if c["id"] in seen:
+            continue
+        seen.add(c["id"]); w = wave(c["kind"], int(c["id"], 16)); n = len(w); i0 = int(c["t"] * SR)
+        if i0 < 0 or i0 + n > len(buf):
+            probs.append({"cue": c["id"], "problem": "pencere_disi", "detail": f"t={c['t']}"}); continue
+        seg = np.abs(buf[max(0, i0 - int(0.3 * SR)):i0 + n + int(0.3 * SR)])
+        thr = 0.15 * float(np.abs(buf[i0:i0 + n]).max() or 1.0)
+        on = np.nonzero(np.abs(buf[max(0, i0 - int(0.3 * SR)):i0 + n]) > max(1e-4, 0.0))[0]
+        first = (max(0, i0 - int(0.3 * SR)) + int(on[0])) if len(on) else None
+        if first is None or abs(first - i0) > tol_s * SR:
+            probs.append({"cue": c["id"], "problem": "zaman_kaymis", "detail": f"beklenen {i0 / SR:.3f}s, ilk ses {None if first is None else round(first / SR, 3)}s"})
+        peak = float(np.abs(buf[i0:i0 + n]).max())
+        if not (min_peak <= peak <= max_peak):
+            probs.append({"cue": c["id"], "problem": "seviye", "detail": f"tepe {peak:.3f} [{min_peak}, {max_peak}]"})
+        covered[i0:i0 + n] = True
+    extra = np.abs(buf) * (~covered)
+    if extra.max() > 1e-4:
+        t_bad = int(np.argmax(extra)) / SR
+        probs.append({"cue": None, "problem": "beklenmeyen_ses", "detail": f"cue dışında ses (t≈{t_bad:.2f}s): kaymış, çift ya da fazla efekt"})
+    if np.abs(buf).max() > 1.0:
+        probs.append({"cue": None, "problem": "kirpilma", "detail": "tepe > 1.0"})
+    return probs

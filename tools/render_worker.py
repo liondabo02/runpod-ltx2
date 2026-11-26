@@ -162,17 +162,74 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
     return man
 
 
+def _probe_seconds(path):
+    """Klibin gerçek süresi (ffprobe); okunamazsa None."""
+    try:
+        r = subprocess.run([shutil.which("ffprobe") or "ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=nw=1:nk=1", path],
+                           capture_output=True, text=True, timeout=60)
+        return float(r.stdout.strip())
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def run_chunked(episode_dir, bible, t0, t1, series_dir, chunk_s=30.0, engine="2d", samples=16, free_bytes=None, runner=run):
+    """Parça parça üretim: pencereyi chunk_s'lik parçalara böler; her parça kendi klibine kodlanır ve süresi DOĞRULANIR.
+    Disk, tüm pencerenin kareleri için yetmiyorsa, yalnız BU işin ürettiği ve kodlanıp doğrulanmış parçanın kareleri silinir
+    (başka işlerin/kullanıcının dosyalarına dokunulmaz); yetiyorsa hiçbir şey silinmez. Parçalar -c copy ile birleştirilir. Çökmede mevcut doğrulanmış parçalar yeniden üretilmez."""
+    rdir = os.path.join(episode_dir, "render"); os.makedirs(rdir, exist_ok=True)
+    fps = int(os.environ.get("AHOS_FPS", "12")); per_frame = 1.0e6
+    free = free_bytes if free_bytes is not None else shutil.disk_usage(rdir).free
+    total_need = (t1 - t0) * fps * per_frame * 1.3
+    purge = total_need > free
+    edges = []; a = t0
+    while a < t1 - 1e-6:
+        edges.append((a, min(t1, a + chunk_s))); a += chunk_s
+    parts = []; log = []
+    for (a, b) in edges:
+        clip = os.path.join(rdir, f"clip_{int(a)}_{int(b)}.mp4")
+        dur = _probe_seconds(clip) if os.path.exists(clip) else None
+        if dur is not None and abs(dur - (b - a)) <= 0.25:               # doğrulanmış parça: yeniden üretme (devam/yeniden başlatma)
+            parts.append(clip); log.append({"chunk": [a, b], "status": "REUSED", "seconds": dur}); continue
+        m = runner(episode_dir, bible, a, b, series_dir, engine, samples)
+        if m.get("status") != "PASSED":
+            return {"status": "BLOCKED", "error": m.get("error", "CHUNK_FAILED"), "chunk": [a, b], "problems": m.get("problems", []), "parts_done": log}
+        dur = _probe_seconds(m["clip"])
+        if dur is None or abs(dur - (b - a)) > 0.25:
+            return {"status": "BLOCKED", "error": "CHUNK_SURE_UYUSMAZ", "chunk": [a, b], "problems": [f"klip {dur} sn, beklenen {b - a:.2f} sn"], "parts_done": log}
+        parts.append(m["clip"]); freed = 0
+        if purge:
+            fdir = os.path.join(rdir, "frames")
+            for i in range(int(round(a * fps)), int(round(b * fps)) + 1):
+                fp = os.path.join(fdir, f"f{i:05d}.png")
+                if os.path.exists(fp):
+                    freed += os.path.getsize(fp); os.remove(fp)
+        log.append({"chunk": [a, b], "status": "DONE", "seconds": dur, "freed_mb": round(freed / 1e6)})
+    lst = os.path.join(rdir, "concat.txt")
+    open(lst, "w", encoding="utf-8").write("".join("file '%s'\n" % p_.replace("\\", "/") for p_ in parts))
+    out = os.path.join(rdir, f"episode_{int(t0)}_{int(t1)}.mp4")
+    if len(parts) == 1:
+        shutil.copyfile(parts[0], out)
+    else:
+        subprocess.run([shutil.which("ffmpeg") or "ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", lst, "-c", "copy", out], check=True)
+    dur = _probe_seconds(out)
+    if dur is None or abs(dur - (t1 - t0)) > 0.5 + 0.05 * len(parts):
+        return {"status": "BLOCKED", "error": "BIRLESTIRME_SURE_UYUSMAZ", "problems": [f"birleşik {dur} sn, beklenen {t1 - t0:.1f} sn"], "parts_done": log}
+    return {"status": "PASSED", "clip": out, "seconds": dur, "chunks": log, "purge_mode": purge, "cost_eur": 0}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--episode-dir", required=True); ap.add_argument("--series", required=True)
     ap.add_argument("--from", dest="t0", type=float, default=0.0); ap.add_argument("--to", dest="t1", type=float, default=10.0)
     ap.add_argument("--engine", default="2d", help="2d (varsayılan) | toon | eevee | workbench"); ap.add_argument("--samples", type=int, default=16)
     ap.add_argument("--fps", type=int, default=None, help="kare hızı (12 varsayılan, 24 akıcı)")
+    ap.add_argument("--chunk-s", type=float, default=0.0, help="parça parça üretim (sn); disk sınırlıysa kullanın")
     a = ap.parse_args()
     if a.fps:
         os.environ["AHOS_FPS"] = str(a.fps)
     bible = json.load(open(a.series, encoding="utf-8"))
-    m = run(a.episode_dir, bible, a.t0, a.t1, os.path.dirname(os.path.abspath(a.series)), a.engine, a.samples)
+    sd = os.path.dirname(os.path.abspath(a.series))
+    m = run_chunked(a.episode_dir, bible, a.t0, a.t1, sd, a.chunk_s, a.engine, a.samples) if a.chunk_s > 0 else run(a.episode_dir, bible, a.t0, a.t1, sd, a.engine, a.samples)
     print(json.dumps(m, ensure_ascii=False, indent=2))
 
 

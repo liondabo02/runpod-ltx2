@@ -51,3 +51,27 @@ def test_bed_is_regenerated_when_sheet_changes_and_kept_when_not():
     sh2 = json.loads(json.dumps(SHEET)); sh2["beats"][0]["choreo"]["objects"][0]["track"][2]["t"] = 3.0; json.dump(sh2, open(sp, "w"))
     assert MW.needs_refresh(d)                                           # sahne değişti: eski yatak kullanılmaz
     MW.run(d, "dizi"); assert json.load(open(os.path.join(d, "audio", "sfx_cues.json")))["cues"][0]["t"] == 13.0
+
+
+def test_verify_bed_accepts_correct_mix_and_catches_shift_duplicate_extra_level():
+    cues = S.cues_from_beats(SHEET, "ep"); n = int(45 * S.SR); good = S.render(cues, n)
+    assert S.verify_bed(good, cues) == []
+    shifted = np.roll(good, int(0.12 * S.SR))                                           # kaymış temas sesi (120 ms geç)
+    assert any(p["problem"] == "zaman_kaymis" for p in S.verify_bed(shifted, cues))
+    extra = good.copy(); extra[int(15 * S.SR):int(15 * S.SR) + 400] = 0.3               # olaysız yerde fazla ses
+    assert any(p["problem"] == "beklenmeyen_ses" for p in S.verify_bed(extra, cues))
+    quiet = good * 0.01; assert any(p["problem"] == "seviye" for p in S.verify_bed(quiet, cues))
+    loud = good * 40; assert any(p["problem"] in ("seviye", "kirpilma") for p in S.verify_bed(loud, cues))
+
+
+def test_each_sound_has_right_kind_duration_and_decay_and_restart_adds_nothing():
+    cues = S.cues_from_beats(SHEET, "ep")
+    dur = {"tap": 0.06, "clink": 0.22, "thud": 0.16, "clunk": 0.28}
+    for c in cues:
+        w = np.array(S.wave(c["kind"], int(c["id"], 16)))
+        assert abs(len(w) / S.SR - dur[c["kind"]]) < 0.005                               # doğru süre
+        tail = float(np.sum(w[-len(w) // 10:] ** 2)); head = float(np.sum(w[:len(w) // 2] ** 2)); assert tail < 0.05 * head   # sönümlenir (patlama yok)
+    kinds = {c["type"] + ":" + c["prop"]: c["kind"] for c in cues}
+    assert kinds["pickup:bottle"] == "clink" and kinds["dispose:bottle"] == "clunk" and kinds["handoff:stone"] in ("thud", "tap", "clink", "clunk")
+    n = int(45 * S.SR); once = S.render(cues, n); twice = S.render(cues + cues, n)       # yeniden başlatma/çift ekleme: ses ikilenmez
+    assert np.array_equal(once, twice) and float(np.abs(twice).max()) < 0.95

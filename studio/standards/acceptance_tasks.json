@@ -381,7 +381,7 @@
    "priority": "P0",
    "title": "El–nesne durumları: al, tut, ver, bırak, el değiştirme",
    "state": "çalışılıyor",
-   "current": "object_state.py (durum makinesi, doğrulama, olaylar, uzanma pencereleri, ağırlık) + puppet2d.hand_offset (çizilen elle ≤3px) render'a bağlı. Render karelerinde temas gözle DOĞRULANMADI; olaylar SFX'e ve uzanma pencereleri hareket motoruna henüz bağlı değil.",
+   "current": "object_state.py + puppet2d.hand_offset render'a bağlı (otomatik uzanma + ağırlık). Gözle: 18-36 sn render karelerinde şişe, elde tutulurken elin yanında görünüyor (qa/nesne_temas_kareleri.png); VER anının kendisi ve atış yayı ayrıca incelenmedi → ölçüt 3 açık. SFX'e bağlı DEĞİL.",
    "change": "Durum makinesi; el değiştirmede sıçrama yok; ağırlık tepkisi",
    "deps": [],
    "criteria": [
@@ -905,16 +905,16 @@
    "id": "F5",
    "area": "F",
    "priority": "P0",
-   "title": "PC disk doluluğu (render ENOSPC ile düştü)",
-   "state": "engelli",
-   "current": "PC diski %100; boş alan ~136 MB. Yeniden render ~800 MB boş alan ister.",
-   "change": "Boş alan açılacak; render çıktısı için en az ~2 GB boş alan şart. Ek: render öncesi boş disk denetimi (ENOSPC'yi erken yakala).",
+   "title": "PC disk: ölçüm ve parça parça üretim",
+   "state": "çalışılıyor",
+   "current": "Ölçüm (26.11.2026, device df): PC birimi 476 GB, boş 3,8 GB. Kare başına ~1,0 MB PNG ölçüldü; 3,8 GB ≈ 2.900 kare ≈ 120 sn @24 fps. Geliştirme/test PC diskini gerektirmiyor: bulut konteyneri 25 GB boş, 2 CPU, 7,5 GB RAM, GPU yok. 480 sn @24 fps bölümün ~11,5 GB karesi PC'ye tek seferde sığmaz.",
+   "change": "run_chunked: parçalara böl, her parçayı kodla ve süresini doğrula, yalnız kendi doğrulanmış karelerini sil (disk yetmezse); ağır render bulutta, PC yalnız Windows'a özgü testler.",
    "deps": [],
    "criteria": [
     {
      "text": "Render başlamadan boş disk denetimi (yetersizse net hata)",
-     "verified": false,
-     "evidence": ""
+     "verified": true,
+     "evidence": "tests/test_render_guard.py::test_render_does_not_start_when_disk_is_insufficient + tests/test_chunked_render.py (bulut 182 passed; PC dogrulamasi sirada)"
     },
     {
      "text": "PC'de en az 5 GB boş alan",
@@ -922,9 +922,7 @@
      "evidence": ""
     }
    ],
-   "evidence": "studio/queue/z2_render_e900_v3.log",
-   "blocker": "PC diski %100 dolu; benim silme iznim yok ve içeriğin çoğu bana ait değil.",
-   "alternative": "Bulutta geliştirmeye ve testlere devam; PC'ye yazma ve render disk açılınca."
+   "evidence": "studio/queue/z2_render_e900_v3.log"
   }
  ]
 }

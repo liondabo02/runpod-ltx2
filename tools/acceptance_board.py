@@ -41,9 +41,30 @@ def show(d, area=None):
     V = sum(counts(t)[0] for t in d["tasks"]); N = sum(counts(t)[1] for t in d["tasks"])
     print(f"TOPLAM doğrulanan ölçüt: {V}/{N}")
 
+def inventory(d):
+    """Envanteri KAYITTAN üretir (sayılar elle yazılmaz): görev başına durum, ölçüt listesi, bağımlılık, engel."""
+    out = ["# AHOS Açık İş Envanteri (kayıttan üretildi)", ""]
+    V = sum(counts(t)[0] for t in d["tasks"]); N = sum(counts(t)[1] for t in d["tasks"])
+    out.append(f"**Toplam doğrulanan ölçüt: {V}/{N}** (kalite yüzdesi değildir). Kaynak: studio/standards/acceptance_tasks.json"); out.append("")
+    for t in d["tasks"]:
+        v, n = counts(t)
+        out.append(f"## {t['id']} [{t['state']}] {v}/{n} — {t['title']}")
+        out.append(f"- Mevcut/eksik: {t['current']}"); out.append(f"- Planlanan değişiklik: {t['change']}")
+        out.append(f"- Bağımlılık: {', '.join(t['deps']) or 'yok'}")
+        if t.get("blocker"): out.append(f"- Engel: {t['blocker']} · Alternatif: {t.get('alternative', '')}")
+        for i, c in enumerate(t["criteria"]):
+            out.append(f"  - [{'x' if c.get('verified') else ' '}] ({i}) {c['text']}" + (f" — kanıt: {c['evidence']}" if c.get("verified") else ""))
+        out.append("")
+    return "\n".join(out)
+
+
 if __name__ == "__main__":
     d = load(); a = sys.argv[1:]
     if not a or a[0] == "show": show(d, a[2] if len(a) > 2 and a[1] == "--area" else None)
+    elif a[0] == "inventory":
+        txt = inventory(d)
+        if len(a) > 1: open(a[1], "w", encoding="utf-8").write(txt)
+        else: print(txt)
     elif a[0] == "set": 
         t = next(x for x in d["tasks"] if x["id"] == a[1]); t[a[2]] = " ".join(a[3:]); save(d)
     elif a[0] == "verify":

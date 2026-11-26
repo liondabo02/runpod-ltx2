@@ -71,6 +71,7 @@ def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
         spec_p = os.path.join(assets_dir, f"{ch['id']}.spec.json")
         h = json.load(open(spec_p, encoding="utf-8")).get("height_m", 1.2) if os.path.exists(spec_p) else 1.2
         out["characters"][ch["id"]] = {"glb": glb, "height": h, "name": names[ch["id"]]}
+    prev_x_ = {}
     for bi, b in enumerate(sheet["beats"]):
         ts, te = float(b["t_start"]), float(b["t_end"])
         if te <= t0 or ts >= t1:
@@ -97,7 +98,8 @@ def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
             if c_ in mot:
                 mot[c_] = {"kind": spec_.get("kind", mot[c_]["kind"]), "x0": float(spec_.get("x0", mot[c_]["x0"])),
                            "x1": float(spec_.get("x1", spec_.get("x0", mot[c_]["x1"]))), "seed": mot[c_]["seed"]}
-        stg_notes = staging.resolve(mot, ch_.get("objects", []), {c: out["characters"][c]["height"] for c in cast if c in out["characters"]}, setpieces2d.TARGETS)
+        stg_notes = staging.resolve(mot, ch_.get("objects", []), {c: out["characters"][c]["height"] for c in cast if c in out["characters"]}, setpieces2d.TARGETS, prev_x=prev_x_)
+        prev_x_ = {c: m_["x1"] for c, m_ in mot.items()}                 # sonraki plana süreklilik: bu planın bitiş konumları
         cam_text = (b.get("camera") or "").lower()
         preset = "close" if re.search(r"yakın|close|detay", cam_text) else "medium" if re.search(r"orta|omuz|medium", cam_text) \
             else "wide" if re.search(r"genel|geniş|wide", cam_text) else None

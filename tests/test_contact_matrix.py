@@ -186,19 +186,49 @@ def test_pick_hand_prefers_throw_target_side_and_swing_moves_arm():
     assert p_idle["aR"] == [0.0, -0.1] and p_sw["aR"] != [0.0, -0.1]
 
 
-def test_staging_resolver_is_generic_and_reports():
+def test_staging_resolver_constraints_preferences_and_walking():
     import staging
+    from object_state import weight_of as object_state_weight
     T = {"bin_a": (1.3, 0.9), "bin_b": (1.85, 0.9)}
+    H = {"x": 1.9, "y": 0.98}
+    ob = [{"prop": "bottle", "track": [{"t": 0, "holder": "y"}, {"t": 2.0, "holder": "y"}, {"t": 3.4, "holder": "x"}, {"t": 6, "holder": "x"}]}]
+    # 1) fiziksel kısıt ihlali (1.2 m > erişim): düzeltilir; karakter ışınlanmaz, önceki konumdan yürür
     mot = {"x": {"kind": "idle", "x0": 1.4, "x1": 1.4}, "y": {"kind": "idle", "x0": 0.2, "x1": 0.2}}
-    ob = [{"prop": "bottle", "track": [{"t": 0, "holder": "y"}, {"t": 1, "holder": "y"}, {"t": 2.5, "holder": "x"}, {"t": 3, "holder": "x"}, {"t": 4, "at": "bin_a", "hide": True}]}]
-    notes = staging.resolve(mot, ob, {"x": 1.9, "y": 0.98}, T)
-    rules = {n["rule"] for n in notes}
-    assert rules == {"handoff_separation", "throw_distance"} or "handoff_separation" in rules
-    gap = abs(mot["x"]["x0"] - mot["y"]["x0"]); assert 0.5 < gap < 0.9      # 0.85*0.27*(1.9+0.98)=0.66
-    # ikinci çağrı: zaten çözülmüş -> değişiklik yok (kararlı)
-    mot2 = {k: dict(v) for k, v in mot.items()}
-    assert [n for n in staging.resolve(mot2, ob, {"x": 1.9, "y": 0.98}, T) if n["rule"] == "handoff_separation"] == []
-    # farklı boy (iki yetişkin) -> daha uzak mesafe
-    m3 = {"x": {"kind": "idle", "x0": 0.0, "x1": 0.0}, "y": {"kind": "idle", "x0": 0.1, "x1": 0.1}}
-    staging.resolve(m3, [{"prop": "b", "track": [{"t": 0, "holder": "y"}, {"t": 1, "holder": "y"}, {"t": 2, "holder": "x"}]}], {"x": 1.7, "y": 1.7}, T)
-    assert abs(m3["x"]["x0"] - m3["y"]["x0"]) > 0.7
+    notes = staging.resolve(mot, ob, H, T, prev_x={"x": 1.4})
+    assert any(n["rule"] == "handoff_separation" and n["kind"] == "adjusted" for n in notes)
+    assert mot["x"]["kind"] == "walk" and mot["x"]["x0"] == 1.4 and mot["x"]["walk_s"] * 0.85 <= 2.0          # temastan önce varır
+    assert 0.4 * 0.27 * 2.88 <= abs(mot["x"]["x1"] - mot["y"]["x1"]) <= 0.95 * 0.27 * 2.88
+    # 2) mesafe fiziksel aralıkta ise TERCİH gerekçesiyle oynanmaz (anlatısal niyet korunur)
+    mot2 = {"x": {"kind": "idle", "x0": 0.9, "x1": 0.9}, "y": {"kind": "idle", "x0": 0.3, "x1": 0.3}}
+    n2 = staging.resolve(mot2, ob, H, T)
+    assert mot2["x"]["x0"] == 0.9 and [n["kind"] for n in n2] == ["ok"]
+    # 3) hazırlık süresi yetmiyorsa çelişki bildirilir, hikâye değiştirilmez
+    ob_fast = [{"prop": "b", "track": [{"t": 0, "holder": "y"}, {"t": 0.5, "holder": "y"}, {"t": 1.0, "holder": "x"}]}]
+    mot3 = {"x": {"kind": "idle", "x0": 1.4, "x1": 1.4}, "y": {"kind": "idle", "x0": 0.2, "x1": 0.2}}
+    n3 = staging.resolve(mot3, ob_fast, H, T, prev_x={"x": 1.4})
+    assert any(n["kind"] == "conflict" and "yetmiyor" in n["why"] for n in n3) and mot3["x"]["x1"] == 1.4
+    # 4) atış aralığı boya/ağırlığa göre hesaplanır (çocuk ve yetişkin farklı)
+    lo_a, hi_a = staging.throw_range(1.9, 0.4); lo_c, hi_c = staging.throw_range(0.98, 0.4)
+    assert lo_a > lo_c and hi_a > hi_c
+    lo_h, hi_h = staging.throw_range(1.9, 2.5)
+    assert hi_h < hi_a                                                               # ağır nesne daha kısa menzil
+    # 5) atış: kutuya yakın duran atan yürür; başka kutunun önüne durmaz
+    obt = [{"prop": "bottle", "track": [{"t": 0, "holder": "x"}, {"t": 2.0, "holder": "x"}, {"t": 3.2, "at": "bin_a", "hide": True}]}]
+    mot4 = {"x": {"kind": "idle", "x0": 1.4, "x1": 1.4}}
+    staging.resolve(mot4, obt, {"x": 1.9}, T, prev_x={"x": 1.4})
+    lo_, hi_ = staging.throw_range(1.9, object_state_weight("bottle"))
+    assert lo_ <= abs(mot4["x"]["x1"] - 1.3) <= hi_ and mot4["x"]["kind"] == "walk"
+
+
+def test_standing_holder_keeps_light_object_at_chest_not_hip_and_scales_with_height():
+    import puppet2d as pp
+    beat = {"cast": ["a", "k"], "characters": ["a", "k"], "motion": {"a": {"kind": "idle", "x0": 0.9, "x1": 0.9, "seed": 0}, "k": {"kind": "idle", "x0": 0.2, "x1": 0.2, "seed": 1}},
+            "lines": [], "camera": "wide", "props": [], "choreo": {"gaze": {"a": "k"}, "objects": [{"prop": "bottle", "track": [{"t": 0, "holder": "a"}, {"t": 9, "holder": "a"}]}]}}
+    ci = r2.carry_info(beat, "a", 3.0)
+    assert ci and ci["style"] != "two_hand_front"
+    des = {"height": 1.9, "class": "adult", "build": 1.0}
+    pose = {"x": 0.9, "z": 0.0, "yaw": 0.0, "sq": 1.0, "lean": 0.0, "head": [0.0, 0.0, 0.0], "aL": [0.0, 0.1], "aR": [0.0, -0.1]}
+    sx, sh = pp.shoulder_offset(des, pose, ci["hand"]); ln = 1.9 * 0.27
+    pp.arm_toward(des, pose, ci["hand"], sx - 0.12 * ln, sh - 0.20 * ln)
+    hx, hy = pp.hand_offset(des, pose, ci["hand"])
+    assert 0.57 * 1.9 < hy < 0.75 * 1.9            # göğüs/üst gövde hizası, kalça (~0.47 H) değil

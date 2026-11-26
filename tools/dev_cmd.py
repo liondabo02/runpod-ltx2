@@ -12,6 +12,32 @@ def run(args, cwd=ROOT, timeout=1700):
     return r.returncode
 
 
+def file_hashes(root):
+    import hashlib
+    out = []
+    for d in ("tools", "tests"):
+        base = os.path.join(root, d)
+        for fn in sorted(os.listdir(base)):
+            if fn.endswith(".py"):
+                with open(os.path.join(base, fn), "rb") as f:
+                    out.append((d + "/" + fn, hashlib.sha256(f.read().replace(b"\r\n", b"\n")).hexdigest()))
+    return out
+
+
+def src_hash(root):
+    import hashlib
+    h = hashlib.sha256()
+    for d in ("tools", "tests"):
+        base = os.path.join(root, d)
+        for fn in sorted(os.listdir(base)):
+            if fn.endswith(".py"):
+                h.update((d + "/" + fn).encode()); h.update(b"\0")
+                with open(os.path.join(base, fn), "rb") as f:
+                    h.update(f.read().replace(b"\r\n", b"\n"))      # Windows CRLF farkı parmak izini bozmasın
+                h.update(b"\0")
+    return h.hexdigest()
+
+
 def main():
     cmd = sys.argv[1] if len(sys.argv) > 1 else "audit"
     if cmd == "audit":
@@ -21,8 +47,23 @@ def main():
         run(["git", "branch", "-a", "--list", "*studio*"]); run(["git", "branch", "--show-current"])
     elif cmd == "newbranch":                       # çalışma ağacını bozmadan yeni dal aç (dosyalar olduğu gibi kalır)
         sys.exit(run(["git", "switch", "-c", sys.argv[2]]))
-    elif cmd == "sha":
-        run(["git", "rev-parse", "HEAD"]); run(["git", "fetch", "--dry-run"]); run(["git", "status", "-sb"])
+    elif cmd == "srchash":                         # kaynak parmak izi: tools/ ve tests/ içindeki .py dosyalarının sha256'sı (bulut ile PC aynı kaynağı mı test etti)
+        print(src_hash(ROOT))
+        if "--list" in sys.argv:                  # dosya başına sha256 (iki makinenin çıktısı diff ile karşılaştırılır)
+            for pth, dg in file_hashes(ROOT):
+                print(dg[:16], pth)
+    elif cmd == "verify":                          # tek kaynak doğrulama: yerel HEAD, uzak dal, kirli dosya, kaynak parmak izi, zaman
+        import datetime
+        git = lambda *a: subprocess.run(["git", *a], cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace").stdout.strip()
+        br = git("branch", "--show-current"); loc = git("rev-parse", "HEAD"); rem_line = git("ls-remote", "origin", "refs/heads/" + br)
+        rem = rem_line.split()[0] if rem_line else ""
+        dirty = git("status", "--short", "--", "tools", "tests", "series", "studio/standards")
+        print("tarih=" + datetime.datetime.now().isoformat(timespec="seconds"))
+        print(f"dal={br}\nyerel_HEAD={loc}\nuzak_HEAD={rem or 'YOK'}\nyerel==uzak: {loc == rem}")
+        print("tools_tree@HEAD=" + git("rev-parse", "HEAD:tools") + "  tests_tree@HEAD=" + git("rev-parse", "HEAD:tests"))
+        print("calisma_agaci_kaynak_sha256=" + src_hash(ROOT))
+        print("kirli_dosyalar(tools,tests,series,standards): " + (dirty.replace(chr(10), " | ") or "YOK (calisma agaci == HEAD)"))
+        sys.exit(0 if loc and loc == rem else 3)
     elif cmd == "test":
         sys.exit(run([sys.executable, "-m", "pytest", "-q", "-x", "--no-header", "-p", "no:cacheprovider"] + sys.argv[2:], cwd=CORE))
     elif cmd == "commit":

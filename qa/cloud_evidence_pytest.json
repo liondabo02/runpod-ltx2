@@ -1,0 +1,31 @@
+{
+ "job": "cloud_pytest_20261126",
+ "machine": "bulut-konteyner",
+ "claim": {
+  "ok": true,
+  "action": "RUN",
+  "owner": "bulut-konteyner",
+  "why": "başlatıldı"
+ },
+ "source_sha256": "e10a7458cee0fea34382b9b0224eaae7ec8e03f6365f1bfbcf49ba03cb0819be",
+ "command": [
+  "python3",
+  "-m",
+  "pytest",
+  "-q",
+  "tests"
+ ],
+ "date": "2026-11-26T21:11:11",
+ "info": {
+  "platform": "Linux-6.18.44-fc-v880-x86_64-with-glibc2.39",
+  "python": "3.13.18",
+  "cpu_count": 2,
+  "ram_mb": 8023,
+  "disk_free_gb": 1125899.9,
+  "disk_total_gb": 1125899.9,
+  "gpu": false,
+  "cost_eur": 0
+ },
+ "exit_code": 0,
+ "raw_tail": "........................................................................ [ 38%]\n........................................................................ [ 77%]\n..........................................                               [100%]\n=============================== warnings summary ===============================\ntests/test_video_qa.py: 18 warnings\n  /mnt/attach/outputs/s7/tools/video_qa.py:59: DeprecationWarning: Image.Image.getdata is deprecated and will be removed in Pillow 14 (2027-10-15). Use get_flattened_data instead.\n    cols = [len(set(f.resize((40, 22)).getdata())) for f in frames]\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n186 passed, 18 warnings in 19.34s\n"
+}
