@@ -4,6 +4,7 @@ import shot_motion as sm
 import props2d
 import staging
 import setpieces2d
+import continuity
 try:
     import mood_engine
 except ImportError:
@@ -71,12 +72,13 @@ def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
         spec_p = os.path.join(assets_dir, f"{ch['id']}.spec.json")
         h = json.load(open(spec_p, encoding="utf-8")).get("height_m", 1.2) if os.path.exists(spec_p) else 1.2
         out["characters"][ch["id"]] = {"glb": glb, "height": h, "name": names[ch["id"]]}
-    prev_x_ = {}
+    prev_x_ = {}; prev_meta_ = None
     locs_ = setpieces2d.load_locations(os.path.dirname(os.path.abspath(assets_dir)))        # proje verisi: mekân -> dekor parçaları (motor mekân adlarını bilmez)
     for bi, b in enumerate(sheet["beats"]):
         ts, te = float(b["t_start"]), float(b["t_end"])
-        if te <= t0 or ts >= t1:
-            continue
+        if ts >= t1:
+            break
+        in_win = te > t0                                                # pencere öncesi planlar da hesaplanır (durum taşınır), çıktıya yazılmaz
         cast = [c for c in b.get("characters", []) if c in out["characters"]]
         lines = [{"char": it["char"], "start": ts + it["start_s"], "end": ts + it["start_s"] + float(it["duration_s"]),
                   "cues": load_cues(episode_dir, it), "mood": mood_engine.mood_for(it.get("text")) if mood_engine else "neutral"}
@@ -94,6 +96,9 @@ def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
             if kind == "idle" and i > 0 and lines:
                 kind = "look" if seed % 2 else "idle"
             mot[c] = {"kind": kind, "x0": sl[i], "x1": sm.move_target(kind, sl[i], seed), "seed": seed}
+        trans_ = continuity.transition_kind(prev_meta_, {"scene_id": b.get("scene_id"), "loc": b.get("location"), "transition": b.get("transition")})
+        continuity.carry_starts(mot, prev_x_, trans_)                   # sürekli geçişte başlangıç = önceki bitiş (ışınlanma yok)
+        prev_meta_ = {"scene_id": b.get("scene_id"), "loc": b.get("location")}
         ch_ = b.get("choreo") or {}                      # yönetmen koreografisi: açık hareket/hedef/nesne izi/bakış (planlayıcı tahminini ezer)
         for c_, spec_ in (ch_.get("motion") or {}).items():
             if c_ in mot:
@@ -126,4 +131,6 @@ def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
                              "fx": props2d.fx_kinds([m_["kind"] for m_ in mot.values()])})
         if out["beats"][-1]["props"] and not lines and bi % 3 == 2 and preset != "close":  # nesne ara planı (kesme)
             out["beats"][-1]["camera"] = "insert"
+        if not in_win:
+            out["beats"].pop()
     return out
