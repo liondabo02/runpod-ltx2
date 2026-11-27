@@ -1,6 +1,6 @@
 """Kanıtlı çalıştırma: görev kaydından (job_ledger) talep al, komutu çalıştır, makine/kaynak sürümü/komut/çıkış kodu/ham çıktı/tarihi tek JSON'a yaz.
 Kullanım: cloud_evidence.py <makine_etiketi> <iş_kimliği> <çıktı.json> -- <komut...>   (Parola/anahtar yazılmaz; yalnız izinli ortam bilgisi)"""
-import datetime, json, os, platform, shutil, subprocess, sys
+import tempfile, datetime, json, os, platform, shutil, subprocess, sys
 sys.path.insert(0, os.path.dirname(__file__))
 import job_ledger, dev_cmd
 
@@ -15,7 +15,7 @@ def machine_info():
                 mem = int(ln.split()[1]) // 1024
     except OSError:
         pass
-    du = shutil.disk_usage(os.environ.get("AHOS_SCRATCH", "/tmp"))   # gerçek çalışma diski (ROOT bir ağ bağlantısı olabilir)
+    du = shutil.disk_usage(os.environ.get("AHOS_SCRATCH") or tempfile.gettempdir())   # gerçek çalışma diski (ROOT bir ağ bağlantısı olabilir)
     gpu = bool(shutil.which("nvidia-smi"))
     return {"platform": platform.platform(), "python": platform.python_version(), "cpu_count": os.cpu_count(), "ram_mb": mem,
             "disk_free_gb": round(du.free / 1e9, 1), "disk_total_gb": round(du.total / 1e9, 1), "gpu": gpu, "cost_eur": 0}

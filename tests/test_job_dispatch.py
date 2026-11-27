@@ -244,3 +244,14 @@ def test_work_key_ignores_transient_ids_but_not_content_or_inputs():
     assert k != L.work_key("render", dict(base, scene_plan={"n": 2}), [("up", "f", "s1")])
     assert k != L.work_key("render", base, [("up", "f", "s2")])
     assert k != L.work_key("voice", base, [("up", "f", "s1")])
+
+
+def test_machine_info_does_not_depend_on_posix_paths(monkeypatch):
+    """Windows'ta '/tmp' yoktur: disk ölçümü işletim sisteminin geçici klasöründen yapılmalı."""
+    monkeypatch.delenv("AHOS_SCRATCH", raising=False)
+    seen = []
+    real = CE.shutil.disk_usage
+    monkeypatch.setattr(CE.shutil, "disk_usage", lambda p: seen.append(p) or real(p))
+    CE.machine_info()
+    import tempfile
+    assert seen == [tempfile.gettempdir()]
