@@ -74,7 +74,7 @@ def test_released_object_does_not_follow_the_hand(tmp_path):
     g = setpieces2d.mouth_of("bin_green"); mouth = (b["targets"]["bin_green"][0], g["rim"])
     for lt in (2.15, 2.45, 2.9):
         _o, x, y, _st, own, hand = r2._objects_now(b, r2.poses_at(plan, des, lt), lt, lambda t: r2.poses_at(plan, des, t))[0]
-        fx, fy = object_state.sink_flight(p0, mouth, below + above, (lt - 2.0) / 1.2)
+        fx, fy = object_state.sink_flight(p0, mouth, below + above, (lt - 2.0) / 1.2, edge=g["half"] + _w + r2.SINK_WALL_PAD)
         assert (x, y) == pytest.approx((fx, fy + below))
         assert own is None and hand is None
 
@@ -110,6 +110,26 @@ def test_whole_readability_gate_passes(tmp_path, name):
     assert not bad, bad
 
 
+def test_low_release_rises_above_the_rim_before_reaching_the_container_wall():
+    mouth, edge = (0.5, 0.83), 0.36
+    pts = [object_state.sink_flight((0.0, 0.3), mouth, 0.3, i / 2000, edge=edge) for i in range(2001)]
+    first_in = next(p for p in pts if p[0] >= 0.5 - edge + 1e-6)
+    assert first_in[1] >= 0.83 - 1e-6 and pts[-1][0] == pytest.approx(0.5)
+    assert max(abs(b[0] - a[0]) + abs(b[1] - a[1]) for a, b in zip(pts, pts[1:])) < 0.02
+
+
+@pytest.mark.parametrize("h,prop", [(0.9, "bottle"), (1.4, "shovel")])
+def test_low_release_beside_the_container_is_not_drawn_in_front_of_it(tmp_path, h, prop):
+    """Matriste bulunan hata: alçak elden atışta nesne yükselirken kabın önünden geçiyordu."""
+    CONFIGS["alcak"] = ("a", "b", h, 1.2, 1.0, -0.5, -1.8, "bin_green", prop)
+    try:
+        plan, des = planned(tmp_path, "alcak")
+        m, why = entry(plan, des)
+    finally:
+        del CONFIGS["alcak"]
+    assert not why, (why, m)
+
+
 # ---------------------------------------------------------------- bilerek eklenen hatalar (her biri ölçüye takılmalı)
 def old_motion(monkeypatch):
     """Önceki motor: kutunun üstündeki hedef noktaya yumuşak geçiş, ağız arkasında kaybolma yok."""
@@ -128,7 +148,7 @@ def test_old_vanish_in_mid_air_is_caught(tmp_path, monkeypatch):
 
 def warped(monkeypatch, fn):
     real = object_state.sink_flight
-    monkeypatch.setattr(object_state, "sink_flight", lambda p0, mouth, h, u: fn(real, p0, mouth, h, u))
+    monkeypatch.setattr(object_state, "sink_flight", lambda p0, mouth, h, u, edge=0.0: fn(lambda *a: real(*a, edge=edge), p0, mouth, h, u))
 
 
 @pytest.mark.parametrize("dx", [-0.5, 0.45])

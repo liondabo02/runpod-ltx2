@@ -143,6 +143,9 @@ def _mouth(beat, at):
     return (float(_tg(beat)[at][0]), g["rim"]) if g and at in _tg(beat) else None
 
 
+SINK_WALL_PAD = 0.04          # alçaktan atışta nesne kabın yan duvarından en az bu kadar açıkta yükselir (m)
+
+
 def _objects_now(beat, items, lt, items_at=None):
     """[(ob, x, y, state, owner, hand)] — her nesne için konum (tutuş noktası dahil) ve çizim sahibi.
     items_at(t) -> o anın oyuncu pozları: verilirse kap içine atışta bırakma noktası bırakma ANININ elinden alınır."""
@@ -163,8 +166,8 @@ def _objects_now(beat, items, lt, items_at=None):
             m = _mouth(beat, at)
             if not m:
                 return None
-            below, above, _w = props2d.extent(_p, _s)
-            return (m[0], m[1], below + above, below)
+            below, above, w_ = props2d.extent(_p, _s)
+            return (m[0], m[1], below + above, below, setpieces2d.mouth_of(at)["half"] + w_ + SINK_WALL_PAD)
         x, y, st = object_state.position(tr, lt, hold, target, sink_fn=sink)
         if x is None:
             continue                                            # imha (açık hide olayı, yalnız tanımlı hedefte): kutunun ağzında asılı kalmaz
