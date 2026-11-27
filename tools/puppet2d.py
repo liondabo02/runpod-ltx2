@@ -551,6 +551,7 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
     ex = ex * des.get("eye_dist", 1.0)
     if emo == "surprise":
         erx *= 1.12; ery *= 1.2
+    brow_top = eye_y - ery                       # ön saçın (kâkül) inemeyeceği çizgi: göz ve kaşların en üstü (kaş çizilince güncellenir)
     for sg in (-1, 1):
         cx = hx + sg * ex * (1.0 - 0.16 * abs(face)) + face * head_w * 0.19
         far = (sg * face) < -0.2
@@ -599,6 +600,7 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         else:
             pts_ = [p0, p1]
         cv.line(pts_, shade(hair, 0.85) if species != "hedgehog" else hair, bw_)
+        brow_top = min(brow_top, min(q[1] for q in pts_) - bw_ * 0.5)
     # yanak
     for sg in (-1, 1):
         bl_ = des.get("blush", 1.0); cc_ = tuple(int(skin[i_] + ((255, 150, 150)[i_] - skin[i_]) * bl_) for i_ in range(3))
@@ -640,16 +642,20 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         cv.line(cv.arc_pts(hx + face * head_w * 0.14 + head_w * 0.17, head_cy + head_h * 0.27, head_w * 0.03, head_h * 0.03, -1.2, 1.2), shade(skin, 0.6), 2.4)
     # ---- saç (ön)
     top = head_cy - head_h * 0.50
+    hair_cap = brow_top - head_h * 0.02          # ön saç çizgisi göz/kaş üstünde kalır: saç yüz özelliklerini örtmez (her ifade: kaş kalkması ve eğimi dahil)
     if style in ("short", "bob", "ponytail", "bun", "wavy_long", "curly", "bangs") and species != "hedgehog":
         pts = cv.arc_pts(hx, head_cy, head_w * 0.545, head_h * 0.54, math.pi * 1.0, math.pi * 2.0, 24)
         fr = [(hx + head_w * 0.54, head_cy - head_h * 0.18), (hx + head_w * 0.36, head_cy - head_h * 0.34), (hx + head_w * 0.16, head_cy - head_h * 0.27),
               (hx - head_w * 0.04, head_cy - head_h * 0.38), (hx - head_w * 0.26, head_cy - head_h * 0.28), (hx - head_w * 0.54, head_cy - head_h * 0.18)]
+        fr = [(x_, min(y_, hair_cap) if abs(x_ - hx) <= head_w * 0.40 else y_) for x_, y_ in fr]
         cv.poly(pts + fr, hair, INK, ow)
         if style == "bun":
             cv.ellipse(hx, top - head_h * 0.06, head_w * 0.17, head_w * 0.15, hair, INK, ow)
     if style in ("bob", "bangs") and des.get("class") in ("toddler", "child") and des["female"]:   # küt kâhkül
-        cv.poly([(hx - head_w * 0.52, head_cy - head_h * 0.20), (hx - head_w * 0.30, head_cy - head_h * 0.08), (hx + head_w * 0.30, head_cy - head_h * 0.08),
-                 (hx + head_w * 0.52, head_cy - head_h * 0.20), (hx + head_w * 0.40, head_cy - head_h * 0.45), (hx - head_w * 0.40, head_cy - head_h * 0.45)], hair, INK, ow * 0.8)
+        bb_ = min(head_cy - head_h * 0.08, hair_cap)       # küt kâkülün alt kenarı gözlerin/kaşların üstünde
+        sb_ = min(head_cy - head_h * 0.20, bb_ + head_h * 0.03)
+        cv.poly([(hx - head_w * 0.52, sb_), (hx - head_w * 0.30, bb_), (hx + head_w * 0.30, bb_),
+                 (hx + head_w * 0.52, sb_), (hx + head_w * 0.40, head_cy - head_h * 0.45), (hx - head_w * 0.40, head_cy - head_h * 0.45)], hair, INK, ow * 0.8)
     if des.get("hat_kind") == "beanie":
         pass
     if style == "spiky" and species != "hedgehog":
@@ -659,7 +665,8 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
             tip = (hx + math.cos(a) * head_w * 0.66, head_cy + math.sin(a) * head_h * 0.72)
             perp = head_w * 0.09
             cv.poly([(b[0] - perp, b[1]), tip, (b[0] + perp, b[1])], hair, INK, ow * 0.8)
-        cv.poly(cv.arc_pts(hx, head_cy, head_w * 0.5, head_h * 0.5, math.pi * 1.08, math.pi * 1.92, 16), hair, INK, ow * 0.8)
+        dome_ = cv.arc_pts(hx, head_cy, head_w * 0.5, head_h * 0.5, math.pi * 1.08, math.pi * 1.92, 16)
+        cv.poly([(x_, min(y_, hair_cap - ow * 0.45)) for x_, y_ in dome_], hair, INK, ow * 0.8)       # kubbenin kapanış kirişi (uç noktalar dahil) göz/kaş üstünde kalır
     if species == "hedgehog":      # alın tutamı
         for k, dx in enumerate((-0.14, 0.0, 0.14)):
             cv.poly([(hx + (dx - 0.07) * head_w, head_cy - head_h * 0.40), (hx + dx * head_w + face * head_w * 0.05, head_cy - head_h * (0.62 + 0.05 * (k % 2))),
