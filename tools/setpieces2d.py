@@ -46,6 +46,15 @@ def rules_sign(cv, cam, x=0.0, t=0.0):
 # Parçanın yerleştirildiği x'e göre dünya konumuna çevrilir; böylece hedefler mekân/proje verisinden gelir, motor koduna gömülmez.
 ANCHORS = {"bins": [("bin_green", 0.0, 0.9, True), ("bin_yellow", 0.55, 0.9, True), ("bin_blue", 1.1, 0.9, True)]}      # (ad, dx, yükseklik, nesne içinde kaybolabilir mi)
 DEFAULT_BIN_X = 1.3
+# İçine nesne girebilen çapaların AĞZI (parça geometrisi; çizim, atış uçuşu ve QA aynı değeri okur): rim = ağız çizgisinin yerden yüksekliği (m),
+# half = açıklığın yarı genişliği (m). Çizgi altında kalan nesne kısmı gövdenin ARKASINDADIR (görünmez). Ağzı tanımsız bir 'sink' çapası ölçülemez sayılır.
+BIN_RIM, BIN_HALF = 0.83, 0.25
+MOUTHS = {name: {"rim": BIN_RIM, "half": BIN_HALF} for name, _dx, _y, sink in ANCHORS["bins"] if sink}
+
+
+def mouth_of(anchor):
+    """Çapa ağzı {'rim','half'} ya da None."""
+    return MOUTHS.get(anchor) if isinstance(anchor, str) else None
 
 
 def anchors_for(pieces):
@@ -66,7 +75,8 @@ def bins(cv, cam, x=1.2, t=0.0):
     for k, c in enumerate([(70, 160, 90), (240, 200, 60), (70, 120, 200)]):
         bx = x + k * 0.55
         _poly(cv, cam, [(bx - 0.2, 0.0), (bx + 0.2, 0.0), (bx + 0.24, 0.75), (bx - 0.24, 0.75)], c)
-        _rect(cv, cam, bx - 0.27, 0.75, bx + 0.27, 0.83, shade(c, 0.8))
+        _rect(cv, cam, bx - 0.27, 0.75, bx + 0.27, BIN_RIM, shade(c, 0.8))
+        _ell(cv, cam, bx, BIN_RIM, BIN_HALF, 0.035, shade(c, 0.35), _o(cam) * 0.6)             # açık ağız: nesne buradan içeri girer
         _ell(cv, cam, bx, 0.42, 0.08, 0.08, (255, 255, 255), _o(cam) * 0.5)
 
 

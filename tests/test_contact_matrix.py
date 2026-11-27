@@ -73,7 +73,8 @@ def test_throw_into_bin_arrives_at_named_sink_and_disappears_only_by_explicit_ev
     # uçuş boyunca nesne görünür; varış anında hedef konumda; sonra kaybolur
     seen = [r2._objects_now(b, _items(b, t / 24), t / 24) for t in range(int(2.0 * 24), int(3.2 * 24))]
     assert all(len(s) == 1 for s in seen)
-    last = seen[-1][0]; assert abs(last[1] - TG["bin_green"][0]) < 0.1 and abs(last[2] - TG["bin_green"][1]) < 0.1
+    rim = setpieces2d.mouth_of("bin_green")["rim"]                       # nesne hedefin üstündeki havada değil, ağzın İÇİNDE kaybolur
+    last = seen[-1][0]; assert abs(last[1] - TG["bin_green"][0]) < 0.01 and last[2] < rim < max(s[0][2] for s in seen)
     assert r2._objects_now(b, _items(b, 3.5), 3.5) == []
 
 def test_drop_releases_hand_and_object_rests_on_ground():

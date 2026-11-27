@@ -162,9 +162,30 @@ def reach_windows(track, lead=0.6):
     return w
 
 
-def position(track, lt, hold_fn, target_fn, arc=0.12):
+SINK_SWALLOW_M = 0.04        # uçuş sonunda nesnenin tepesi ağız çizgisinin bu kadar altındadır (tamamen içeride)
+SINK_CLEAR_MIN, SINK_CLEAR_K = 0.12, 0.18      # uçuş tepesi, bırakma noktası ve ağzın üstünde en az bu kadar yükselir (m; ya da yatay yolun katı)
+
+
+def sink_flight(p0, mouth, obj_h, u):
+    """Kap içine atış: nesnenin ÇİZİLEN EN ALT noktasının konumu (u 0..1); obj_h = çizilen dikey boy. mouth = (ağız merkezi x, ağız çizgisi y). Balistik: bırakma noktasından yükselip
+    tepeden ağza DÜŞER; taban ağız çizgisini tam ağız merkezinde keser (yatay yol orada biter), sonra nesne bütünüyle içeri iner."""
+    (x0, y0), (mx, rim) = p0, mouth
+    u = max(0.0, min(1.0, u))
+    y1 = rim - obj_h - SINK_SWALLOW_M
+    apex = max(y0, rim) + max(SINK_CLEAR_MIN, SINK_CLEAR_K * abs(mx - x0))
+    a, b, c = math.sqrt(apex - y0), math.sqrt(apex - y1), math.sqrt(apex - rim)
+    ua = a / (a + b)                                    # tepe anı (tek yerçekimi: iki yarı aynı parabol)
+    k = ((a + b) ** 2)
+    y = apex - k * (u - ua) ** 2
+    ur = ua + c / (a + b)                               # tabanın ağız çizgisini geçtiği an
+    return x0 + (mx - x0) * min(1.0, u / ur), y
+
+
+def position(track, lt, hold_fn, target_fn, arc=0.12, sink_fn=None):
     """Nesnenin dünya konumu (x, y, durum). hold_fn(holder, lt) -> (x, y) elin konumu; target_fn(at) -> (x, y).
-    El değiştirme ve bırakma yay çizer; yay yüksekliği mesafeyle orantılı (kısa mesafede küçük)."""
+    El değiştirme ve bırakma yay çizer; yay yüksekliği mesafeyle orantılı (kısa mesafede küçük).
+    sink_fn(at) -> (ağız_x, ağız_y, çizilen_boy, yerleşim_noktasının_altına_taşan) ya da None. Ağzı olan bir kaba imhada (hide) uçuş sink_flight'tır: nesne bırakma ANINDAKİ el
+    konumundan ayrılır (hold_fn o anın zamanıyla çağrılır) ve el sonradan nereye giderse gitsin yolu değişmez."""
     def pos(k):
         return hold_fn(k["holder"], lt, k.get("hand")) if "holder" in k else target_fn(k["at"])
     st = state_at(track, lt)
@@ -176,6 +197,12 @@ def position(track, lt, hold_fn, target_fn, arc=0.12):
         p = pos(track[-1]); return p[0], p[1], st
     for a, b in zip(track, track[1:]):
         if a["t"] <= lt <= b["t"]:
+            if sink_fn and "holder" in a and b.get("hide") and lt > a["t"]:
+                m = sink_fn(b["at"])
+                if m:
+                    p0 = hold_fn(a["holder"], a["t"], a.get("hand"))
+                    x, y = sink_flight((p0[0], p0[1] - m[3]), (m[0], m[1]), m[2], (lt - a["t"]) / (b["t"] - a["t"]))
+                    return x, y + m[3], st
             pa, pb = pos(a), pos(b)
             u = 0.0 if b["t"] == a["t"] else (lt - a["t"]) / (b["t"] - a["t"]); u = u * u * (3 - 2 * u)
             moving = ("holder" in a) != ("holder" in b) or a.get("holder") != b.get("holder") or ("at" in a and "at" in b and a["at"] != b["at"])

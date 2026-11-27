@@ -21,6 +21,34 @@ def _o(cam, ow=None):
     return ow or max(1.6, 0.012 * cam.s)
 
 
+_EXTENT = {}
+
+
+def extent(kind, scale=1.0):
+    """Nesnenin ÇİZİLEN sınırları, yerleşim noktasına göre metre: (alta taşan, üste uzanan, yarı genişlik). Katalog tahmini değil, çizimin ölçümü."""
+    key = (kind, round(scale, 4))
+    if key not in _EXTENT:
+        from PIL import Image, ImageChops
+        import puppet2d as pp
+        size, ppm, back = 800, 200.0, (1, 2, 3)
+
+        class _C:
+            s = ppm
+
+            def x(self, v):
+                return size / 2 + v * ppm
+
+            def y(self, v):
+                return size / 2 - v * ppm
+        cv = pp.Cv(size, size, ss=1); cv.img.paste(back, (0, 0, size, size))
+        draw(cv, _C(), kind, 0.0, 0.0, 0.0, 0, scale=scale)
+        r, g, b = ImageChops.difference(cv.img, Image.new("RGB", cv.img.size, back)).split()
+        box = ImageChops.lighter(ImageChops.lighter(r, g), b).getbbox()
+        _EXTENT[key] = (0.0, 0.0, 0.0) if box is None else (
+            max(0.0, (box[3] - size / 2) / ppm), (size / 2 - box[1]) / ppm, max(abs(box[0] - size / 2), abs(box[2] - size / 2)) / ppm)
+    return _EXTENT[key]
+
+
 def draw(cv, cam, kind, wx, wy, t, k=0, scale=1.0):
     ow = _o(cam); s = cam.s * scale
     x, y = cam.x(wx), cam.y(wy)

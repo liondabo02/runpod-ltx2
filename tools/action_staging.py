@@ -7,6 +7,8 @@
 3) KAMERA (framing): temas penceresinde tek ve sabit bir 'aksiyon' kadrajı: katılanlar, eller, nesnenin yerleri ve hedef birlikte; tepki/yakın plan kesmesi yapılmaz."""
 import continuity
 import object_state
+import setpieces2d
+import props2d
 import shot_motion as sm
 
 BODY_K = 0.30             # karakterin yarı genişliği / boy (çizgi film başı dahil); iki oyuncunun örtüşmeden durma aralığı = BODY_K*(Ha+Hb)
@@ -198,6 +200,13 @@ def framing(beat, designs, lt, base_ppm):
                 at = (beat.get("targets") or {}).get(at) if isinstance(at, str) else at
                 if at is not None:
                     lo.append(at[0] - 0.30); hi.append(at[0] + 0.30); top.append(at[1] + 0.35)
+            for k0, k1 in zip(tr, tr[1:]):                              # kap içine atışın yay tepesi de kadrajda kalır
+                g = setpieces2d.mouth_of(k1.get("at")) if "holder" in k0 and k1.get("hide") else None
+                if g and k0["holder"] in mo and k1["at"] in (beat.get("targets") or {}):
+                    H = designs[k0["holder"]]["height"]
+                    dx = abs(beat["targets"][k1["at"]][0] - sm.motion_x(mo[k0["holder"]], k0["t"], dur, H))
+                    top.append(max(0.8 * H, g["rim"]) + max(object_state.SINK_CLEAR_MIN, object_state.SINK_CLEAR_K * dx)
+                               + sum(props2d.extent(ob.get("prop", ""), ob.get("scale", 0.55))[:2]))
         return (min(lo), max(hi), max(top)) if lo else None
     act = [c for c in sorted({c for e in evs for c in (e["by"], e.get("to")) if c}) if c in mo and c in designs]
     if not act:

@@ -137,8 +137,15 @@ def object_owner(st):
     return None
 
 
-def _objects_now(beat, items, lt):
-    """[(ob, x, y, state, owner, hand)] — her nesne için konum (tutuş noktası dahil) ve çizim sahibi."""
+def _mouth(beat, at):
+    """Adlı hedef bir kabın ağzıysa (ağız_x, ağız_y), değilse None."""
+    g = setpieces2d.mouth_of(at)
+    return (float(_tg(beat)[at][0]), g["rim"]) if g and at in _tg(beat) else None
+
+
+def _objects_now(beat, items, lt, items_at=None):
+    """[(ob, x, y, state, owner, hand)] — her nesne için konum (tutuş noktası dahil) ve çizim sahibi.
+    items_at(t) -> o anın oyuncu pozları: verilirse kap içine atışta bırakma noktası bırakma ANININ elinden alınır."""
     out = []
     for ob in (beat.get("choreo") or {}).get("objects", []):
         tr = ob.get("track") or []
@@ -146,28 +153,70 @@ def _objects_now(beat, items, lt):
             continue
         sc = ob.get("scale", 0.55); grip = object_state.grip_of(ob["prop"], sc)
         def hold(holder, t_, hand=None, _g=grip):
-            h = _hold_pos(holder, items, None, beat, t_, hand, _g)
+            its = items_at(t_) if items_at is not None and abs(t_ - lt) > 1e-9 else items
+            h = _hold_pos(holder, its, None, beat, t_, hand, _g)
             return (h[0], h[1]) if h else (0.0, 0.0)
         def target(at):
             at = _tg(beat)[at] if isinstance(at, str) else at
             return (at[0], at[1])
-        x, y, st = object_state.position(tr, lt, hold, target)
+        def sink(at, _p=ob["prop"], _s=sc):
+            m = _mouth(beat, at)
+            if not m:
+                return None
+            below, above, _w = props2d.extent(_p, _s)
+            return (m[0], m[1], below + above, below)
+        x, y, st = object_state.position(tr, lt, hold, target, sink_fn=sink)
         if x is None:
             continue                                            # imha (açık hide olayı, yalnız tanımlı hedefte): kutunun ağzında asılı kalmaz
         own = object_owner(st)
+        into = _entry_target(beat, tr, st)
+        if into and lt > into[0]:
+            own = None                                          # bırakıldı: elin değil, serbest nesne (parmak çizilmez)
         out.append((ob, x, y, st, own, pick_hand(beat, own) if own else None))
     return out
 
 
-def _draw_objects(cv, cam, beat, items, designs, lt, owner="__free__", emit=None):
+def _entry_target(beat, track, st):
+    """Nesne şu an bir kabın ağzına gidiyorsa (bırakma anı, (ağız_x, ağız_y)); değilse None."""
+    if st["state"] != "put":
+        return None
+    for a, b in zip(track, track[1:]):
+        if "holder" in a and b.get("hide") and a["holder"] == st["holder"]:
+            m = _mouth(beat, b.get("at"))
+            return (a["t"], m) if m else None
+    return None
+
+
+def _clip_above(cv, cam, world_y, draw):
+    """draw'u uygula ama world_y çizgisinin ALTINDA kalan pikselleri geri al (nesne kabın gövdesi arkasında)."""
+    cut = int(round(cam.y(world_y) * cv.ss))
+    cut = max(0, min(cv.img.size[1], cut))
+    if cut >= cv.img.size[1]:
+        draw(cv, cam); return
+    box = (0, cut, cv.img.size[0], cv.img.size[1])
+    keep = cv.img.crop(box)
+    draw(cv, cam)
+    cv.img.paste(keep, box)
+
+
+def _draw_objects(cv, cam, beat, items, designs, lt, owner="__free__", emit=None, items_at=None):
     """Nesneleri çizer. owner='__free__': serbest nesneler (yerde, uçuşta); owner=cid: o karakterin elindekiler (karakterden HEMEN sonra, parmaklar önde)."""
     by = {i[0]: i for i in items}
-    for ob, x, y, st, own, hand in _objects_now(beat, items, lt):
+    for ob, x, y, st, own, hand in _objects_now(beat, items, lt, items_at):
         late = st["state"] == "transfer"                        # el değiştirirken nesne iki karakterin de ÖNÜNDE (alıcı karakter vericiyi örtüp nesneyi gizlemesin)
         slot = "__late__" if late else ("__free__" if own is None else own)
         if slot != owner:
             continue
-        body = lambda c, cm, o_=ob, x_=x, y_=y: props2d.draw(c, cm, o_["prop"], x_, y_, 0.0, 0, scale=o_.get("scale", 0.55))
+        full = lambda c, cm, o_=ob, x_=x, y_=y: props2d.draw(c, cm, o_["prop"], x_, y_, 0.0, 0, scale=o_.get("scale", 0.55))
+        body = full
+        into = _entry_target(beat, ob.get("track") or [], st)
+        if into:
+            mx_, rim_ = into[1]
+            half_ = max(setpieces2d.MOUTHS[k]["half"] for k in setpieces2d.MOUTHS)
+            if abs(x - mx_) <= half_:               # ağzın üstünden içeri iniyor: çizgi altı görünmez (ağız dışında kırpma YOK: ıska gizlenmez)
+                def body(c, cm, f_=full, r_=rim_):
+                    _clip_above(c, cm, r_, f_)
+                body.full = full
         body(cv, cam)
         if emit is not None:
             emit("object", ob.get("id") or ob.get("prop", "obj"), body, (x, y))
@@ -290,6 +339,9 @@ def apply_handoff_reach(beat, items, lt):
                 p[key] = [old[0] + (p[key][0] - old[0]) * w, old[1] + (p[key][1] - old[1]) * w]
 
 
+SWING_RELEASE_LEAD_S = 0.15
+
+
 def apply_throw_swing(beat, items, lt):
     """Atış/bırakma kolu: bırakmadan önce geri salınım, bırakma anında hedefe doğru ileri savurma (kol nesneyi gerçekten fırlatır), sonra gevşeme."""
     by = {i[0]: i for i in items}
@@ -297,10 +349,13 @@ def apply_throw_swing(beat, items, lt):
         for e in object_state.events(ob.get("track") or []):
             if e["type"] not in ("dispose", "drop") or e["by"] not in by:
                 continue
-            ts = e["t_start"]; tgt = None
+            ts = e["t_start"]; tgt = None; lead = 0.0
             for k in ob["track"]:
                 if isinstance(k.get("at"), str) and k["t"] == e["t"]:
                     tgt = _tg(beat).get(k["at"])
+                    if k.get("hide") and _mouth(beat, k["at"]):
+                        lead = SWING_RELEASE_LEAD_S       # kaba atış: savurma BIRAKMA anında tepeye varır (el, bıraktığı nesneyi geçip önüne atlamaz)
+            ts -= lead
             if tgt is None or not (ts - 0.45 <= lt <= ts + 0.5):
                 continue
             cid, des, p, *_ = by[e["by"]]
@@ -376,7 +431,12 @@ def reaction_target(beat, t):
     return None
 
 
-def frame(plan, designs, t, bible_chars=None, trace=None):
+def poses_at(plan, designs, t):
+    """O anın çizilecek oyuncu pozları (frame ile aynı hesap; çizim yapılmaz)."""
+    return frame(plan, designs, t, poses_only=True)
+
+
+def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False):
     """trace (dict) verilirse çizimin GERÇEK yerleşimi yazılır: kamera, pozlar ve çizim sırasıyla katmanlar [(tür, kimlik, çizici(cv, cam), nokta)].
     Okunabilirlik ölçüsü bu kayıttan çalışır; ayrı bir yerleşim tahmini yapılmaz."""
     beat = next((b for b in plan["beats"] if b["t_start"] <= t < b["t_end"]), None)
@@ -456,6 +516,14 @@ def frame(plan, designs, t, bible_chars=None, trace=None):
         xs.append(p["x"])
     apply_throw_swing(beat, items, lt)                   # atışta kol savurma
     apply_handoff_reach(beat, items, lt)                 # el değiştirmede eller buluşma noktasına uzanır
+    if poses_only:
+        return items
+    _memo = {}
+
+    def items_at_(t_, _b=beat):                          # aynı vuruşta başka bir anın pozları (atışın bırakma noktası)
+        if t_ not in _memo:
+            _memo[t_] = poses_at(plan, designs, _b["t_start"] + t_) or items
+        return _memo[t_]
     avg = sum(xs) / len(xs) if xs else 0.0
     focus = beat.get("focus")
     reaction = reaction_target(beat, t)               # tepki planı: replik bitince / uzun replikin ortasında dinleyene kesilir
@@ -528,11 +596,11 @@ def frame(plan, designs, t, bible_chars=None, trace=None):
         body_(cv, cam)
         if emit is not None:
             emit("character", cid, body_, (p["x"], 0.0))
-        _draw_objects(cv, cam, beat, items, designs, lt, owner=cid, emit=emit)      # elindeki nesne: karakterden hemen sonra, parmaklar önde
+        _draw_objects(cv, cam, beat, items, designs, lt, owner=cid, emit=emit, items_at=items_at_)      # elindeki nesne: karakterden hemen sonra, parmaklar önde
     if xs:
         fx_layer.icons(cv, cam, beat, xs, [designs[c]["height"] for c in beat["cast"]], t, lt)
-    _draw_objects(cv, cam, beat, items, designs, lt, emit=emit)             # serbest nesneler (yerde, uçuşta)
-    _draw_objects(cv, cam, beat, items, designs, lt, owner="__late__", emit=emit)   # el değiştiren nesne: tüm karakterlerden sonra
+    _draw_objects(cv, cam, beat, items, designs, lt, emit=emit, items_at=items_at_)             # serbest nesneler (yerde, uçuşta)
+    _draw_objects(cv, cam, beat, items, designs, lt, owner="__late__", emit=emit, items_at=items_at_)   # el değiştiren nesne: tüm karakterlerden sonra
     for k_, kind in enumerate(beat.get("props") or []):
         if kind in BACK_PROPS:
             continue

@@ -19,6 +19,12 @@ DEFAULTS = {
     "min_object_px": 14,          # nesnenin ekrandaki uzun kenarı (1280x720)
     "max_cuts": 0,                # pencere içinde kamera sıçraması sayısı
     "lead_s": 0.3, "tail_s": 0.3, "fps": 12,
+    # kap içine atış (entry): nesne ağızdan, yukarıdan girip ağız çizgisinde parça parça kaybolmalı
+    "entry_fps": 24,
+    "entry_rim_tol_m": 0.06,      # son görünen karede nesnenin alt kenarı ağız çizgisine en çok bu kadar uzak
+    "entry_side_tol_m": 0.04,     # son görünen karede nesne ağız açıklığının yanlarından en çok bu kadar taşabilir
+    "entry_last_visible": 0.65,   # kaybolmadan önceki son karede nesnenin en çok bu oranı görünür (havada birden yok olmaz)
+    "entry_max_step_m": 0.40,     # ardışık karede nesne merkezinin en büyük yolu (sıçrama)
 }
 SENT = (1, 2, 3)
 W, H = pp.W, pp.H
@@ -101,10 +107,12 @@ def sample(plan, designs, beat, event, lt):
     if i is not None:
         _k, _key, fn, at = layers[i]
         centred = sc.Cam(at[0], at[1], cam.z)                      # aynı ölçekte ortalanmış çizim = toplam alan (kadraj dışı pay dahil)
-        total = max(1, _count(_mask(fn, centred)))
+        whole = getattr(fn, "full", fn)                             # kap ağzından içeri inerken katman kırpıktır; toplam alan kırpılmamış çizimden
+        total = max(1, _count(_mask(whole, centred)))
         seen = _minus(masks[i], later(i, {(lay[0], lay[1]) for lay in layers if lay[0] == "grip"}))     # tutan parmaklar 'örtme' sayılmaz
-        res["object"] = min(1.0, _count(seen) / total)
-        bb = _mask(fn, centred).getbbox()
+        if whole is fn or _count(masks[i]) >= _count(_mask(whole, cam)):      # kırpma piksel aldıysa bu beklenen kayboluştur: onu 'entry' ölçütü denetler
+            res["object"] = min(1.0, _count(seen) / total)
+        bb = _mask(whole, centred).getbbox()
         res["object_px"] = max(bb[2] - bb[0], bb[3] - bb[1]) if bb else 0
     elif lt < event["t"] - 1e-6:
         res["object"] = 0.0; res["object_px"] = 0                    # olay bitmeden nesne hiç çizilmiyorsa görünmüyor demektir
@@ -131,6 +139,86 @@ def sample(plan, designs, beat, event, lt):
         occ = _union([masks[k] for k in range(len(layers)) if layers[k][0] in ("character", "front")])
         res["target"] = min(1.0, _count(_minus(rect, occ)) / area)
     return res
+
+
+def _entry_frame(plan, designs, beat, event, lt):
+    """Bir anda nesnenin çizilen görünümü: {'cam','vis' (görünen bbox|None),'frac' (görünen/toplam),'full' (kırpılmamış bbox|None)}."""
+    tr = {}
+    if r2.frame(plan, designs, beat["t_start"] + lt, trace=tr) is None:
+        return None
+    cam, layers = tr["cam"], tr["layers"]
+    i = next((k for k, lay in enumerate(layers) if lay[0] == "object" and lay[1] == event["object"]), None)
+    if i is None:
+        return {"cam": cam, "vis": None, "frac": 0.0, "full": None}
+    fn, at = layers[i][2], layers[i][3]
+    whole = getattr(fn, "full", fn)
+    total = max(1, _count(_mask(whole, sc.Cam(at[0], at[1], cam.z))))
+    own = _mask(fn, cam)
+    seen = _minus(own, _union([_mask(lay[2], cam) for lay in layers[i + 1:] if lay[0] != "grip"]))
+    return {"cam": cam, "vis": seen.getbbox(), "frac": min(1.0, _count(seen) / total), "full": _mask(whole, cam).getbbox()}
+
+
+def measure_entry(plan, designs, beat, event, cfg=None):
+    """Kap içine atış, ÇİZİLEN karelerden (uçuş formülünden bağımsız): (ölçüm, sorun listesi). Koşullar:
+    nesne ağız çizgisini yukarıdan ve açıklığın içinden geçer; ağız çizgisinin altında (kabın önünde) hiç çizilmez; son görünen karede ağız
+    çizgisinde, açıklığın içinde ve büyük ölçüde içeri girmiştir; sonra bir daha görünmez; yolunda sıçrama yoktur."""
+    cfg = dict(DEFAULTS, **(cfg or {}))
+    g = setpieces2d.mouth_of(event.get("target"))
+    if not g:
+        return {}, [f"hedefin ağız tanımı yok ({event.get('target')}): nesnenin içeri girdiği ölçülemez"]
+    mx, rim, half = float(beat["targets"][event["target"]][0]), g["rim"], g["half"]
+    dur = beat["t_end"] - beat["t_start"]
+    a, b = event["t_start"], min(dur - 1e-3, event["t"] + cfg["tail_s"])
+    n = max(2, int(round((b - a) * cfg["entry_fps"])) + 1)
+    frames = [(lt, s) for lt in (a + (b - a) * k / (n - 1) for k in range(n)) for s in [_entry_frame(plan, designs, beat, event, lt)] if s]
+    why, metrics = [], {}
+    shown = [k for k, (_t, s) in enumerate(frames) if s["vis"]]
+    if not shown:
+        return metrics, ["uçuş boyunca nesne hiç görünmüyor"]
+    last_t, last = frames[shown[-1]]
+    cam = last["cam"]; px = cam.s
+    x0, _y0, x1, y1 = last["vis"]
+    metrics = {"last_seen_at": round(last_t, 3), "last_visible": round(last["frac"], 3),
+               "last_bottom_above_rim_m": round((cam.y(rim) - y1) / px, 3),
+               "last_side_overflow_m": round(max(cam.x(mx - half) - x0, x1 - cam.x(mx + half), 0.0) / px, 3)}
+    if shown[-1] >= len(frames) - 1:
+        why.append("nesne pencere sonunda hâlâ görünüyor (kabın içine girmiyor)")
+    if abs(metrics["last_bottom_above_rim_m"]) > cfg["entry_rim_tol_m"]:
+        why.append(f"nesne ağız çizgisinde kaybolmuyor: son görünüşte alt kenarı çizgiden {metrics['last_bottom_above_rim_m']:+.2f} m (+: havada kayboluyor, -: kabın önünde)")
+    if metrics["last_side_overflow_m"] > cfg["entry_side_tol_m"]:
+        why.append(f"nesne açıklığın dışında kayboluyor ({metrics['last_side_overflow_m']:.2f} m taşma): ıska")
+    if last["frac"] > cfg["entry_last_visible"]:
+        why.append(f"nesne içeri girmeden birden yok oluyor (son karede %{100 * last['frac']:.0f} görünür)")
+    holes = [frames[k][0] for k in range(shown[0], shown[-1] + 1) if not frames[k][1]["vis"]]
+    if holes:
+        why.append(f"nesne uçuş ortasında kaybolup yeniden görünüyor ({holes[0]:.2f} sn)")
+    below, step_max, prev = 0.0, 0.0, None
+    crossed_ok = None
+    for _t, s in frames:
+        c = s["cam"]
+        if s["vis"]:
+            vx0, _a, vx1, vy1 = s["vis"]
+            if vx1 > c.x(mx - half) and vx0 < c.x(mx + half):       # kabın üstündeki sütunda çizgi altına taşan çizim = kabın ÖNÜNDE
+                below = max(below, (vy1 - c.y(rim)) / c.s)
+        if s["full"]:
+            fx0, fy0, fx1, fy1 = s["full"]
+            wx = ((fx0 + fx1) / 2 - c.x(mx)) / c.s; wy = (c.y(rim) - (fy0 + fy1) / 2) / c.s      # ağıza göre merkez (m)
+            if prev is not None:
+                step_max = max(step_max, ((wx - prev[0]) ** 2 + (wy - prev[1]) ** 2) ** 0.5)
+            bottom = (c.y(rim) - fy1) / c.s
+            if crossed_ok is None and prev is not None and bottom <= 0.0 < prev[2] and abs(wx) <= half + 0.5:
+                crossed_ok = abs(wx) <= half and abs(prev[0]) <= half + cfg["entry_max_step_m"] and wy < prev[1]
+            prev = (wx, wy, bottom)
+        else:
+            prev = None
+    metrics.update(below_rim_m=round(below, 3), max_step_m=round(step_max, 3), crossed_from_above=bool(crossed_ok))
+    if below > cfg["entry_rim_tol_m"]:
+        why.append(f"nesne ağız çizgisinin {below:.2f} m altında kabın önünde çiziliyor")
+    if not crossed_ok:
+        why.append("nesne ağız çizgisini yukarıdan ve açıklığın içinden geçmiyor")
+    if step_max > cfg["entry_max_step_m"]:
+        why.append(f"uçuşta sıçrama: ardışık karede {step_max:.2f} m")
+    return metrics, why
 
 
 def _cuts(samples):
@@ -175,6 +263,9 @@ def measure_event(plan, designs, beat, event, cfg=None):
     metrics["cuts"] = _cuts(samples)
     if metrics["cuts"] > cfg["max_cuts"]:
         fails.append({"metric": "cuts", "why": f"aksiyon sürerken kamera {metrics['cuts']} kez kesiyor/sıçrıyor"})
+    if event["type"] == "dispose":
+        metrics["entry"], why = measure_entry(plan, designs, beat, event, cfg)
+        fails.extend({"metric": "entry", "why": w} for w in why)
     if not samples:
         fails.append({"metric": "samples", "why": "pencerede ölçülecek kare yok"})
     return {"beat": beat.get("i"), "shot": beat.get("shot_id"), "event": event["type"], "object": event["object"], "by": event.get("by"),
@@ -191,7 +282,7 @@ def problems(report):
     out = []
     for r in report:
         for f in r["fails"]:
-            engine = "camera" if f["metric"] in ("cuts", "object_px") else "staging"
+            engine = "camera" if f["metric"] in ("cuts", "object_px") else ("object_motion" if f["metric"] == "entry" else "staging")
             out.append({"rule": "ACTION_UNREADABLE", "engine": engine, "shot": r["shot"],
                         "why": f"{r['event']} {r['object']} ({r['by']}{' -> ' + r['to'] if r.get('to') else ''}{' => ' + r['target'] if r.get('target') else ''}): {f['why']}"})
     return out
