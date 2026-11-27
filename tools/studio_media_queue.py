@@ -18,12 +18,15 @@ import time
 import uuid
 from pathlib import Path
 from ahos_studio_os import CANON
+from job_ledger import work_key
 
 MEDIA_KINDS = frozenset(("model", "rig", "set", "animation", "voice",
                          "lipsync", "render", "scene_qa", "edit", "episode_qa"))
 MEDIA_CAPS = frozenset(("character_model", "rig", "scene", "animation", "voice",
                         "lipsync", "render", "qa", "editing"))
 DONE_DEPS = frozenset(("DONE_VERIFIED", "DONE_DRAFT"))
+# Aynı içerikli başka iş bu durumlardayken ikinci kez üretim dağıtılmaz.
+HOLDING_STATES = ("LEASED", "AWAITING_QA", "REVIEWING", "BLOCKED")
 MAX_UPLOAD = 64 * 1024 * 1024
 MAX_ATTEMPTS = 3
 NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$")
@@ -226,6 +229,9 @@ CREATE TABLE IF NOT EXISTS media_artifact_history (
   bytes INTEGER NOT NULL, local_path TEXT NOT NULL, archived_at REAL NOT NULL,
   PRIMARY KEY(job_id,attempt,role,filename)
 );
+CREATE TABLE IF NOT EXISTS media_work (
+  job_id TEXT PRIMARY KEY, work_key TEXT NOT NULL
+);
 """)
 
     def register(self, info):
@@ -402,6 +408,79 @@ CREATE TABLE IF NOT EXISTS media_artifact_history (
             db.execute("INSERT INTO media_events VALUES(?,?,?,?,?)",
                        (now,job["job_id"],"LEASE_EXPIRED",job["worker_id"] or "",state))
 
+    def _work_key(self, db, job):
+        """İşin dağıtıldığı andaki kayıtlı kimliği; yoksa güncel girdilerden hesaplanır."""
+        stored = db.execute("SELECT work_key FROM media_work WHERE job_id=?", (job["job_id"],)).fetchone()
+        if stored:
+            return stored["work_key"]
+        payload = json.loads(job["payload"])
+        inputs = []
+        for task_id in payload.get("dependencies", []):
+            inputs += [(task_id, x["filename"], x["sha256"]) for x in db.execute(
+                "SELECT a.filename,a.sha256 FROM media_artifacts a JOIN media_jobs j ON a.job_id=j.job_id "
+                "WHERE j.episode_id=? AND j.task_id=? AND a.role='worker'",
+                (job["episode_id"], task_id)).fetchall()]
+        return work_key(job["capability"], payload, inputs)
+
+    def _same_work(self, db, job, key):
+        rows = db.execute(
+            "SELECT * FROM media_jobs WHERE capability=? AND task_id=? AND job_id!=? "
+            "AND state!='QUEUED' ORDER BY created",
+            (job["capability"], job["task_id"], job["job_id"])).fetchall()
+        return [row for row in rows if self._work_key(db, row) == key]
+
+    def _reuse(self, db, job, source, key, now):
+        """QA geçmiş aynı işin dosyalarını bağla: yeniden üretim yok, BAĞIMSIZ QA yine zorunlu."""
+        items = db.execute("SELECT * FROM media_artifacts WHERE job_id=? AND role='worker'",
+                           (source["job_id"],)).fetchall()
+        production = json.loads(source["result"]).get("production")
+        intact = bool(items) and isinstance(production, dict) and all(
+            Path(x["local_path"]).is_file() and Path(x["local_path"]).stat().st_size == x["bytes"]
+            and checksum(x["local_path"]) == x["sha256"] for x in items)
+        if not intact:
+            db.execute("INSERT INTO media_events VALUES(?,?,?,?,?)",
+                       (now, job["job_id"], "REUSE_REJECTED", "queue", source["job_id"]))
+            return False
+        for x in items:
+            db.execute("INSERT INTO media_artifacts VALUES(?,?,?,?,?,?,?)",
+                       (job["job_id"], "worker", x["uploader_id"], x["filename"], x["sha256"],
+                        x["bytes"], x["local_path"]))
+        # worker_id özgün üreticidir: kendi çıktısını inceleyemez (review_claim bunu dışlar).
+        db.execute("UPDATE media_jobs SET state='AWAITING_QA',worker_id=?,result=?,updated=? WHERE job_id=?",
+                   (items[0]["uploader_id"], json.dumps(production, ensure_ascii=False), now, job["job_id"]))
+        db.execute("UPDATE tasks SET state='AWAITING_QA' WHERE episode_id=? AND task_id=?",
+                   (job["episode_id"], job["task_id"]))
+        db.execute("INSERT OR REPLACE INTO media_work VALUES(?,?)", (job["job_id"], key))
+        db.execute("INSERT INTO media_events VALUES(?,?,?,?,?)",
+                   (now, job["job_id"], "REUSED", "queue", source["job_id"]))
+        return True
+
+    def _pick(self, db, caps, now):
+        """Dağıtılacak ilk iş. Mükerrer iş: aynı içerik sürüyorsa/bloke ise beklet; QA geçmişse yeniden üretme."""
+        args = ",".join("?" * len(caps))
+        queued = db.execute(
+            f"SELECT * FROM media_jobs WHERE state='QUEUED' AND attempts<? "
+            f"AND capability IN ({args}) ORDER BY created,rowid",
+            (MAX_ATTEMPTS, *caps)).fetchall()
+        held, reused = 0, []
+        for job in queued:
+            db.execute("DELETE FROM media_work WHERE job_id=?", (job["job_id"],))   # kuyruktaki işin girdisi yeniden okunur
+            key = self._work_key(db, job)
+            peers = self._same_work(db, job, key)
+            passed = next((x for x in peers if x["state"] == "QA_PASS"), None)
+            tried = db.execute("SELECT 1 FROM media_events WHERE job_id=? AND event='REUSED'",
+                               (job["job_id"],)).fetchone()
+            # Yeniden kullanım iş başına bir kez: QA reddederse bir sonraki tur gerçek üretimdir.
+            if passed and not tried and job["attempts"] == 0 and self._reuse(db, job, passed, key, now):
+                reused.append(job["job_id"])
+                continue
+            if any(x["state"] in HOLDING_STATES for x in peers):
+                held += 1
+                continue
+            db.execute("INSERT OR REPLACE INTO media_work VALUES(?,?)", (job["job_id"], key))
+            return job, held, reused
+        return None, held, reused
+
     def lease(self, worker, seconds=120):
         if worker["role"] != "worker":
             raise QueueError("Reviewers do not run media jobs")
@@ -420,13 +499,14 @@ CREATE TABLE IF NOT EXISTS media_artifact_history (
             caps = worker["capabilities"]
             if not caps:
                 return {"status":"NO_COMPATIBLE_WORK"}
-            args = ",".join("?" * len(caps))
-            job = db.execute(
-                f"SELECT * FROM media_jobs WHERE state='QUEUED' AND attempts<? "
-                f"AND capability IN ({args}) ORDER BY created LIMIT 1",
-                (MAX_ATTEMPTS,*caps)).fetchone()
+            job,held,reused = self._pick(db,caps,now)
             if job is None:
-                return {"status":"NO_COMPATIBLE_WORK"}
+                idle={"status":"NO_COMPATIBLE_WORK"}
+                if held:
+                    idle["held_duplicates"]=held
+                if reused:
+                    idle["reused_without_production"]=reused
+                return idle
             lease_key = secrets.token_urlsafe(32)
             db.execute("UPDATE media_jobs SET state='LEASED',worker_id=?,lease_key=?,"
                        "lease_until=?,attempts=attempts+1,updated=? WHERE job_id=?",
