@@ -8,6 +8,7 @@ Açı konvansiyonu (mesh_factory yüzü -Y'ye bakar):
 import math, re
 
 W = 2 * math.pi
+MOVE_FADE_S = 0.2        # yürüyüşe özgü ek salınımların açılma süresi (sn)
 SWAY_IN_S = 1.5          # bekleme/bakınma salınımı bu sürede açılır: plan başında çizilen konum = plan durumu
 
 KINDS = [  # öncelik sırasıyla (ilk eşleşen kazanır)
@@ -90,6 +91,47 @@ except Exception:       # profil yoksa varsayılan davranış
     _stp = None
 
 
+# ---------------------------------------------------------------- ayak izleri (birim: bir adım çevrimi boyu D; konum = gidilen yol)
+# Her salınım (p0, p1, hedef): ayak, gövde p0 yolundayken kalkar, p1'de 'hedef' noktasına basar; arada kalan her yerde bastığı noktada SABİTTİR.
+# Basışlar yarım adım arayla dizilir (0.5, 1.0, ... n): ardışık iki basış arası hiç yarım adımı geçmez, ayak gövdeden en çok ±stance/2 uzaklaşır.
+# Yürüyüş duruş pozunda (iki ayak da gövdenin altında, 0) başlar; ilk adım yarım boydur, sonuncusu geride kalan ayağı hedefte toplar.
+STANCE = {"walk": 0.62, "run": 0.38}      # bir ayağın çevrim içinde yerde kaldığı oran
+FIRST_LIFT, LAST_LAND = 0.02, 0.02        # ilk kalkış yoldan bu kadar sonra, son basış hedeften bu kadar önce (D)
+STRIDE_STRETCH_MAX = 1.2       # yol tam sayıda çevrime bölünürken adım doğal boyunun en çok bu katına uzar
+LIFT_MIN_STEP = 0.35           # kısa toplama adımında ayak en az tam kaldırmanın bu oranı kadar kalkar
+BOB_FADE = 0.25                # adım yaylanması yolun bu ilk/son parçasında (D) açılır/söner
+
+
+def stride_count(total, d0):
+    n = max(1, round(total / d0))
+    return n + 1 if total / n > STRIDE_STRETCH_MAX * d0 else n
+
+
+def footsteps(gait, n):
+    """n çevrimlik yürüyüşün salınımları: {'R': [(p0, p1, hedef)], 'L': [...]}; ilk adımı R atar. Her iki ayak 0'da başlar, n'de biter."""
+    stance = STANCE[gait]; a = stance / 2.0; swing = 1.0 - stance
+    out = {"R": [], "L": []}
+    for m in range(1, 2 * n + 1):                          # m'inci basış: 0.5*m noktasına, gövde oraya a kala
+        land = 0.5 * m - a
+        out["R" if m % 2 else "L"].append((FIRST_LIFT if m == 1 else land - swing, land, 0.5 * m))
+    out["R"].append((n - 0.5 + a, n - LAST_LAND, float(n)))      # toplama adımı
+    return out
+
+
+def foot_at(swings, p):
+    """p yolundayken ayağın (konum, kaldırma 0..1, atılan adımın boyu). Basılıyken kaldırma tam 0."""
+    at = 0.0
+    for p0, p1, to in swings:
+        if p <= p0 + 1e-9:
+            break
+        if p < p1 - 1e-9:
+            u = (p - p0) / (p1 - p0)
+            r0, r1 = at - p0, to - p1                      # gövdeye göre kalkış ve basış uzaklığı: salınım ikisinin arasında kalır
+            return p + r0 + (r1 - r0) * (0.5 - 0.5 * math.cos(math.pi * u)), math.sin(math.pi * u), to - at
+        at = to
+    return at, 0.0, 0.0
+
+
 def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
     prof = _stp.current() if _stp else {"gait": True, "speak_acting": True, "energy": 1.0}
     carry = (kind == "carry")                          # nesne taşıyarak yürüme: yürüyüş + kollar önde, daha ağır adım
@@ -126,7 +168,6 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
         mv = smooth((t - ta) / max(1e-6, te - ta))
         p["x"] = x0 + (x1 - x0) * mv
         direction = 1.0 if x1 >= x0 else -1.0
-        moving = ta <= t < te
         if t < ta:
             yaw_k = 0.2 + (0.60 if run_ else 0.55) * smooth(t / ta)    # gövde gidilecek yöne dönmeye başlar
         elif t < te:
@@ -137,28 +178,27 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
         p["view"] = "side" if yaw_k * 1.25 >= 0.95 else ("three_quarter" if yaw_k * 1.25 >= 0.45 else "front")   # görünüş, adım salınımından bağımsız (kare kare titremez)
         # ADIM = KAT EDİLEN MESAFE: temas eden ayak dünyada sabit kalır (ayak kayması yok). Faz süreden değil gidilen yoldan gelir.
         run_ = (kind == "run")
-        D = (1.05 if run_ else 0.62) * H * (0.88 if kid else 1.0) * (0.85 if pers == 2 else 1.0)      # bir adım çevrimi (sol+sağ) boyu, m
-        stance = 0.38 if run_ else 0.62
+        D0 = (1.05 if run_ else 0.62) * H * (0.88 if kid else 1.0) * (0.85 if pers == 2 else 1.0)      # doğal adım çevrimi (sol+sağ) boyu, m
         total = abs(x1 - x0)
-        D = total / max(1, round(total / D)) if total > 1e-6 else D                                    # yol, tam sayıda çevrime bölünür: duruşta iki ayak da yerde biter
-        a_ = stance * D / 2.0                                                                         # temas ayağının gövdeye göre ±uzaklığı, m
+        n_cyc = stride_count(total, D0) if total > 1e-6 else 0
+        D = total / n_cyc if n_cyc else D0                                                          # yol, tam sayıda çevrime bölünür
         dpath = abs(p["x"] - x0)
-        for key, off_ in (("L", 0.0), ("R", 0.5)):
-            th = (dpath / D + off_) % 1.0
-            if th < stance:
-                fo = a_ - 2 * a_ * (th / stance); lf = 0.0
-            else:
-                u = (th - stance) / (1 - stance); fo = -a_ + 2 * a_ * (0.5 - 0.5 * math.cos(math.pi * u))
-                lf = math.sin(math.pi * u) * (0.18 if run_ else 0.10) * H
-            p["f" + key] = direction * fo / H          # H'ye göre oran (puppet piksele çevirir)
+        steps = footsteps("run" if run_ else "walk", n_cyc) if n_cyc else {"L": [], "R": []}
+        for key in "LR":
+            at, up, size = foot_at(steps[key], dpath / D)
+            lf = up * (0.18 if run_ else 0.10) * H * max(LIFT_MIN_STEP, min(1.0, size)) * min(1.0, D / D0)
+            p["f" + key] = direction * (at * D - dpath) / H          # gövdeye göre, H'ye oran (puppet piksele çevirir); duruşta 0
             p["h" + key] = lf / H
-        sw = math.sin(W * (dpath / D))
+        sw = math.sin(W * (dpath / D))                                                      # kol/bacak salınımı (ayaklarla ters kol)
+        env = smooth(min(dpath, n_cyc * D - dpath) / (BOB_FADE * D)) if n_cyc else 0.0
+        bob = env * abs(math.cos(W * (dpath / D)))                                          # gövde ayak yerden geçerken yüksek, çift basışta alçak
         p["lL"], p["lR"] = -amp * sw, amp * sw
         for side, sg in (("L", 1), ("R", -1)):
             arm_fwd(p, side, sg * amp * 0.7 * sw + (0.5 if kind == "run" else 0.0))
             arm_out(p, side, 0.12)
-        p["z"] = abs(sw) * (0.02 if kind == "walk" else 0.07) * H
-        p["sq"] = 1.0 - (0.03 if kind == "walk" else 0.07) * (1.0 - abs(sw))            # adım temasında hafif ezilme
+        p["z"] = bob * (0.02 if kind == "walk" else 0.07) * H
+        dip = 0.03 if kind == "walk" else 0.07
+        p["sq"] = 1.0 - dip * (env - bob)                                                # adım temasında hafif ezilme; dururken yok
         p["lean"] = 0.04 if kind == "walk" else 0.20
         run_k = 1.0 if run_ else 0.5
         if t < ta:                                           # hazırlık: geri yaslan, çömel, kollar geri — sonra bırakılır
@@ -181,12 +221,14 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
             for side_ in "LR":
                 arm_fwd(p, side_, 0.95); arm_out(p, side_, 0.30)
             p["lean"] = -0.05; p["head"][0] += 0.10
-        if moving:
-            p["z"] += abs(sw) * H * (0.025 if kid else 0.0) + (abs(sw) * H * 0.03 if pers == 3 else 0.0)     # sekme
-            p["yaw"] += direction * 0.07 * sw * (2.0 if pers == 1 else 1.0)                                # omuz/kalça salınımı
-            p["head"][2] += 0.12 * math.sin(W * f * t) * (1.6 if pers == 1 else 1.0)                     # baş adımla yalpalar
-            p["head"][0] += (0.22 if pers == 2 else (-0.08 if pers == 1 else 0.0))                          # ağır: başı öne; caka: yukarı
-            p["lean"] += (-0.07 if pers == 1 else (0.08 if pers == 2 else 0.0))
+        # yürürken eklenen salınım ve duruş farkı: hareket başında açılır, durunca toparlanma süresinde söner (tek karede açılıp kapanmaz)
+        mk = smooth((t - ta) / MOVE_FADE_S) * (1.0 - smooth((t - te) / tr))
+        if mk > 0.0:
+            p["z"] += mk * bob * H * ((0.025 if kid else 0.0) + (0.03 if pers == 3 else 0.0))     # sekme
+            p["yaw"] += mk * direction * 0.07 * sw * (2.0 if pers == 1 else 1.0)                                # omuz/kalça salınımı
+            p["head"][2] += mk * 0.12 * math.sin(W * f * t) * (1.6 if pers == 1 else 1.0)                     # baş adımla yalpalar
+            p["head"][0] += mk * (0.22 if pers == 2 else (-0.08 if pers == 1 else 0.0))                          # ağır: başı öne; caka: yukarı
+            p["lean"] += mk * (-0.07 if pers == 1 else (0.08 if pers == 2 else 0.0))
     elif kind == "wave":
         pre = smooth(min(1.0, t / 0.35))                  # hazırlık: kol önce hafif aşağıdan gelir
         arm_out(p, "R", (2.4 + 0.35 * math.sin(W * 2.5 * t)) * pre)
