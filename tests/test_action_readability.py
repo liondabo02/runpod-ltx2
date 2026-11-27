@@ -151,3 +151,21 @@ def test_render_gate_blocks_unreadable_action_before_drawing_frames(tmp_path, mo
     assert m["status"] == "BLOCKED" and m["error"] == "AKSIYON_OKUNAMIYOR", m
     assert os.path.exists(ep / "render" / "readability.json")
     assert any("[camera]" in p or "[staging]" in p for p in m["problems"])
+
+
+def test_injected_object_occlusion_is_measured_on_the_object_itself(tmp_path, monkeypatch):
+    """Elde tutulan nesnenin önüne uzun bir oyuncu konur: yalnız el değil NESNE ölçütü de düşmeli."""
+    plan, des = planned(tmp_path, "cocuk_sola")
+    b = plan["beats"][0]
+    b["motion"]["robo"] = dict(b["motion"]["robo"], x0=-0.15, x1=-0.15); b["motion"]["robo"].pop("approach", None)
+    monkeypatch.setattr(action_staging, "draw_order", lambda beat, d, items: sorted(items, key=lambda it: it[0] == "robo"))
+    r = throw(rd.measure_plan(plan, des))
+    assert "object" in failed(r) and r["metrics"]["object"]["min"] < 0.3, r["metrics"]
+
+
+def test_depth_order_participants_front_shorter_participant_foremost():
+    items = [(c, {"height": h}, {"x": x}) for c, h, x in (("uzun", 1.9, 0.5), ("kisa", 1.0, 0.0), ("seyirci", 1.4, 1.5))]
+    des = {c: d for c, d, _p in items}
+    give = {"choreo": {"objects": [{"prop": "bottle", "track": [{"t": 0, "holder": "kisa"}, {"t": 1, "holder": "kisa"}, {"t": 2, "holder": "uzun"}]}]}}
+    assert [i[0] for i in action_staging.draw_order(give, des, items)] == ["seyirci", "uzun", "kisa"]
+    assert [i[0] for i in action_staging.draw_order({"choreo": {"objects": []}}, des, items)] == ["kisa", "uzun", "seyirci"]      # aksiyonsuz plan: eski sıra
