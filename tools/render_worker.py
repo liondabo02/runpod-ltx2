@@ -97,6 +97,14 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
     if _blk:
         return {"status": "BLOCKED", "error": "SAHNE_SOZLESMESI_TUTARSIZ",
                 "problems": [f"[{x['engine']}] {x['rule']} {x['shot']}: {x['why']}" for x in _blk]}
+    if engine == "2d":                                   # yüz kapısı: planda oynayan her tasarımda göz ve kaş çizilen pikselden ölçülür
+        import face_visibility
+        _faces = face_visibility.check_designs(pp2.designs_for(bible, assets), {c for b_ in _plan["beats"] for c in b_["cast"]})
+        json.dump({"characters": _faces, "thresholds": face_visibility.MIN_VISIBLE}, open(os.path.join(rdir, "face_visibility.json"), "w", encoding="utf-8"), ensure_ascii=False)
+        _hidden = face_visibility.problems(_faces)
+        if _hidden:
+            return {"status": "BLOCKED", "error": "YUZ_OKUNAMIYOR",
+                    "problems": [f"[{x['engine']}] {x['rule']} {x['character']}: {x['why']}" for x in _hidden]}
     if engine == "2d":                                   # okunabilirlik kapısı: temas anları çizilen katmanlardan ölçülür; okunmayan aksiyon üretime girmez
         import readability
         _rep = readability.measure_plan(_plan, pp2.designs_for(bible, assets))

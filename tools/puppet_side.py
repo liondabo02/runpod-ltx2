@@ -109,14 +109,20 @@ def draw_profile(cv, des, pose, st, fx, fy, ppm, t, P):
     es_ = des.get("eye_scale", 1.0) * (0.84 if cls == "adult" else 1.0)
     erx, ery = head_w * 0.10 * es_, head_h * 0.17 * es_
     ex_, ey_ = hx + d * head_w * 0.27, head_cy - head_h * 0.04
-    if st.get("blink") or emo == "laugh":
+    hide = st.get("hide", ())
+    if "eyes" in hide:
+        pass
+    elif st.get("blink") or emo == "laugh":
         cv.line([(ex_ - erx, ey_ + ery * 0.15), (ex_ + erx, ey_ + ery * 0.15)], INK, ow * 1.2)
     else:
         cv.ellipse(ex_, ey_, erx, ery, (255, 255, 255), INK, ow * 0.45)
         pr = erx * (0.50 if emo in ("surprise", "scared") else 0.66)
         cv.ellipse(ex_ + d * erx * 0.30, ey_ + ery * 0.08, pr, pr * 1.2, des["iris"], None, 0)
         cv.ellipse(ex_ + d * erx * 0.30, ey_ + ery * 0.08, pr * 0.55, pr * 0.7, (15, 10, 15), None, 0)
-    cv.line([(ex_ - d * erx * 0.9, ey_ - ery * 1.45), (ex_ + d * erx * 1.1, ey_ - ery * (1.35 if emo != "surprise" else 1.9))], INK, ow * 0.9)
+    limit = P.window_top(ey_, ery, ow)
+    hw_limit = P.headwear_edge(ey_, ery, ow * 0.9, ow)
+    style_, acc_ = des["hair_style"], des.get("accessory")
+    brow_pts = [(ex_ - d * erx * 0.9, ey_ - ery * 1.45), (ex_ + d * erx * 1.1, ey_ - ery * (1.35 if emo != "surprise" else 1.9))]
     ml = st.get("mouth", "X")
     if emo == "laugh" and ml == "X": ml = "D"
     P.draw_mouth(cv, hx + d * head_w * 0.36, head_cy + head_h * 0.27, head_w * 0.17 * des.get("mouth_w", 1.0), head_h * 0.15, ml, INK, emo)
@@ -126,15 +132,22 @@ def draw_profile(cv, des, pose, st, fx, fy, ppm, t, P):
         if d < 0: pts = pts[::-1]                                         # sola bakışta çokgen yönü ters çevrilir
         fr = [(hx + d * head_w * 0.50, head_cy - head_h * 0.16), (hx + d * head_w * 0.30, head_cy - head_h * 0.33),
               (hx + d * head_w * 0.05, head_cy - head_h * 0.25), (hx - d * head_w * 0.35, head_cy - head_h * 0.05), (hx - d * head_w * 0.54, head_cy - head_h * 0.10)]
-        cv.poly(pts + fr, hair, INK, ow)
+        # öndeki köşeler pencere çizgisinin üstünde; ense saçı (arkadakiler) yerinde kalır
+        poly_ = [(x_, min(y_, limit) if d * (x_ - hx) > -head_w * 0.05 and i_ >= len(pts) else y_) for i_, (x_, y_) in enumerate(pts + fr)]
+        cv.poly(poly_, hair, INK, ow)
         if style == "bun":
             cv.ellipse(hx - d * head_w * 0.18, head_cy - head_h * 0.56, head_w * 0.16, head_w * 0.15, hair, INK, ow)
         if style == "ponytail":
             cv.ellipse(hx - d * head_w * 0.62, head_cy + head_h * 0.10, head_w * 0.12, head_h * 0.30, hair, INK, ow, rot=0.3 * d)
     if style == "hijab":
         sc = des.get("scarf", hair)
-        cv.poly(cv.arc_pts(hx, head_cy - head_h * 0.02, head_w * 0.58, head_h * 0.57, math.pi * 0.95, 2.05 * math.pi, 26) +
-                [(hx + d * head_w * 0.30, head_cy + head_h * 0.30), (hx - d * head_w * 0.3, head_cy + head_h * 0.40)], sc, INK, ow * 0.9)
+        # yüz açıklığı olan örtü: ense -> tepe -> alın, sonra gözün üstünden ve gerisinden çeneye (ileri yön = d)
+        u = lambda uu, y_: (hx + d * head_w * uu, y_)
+        outer = [u(0.58 * math.cos(a_), head_cy - head_h * 0.02 + head_h * 0.57 * math.sin(a_)) for a_ in (math.pi * (0.88 + 0.90 * i_ / 24) for i_ in range(25))]
+        brim = min(hw_limit, head_cy - head_h * 0.36)
+        inner = [u(0.36, brim), u(0.08, min(limit, head_cy - head_h * 0.24)), u(-0.01, head_cy + head_h * 0.08),
+                 u(0.12, head_cy + head_h * 0.44), u(0.10, head_cy + head_h * 0.60), u(-0.40, head_cy + head_h * 0.60)]
+        cv.poly(outer + inner, sc, INK, ow * 0.9)
     # ---- aksesuar
     acc = des.get("accessory"); top = head_cy - head_h * 0.50
     if acc == "star":
@@ -145,13 +158,15 @@ def draw_profile(cv, des, pose, st, fx, fy, ppm, t, P):
             pts.append((cx_ + math.cos(a) * rr, cy_ + math.sin(a) * rr))
         cv.poly(pts, (255, 214, 60), INK, ow * 0.7)
     elif acc == "glasses":
-        cv.line(cv.arc_pts(ex_, ey_, erx * 1.5, ery * 1.25, 0, 2 * math.pi, 28), INK, ow)
-        cv.line([(ex_ - d * erx * 1.5, ey_), (hx - d * head_w * 0.10, ey_ - ery * 0.1)], INK, ow * 0.8)
-    elif acc in ("hat", "beanie"):
-        bc = des["accent"]
-        cv.poly(cv.arc_pts(hx, head_cy - head_h * 0.02, head_w * 0.54, head_h * 0.55, math.pi, 2 * math.pi, 24), bc, INK, ow)
-        if acc == "hat":
-            cv.ellipse(hx + d * head_w * 0.10, top + head_h * 0.08, head_w * 0.62, head_h * 0.09, shade(bc, 0.85), INK, ow)
+        gw, gh = max(erx * 1.5, erx + ow * 1.2), max(ery * 1.25, ery + ow * 1.2)       # küçük gözde de çerçeve çizgisi gözün üstüne binmez
+        cv.line(cv.arc_pts(ex_, ey_, gw, gh, 0, 2 * math.pi, 28), INK, ow)
+        cv.line([(ex_ - d * gw, ey_), (hx - d * head_w * 0.10, ey_ - ery * 0.1)], INK, ow * 0.8)
+    elif acc == "beanie":
+        cv.poly(P.dome(cv, hx, head_cy - head_h * 0.02, head_w * 0.54, head_h * 0.64, math.pi, 2 * math.pi, hw_limit), des["accent"], INK, ow)
+    elif acc == "hat":                                                     # tepe kenarlığın üstünde (düz disk gibi görünmesin)
+        brim_y = min(top + head_h * 0.08, hw_limit - head_h * 0.06)
+        cv.poly(cv.arc_pts(hx, brim_y, head_w * 0.42, head_h * 0.36, math.pi, 2 * math.pi, 20), des["accent"], INK, ow)
+        cv.ellipse(hx + d * head_w * 0.10, brim_y, head_w * 0.62, head_h * 0.06, shade(des["accent"], 0.85), INK, ow)
     elif acc == "bow":
         cv.ellipse(hx - d * head_w * 0.30, top + head_h * 0.12, head_w * 0.12, head_w * 0.08, des["accent"], INK, ow)
     elif acc == "flower_pin":
@@ -159,6 +174,10 @@ def draw_profile(cv, des, pose, st, fx, fy, ppm, t, P):
         for k_ in range(5):
             a_ = k_ * 2 * math.pi / 5
             cv.ellipse(hx - d * head_w * 0.10 + math.cos(a_) * fr_ * 0.8, head_cy + head_h * 0.30 + math.sin(a_) * fr_ * 0.8, fr_ * 0.55, fr_ * 0.55, (255, 214, 60), INK, ow * 0.5)
+    if "brows" not in hide:                                              # saç ve şapkadan sonra
+        covered = style_ != "bald" or species == "hedgehog" or acc_ in ("hat", "beanie", "glasses")
+        over_ = covered and min(y_ for _x, y_ in brow_pts) - ow * 0.45 < limit
+        cv.line(brow_pts, P.brow_colour(INK, P.cover_colours(des), skin, over_), ow * 0.9)
     return {"head": (hx, head_cy), "nose_x": hx + d * head_w * 0.58}
 
 

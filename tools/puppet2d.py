@@ -374,6 +374,73 @@ def draw_grip(cv, des, pose, side, fx, fy, ppm):
     cv.capsule((x - sg * r * 0.2, y - r * 0.8), (x + sg * r * 0.5, y - r * 0.95), r * 0.21, r * 0.18, skin, INK, ow * 0.6)       # başparmak üstte
 
 
+# ---------------------------------------------------------------- yüz penceresi (saç / şapka / örtü gözleri kapatamaz)
+EYE_WIDEN_MAX = 1.2       # gözün en çok büyüdüğü oran (şaşkınlık); pencere ifadeye göre OYNAMAZ, saç zıplamaz
+EYE_GAP_OW = 0.75         # göz üst kenarı ile örtünün alt kenarı arasındaki pay (dış çizgi kalınlığının katı)
+
+
+def window_top(eye_y, ery_rest, ow):
+    """Ön saç, şapka ve örtünün inebileceği en alt ekran y'si. ery_rest: ifadesiz göz yarıçapı."""
+    return eye_y - ery_rest * EYE_WIDEN_MAX - ow * EYE_GAP_OW
+
+
+def above(pts, limit, cx, half):
+    """Göz sütunundaki (|x - cx| <= half) köşeleri pencere çizgisinin üstüne al; yan tutamlar ve diken uçları yerinde kalır."""
+    return [(x, min(y, limit) if abs(x - cx) <= half else y) for x, y in pts]
+
+
+BROW_REST_K = 2.0         # şapka/örtü kenarı: göz merkezinin bu kadar (ifadesiz göz yarıçapı) üstünde, yani dinlenen kaşın üstünde durur
+
+
+def headwear_edge(eye_y, ery_rest, brow_width, ow):
+    """Başlığın (şapka, bere, örtü) göz sütununda inebileceği en alt ekran y'si. Saçtan farklı olarak başlık kaşın üstüne oturur."""
+    return eye_y - ery_rest * BROW_REST_K - brow_width * 0.5 - ow * 0.5
+
+
+def dome(cv, cx, cy, rx, ry, a0, a1, limit, n=24):
+    """Tepe yayı (a0..a1, pi..2pi arası): alt kirişi pencere çizgisinin altına inecekse yay daha yukarıda başlar/biter (kubbe başın içinde kalır)."""
+    low = (limit - cy) / ry                                    # izin verilen en büyük sin
+    if low < 0:
+        rise = math.asin(min(1.0, -low))
+        a0, a1 = max(a0, math.pi + rise), min(a1, 2 * math.pi - rise)
+    return [(x, min(y, limit)) for x, y in cv.arc_pts(cx, cy, rx, ry, a0, a1, n)]
+
+
+COVER_HALF_K = 0.50       # göz sütununun yarı genişliği / baş genişliği (tam dönük yüzde dış göz buraya uzanır)
+BROW_CONTRAST = 60        # örtünün üstündeki kaşın örtüden, tenden ve dış çizgiden en az bu kadar (en büyük kanal farkı) ayrışması istenir
+BROW_SKIN_CONTRAST = 44   # açık yüzdeki kaşın tenden en az bu kadar ayrışması istenir
+
+
+def _contrast(a, b):
+    return max(abs(a[i] - b[i]) for i in range(3))
+
+
+def brow_colour(base, under, skin, over=True):
+    """Kaş rengi. Her durumda tenden ayrışır (koyu tende saç renginden türetilen kaş tenle birleşip kayboluyordu). over: kaş bir örtünün üstüne
+    düşüyorsa ayrıca örtü renklerinden (under) ve koyu dış çizgiden de ayrışır. Tasarımın kendi kaş rengi yetiyorsa o kalır."""
+    grounds = [(skin, BROW_SKIN_CONTRAST)] + ([(g, BROW_CONTRAST) for g in list(under) + [skin, INK]] if over else [])
+    score = lambda c: min(_contrast(c, g) - need for g, need in grounds)           # >= 0: bütün zeminlerden yeterince ayrışıyor
+    if score(base) >= 0:
+        return base
+    mix = lambda a, b: tuple((a[i] + b[i]) // 2 for i in range(3))
+    # yalnız doğal tonlar (kaşın kendi rengi ve ten): başlık renginden ya da doygunlaştırmadan aday üretilmez
+    cands = [shade(base, k) for k in (0.55, 0.7, 1.35)] + [mix(base, skin)] + [shade(skin, k) for k in (0.82, 0.70, 0.55, 0.40, 1.45, 1.75, 2.1, 2.5)]
+    good = [c for c in cands if score(c) >= 0]
+    return min(good, key=lambda c: _contrast(c, base)) if good else max([base] + cands, key=score)
+
+
+def cover_colours(des):
+    """Alnı örtebilen parçaların renkleri (kaşın altına gelebilecek zeminler)."""
+    out = []
+    if des.get("accessory") in ("hat", "beanie"):
+        out.append(des["accent"])
+    if des.get("hair_style") == "hijab":
+        out.append(des.get("scarf", des["hair"]))
+    elif des.get("hair_style") != "bald":
+        out.append(des["hair"])
+    return out
+
+
 def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
     """fx,fy: ayak ortası (ekran px). ppm: piksel/metre. st: {'mouth':harf,'blink':0/1,'emotion':str,'dir':-1..1}"""
     if view_of(pose) == "side":
@@ -549,14 +616,23 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
     erx *= {"round": 1.0, "almond": 1.12, "wide": 1.08, "narrow": 0.92, "sleepy": 1.05}.get(shp, 1.0)
     ery *= {"round": 1.0, "almond": 0.74, "wide": 1.12, "narrow": 0.80, "sleepy": 0.80}.get(shp, 1.0)
     ex = ex * des.get("eye_dist", 1.0)
+    limit = window_top(eye_y, ery, ow)                                     # ifadeden bağımsız
+    hw_limit = headwear_edge(eye_y, ery, ow * 1.7 * des.get("brow_w", 1.0), ow)
+    eyes_x = {}
+    covered = des["accessory"] in ("hat", "beanie", "glasses") or des["hair_style"] != "bald" or des["species"] == "hedgehog"
+    brows, reach = [], {-1: 0.0, 1: 0.0}                                   # reach: gözlerin baş merkezinden iki yana uzanışı (px)
     if emo == "surprise":
         erx *= 1.12; ery *= 1.2
-    brow_top = eye_y - ery                       # ön saçın (kâkül) inemeyeceği çizgi: göz ve kaşların en üstü (kaş çizilince güncellenir)
+    hide = st.get("hide", ())          # yalnız ölçüm: yüz öğesini çizmeden aynı kare (face_visibility.py)
     for sg in (-1, 1):
         cx = hx + sg * ex * (1.0 - 0.16 * abs(face)) + face * head_w * 0.19
         far = (sg * face) < -0.2
         rx = erx * (0.82 if far else 1.0)
-        if st.get("blink") or emo == "laugh":
+        eyes_x[sg] = cx
+        reach[sg] = max(reach[sg], sg * (cx - hx) + rx)
+        if "eyes" in hide:
+            pass
+        elif st.get("blink") or emo == "laugh":
             cv.line(cv.arc_pts(cx, eye_y + ery * 0.1, rx, ery * 0.6, math.pi * 1.1, math.pi * 1.9), INK, ow * 1.1) if emo == "laugh" else \
                 cv.line([(cx - rx, eye_y + ery * 0.15), (cx + rx, eye_y + ery * 0.15)], INK, ow * 1.2)
         else:
@@ -599,8 +675,8 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
             pts_ = [(p0[0], p0[1] + ery * 0.12), p1]; bw_ *= 1.7
         else:
             pts_ = [p0, p1]
-        cv.line(pts_, shade(hair, 0.85) if species != "hedgehog" else hair, bw_)
-        brow_top = min(brow_top, min(q[1] for q in pts_) - bw_ * 0.5)
+        if "brows" not in hide:
+            brows.append((pts_, shade(hair, 0.85) if species != "hedgehog" else hair, bw_, covered and min(y_ for _x, y_ in pts_) - bw_ * 0.5 < limit))
     # yanak
     for sg in (-1, 1):
         bl_ = des.get("blush", 1.0); cc_ = tuple(int(skin[i_] + ((255, 150, 150)[i_] - skin[i_]) * bl_) for i_ in range(3))
@@ -642,20 +718,16 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         cv.line(cv.arc_pts(hx + face * head_w * 0.14 + head_w * 0.17, head_cy + head_h * 0.27, head_w * 0.03, head_h * 0.03, -1.2, 1.2), shade(skin, 0.6), 2.4)
     # ---- saç (ön)
     top = head_cy - head_h * 0.50
-    hair_cap = brow_top - head_h * 0.02          # ön saç çizgisi göz/kaş üstünde kalır: saç yüz özelliklerini örtmez (her ifade: kaş kalkması ve eğimi dahil)
     if style in ("short", "bob", "ponytail", "bun", "wavy_long", "curly", "bangs") and species != "hedgehog":
         pts = cv.arc_pts(hx, head_cy, head_w * 0.545, head_h * 0.54, math.pi * 1.0, math.pi * 2.0, 24)
         fr = [(hx + head_w * 0.54, head_cy - head_h * 0.18), (hx + head_w * 0.36, head_cy - head_h * 0.34), (hx + head_w * 0.16, head_cy - head_h * 0.27),
               (hx - head_w * 0.04, head_cy - head_h * 0.38), (hx - head_w * 0.26, head_cy - head_h * 0.28), (hx - head_w * 0.54, head_cy - head_h * 0.18)]
-        fr = [(x_, min(y_, hair_cap) if abs(x_ - hx) <= head_w * 0.40 else y_) for x_, y_ in fr]
-        cv.poly(pts + fr, hair, INK, ow)
+        cv.poly(above(pts + fr, limit, hx, head_w * COVER_HALF_K), hair, INK, ow)
         if style == "bun":
             cv.ellipse(hx, top - head_h * 0.06, head_w * 0.17, head_w * 0.15, hair, INK, ow)
     if style in ("bob", "bangs") and des.get("class") in ("toddler", "child") and des["female"]:   # küt kâhkül
-        bb_ = min(head_cy - head_h * 0.08, hair_cap)       # küt kâkülün alt kenarı gözlerin/kaşların üstünde
-        sb_ = min(head_cy - head_h * 0.20, bb_ + head_h * 0.03)
-        cv.poly([(hx - head_w * 0.52, sb_), (hx - head_w * 0.30, bb_), (hx + head_w * 0.30, bb_),
-                 (hx + head_w * 0.52, sb_), (hx + head_w * 0.40, head_cy - head_h * 0.45), (hx - head_w * 0.40, head_cy - head_h * 0.45)], hair, INK, ow * 0.8)
+        cv.poly(above([(hx - head_w * 0.52, head_cy - head_h * 0.20), (hx - head_w * 0.30, head_cy - head_h * 0.08), (hx + head_w * 0.30, head_cy - head_h * 0.08),
+                       (hx + head_w * 0.52, head_cy - head_h * 0.20), (hx + head_w * 0.40, head_cy - head_h * 0.45), (hx - head_w * 0.40, head_cy - head_h * 0.45)], limit, hx, head_w * COVER_HALF_K), hair, INK, ow * 0.8)
     if des.get("hat_kind") == "beanie":
         pass
     if style == "spiky" and species != "hedgehog":
@@ -664,9 +736,9 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
             b = (hx + math.cos(a) * head_w * 0.45, head_cy + math.sin(a) * head_h * 0.50)
             tip = (hx + math.cos(a) * head_w * 0.66, head_cy + math.sin(a) * head_h * 0.72)
             perp = head_w * 0.09
-            cv.poly([(b[0] - perp, b[1]), tip, (b[0] + perp, b[1])], hair, INK, ow * 0.8)
-        dome_ = cv.arc_pts(hx, head_cy, head_w * 0.5, head_h * 0.5, math.pi * 1.08, math.pi * 1.92, 16)
-        cv.poly([(x_, min(y_, hair_cap - ow * 0.45)) for x_, y_ in dome_], hair, INK, ow * 0.8)       # kubbenin kapanış kirişi (uç noktalar dahil) göz/kaş üstünde kalır
+            up_ = max(0.0, b[1] - limit)                            # alçaktaki diken bütün olarak yukarı kayar (yassılaşıp başın dışına çizgi bırakmaz)
+            cv.poly([(b[0] - perp, b[1] - up_), (tip[0], tip[1] - up_), (b[0] + perp, b[1] - up_)], hair, INK, ow * 0.8)
+        cv.poly(dome(cv, hx, head_cy, head_w * 0.5, head_h * 0.5, math.pi * 1.08, math.pi * 1.92, limit, 16), hair, INK, ow * 0.8)
     if species == "hedgehog":      # alın tutamı
         for k, dx in enumerate((-0.14, 0.0, 0.14)):
             cv.poly([(hx + (dx - 0.07) * head_w, head_cy - head_h * 0.40), (hx + dx * head_w + face * head_w * 0.05, head_cy - head_h * (0.62 + 0.05 * (k % 2))),
@@ -677,6 +749,10 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         sc_ = des["scarf"]
         outer = cv.arc_pts(hx, head_cy - head_h * 0.02, head_w * 0.60, head_h * 0.58, math.pi * 1.04, math.pi * 1.96, 26)
         inner = cv.arc_pts(hx, head_cy + head_h * 0.02, head_w * 0.46, head_h * 0.44, math.pi * 1.96, math.pi * 1.04, 26)
+        # dönen yüzde göz o yana kayar: açıklık o yanda gözü içine alacak kadar genişler (dış çizginin içinde kalır)
+        wide_ = {sg_: min(head_w * 0.585, max(head_w * 0.46, reach[sg_] + ow)) / (head_w * 0.46) for sg_ in (-1, 1)}
+        inner = [(hx + (x_ - hx) * wide_[1 if x_ >= hx else -1], y_) for x_, y_ in inner]
+        inner = [(x_, min(y_, hw_limit if abs(x_ - hx) <= head_w * 0.34 else limit) if -reach[-1] - ow <= x_ - hx <= reach[1] + ow else y_) for x_, y_ in inner]
         cv.poly(outer + inner, sc_, INK, ow * 0.9)
     if acc == "flower_pin":   # sarı çiçek iğnesi (başörtüsünde)
         fx_, fy_, fr_ = hx + head_w * 0.46, head_cy + head_h * 0.34, head_w * 0.075
@@ -691,20 +767,25 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
             a = -math.pi / 2 + i * math.pi / 5; rr = r_ if i % 2 == 0 else r_ * 0.45
             pts.append((cx_ + math.cos(a) * rr, cy_ + math.sin(a) * rr))
         cv.poly(pts, (255, 214, 60), INK, ow * 0.7)
-    if acc == "glasses":
+    if acc == "glasses":      # çerçeve çizilen gözün merkezini izler (yüz dönünce kaymaz) ve gözü içine alır
+        gw = max(erx * 1.45, erx + ow * 1.2)
+        gr = min(gw, max(erx + ow * 0.7, (eyes_x[1] - eyes_x[-1]) / 2 - ow * 0.2))       # iki cam üst üste binmez, ama göz dışarıda kalmaz
         for sg in (-1, 1):
-            cv.ellipse(hx + sg * ex + face * head_w * 0.12, eye_y, erx * 1.45, ery * 1.25, (255, 255, 255), None, 0) if False else None
-            cv.line(cv.arc_pts(hx + sg * ex + face * head_w * 0.12, eye_y, erx * 1.45, ery * 1.2, 0, 2 * math.pi, 28), INK, ow)
-        cv.line([(hx - ex + erx * 1.45 + face * head_w * 0.12, eye_y), (hx + ex - erx * 1.45 + face * head_w * 0.12, eye_y)], INK, ow)
+            cv.line(cv.arc_pts(eyes_x[sg], eye_y, gr, ery * 1.2 + ow * 0.5, 0, 2 * math.pi, 28), INK, ow)
+        if eyes_x[-1] + gr < eyes_x[1] - gr:
+            cv.line([(eyes_x[-1] + gr, eye_y), (eyes_x[1] - gr, eye_y)], INK, ow)
     if acc == "hat":
-        cv.ellipse(hx, top + head_h * 0.06, head_w * 0.62, head_h * 0.10, shade(des["accent"], 0.85), INK, ow)
-        cv.poly(cv.arc_pts(hx, top + head_h * 0.06, head_w * 0.42, head_h * 0.42, math.pi, 2 * math.pi, 20), des["accent"], INK, ow)
+        brim_y = min(top + head_h * 0.06, hw_limit - head_h * 0.10)
+        cv.ellipse(hx, brim_y, head_w * 0.62, head_h * 0.10, shade(des["accent"], 0.85), INK, ow)
+        cv.poly(cv.arc_pts(hx, brim_y, head_w * 0.42, head_h * 0.42, math.pi, 2 * math.pi, 20), des["accent"], INK, ow)
     if acc == "beanie":       # ayıcık kulaklı bere
         bc = des["accent"]
         for sg in (-1, 1):
             cv.ellipse(hx + sg * head_w * 0.36, top + head_h * 0.02, head_w * 0.11, head_w * 0.11, bc, INK, ow)
             cv.ellipse(hx + sg * head_w * 0.36, top + head_h * 0.03, head_w * 0.05, head_w * 0.05, shade(bc, 0.8), None, 0)
-        cv.poly(cv.arc_pts(hx, head_cy - head_h * 0.02, head_w * 0.56, head_h * 0.56, math.pi * 1.0, math.pi * 2.0, 24), bc, INK, ow)
+        cv.poly(dome(cv, hx, head_cy - head_h * 0.02, head_w * 0.56, head_h * 0.65, math.pi * 1.0, math.pi * 2.0, hw_limit), bc, INK, ow)
     if acc == "bow":
         cv.ellipse(hx - head_w * 0.38, top + head_h * 0.1, head_w * 0.12, head_w * 0.08, des["accent"], INK, ow)
         cv.ellipse(hx - head_w * 0.22, top + head_h * 0.1, head_w * 0.12, head_w * 0.08, des["accent"], INK, ow)
+    for pts_, col_, bw_, over_ in brows:                    # saç, şapka ve gözlükten sonra: kaş her tasarımda okunur
+        cv.line(pts_, brow_colour(col_, cover_colours(des), skin, over_), bw_)
