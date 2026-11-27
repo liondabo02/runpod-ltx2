@@ -89,6 +89,14 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
                     bad.append(f"vuruş {pb['i']} nesne {ob.get('prop')}: {pr}")
     if bad:
         return {"status": "BLOCKED", "error": "NESNE_IZI_GECERSIZ", "problems": bad}
+    import scene_contract as sc                          # sahne sözleşmesi kapısı: tutarsız süreklilik/yerleşim render'a girmez, sorumlu motor adıyla geri döner
+    _plan = sp.plan(episode_dir, bible, assets, t0, t1)
+    _c = sc.from_beat_sheet(sheet, _plan, project_id=bible.get("id", "series"), episode_id=os.path.basename(episode_dir), window=(t0, t1))
+    _blk, _warn = sc.gate(_c)
+    json.dump({"blocking": _blk, "warnings": _warn}, open(os.path.join(rdir, "contract_gate.json"), "w", encoding="utf-8"), ensure_ascii=False)
+    if _blk:
+        return {"status": "BLOCKED", "error": "SAHNE_SOZLESMESI_TUTARSIZ",
+                "problems": [f"[{x['engine']}] {x['rule']} {x['shot']}: {x['why']}" for x in _blk]}
     blender = find_blender() if engine != "2d" else "n/a"
     if not blender:
         return {"status": "BLOCKED", "error": "BLENDER_MISSING"}

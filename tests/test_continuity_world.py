@@ -225,9 +225,32 @@ def test_render_preflight_uses_same_positions_as_drawing(tmp_path, monkeypatch):
     bible = json.load(open(root / "series-bible.json", encoding="utf-8")); reached = []
     monkeypatch.setattr(rw.r2, "render_window", lambda plan_, des_, out_, **k: os.makedirs(out_, exist_ok=True) or reached.append(1) or {"missing": 1})
     m = rw.run(str(root / "episodes" / "e900_kabul"), bible, 0, 38, str(root))
+    # atış ön kontrolü geçti (hata nesne izi değil); ama bilinen açık kusur (Aden, Harun'un içinden geçiyor) artık sözleşme kapısında durur
+    assert m["error"] == "SAHNE_SOZLESMESI_TUTARSIZ" and not reached and any("continuity_crossing" in p for p in m["problems"]), m
+    m = rw.run(str(root / "episodes" / "e900_kabul"), bible, 0, 31, str(root))
     assert m["error"] == "FRAMES_MISSING" and reached, m
     # bilerek: plan başında, yürümeye vakit bırakmayan ve kutunun dibinden yapılan atış
     throw = [{"prop": "ball", "track": [{"t": 0, "holder": "a"}, {"t": 0.05, "holder": "a"}, {"t": 0.9, "at": "bin_green", "hide": True}]}]
     bible2, ep, assets, _ = mk(tmp_path, {"a": 1.6}, [beat(0, ["a"], {"a": M("idle", 1.0)}, throw)])
     m2 = rw.run(ep, bible2, 0, 8, os.path.dirname(assets))
     assert m2["error"] == "NESNE_IZI_GECERSIZ" and any("atış mesafesi" in p for p in m2["problems"]), m2
+
+
+def test_render_gate_blocks_inconsistent_contract_and_names_engine(tmp_path, monkeypatch):
+    """Uzanılamayan devir (yerleşim çelişkisi) render'a girmez; sorumlu motor adıyla geri döner. Temiz bölüm geçer."""
+    import render_worker as rw
+    reached = []
+    monkeypatch.setattr(rw.r2, "render_window", lambda plan_, des_, out_, **k: os.makedirs(out_, exist_ok=True) or reached.append(1) or {"missing": 1})
+    give = [{"prop": "ball", "track": [{"t": 0, "holder": "a"}, {"t": 0.3, "holder": "a"}, {"t": 0.8, "holder": "b"}, {"t": 2, "holder": "b"}]}]
+    beats = [beat(0, ["a", "b"], {"a": M("idle", -1.8), "b": M("idle", 1.8)}, dur=2),
+             beat(1, ["a", "b"], {"a": M("idle", 1.4), "b": M("idle", 1.8)}, give, dur=2)]
+    bible, ep, assets, _ = mk(tmp_path, {"a": 1.7, "b": 1.7}, beats)
+    series = os.path.dirname(assets)
+    r = rw.run(ep, bible, 0, 4, series)
+    assert r["error"] == "SAHNE_SOZLESMESI_TUTARSIZ" and not reached, r
+    assert any("[staging] STAGING_CONFLICT" in p for p in r["problems"]), r
+    assert os.path.exists(os.path.join(ep, "render", "contract_gate.json"))
+    clean = [beat(0, ["a", "b"], {"a": M("idle", -1.0), "b": M("idle", 1.0)}), beat(1, ["a", "b"], {"a": M("idle", -1.0), "b": M("idle", 1.0)})]
+    bible, ep, assets, _ = mk(tmp_path / "ok", {"a": 1.7, "b": 1.7}, clean)
+    r = rw.run(ep, bible, 0, 16, os.path.dirname(assets))
+    assert r.get("error") != "SAHNE_SOZLESMESI_TUTARSIZ" and reached, r

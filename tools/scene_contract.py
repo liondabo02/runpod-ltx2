@@ -24,11 +24,13 @@ def _dialogue(raw):
     return out
 
 
-def from_beat_sheet(sheet, plan=None, *, project_id, episode_id, asset_versions=None, languages=("tr",)):
-    """sheet: beat_sheet.json; plan: shot_planner.plan çıktısı (varsa konumlar oradan)."""
+def from_beat_sheet(sheet, plan=None, *, project_id, episode_id, asset_versions=None, languages=("tr",), window=None):
+    """sheet: beat_sheet.json; plan: shot_planner.plan çıktısı (varsa konumlar oradan). window=(t0,t1): yalnız bu aralıktaki vuruşlar (dizin numarası korunur)."""
     pb = {b["i"]: b for b in (plan or {}).get("beats", [])}
     shots, gaps = [], []
     for i, b in enumerate(sheet["beats"]):
+        if window and (float(b["t_end"]) <= window[0] or float(b["t_start"]) >= window[1]):
+            continue
         pl = pb.get(i); ch = b.get("choreo") or {}
         scene = b.get("scene_id") or "SC00"; sid = b.get("shot_id") or f"{scene.lower()}_s{i:03d}"
         cast = list(pl["cast"]) if pl else list(b.get("characters", []))
@@ -100,6 +102,17 @@ def validate(c):
     p += [{"rule": g_.get("rule", "GAP"), "engine": g_["engine"], "shot": g_["shot"], "why": g_["why"]} for g_ in c.get("gaps", [])]
     p += [{"rule": e["rule"], "engine": e["engine"], "shot": e["shot"], "why": e["why"]} for e in continuity.check(c["shots"])]
     return p
+
+
+BLOCKING = {"TELEPORT", "OBJECT_JUMP", "OBJECT_VANISH", "DUP_OBJECT", "OBJECT_EVENT_OUTSIDE", "STAGING_CONFLICT",
+            "SCHEMA", "VERSION", "DUP_ID", "TIME", "OVERLAP", "DUP_EVENT", "LANG"}
+
+
+def gate(c):
+    """Üretim kapısı: (engelleyici, uyarı) listeleri. Engelleyici = sahne sözleşmesi tutarsız; render başlamaz.
+    Uyarı = yetenek boşlukları (render motoru çizemiyor) — sessizce 'destekleniyor' denmez, sonuçta raporlanır."""
+    pr = validate(c)
+    return [x for x in pr if x["rule"] in BLOCKING], [x for x in pr if x["rule"] not in BLOCKING]
 
 
 def upgrade(obj):
