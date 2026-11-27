@@ -32,6 +32,7 @@ def draw_profile(cv, des, pose, st, fx, fy, ppm, t, P):
     head_cy = torso_top - head_h * 0.40 + pose["head"][0] * head_h * 0.06
     hx = fx + lean + d * head_w * 0.06
     wx = lambda dx: fx + d * dx                                           # yüz yönüne göre ileri ofset
+    P.ground_shadow(cv, fx, fy, Hh, jump)
 
     # ---- uzak kol (gövdenin arkasında, koyu)
     def arm(side, near):

@@ -441,6 +441,14 @@ def cover_colours(des):
     return out
 
 
+SHADOW = (60, 110, 50)
+
+
+def ground_shadow(cv, fx, fy, Hh, jump):
+    """Ayak altı yer gölgesi: her görünüşte (ön, üç-çeyrek, profil) gövdeden ÖNCE çizilir; zeminde kalır, zıplayınca daralır."""
+    cv.ellipse(fx, fy + Hh * 0.012, Hh * 0.30 * (1 - min(0.5, max(0.0, jump) / (Hh * 1.5))), Hh * 0.05, shade(SHADOW, 0.8), None, 0)
+
+
 def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
     """fx,fy: ayak ortası (ekran px). ppm: piksel/metre. st: {'mouth':harf,'blink':0/1,'emotion':str,'dir':-1..1}"""
     if view_of(pose) == "side":
@@ -478,8 +486,7 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
     nod = pose["head"][0]
     sway = math.sin(t * 2.2 + des["age"]) * Hh * 0.004
 
-    # gölge
-    cv.ellipse(fx, fy + Hh * 0.012, Hh * 0.30 * (1 - min(0.5, jump / (Hh * 1.5))), Hh * 0.05, shade((60, 110, 50), 0.8), None, 0)
+    ground_shadow(cv, fx, fy, Hh, jump)
 
     cr = crouch_of(des, pose) * ppm      # çömelme: kalça ve üst gövde alçalır, ayaklar yerinde kalır
     hip_y = by - leg_h + cr
