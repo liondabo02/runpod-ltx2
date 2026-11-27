@@ -153,3 +153,25 @@ def test_without_kneeling_the_big_height_difference_is_caught(tmp_path, monkeypa
     plan, des = project(tmp_path, "cocuk_buyuge_saga")
     conflicts = [n for n in plan["beats"][0]["staging_notes"] if n["kind"] == "conflict"]
     assert conflicts or r2.handoff_problems(plan, des) or not handoff(plan, des)["ok"]
+
+
+@pytest.mark.parametrize("name", sorted(CONFIGS))
+def test_both_hands_stay_visible_through_the_whole_handoff(tmp_path, name):
+    """Önde çizilen karakterin saçı/kolu arkadaki elin üstüne binse de alıcı ve verici el HER örnekte görünür (yalnız oran değil, en kötü an)."""
+    plan, des = project(tmp_path, name)
+    r = handoff(plan, des)
+    giver, taker = CONFIGS[name][:2]
+    for c in (giver, taker):
+        assert r["metrics"][f"hand:{c}"]["min"] >= 0.6, r["metrics"]
+
+
+@pytest.mark.parametrize("name", sorted(CONFIGS))
+def test_transfer_draws_the_fingers_of_both_participants_on_top(tmp_path, name):
+    plan, des = project(tmp_path, name)
+    giver, taker = CONFIGS[name][:2]
+    tr = {}; r2.frame(plan, des, plan["beats"][0]["t_start"] + 2.7, trace=tr)
+    order = [(k, key) for k, key, *_ in tr["layers"]]
+    grips = [key for k, key in order if k == "grip"]
+    assert sorted(grips) == sorted([giver, taker]), order
+    obj = order.index(("object", "bottle"))
+    assert all(order.index(("grip", c)) > obj for c in (giver, taker))

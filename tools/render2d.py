@@ -223,12 +223,17 @@ def _draw_objects(cv, cam, beat, items, designs, lt, owner="__free__", emit=None
         body(cv, cam)
         if emit is not None:
             emit("object", ob.get("id") or ob.get("prop", "obj"), body, (x, y))
-        if own is not None and own in by:                       # parmaklar nesnenin ÖNÜNDE: avuç nesneyi kavrar
-            _c, d_, p_, _m, _l, _e = by[own]
-            grip_ = lambda c, cm, d2=d_, p2=p_, h2=hand: pp.draw_grip(c, d2, p2, h2, cm.x(p2["x"]), cm.y(0.0), cm.s)
+        grippers = [(own, hand)] if own is not None else []
+        if st["state"] == "transfer":                           # el değiştirmede İKİ el de nesnede: alıcı elin parmakları da önde çizilir (verenin saçı/gövdesi alıcı eli örtmez)
+            grippers = [(c, hand if c == own else pick_hand(beat, c)) for c in (st["holder"], st["to"])]
+        for g_cid, g_hand in grippers:                          # parmaklar nesnenin ÖNÜNDE: avuç nesneyi kavrar
+            if g_cid not in by:
+                continue
+            _c, d_, p_, _m, _l, _e = by[g_cid]
+            grip_ = lambda c, cm, d2=d_, p2=p_, h2=g_hand: pp.draw_grip(c, d2, p2, h2, cm.x(p2["x"]), cm.y(0.0), cm.s)
             grip_(cv, cam)
             if emit is not None:
-                emit("grip", own, grip_)
+                emit("grip", g_cid, grip_)
 
 
 def object_effects(beat, cid, lt):
