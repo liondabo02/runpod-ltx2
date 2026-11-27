@@ -190,6 +190,19 @@ def _entry_target(beat, track, st):
     return None
 
 
+def _released(beat, track, st, lt):
+    """Nesne kabın ağzına doğru elden AYRILDI mı? İz anahtarı 'put' dese de uçuş boyunca kimse tutmuyor."""
+    into = _entry_target(beat, track, st)
+    return bool(into) and lt > into[0]
+
+
+def _reach_windows(beat, track):
+    """Otomatik uzanma pencereleri. Kaba atış için üretilmez: hazırlık, savurma ve takibi apply_throw_swing verir. Genel 'uzanma' pozu
+    nesnenin kaba vardığı ana bağlıydı; boş el nesne uçarken ikinci kez uzanıyordu."""
+    thrown = {b["t"] for a, b in zip(track, track[1:]) if "holder" in a and b.get("hide") and _mouth(beat, b.get("at"))}
+    return [w for w in object_state.reach_windows(track) if not (w["kind"] == "dispose" and w["t1"] in thrown)]
+
+
 def _clip_above(cv, cam, world_y, draw):
     """draw'u uygula ama world_y çizgisinin ALTINDA kalan pikselleri geri al (nesne kabın gövdesi arkasında)."""
     cut = int(round(cam.y(world_y) * cv.ss))
@@ -244,10 +257,12 @@ def object_effects(beat, cid, lt):
         tr = ob.get("track") or []
         if not tr:
             continue
-        for w in object_state.reach_windows(tr):
+        for w in _reach_windows(beat, tr):
             if w["actor"] == cid and w["t0"] <= lt <= w["t1"] + (w["t1"] - w["t0"]):
                 reach = (lt - w["t0"], 2.0 * max(0.3, w["t1"] - w["t0"]))
         st = object_state.state_at(tr, lt)
+        if _released(beat, tr, st, lt):
+            continue
         if st["state"] in ("held", "put") and st["holder"] == cid or (st["state"] == "transfer" and cid in (st["holder"], st["to"])):
             weight = max(weight, object_state.weight_of(ob.get("prop")))
     return reach, weight
@@ -341,10 +356,7 @@ def apply_handoff_reach(beat, items, lt):
             for (cid, des, p, *_), side, xs_, (mx, mh) in ((ga, sg_, xg, ha_), (ra, sr_, xr, hb_)):
                 if w <= 0.0 or pp.view_of(p) == "side":
                     continue
-                old = list(p["aL"]) if side == "L" else list(p["aR"])
-                pp.arm_toward(des, p, side, mx - xs_, mh)
-                key = "aL" if side == "L" else "aR"
-                p[key] = [old[0] + (p[key][0] - old[0]) * w, old[1] + (p[key][1] - old[1]) * w]
+                pp.arm_blend(des, p, side, mx - xs_, mh, w)
 
 
 SWING_RELEASE_LEAD_S = 0.15
@@ -377,9 +389,7 @@ def apply_throw_swing(beat, items, lt):
                 w = 1.0; u = pp_smooth((lt - (ts - 0.1)) / 0.25); tx = sx + dirn * (-0.5 + 1.5 * u) * ln; th = sh - (0.9 - 1.3 * u) * ln   # ileri-yukarı savurma
             else:
                 w = 1.0 - pp_smooth((lt - (ts + 0.15)) / 0.35); tx, th = sx + dirn * 1.0 * ln, sh + 0.4 * ln
-            key = "aL" if side == "L" else "aR"; old = list(p[key])
-            pp.arm_toward(des, p, side, tx, th)
-            p[key] = [old[0] + (p[key][0] - old[0]) * w, old[1] + (p[key][1] - old[1]) * w]
+            pp.arm_blend(des, p, side, tx, th, w)
 
 
 def pp_smooth(x):
@@ -394,6 +404,8 @@ def carry_info(beat, cid, lt):
         if not tr:
             continue
         st = object_state.state_at(tr, lt)
+        if _released(beat, tr, st, lt):                      # kaba atılan nesne bırakıldı: artık taşınmıyor, boş kol tutma pozuna dönmez
+            continue
         mine = (st["state"] in ("held", "put") and st["holder"] == cid) or (st["state"] == "transfer" and cid in (st["holder"], st["to"]))
         if not mine:
             continue

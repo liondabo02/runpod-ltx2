@@ -209,15 +209,15 @@ def view_of(pose):
 
 
 def _elbow(sh, hand, arm_len, sg):
-    """Omuz ile el arasında dirsek noktası: iki parça (üst kol + ön kol, her biri arm_len/2); dirsek aşağı/dışa doğru bükülür."""
+    """Omuz ile el arasında dirsek noktası (ekran y aşağı): iki parça (üst kol + ön kol, her biri arm_len/2). El aşağıdayken dirsek gövdeden
+    DIŞA, el yana uzanmışken ve yukarıdayken AŞAĞI/DIŞA bükülür. Arada büküm sürekli olarak sıfırdan geçer (dirsek arkaya döner, kısalmış görünür);
+    taraf tek karede değişmez ve dirsek gövdenin içine doğru katlanmaz."""
     dx, dy = hand[0] - sh[0], hand[1] - sh[1]; d = math.hypot(dx, dy) or 1e-6
     half = arm_len / 2.0; hgt = math.sqrt(max(0.0, half * half - (d / 2.0) ** 2))
-    nx, ny = -dy / d, dx / d
-    if ny < 0:
-        nx, ny = -nx, -ny                                  # dirsek aşağı yönde
-    if nx * sg < 0 and abs(ny) < 0.3:
-        nx, ny = -nx, -ny
-    return ((sh[0] + hand[0]) / 2 + nx * hgt, (sh[1] + hand[1]) / 2 + ny * hgt)
+    a = math.atan2(sg * dx, dy)                            # kolun yönü: 0 = aşağı, +pi/2 = dışa yatay
+    f = math.cos(2.0 * a) if abs(a) < math.pi / 2 else -1.0
+    nx, ny = sg * math.cos(a), -math.sin(a)
+    return ((sh[0] + hand[0]) / 2 + nx * hgt * f, (sh[1] + hand[1]) / 2 + ny * hgt * f)
 
 
 # ---------------------------------------------------------------- çömelme (tek geometri: çizim, el konumu, omuz ve erişim ölçüsü aynı değeri kullanır)
@@ -291,6 +291,31 @@ def arm_toward(des, pose, side, tx, th):
     pose[key][0] = 0.0; pose[key][1] = ang if side == "L" else -ang
     pose["d" + side] = min(math.hypot(vx, vdown), ln)                                   # el mesafesi: hedefe kadar; yakınsa dirsek bükülür, uzaksa kol tam gerilir
     return ratio
+
+
+def arm_blend(des, pose, side, tx, th, w):
+    """Kolu o anki pozdan (w=0) hedefe uzanmış poza (w=1) sürekli geçirir. Açı ile birlikte EL MESAFESİ de karışır: yalnız açı karışsaydı
+    pencere açılıp kapanırken el tek karede bükülü pozdan gergin poza (ya da tersi) sıçrardı."""
+    key = "aL" if side == "L" else "aR"; old = list(pose[key]); full = des["height"] * 0.27
+    old_len = min(full, pose["d" + side]) if ("d" + side) in pose else full * (1.0 - 0.28 * min(1.0, abs(old[0]) / 1.3))
+    had = ("d" + side) in pose
+    ratio = arm_toward(des, pose, side, tx, th)
+    pose[key] = [old[0] + (pose[key][0] - old[0]) * w, old[1] + (pose[key][1] - old[1]) * w]
+    if w <= 0.0 and not had:
+        del pose["d" + side]
+    else:
+        pose["d" + side] = old_len + (pose["d" + side] - old_len) * w
+    return ratio
+
+
+def arm_joints(des, pose, side):
+    """Çizilen kolun (omuz, dirsek, el) noktaları, ayağa göre metre: (dx, yükseklik). Ön/üç-çeyrek görünüş; çizimle aynı geometri."""
+    full = des["height"] * 0.27
+    sx, sh = shoulder_offset(des, pose, side); hx, hh = hand_offset(des, pose, side)
+    if ("d" + side) in pose and math.hypot(hx - sx, hh - sh) < full * 0.985:
+        ex, ey = _elbow((sx, -sh), (hx, -hh), full, -1 if side == "L" else 1)
+        return (sx, sh), (ex, -ey), (hx, hh)
+    return (sx, sh), ((sx + hx) / 2, (sh + hh) / 2), (hx, hh)
 
 
 HAND_R_K = 0.052          # el yarıçapı / boy (draw_grip ile aynı oran)
