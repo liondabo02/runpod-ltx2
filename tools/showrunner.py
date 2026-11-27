@@ -23,6 +23,7 @@ import render_worker as rw  # noqa: E402
 import video_qa as vqa  # noqa: E402
 import series_memory as sm  # noqa: E402
 import script_fidelity as sf  # noqa: E402
+import worker_events as we  # noqa: E402
 
 ROOT = os.path.dirname(HERE)
 
@@ -195,10 +196,15 @@ def run(command, series_id=None, seconds=480, base=None, render_seconds=12, scri
     bible_path = os.path.join(base, sid, "series-bible.json") if sid else None
     new_series = not (bible_path and os.path.exists(bible_path))
     if new_series:
-        raw = director_make_bible(command, series_id)
-        sid = series_id or slug(raw.get("title", "dizi"))
-        bible_path = os.path.join(base, sid, "series-bible.json")
-        errs = check_bible(raw)
+        with we.working("director", "yeni dizinin karakter ve mekânlarını tasarlıyor") as act:
+            raw = director_make_bible(command, series_id)
+            sid = series_id or slug(raw.get("title", "dizi"))
+            bible_path = os.path.join(base, sid, "series-bible.json")
+            errs = check_bible(raw)
+            if errs:
+                act.failed("dizi tasarımı geçersiz: " + "; ".join(errs))
+            else:
+                act.done("dizi tasarımı hazır (taslak, onay bekliyor)")
         led = Ledger(os.path.join(base, sid, "ledger.jsonl"))
         if errs:
             led.add("director", "FAILED", "bible geçersiz: " + "; ".join(errs))
@@ -209,7 +215,9 @@ def run(command, series_id=None, seconds=480, base=None, render_seconds=12, scri
         led.add("director", "DONE_DRAFT", f"yeni dizi bible'ı: {len(bible['characters'])} karakter, {len(bible['locations'])} mekân", bible_path)
         report["steps"].append({"worker": "director", "status": "DONE_DRAFT", "what": "dizi bible'ı üretti (kimlik onayı: PENDING)"})
     else:
-        bible = json.load(open(bible_path, encoding="utf-8"))
+        with we.working("director", "mevcut dizi bilgisini açıyor") as act:
+            bible = json.load(open(bible_path, encoding="utf-8"))
+            act.done("mevcut karakterler korunuyor")
         led = Ledger(os.path.join(base, sid, "ledger.jsonl"))
         led.add("director", "REUSED", "mevcut dizi bible'ı kullanıldı (süreklilik)", bible_path)
         report["steps"].append({"worker": "director", "status": "REUSED", "what": "mevcut dizi, karakterler korunuyor"})
@@ -237,8 +245,12 @@ def run(command, series_id=None, seconds=480, base=None, render_seconds=12, scri
             os.makedirs(out, exist_ok=True); sheet = beats_sheet; write_json(os.path.join(out, "beat_sheet.json"), sheet)
             _e = validate(sheet, bible, seconds)[0]
             hist = [{"score": "n/a (sahip senaryosu)", "validator_errors": _e}]
+            we.emit("writers_room", "note", "sahibin hazır sahne listesi kullanıldı (yazım yapılmadı)")
         else:
-            sheet, hist = wr.run(bible, idea, seconds, out)
+            with we.working("writers_room", "%s senaryosunu yazıyor" % eid) as act:
+                sheet, hist = wr.run(bible, idea, seconds, out)
+                _n = len(hist[-1]["validator_errors"])
+                (act.done if not _n else act.failed)("senaryo taslağı: %d sahne vuruşu, %d kural hatası" % (len(sheet.get("beats", [])), _n))
         last = hist[-1]
         status = "DONE_DRAFT" if not last["validator_errors"] else "NEEDS_REVISION"
         led.add("writers_room", status, f"{eid}: skor {last['score']}, doğrulayıcı hata {len(last['validator_errors'])}",
@@ -270,7 +282,9 @@ def run(command, series_id=None, seconds=480, base=None, render_seconds=12, scri
             write_json(os.path.join(out, "script_fidelity.json"), fid)
             led.add("fidelity", fid["status"], f"replik kapsamı {fid['coverage']}", os.path.join(out, "script_fidelity.json"))
             report["steps"].append({"worker": "script_fidelity", "status": fid["status"], "coverage": fid["coverage"]})
-        errs, warns = validate(sheet, bible, seconds)
+        with we.working("validator", "senaryoyu süre ve kurallara göre denetliyor") as act:
+            errs, warns = validate(sheet, bible, seconds)
+            (act.done if not errs else act.failed)("%d hata, %d uyarı" % (len(errs), len(warns)))
         qa = {"verdict": "PASS" if not errs else "NEEDS_REVISION", "errors": errs, "warnings": warns,
               "creative": "NOT_EVALUATED", "cost_eur": 0, "generated_at": now()}
         write_json(os.path.join(out, "quality_report.json"), qa)
@@ -281,7 +295,9 @@ def run(command, series_id=None, seconds=480, base=None, render_seconds=12, scri
     voiced = False
     if sheet:
         try:
-            man = vw.run(out, bible)
+            with we.working("voice", "replikleri seslendiriyor ve ağız zamanlarını çıkarıyor") as act:
+                man = vw.run(out, bible)
+                (act.done if man["status"] == "PASSED" else act.failed)("%s satır, %d sorun" % (man["lines"], len(man["problems"])))
             vstatus = "DONE_DRAFT" if man["status"] == "PASSED" else "NEEDS_REVISION"
             led.add("voice", vstatus, f"{man['lines']} satır, {len(man['problems'])} sorun", os.path.join(out, "voice_manifest.json"))
             led.add("lipsync", vstatus, "viseme zamanları voice_manifest içinde")
@@ -295,7 +311,9 @@ def run(command, series_id=None, seconds=480, base=None, render_seconds=12, scri
     # 5b) Animatik (kurgu aşamasının ilk hâli)
     if sheet:
         try:
-            am = aw.run(out)
+            with we.working("animatic", "ön izleme videosunu kuruyor") as act:
+                am = aw.run(out)
+                (act.done if am["status"] == "PASSED" else act.failed)("ön izleme %s sn, %s" % (am.get("duration_s"), am["status"]))
             astatus = "DONE_DRAFT" if am["status"] == "PASSED" else "NEEDS_REVISION"
             led.add("edit", astatus, f"animatik {am['duration_s']} sn, {am['voiced_lines']} sesli satır", os.path.join(out, "animatic.mp4"))
             report["steps"].append({"worker": "edit(animatic)", "status": astatus, "seconds": am["duration_s"]})
@@ -306,7 +324,9 @@ def run(command, series_id=None, seconds=480, base=None, render_seconds=12, scri
     # 5c) Karakter Tasarımcısı (Blender gerekir; yoksa dürüstçe BLOCKED)
     if sheet:
         try:
-            cr = cw.run(os.path.join(base, sid), bible)
+            with we.working("character", "karakter tasarımlarını hazırlıyor") as act:
+                cr = cw.run(os.path.join(base, sid), bible)
+                (act.done if cr["status"] in ("DONE", "DONE_DRAFT", "PASSED") else act.failed)("%d karakter, durum %s" % (len(cr["characters"]), cr["status"]))
             led.add("character_model", cr["status"], f"{len(cr['characters'])} karakter; yaklaşık: {cr['approximations']}",
                     os.path.join(base, sid, "assets", "character_plan.json"))
             report["steps"].append({"worker": "character_model", "status": cr["status"],
@@ -320,10 +340,17 @@ def run(command, series_id=None, seconds=480, base=None, render_seconds=12, scri
     if sheet and render_seconds:
         t1 = float(seconds) if render_seconds < 0 else min(float(render_seconds), float(seconds))
         try:
-            rm = rw.run(out, bible, 0.0, t1, os.path.join(base, sid))
+            with we.working("render", "ilk %d saniyenin karelerini çiziyor" % int(t1)) as act:
+                rm = rw.run(out, bible, 0.0, t1, os.path.join(base, sid))
+                if rm.get("status") == "PASSED":
+                    act.done("%s kare çizildi" % rm.get("frames"))
+                else:
+                    act.failed("engellendi: %s %s" % (rm.get("error"), "; ".join(map(str, rm.get("problems", [])[:2]))))
             if rm.get("status") == "PASSED":
                 led.add("render", "DONE_DRAFT", f"{rm['frames']} kare, {rm.get('sec_per_frame')} sn/kare, 8 dk tahmini {rm.get('estimate_hours_for_480s')} saat", rm["clip"])
-                vq = vqa.check(rm["clip"], t1)
+                with we.working("video_qa", "videoyu teknik olarak denetliyor") as act:
+                    vq = vqa.check(rm["clip"], t1)
+                    (act.done if vq["verdict"] == "PASS" else act.failed)("sonuç %s %s" % (vq["verdict"], "; ".join(vq["problems"][:2])))
                 write_json(os.path.join(out, "video_quality_report.json"), vq)
                 led.add("qa_video", vq["verdict"], "; ".join(vq["problems"]) or "otomatik kontroller geçti (yaratıcı kalite: sahip izler)", rm["clip"])
                 report["steps"].append({"worker": "render", "status": "DONE_DRAFT", "clip": rm["clip"],

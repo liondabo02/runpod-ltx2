@@ -14,6 +14,7 @@ import argparse, hashlib, json, os, re, sys, time, urllib.request, urllib.error
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from validate_beat_sheet import validate  # noqa: E402
 import lessons  # noqa: E402
+import worker_events as we  # noqa: E402
 
 ACT_SECONDS = 40
 PASS_SCORE = 80
@@ -32,6 +33,7 @@ def llm_call(system, user, temperature=0.7):
     hdr = {"Content-Type": "application/json", **({"Authorization": "Bearer " + key} if key else {})}
     last = None
     for attempt in range(1, 7):          # ücretsiz modeller takılabilir: yeniden dene (auto her seferinde başka hedef seçebilir)
+        we.note("yazı modeline istek gönderdi, yanıt bekliyor" + (" (deneme %d)" % attempt if attempt > 1 else ""))
         req = urllib.request.Request(base + "/chat/completions", data, hdr)
         try:
             with urllib.request.urlopen(req, timeout=180) as r:

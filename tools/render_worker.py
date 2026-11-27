@@ -60,6 +60,9 @@ def split_by_scene(sheet, t0, t1):
     return segs
 
 
+import worker_events  # noqa: E402
+
+
 def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=subprocess.run):
     episode_dir = os.path.abspath(episode_dir)
     assets = os.path.join(series_dir, "assets")
@@ -119,6 +122,7 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
     frames = os.path.join(rdir, "frames")
     started = time.time(); problems = []
     for si, (a, b, loc) in enumerate(split_by_scene(sheet, t0, t1)):
+        worker_events.note("%d. sahneyi çiziyor (%s, %.0f-%.0f sn)" % (si + 1, loc, a, b))
         plan = sp.plan(episode_dir, bible, assets, a, b)
         pp = os.path.join(rdir, f"plan_{si}.json")
         json.dump(plan, open(pp, "w", encoding="utf-8"), ensure_ascii=False)

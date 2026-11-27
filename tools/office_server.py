@@ -8,6 +8,7 @@ from urllib.parse import urlparse, unquote
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 ROOT = os.path.dirname(HERE)
 import lessons, studio_enqueue, studio_daemon
+import office_live, worker_events
 
 Q = os.path.join(ROOT, "studio", "queue"); OUT = os.path.join(ROOT, "out"); REPORTS = os.path.join(ROOT, "studio", "reports")
 WORKERS = [
@@ -83,6 +84,19 @@ def status():
             "workers": [{"id": i, "name": n, "role": r, "connected": c, "state": ws.get(i, "off" if not c else "ready")} for i, n, r, c in WORKERS],
             "lessons": {w: [{"t": x["lesson"], "owner": x["source"] == "owner", "n": x["count"]} for x in lessons.top(w, 12)] for w in ("writer", "critic")}}
 
+def live_status():
+    d = daemon_state(); js = jobs()
+    running = [j["id"] for j in js if j["state"] == "running"]
+    ev = worker_events.read()
+    live = office_live.derive(WORKERS, ev, running, d["alive"], time.time())
+    return {"now": time.time(), "daemon": d, "jobs": js, "workers": live, "feed": ev[-60:], "videos": videos()[:5]}
+
+def cancel_running():
+    if not any(j["state"] == "running" for j in jobs()):
+        return {"ok": False, "msg": "çalışan iş yok"}
+    open(os.path.join(Q, "CANCEL"), "w").write("1")
+    return {"ok": True, "msg": "iptal isteği gönderildi"}
+
 _daemon = {"p": None}
 def start_daemon():
     if daemon_state()["alive"]: return "zaten çalışıyor"
@@ -102,10 +116,12 @@ class H(BaseHTTPRequestHandler):
         self.send_response(code); self.send_header("Content-Type", "application/json; charset=utf-8"); self.send_header("Content-Length", str(len(b))); self.end_headers(); self.wfile.write(b)
     def do_GET(self):
         u = urlparse(self.path)
-        if u.path in ("/", "/index.html", "/insan"):
-            b = open(os.path.join(ROOT, "studio", "office", "index_insan.html" if u.path == "/insan" else "index.html"), "rb").read()
+        if u.path in ("/", "/index.html", "/insan", "/canli"):
+            page = {"/insan": "index_insan.html", "/canli": "index_canli.html"}.get(u.path, "index.html")
+            b = open(os.path.join(ROOT, "studio", "office", page), "rb").read()
             self.send_response(200); self.send_header("Content-Type", "text/html; charset=utf-8"); self.send_header("Content-Length", str(len(b))); self.end_headers(); self.wfile.write(b)
         elif u.path == "/api/status": self._json(status())
+        elif u.path == "/api/live": self._json(live_status())
         elif u.path == "/api/report":
             st = status()["latest_report"]
             self._json({"text": open(os.path.join(REPORTS, st), encoding="utf-8").read() if st else "Henüz rapor yok."})
@@ -139,7 +155,14 @@ class H(BaseHTTPRequestHandler):
         try: d = json.loads(self.rfile.read(n) or b"{}")
         except ValueError: return self._json({"error": "bozuk istek"}, 400)
         p = urlparse(self.path).path
-        if p == "/api/command":
+        if p == "/api/ceo":
+            m = str(d.get("message", "")).strip()[:2000]
+            if not m: return self._json({"error": "mesaj boş"}, 400)
+            s = live_status()
+            self._json(office_live.ceo_reply(m, s["workers"], s["jobs"], s["daemon"]["alive"],
+                       model=lambda a, c: office_live.model_reply(a, c, env=studio_daemon.llm_env())))
+        elif p == "/api/cancel": self._json(cancel_running())
+        elif p == "/api/command":
             c = str(d.get("command", "")).strip()
             if not c: return self._json({"error": "komut boş"}, 400)
             rs = int(d.get("render_seconds", 12))

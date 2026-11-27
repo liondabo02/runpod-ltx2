@@ -4,6 +4,7 @@ Başlat: python tools\studio_daemon.py     Durdur: studio\queue\STOP dosyası ol
 import argparse, json, os, subprocess, sys, time, traceback
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 ROOT = os.path.dirname(HERE); Q = os.path.join(ROOT, "studio", "queue")
+import worker_events as we
 
 def log(msg):
     line = time.strftime("%H:%M:%S ") + msg
@@ -46,6 +47,7 @@ def run_job(fname, runner=None):
     run_path = os.path.join(Q, base + ".running.json"); os.replace(src, run_path)
     try: os.remove(os.path.join(Q, "progress.json"))
     except OSError: pass
+    we.emit("showrunner", "start", "görevi aldı: " + str(job.get("command") or job.get("render_only") or job.get("tool") or ""), job=base)
     try:
         if runner:
             res = runner(job)
@@ -68,7 +70,10 @@ def run_job(fname, runner=None):
             limit = float(os.environ.get("AHOS_JOB_TIMEOUT_MIN", "45")) * 60
             t0 = time.time(); cancelled = False
             with open(logp, "w", encoding="utf-8", errors="replace") as lf:
-                proc = subprocess.Popen(cmd, env=llm_env(), stdout=lf, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
+                env = llm_env(); env["AHOS_JOB_ID"] = base
+                if job.get("render_only"):
+                    we.emit("render", "start", "bölümün karelerini çiziyor: %s" % job["render_only"], job=base)
+                proc = subprocess.Popen(cmd, env=env, stdout=lf, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
                 while proc.poll() is None:
                     time.sleep(2); heartbeat("çalışıyor: " + base)
                     if os.path.exists(os.path.join(Q, "CANCEL")):
@@ -85,11 +90,18 @@ def run_job(fname, runner=None):
                 raise RuntimeError("iptal edildi")
             if time.time() - t0 > limit:
                 raise RuntimeError("süre aşımı (%d dk)" % (limit // 60))
+            if job.get("render_only"):
+                ok = rc == 0 and not cancelled
+                we.emit("render", "done" if ok else "failed", "render komutu bitti (çıkış kodu %s)" % rc, job=base)
             if rc != 0:
                 raise RuntimeError("showrunner kodu %s: %s" % (rc, tail[-700:]))
         job["state"] = "done"; job["result"] = res; final = base + ".done.json"
     except Exception as e:
         job["state"] = "failed"; job["error"] = str(e); job["trace"] = traceback.format_exc()[-800:]; final = base + ".failed.json"
+    if job["state"] == "done":
+        we.emit("showrunner", "done", "görev kuyruğu bu işi tamamladı (işçi sonuçlarına ayrıca bak)", job=base)
+    else:
+        we.emit("showrunner", "failed", "görev tamamlanamadı: " + job.get("error", "")[:200], job=base)
     json.dump(job, open(os.path.join(Q, final), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     os.remove(run_path)
     return job["state"]

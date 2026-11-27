@@ -191,6 +191,9 @@ def visemes_real(wav, out_json):
     return json.load(open(out_json, encoding="utf-8")).get("mouthCues", [])
 
 
+import worker_events  # noqa: E402
+
+
 def run(episode_dir, bible, tts=tts_real, visemes=visemes_real, margin=0.3, lang="tr"):
     sheet = json.load(open(os.path.join(episode_dir, "beat_sheet.json"), encoding="utf-8"))
     chars = {c["id"]: c for c in bible["characters"]}
@@ -210,6 +213,7 @@ def run(episode_dir, bible, tts=tts_real, visemes=visemes_real, margin=0.3, lang
             name = f"b{bi:03d}_{li}_{cid}"
             wav = os.path.join(adir, name + ".wav"); vj = os.path.join(vdir, name + ".json")
             try:
+                worker_events.note('%s repliğini seslendiriyor: "%s"' % (chars[cid].get("name") or cid, text[:70]))
                 tts(text, voice, rate, pitch, wav)
                 import audio_qa                            # HAM TTS çıktısı denetlenir (cila uçlara fade ekler, kesilmeyi gizler)
                 _x, _sr = audio_qa.read_wav(wav)
