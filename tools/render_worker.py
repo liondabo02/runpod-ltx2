@@ -97,6 +97,14 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
     if _blk:
         return {"status": "BLOCKED", "error": "SAHNE_SOZLESMESI_TUTARSIZ",
                 "problems": [f"[{x['engine']}] {x['rule']} {x['shot']}: {x['why']}" for x in _blk]}
+    if engine == "2d":                                   # okunabilirlik kapısı: temas anları çizilen katmanlardan ölçülür; okunmayan aksiyon üretime girmez
+        import readability
+        _rep = readability.measure_plan(_plan, pp2.designs_for(bible, assets))
+        json.dump({"events": _rep, "thresholds": readability.DEFAULTS}, open(os.path.join(rdir, "readability.json"), "w", encoding="utf-8"), ensure_ascii=False)
+        _unread = readability.problems(_rep)
+        if _unread:
+            return {"status": "BLOCKED", "error": "AKSIYON_OKUNAMIYOR",
+                    "problems": [f"[{x['engine']}] {x['rule']} {x['shot']}: {x['why']}" for x in _unread]}
     blender = find_blender() if engine != "2d" else "n/a"
     if not blender:
         return {"status": "BLOCKED", "error": "BLENDER_MISSING"}

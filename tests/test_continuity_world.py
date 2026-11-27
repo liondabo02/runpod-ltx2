@@ -225,9 +225,9 @@ def test_render_preflight_uses_same_positions_as_drawing(tmp_path, monkeypatch):
     bible = json.load(open(root / "series-bible.json", encoding="utf-8")); reached = []
     monkeypatch.setattr(rw.r2, "render_window", lambda plan_, des_, out_, **k: os.makedirs(out_, exist_ok=True) or reached.append(1) or {"missing": 1})
     m = rw.run(str(root / "episodes" / "e900_kabul"), bible, 0, 38, str(root))
-    # atış ön kontrolü geçti (hata nesne izi değil); ama bilinen açık kusur (Aden, Harun'un içinden geçiyor) artık sözleşme kapısında durur
-    assert m["error"] == "SAHNE_SOZLESMESI_TUTARSIZ" and not reached and any("continuity_crossing" in p for p in m["problems"]), m
-    m = rw.run(str(root / "episodes" / "e900_kabul"), bible, 0, 31, str(root))
+    # atış ön kontrolü ve sözleşme geçti (seyirci geçişmesi bloklama motorunca çözüldü); bilinen açık kusur (boy farkında devir okunmuyor) okunabilirlik kapısında durur
+    assert m["error"] == "AKSIYON_OKUNAMIYOR" and not reached and all("handoff" in p and "sc01_sh04" in p for p in m["problems"]), m
+    m = rw.run(str(root / "episodes" / "e900_kabul"), bible, 0, 22, str(root))      # okunan aksiyon (yerden alma) içeren pencere çizime geçer
     assert m["error"] == "FRAMES_MISSING" and reached, m
     # bilerek: plan başında, yürümeye vakit bırakmayan ve kutunun dibinden yapılan atış
     throw = [{"prop": "ball", "track": [{"t": 0, "holder": "a"}, {"t": 0.05, "holder": "a"}, {"t": 0.9, "at": "bin_green", "hide": True}]}]

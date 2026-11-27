@@ -10,6 +10,7 @@ import puppet2d as pp  # noqa: E402
 import scenes2d as sc  # noqa: E402
 import props2d
 import object_state  # noqa: E402
+import action_staging  # noqa: E402
 import setpieces2d  # noqa: E402
 import fx_layer  # noqa: E402
 try:
@@ -158,7 +159,7 @@ def _objects_now(beat, items, lt):
     return out
 
 
-def _draw_objects(cv, cam, beat, items, designs, lt, owner="__free__"):
+def _draw_objects(cv, cam, beat, items, designs, lt, owner="__free__", emit=None):
     """Nesneleri çizer. owner='__free__': serbest nesneler (yerde, uçuşta); owner=cid: o karakterin elindekiler (karakterden HEMEN sonra, parmaklar önde)."""
     by = {i[0]: i for i in items}
     for ob, x, y, st, own, hand in _objects_now(beat, items, lt):
@@ -166,10 +167,16 @@ def _draw_objects(cv, cam, beat, items, designs, lt, owner="__free__"):
         slot = "__late__" if late else ("__free__" if own is None else own)
         if slot != owner:
             continue
-        props2d.draw(cv, cam, ob["prop"], x, y, 0.0, 0, scale=ob.get("scale", 0.55))
+        body = lambda c, cm, o_=ob, x_=x, y_=y: props2d.draw(c, cm, o_["prop"], x_, y_, 0.0, 0, scale=o_.get("scale", 0.55))
+        body(cv, cam)
+        if emit is not None:
+            emit("object", ob.get("id") or ob.get("prop", "obj"), body, (x, y))
         if own is not None and own in by:                       # parmaklar nesnenin ÖNÜNDE: avuç nesneyi kavrar
             _c, d_, p_, _m, _l, _e = by[own]
-            pp.draw_grip(cv, d_, p_, hand, cam.x(p_["x"]), cam.y(0.0), cam.s)
+            grip_ = lambda c, cm, d2=d_, p2=p_, h2=hand: pp.draw_grip(c, d2, p2, h2, cm.x(p2["x"]), cm.y(0.0), cm.s)
+            grip_(cv, cam)
+            if emit is not None:
+                emit("grip", own, grip_)
 
 
 def object_effects(beat, cid, lt):
@@ -329,7 +336,9 @@ def reaction_target(beat, t):
     return None
 
 
-def frame(plan, designs, t, bible_chars=None):
+def frame(plan, designs, t, bible_chars=None, trace=None):
+    """trace (dict) verilirse çizimin GERÇEK yerleşimi yazılır: kamera, pozlar ve çizim sırasıyla katmanlar [(tür, kimlik, çizici(cv, cam), nokta)].
+    Okunabilirlik ölçüsü bu kayıttan çalışır; ayrı bir yerleşim tahmini yapılmaz."""
     beat = next((b for b in plan["beats"] if b["t_start"] <= t < b["t_end"]), None)
     if beat is None:
         return None
@@ -442,7 +451,12 @@ def frame(plan, designs, t, bible_chars=None):
     if preset == "insert" and beat.get("props"):
         ix, iy = props2d.place(beat["props"][0], xs, [designs[c]["height"] for c in beat["cast"]], t, lt, dur)
         cam = sc.Cam(ix, max(0.55, min(iy - 0.35, 1.0)), 1.05)      # ek plan: nesne + karakterler birlikte kadrajda (başsız/bacaksız kadraj yok)
+    act_ = action_staging.framing(beat, designs, lt, sc.BASE_PPM)      # temas penceresi: sabit aksiyon kadrajı (tepki/yakın plan/ek plan kesmesi yapılmaz)
+    if act_:
+        preset = "action"; cam = sc.Cam(act_["cx"], act_["cy"], act_["zoom"])
     cv = pp.Cv()
+    layers = [] if trace is not None else None
+    emit = (lambda kind_, key_, fn_, at_=None: layers.append((kind_, key_, fn_, at_))) if trace is not None else None
     sc.scene_back(cv, beat["scene"], cam, t, light=beat.get("light", ""))
     if preset != "insert":
         setpieces2d.draw(cv, cam, beat.get("loc"), t, pieces=beat.get("pieces"))
@@ -458,8 +472,9 @@ def frame(plan, designs, t, bible_chars=None):
         if kind in BACK_PROPS and preset != "insert":
             wx, wy = props2d.place(kind, xs, [designs[c]["height"] for c in beat["cast"]], t, lt, dur)
             props2d.draw(cv, cam, kind, wx, wy, t, k_)
-    for cid, d, p, m, look, e in sorted(items, key=lambda it: it[2]["x"]):
-        if preset in ("close", "xclose") and cid != focus and _head_cropped(cam, p["x"], d["height"]):
+    act_ids_ = {c for ev_ in action_staging._events(beat) for c in (ev_["by"], ev_.get("to")) if c} if act_ else set()
+    for cid, d, p, m, look, e in action_staging.draw_order(beat, designs, items):
+        if ((preset in ("close", "xclose") and cid != focus) or (preset == "action" and cid not in act_ids_)) and _head_cropped(cam, p["x"], d["height"]):
             continue                                        # yakın planda odak dışı karakterin yüzü kenarda yarım kesilecekse çizilmez (kazara kesik yüz yok)
         emo = EMO.get(m["kind"], "neutral")
         mood_ = spk_mood.get(cid) or beat.get("mood", "neutral")
@@ -469,12 +484,15 @@ def frame(plan, designs, t, bible_chars=None):
         dart = (_hash(slot, m["seed"], 3) - 0.5) * 1.4
         st = {"mouth": letters.get(cid, "X"), "blink": blink_at(t, m["seed"]), "emotion": emo,
               "gaze": look * 0.9 + (0 if look else dart), "brow": e, "pulse": e}
-        pp.draw_character(cv, d, p, st, cam.x(p["x"]), cam.y(0.0), cam.s, t)
-        _draw_objects(cv, cam, beat, items, designs, lt, owner=cid)      # elindeki nesne: karakterden hemen sonra, parmaklar önde
+        body_ = lambda c, cm, d_=d, p_=p, st_=st: pp.draw_character(c, d_, p_, st_, cm.x(p_["x"]), cm.y(0.0), cm.s, t)
+        body_(cv, cam)
+        if emit is not None:
+            emit("character", cid, body_, (p["x"], 0.0))
+        _draw_objects(cv, cam, beat, items, designs, lt, owner=cid, emit=emit)      # elindeki nesne: karakterden hemen sonra, parmaklar önde
     if xs:
         fx_layer.icons(cv, cam, beat, xs, [designs[c]["height"] for c in beat["cast"]], t, lt)
-    _draw_objects(cv, cam, beat, items, designs, lt)             # serbest nesneler (yerde, uçuşta)
-    _draw_objects(cv, cam, beat, items, designs, lt, owner="__late__")   # el değiştiren nesne: tüm karakterlerden sonra
+    _draw_objects(cv, cam, beat, items, designs, lt, emit=emit)             # serbest nesneler (yerde, uçuşta)
+    _draw_objects(cv, cam, beat, items, designs, lt, owner="__late__", emit=emit)   # el değiştiren nesne: tüm karakterlerden sonra
     for k_, kind in enumerate(beat.get("props") or []):
         if kind in BACK_PROPS:
             continue
@@ -487,6 +505,9 @@ def frame(plan, designs, t, bible_chars=None):
                 continue
             props2d.draw_fx(cv, cam, kind, sum(xs) / len(xs), hy if kind != "speed" else 0.1, t, lt)
     sc.scene_front(cv, beat["scene"], cam, t)
+    if trace is not None:
+        emit("front", "scene_front", lambda c, cm: sc.scene_front(c, beat["scene"], cm, t))
+        trace.update(cam=cam, preset=preset, items=items, layers=layers, beat=beat, lt=lt)
     im = grade(cv.done(), beat.get("light") or "", t)
     try:
         return fx_layer.post(im, beat, t, lt, dur, float(plan.get("total_s", 480.0)), bool(beat.get("first_of_scene")))
@@ -528,7 +549,7 @@ def grade(im, light, t):
 
 _G = {}
 ENGINE_FILES = ("render2d.py", "puppet2d.py", "scenes2d.py", "setpieces2d.py", "props2d.py", "fx_layer.py", "bg_art.py", "shot_motion.py", "puppet_side.py", "object_state.py",
-                "shot_planner.py", "style_profile.py", "mood_engine.py")
+                "shot_planner.py", "style_profile.py", "mood_engine.py", "action_staging.py", "staging.py", "continuity.py")
 
 
 def available_mem_mb():

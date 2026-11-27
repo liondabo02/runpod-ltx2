@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "tools"))
 import shot_motion as sm, shot_planner as sp, render2d as r2, puppet2d as pp, staging, setpieces2d, object_state, render_worker as rw
 
 TOOLS = os.path.join(os.path.dirname(__file__), "..", "tools")
-ENGINE_FILES = ["continuity.py", "scene_contract.py", "staging.py", "render2d.py", "shot_planner.py", "setpieces2d.py", "object_state.py", "render_worker.py", "puppet2d.py", "shot_motion.py", "sfx_events.py"]
+ENGINE_FILES = ["continuity.py", "scene_contract.py", "staging.py", "render2d.py", "shot_planner.py", "setpieces2d.py", "object_state.py", "render_worker.py", "puppet2d.py", "shot_motion.py", "sfx_events.py", "action_staging.py", "readability.py"]
 FORBIDDEN = ["e900", "harun", "aden", "park_trash_walk", "ahos-bizim", "SC01", "kabul"]
 
 
@@ -75,7 +75,10 @@ def test_other_projects_handoff_and_throw_are_physically_valid(tmp_path, heights
     # 4) ışınlanma yok: yeniden konumlanan karakter yürüyerek gelir ve temastan önce varır
     for pb in plan["beats"]:
         for n in pb["staging_notes"]:
-            if n["kind"] == "adjusted":
+            if n["kind"] == "adjusted" and n["rule"] == "blocking":      # seyirci: eylemi korunur; yeni yere yaklaşma yürüyüşüyle, plan içinde varır
+                m = pb["motion"][n["actor"]]; ap = m.get("approach")
+                assert not ap or (ap["walk_s"] <= pb["t_end"] - pb["t_start"] and abs(m["x0"] - n["to"]) < 1e-3), m
+            elif n["kind"] == "adjusted":
                 m = pb["motion"][n["actor"]]; assert m["kind"] == "walk" and m.get("walk_s")
     # 5) karelerde (dünya ölçeğinde, çözünürlükten bağımsız) tutulan nesne elin yanında; render hatasız
     items_checked = 0
