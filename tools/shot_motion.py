@@ -8,6 +8,7 @@ Açı konvansiyonu (mesh_factory yüzü -Y'ye bakar):
 import math, re
 
 W = 2 * math.pi
+SWAY_IN_S = 1.5          # bekleme/bakınma salınımı bu sürede açılır: plan başında çizilen konum = plan durumu
 
 KINDS = [  # öncelik sırasıyla (ilk eşleşen kazanır)
     ("run", r"koş|kaç|fırla|süzül\w* hız"),
@@ -236,7 +237,7 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
     elif kind == "look":
         p["head"][2] = 0.9 * math.sin(W * 0.4 * t + s)
         p["head"][0] = 0.18; p["lean"] = 0.12 + 0.05 * math.sin(W * 0.8 * t)
-        p["x"] = x0 + 0.6 * math.sin(W * 0.12 * t + s)
+        p["x"] = x0 + 0.6 * math.sin(W * 0.12 * t + s) * smooth(t / SWAY_IN_S)      # t=0'da tam x0: plan başında sıçrama yok
         v = 0.6 * W * 0.12 * math.cos(W * 0.12 * t + s)
         sw = math.sin(W * 1.8 * t) * min(0.6, abs(v) * 1.2)
         p["lL"], p["lR"] = -sw, sw
@@ -269,7 +270,7 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
         h = ((slot * 2654435761 + seed * 40503) & 0xFFFF) / 65535.0
         bump = math.sin(math.pi * min(1.0, loc / 0.45)) if loc < 0.45 else 0.0
         if kind != "sit":
-            p["x"] += 0.10 * math.sin(W * 0.11 * t + s) * (H / 1.0) * 0.5   # ağırlık kaydırma
+            p["x"] += 0.10 * math.sin(W * 0.11 * t + s) * (H / 1.0) * 0.5 * smooth(t / SWAY_IN_S)   # ağırlık kaydırma (plan başında sıfırdan açılır)
         if h > 0.55:                                  # jest: el kaldır / kol salla
             side = "R" if h > 0.78 else "L"
             arm_out(p, side, 0.35 + 1.1 * bump); arm_fwd(p, side, 0.5 * bump)
@@ -278,6 +279,41 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
             p["head"][2] += 0.35 * bump; p["lean"] += 0.05 * bump
         p["z"] += 0.01 * H * max(0.0, math.sin(W * 1.3 * t + s))
     return p
+
+
+def segment(m, lt, dur):
+    """Plan içi hareket parçası: (hareket sözlüğü, yerel zaman, parça süresi).
+    'approach' varsa karakter önce önceki planın bittiği yerden ('from') eylem işaretine (x0) YÜRÜR, eylem varınca başlar.
+    Çizim, ön kontrol ve süreklilik aynı fonksiyonu kullanır (iki ayrı konum hesabı yok)."""
+    ap = m.get("approach")
+    if ap:
+        ws = float(ap["walk_s"])
+        if lt < ws:
+            return dict(m, kind="walk", x0=float(ap["from"]), x1=float(m["x0"]), walk_s=ws), lt, ws
+        return m, lt - ws, max(0.1, dur - ws)
+    if m.get("kind") == "walk" and m.get("walk_s"):      # yerleşim çözücü: temastan önce varacak yürüyüş süresi
+        return m, lt, float(m["walk_s"])
+    return m, lt, dur
+
+
+def motion_x(m, lt, dur, H):
+    """Plan içi lt anında karakterin dünya x konumu (tepki/uzanma bindirmeleri hariç taban hareket)."""
+    s, t_, d_ = segment(m, lt, dur)
+    return pose_at(s["kind"], t_, d_, s.get("seed", 0), s["x0"], s["x1"], H, H * 0.45)["x"]
+
+
+def exit_x(m, dur, H, react=None):
+    """Plan SONUNDA çizilen konum. react: {'t','kind'} yönetmen tepkisi (o andan sonra tepki hareketi, konum plan boyunca taban hareketten)."""
+    x = motion_x(m, dur, dur, H)
+    if react and dur >= float(react["t"]):
+        x = pose_at(react["kind"], dur - float(react["t"]), dur, m.get("seed", 0), x, x, H, H * 0.45)["x"]
+    return x
+
+
+def entry_x(m):
+    """Plan BAŞINDA karakterin konumu."""
+    ap = m.get("approach")
+    return float(ap["from"]) if ap else float(m["x0"])
 
 
 VISEME_OPEN = {"X": 0.05, "A": 0.12, "B": 0.40, "C": 0.85, "D": 1.0, "E": 0.65, "F": 0.35, "G": 0.30, "H": 0.60}

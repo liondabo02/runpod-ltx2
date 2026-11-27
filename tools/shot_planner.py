@@ -6,6 +6,10 @@ import staging
 import setpieces2d
 import continuity
 try:
+    import puppet2d as _pp
+except ImportError:
+    _pp = None
+try:
     import mood_engine
 except ImportError:
     mood_engine = None
@@ -72,7 +76,14 @@ def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
         spec_p = os.path.join(assets_dir, f"{ch['id']}.spec.json")
         h = json.load(open(spec_p, encoding="utf-8")).get("height_m", 1.2) if os.path.exists(spec_p) else 1.2
         out["characters"][ch["id"]] = {"glb": glb, "height": h, "name": names[ch["id"]]}
-    prev_x_ = {}; prev_meta_ = None
+    des_ = {}
+    if _pp is not None:                                      # el değiştirme erişimi: çizimle AYNI ölçü ve aynı tasarım kaynağı (planlayıcı ayrı tahmin yapmaz)
+        try:
+            des_ = _pp.designs_for(bible, assets_dir)
+        except Exception:
+            des_ = {}
+    reach_fn_ = (lambda a, xa, b, xb: _pp.handoff_reach_ratio(des_[a], xa, des_[b], xb)) if _pp is not None and des_ else None
+    world_x_ = {}; world_obj_ = {}; prev_meta_ = None       # birikmiş dünya durumu: kadraj dışındaki oyuncu/nesne de korunur
     locs_ = setpieces2d.load_locations(os.path.dirname(os.path.abspath(assets_dir)))        # proje verisi: mekân -> dekor parçaları (motor mekân adlarını bilmez)
     for bi, b in enumerate(sheet["beats"]):
         ts, te = float(b["t_start"]), float(b["t_end"])
@@ -97,20 +108,33 @@ def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
                 kind = "look" if seed % 2 else "idle"
             mot[c] = {"kind": kind, "x0": sl[i], "x1": sm.move_target(kind, sl[i], seed), "seed": seed}
         trans_ = continuity.transition_kind(prev_meta_, {"scene_id": b.get("scene_id"), "loc": b.get("location"), "transition": b.get("transition")})
-        continuity.carry_starts(mot, prev_x_, trans_)                   # sürekli geçişte başlangıç = önceki bitiş (ışınlanma yok)
+        if trans_ in continuity.FREE:
+            world_x_, world_obj_ = {}, {}
+        continuity.carry_starts(mot, world_x_, trans_)                  # sürekli geçişte başlangıç = önceki bitiş (ışınlanma yok)
         prev_meta_ = {"scene_id": b.get("scene_id"), "loc": b.get("location")}
         ch_ = b.get("choreo") or {}                      # yönetmen koreografisi: açık hareket/hedef/nesne izi/bakış (planlayıcı tahminini ezer)
         for c_, spec_ in (ch_.get("motion") or {}).items():
             if c_ in mot:
                 mot[c_] = {"kind": spec_.get("kind", mot[c_]["kind"]), "x0": float(spec_.get("x0", mot[c_]["x0"])),
                            "x1": float(spec_.get("x1", spec_.get("x0", mot[c_]["x1"]))), "seed": mot[c_]["seed"]}
+                if mot[c_]["kind"] not in continuity.MOVING:
+                    mot[c_]["x1"] = mot[c_]["x0"]                       # duran eylem yer değiştirmez (çizim yalnız x0 kullanır)
         spec_ = locs_.get(b.get("location") or "", {}); pieces_ = setpieces2d.pieces_of(spec_)
         tg_, sk_ = setpieces2d.anchors_for(pieces_)
         gaps_ = [f"mekân '{b.get('location')}': dekor parçası motor kataloğunda yok: {n}" for n in setpieces2d.unknown_pieces(spec_)]
         if b.get("location") and not spec_:
             gaps_.append(f"mekân '{b.get('location')}': proje verisinde (locations.json) dekor tanımı yok; arka plan dışında çizilecek bir şey yok")
-        stg_notes = staging.resolve(mot, ch_.get("objects", []), {c: out["characters"][c]["height"] for c in cast if c in out["characters"]}, tg_, prev_x=prev_x_)
-        prev_x_ = {c: m_["x1"] for c, m_ in mot.items()}                 # sonraki plana süreklilik: bu planın bitiş konumları
+        heights_ = {c: out["characters"][c]["height"] for c in cast if c in out["characters"]}
+        listed_ = list(ch_.get("objects", []))
+        carried_, obj_gaps_ = continuity.carry_objects(world_obj_, listed_, cast, te - ts, tg_)     # anılmayan nesne kaybolmaz
+        objs_ = listed_ + carried_; gaps_ += obj_gaps_
+        gaze_ = ch_.get("gaze", {}); react_ = ch_.get("react", {})
+        stg_notes = staging.resolve(mot, objs_, heights_, tg_, prev_x=world_x_, reach_fn=reach_fn_, dur=te - ts)
+        stg_notes += continuity.reconcile(mot, world_x_, trans_, heights_, te - ts, objs_, react_)  # koreografi işareti ışınlanma yaratamaz
+        for c_, m_ in mot.items():                                      # sonraki plana süreklilik: plan sonunda ÇİZİLEN konum
+            m_["x_end"] = round(sm.exit_x(m_, te - ts, heights_.get(c_, 1.2), react_.get(c_)), 4)
+            world_x_[c_] = m_["x_end"]
+        continuity.update_objects(world_obj_, objs_, tg_)
         cam_text = (b.get("camera") or "").lower()
         preset = "close" if re.search(r"yakın|close|detay", cam_text) else "medium" if re.search(r"orta|omuz|medium", cam_text) \
             else "wide" if re.search(r"genel|geniş|wide", cam_text) else None
@@ -124,7 +148,7 @@ def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
                              "cast": cast, "motion": mot, "lines": lines, "camera": preset, "focus": focus,
                              "loc": b.get("location"), "light": b.get("light_time", ""), "shot_id": b.get("shot_id"),
                              "mood": (mood_engine.mood_for(b.get("action", ""), (b.get("emotion") or {}).get("valence")) if mood_engine else "neutral"),
-                             "staging_notes": stg_notes, "pieces": pieces_, "targets": tg_, "sinks": sorted(sk_), "capability_gaps": gaps_, "choreo": {"objects": ch_.get("objects", []), "gaze": ch_.get("gaze", {}), "react": ch_.get("react", {})},
+                             "staging_notes": stg_notes, "pieces": pieces_, "targets": tg_, "sinks": sorted(sk_), "capability_gaps": gaps_, "transition_kind": trans_, "choreo": {"objects": objs_, "gaze": gaze_, "react": react_},
                              "icons": (ch_.get("icons", []) if ch_ else _icons(b.get("action", ""))), "scene_id": b.get("scene_id"),
                              "first_of_scene": bi == 0 or sheet["beats"][bi - 1].get("scene_id") != b.get("scene_id"),
                              "props": ([] if ch_ else props2d.extract(str(b.get("action", "")) + " " + str(b.get("camera", "")))),

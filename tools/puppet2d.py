@@ -91,6 +91,16 @@ class Cv:
 
 
 # ---------------------------------------------------------------- karakter tasarımı
+def designs_for(bible, assets_dir):
+    """Tek kaynak: bible + <assets>/<id>.spec.json -> {id: tasarım}. Planlayıcı, render ve testler aynı boy/oranı kullanır."""
+    import json as _j, os as _o
+    out = {}
+    for ch in bible["characters"]:
+        sp = _o.path.join(assets_dir, f"{ch['id']}.spec.json")
+        out[ch["id"]] = derive_design(ch, _j.load(open(sp, encoding="utf-8")) if _o.path.exists(sp) else {})
+    return out
+
+
 def derive_design(ch, spec):
     """Bible + spec -> 2D tasarım. LLM alanları (hair_style, species, accessory) varsa onları kullanır; yoksa kurallarla türetir."""
     text = " ".join(str(ch.get(k, "")) for k in ("name", "role", "look", "personality")).lower()

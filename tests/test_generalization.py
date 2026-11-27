@@ -4,10 +4,10 @@ Ayrıca: motor kaynağında proje/bölüm adı yok (statik denetim)."""
 import json, os, re, sys, random
 import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "tools"))
-import shot_planner as sp, render2d as r2, puppet2d as pp, staging, setpieces2d, object_state, render_worker as rw
+import shot_motion as sm, shot_planner as sp, render2d as r2, puppet2d as pp, staging, setpieces2d, object_state, render_worker as rw
 
 TOOLS = os.path.join(os.path.dirname(__file__), "..", "tools")
-ENGINE_FILES = ["staging.py", "render2d.py", "shot_planner.py", "setpieces2d.py", "object_state.py", "render_worker.py", "puppet2d.py", "shot_motion.py", "sfx_events.py"]
+ENGINE_FILES = ["continuity.py", "scene_contract.py", "staging.py", "render2d.py", "shot_planner.py", "setpieces2d.py", "object_state.py", "render_worker.py", "puppet2d.py", "shot_motion.py", "sfx_events.py"]
 FORBIDDEN = ["e900", "harun", "aden", "park_trash_walk", "ahos-bizim", "SC01", "kabul"]
 
 
@@ -63,10 +63,11 @@ def test_other_projects_handoff_and_throw_are_physically_valid(tmp_path, heights
     p0, p1 = plan["beats"]
     assert abs(p0["targets"]["bin_green"][0] - bin_x) < 1e-6 and "bin_yellow" in p0["targets"]
     # 2) el değiştirme: fiziksel aralık (kol erişimi) sağlanır
-    reach = 0.27 * (heights[a] + heights[b]); sep = abs(p0["motion"][a]["x1"] - p0["motion"][b]["x1"])
     confl = [n for pb in plan["beats"] for n in pb["staging_notes"] if n["kind"] == "conflict"]
-    hand_ok = 0.4 * reach - 1e-6 <= sep <= 0.95 * reach + 1e-6
-    assert hand_ok or any(n["rule"] == "handoff_separation" for n in confl), (sep, reach)          # ya fiziksel olarak geçerli ya da çelişki AÇIKÇA bildirilmiş
+    dur0 = p0["t_end"] - p0["t_start"]
+    xa, xb = (sm.motion_x(p0["motion"][c], 3.4, dur0, heights[c]) for c in (a, b))
+    ratio = pp.handoff_reach_ratio(des[a], xa, des[b], xb)          # çizimin kullandığı AYNI erişim ölçüsü (omuz yüksekliği farkı dahil)
+    assert ratio <= 1.0 or any(n["rule"] == "handoff_separation" for n in confl), (ratio, xa, xb)          # ya fiziksel olarak geçerli ya da çelişki AÇIKÇA bildirilmiş
     # 3) atış: okunur aralık (boya/ağırlığa göre), hedefe göre
     lo, hi = staging.throw_range(heights[b], object_state.weight_of(prop))
     dx = abs(p1["targets"]["bin_blue"][0] - p1["motion"][b]["x1"])
@@ -85,7 +86,6 @@ def test_other_projects_handoff_and_throw_are_physically_valid(tmp_path, heights
     items = []
     for cid in beat["cast"]:
         m = beat["motion"][cid]
-        import shot_motion as sm
         pose = sm.pose_at(m["kind"], lt, 9.0, m["seed"], m["x0"], m["x1"], des[cid]["height"], des[cid]["height"] * 0.45); items.append((cid, des[cid], pose, m, 0, 0))
     objs = r2._objects_now(beat, items, lt)
     assert len(objs) == 1 and objs[0][4] == b

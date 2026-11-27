@@ -201,8 +201,7 @@ def handoff_problems(plan, designs):
                     continue
                 xs = {}
                 for c in (e["by"], e["to"]):
-                    m = mo[c]
-                    xs[c] = sm.pose_at(m["kind"], e["t"], _dur_of(m, dur), m.get("seed", 0), m["x0"], m["x1"], designs[c]["height"], designs[c]["height"] * 0.45)["x"]
+                    xs[c] = sm.motion_x(mo[c], e["t"], dur, designs[c]["height"])
                 ratio = pp.handoff_reach_ratio(designs[e["by"]], xs[e["by"]], designs[e["to"]], xs[e["to"]], pick_hand(b, e["by"]), pick_hand(b, e["to"]))
                 if ratio > 1.0:
                     probs.append("vuruş %s nesne %d: %s -> %s el değiştirme t=%.1f: kollar buluşamıyor (erişim oranı %.2f, x=%.2f/%.2f); karakterler yaklaşmalı veya atma olarak tanımlanmalı"
@@ -271,11 +270,6 @@ def apply_throw_swing(beat, items, lt):
             key = "aL" if side == "L" else "aR"; old = list(p[key])
             pp.arm_toward(des, p, side, tx, th)
             p[key] = [old[0] + (p[key][0] - old[0]) * w, old[1] + (p[key][1] - old[1]) * w]
-
-
-def _dur_of(m, dur):
-    """Yerleşim çözücünün yürüttüğü karakter temastan ÖNCE varsın diye yürüyüş süresi (walk_s) planlayıcı süresinden kısa olabilir."""
-    return float(m["walk_s"]) if m.get("kind") == "walk" and m.get("walk_s") else dur
 
 
 def pp_smooth(x):
@@ -353,18 +347,18 @@ def frame(plan, designs, t, bible_chars=None):
     E = emphasis(sp_cues, t - sp_start) if speaker else 0.0
     px = {}
     for cid in beat["cast"]:
-        px[cid] = sm.pose_at(beat["motion"][cid]["kind"], lt, _dur_of(beat["motion"][cid], dur), beat["motion"][cid]["seed"], beat["motion"][cid]["x0"],
-                             beat["motion"][cid]["x1"], designs[cid]["height"], designs[cid]["height"] * 0.45)["x"]
+        px[cid] = sm.motion_x(beat["motion"][cid], lt, dur, designs[cid]["height"])
     for cid in beat["cast"]:
         m, d = beat["motion"][cid], designs[cid]
         Hm = d["height"]
         rc = ((beat.get("choreo") or {}).get("react") or {}).get(cid)           # yönetmen tepkisi: belirli andan sonra (ör. şaşırma)
-        lte, kind_e = lt, m["kind"]
+        m, seg_t, seg_d = sm.segment(m, lt, dur)             # yaklaşma yürüyüşü varsa o parça; yoksa eylemin kendisi
+        lte, kind_e = seg_t, m["kind"]
         if rc and lt >= float(rc["t"]):
             lte, kind_e = lt - float(rc["t"]), rc["kind"]
-            m = dict(m); m["kind"] = kind_e; m["x0"] = m["x1"] = _x_at(px, cid, m)
+            m = dict(m); m["kind"] = kind_e; m["x0"] = m["x1"] = _x_at(px, cid, m); seg_d = dur
         reach_w, carry_w = object_effects(beat, cid, lt)
-        dur_e = _dur_of(m, dur)
+        dur_e = seg_d
         if reach_w and kind_e in ("idle", "look") and not rc:      # nesne teması yaklaşıyor ve karakter boşta: uzanma hazırlığı otomatik
             lte, dur_e, kind_e = reach_w[0], reach_w[1], "reach"
             m = dict(m); m["kind"] = "reach"; m["x0"] = m["x1"] = _x_at(px, cid, m)
@@ -390,7 +384,7 @@ def frame(plan, designs, t, bible_chars=None):
                 else:
                     p[ha][0] = -0.35; p[ha][1] = sg_ * 0.25
                     p["head"][1] += -sg_ * adj["side_tilt"]
-                    stationary_ = (kind_e not in ("walk", "carry", "run")) or (kind_e == "walk" and (abs(m["x1"] - m["x0"]) < 0.02 or lt >= 0.9 * _dur_of(m, dur)))      # yürüyüp varmış karakter de duran sayılır
+                    stationary_ = (kind_e not in ("walk", "carry", "run")) or (kind_e == "walk" and (abs(m["x1"] - m["x0"]) < 0.02 or lt >= 0.9 * seg_d))      # yürüyüp varmış karakter de duran sayılır
                     if stationary_ and ci["weight"] < 1.5 and ci["style"] != "two_hand_front":
                         # duran kişi hafif nesneyi kalça hizasında sallamaz: dirseği bükük, nesne göğüs hizasında önde tutar (boy ve kola göre; çocuk yüzüyle aynı hizaya düşmez)
                         gz_ = ((beat.get("choreo") or {}).get("gaze") or {}).get(cid)

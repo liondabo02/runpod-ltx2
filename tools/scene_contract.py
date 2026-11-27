@@ -1,9 +1,10 @@
 """AHOS ortak sahne sözleşmesi (sürümlü). Kamera, süreklilik, animasyon, ses, QA aynı kimlik ve durum verisini okur.
 Sözleşme proje/bölüm/sahne/plan/olay kimlikleri, karakter+varlık sürümleri, aktör/nesne giriş-çıkış durumu,
-diyalog+dil, kamera niyeti, ses olayları, gereken yetenekler ve üretim/kabul bağlantılarını taşır.
+diyalog+dil, kamera niyeti, ses olayları, gereken yetenekler ve üretim/onay bağlantılarını taşır.
 Motor hiçbir projeye özgü ad bilmez; veri proje dosyalarından gelir. Eski veri: upgrade()/from_beat_sheet()."""
 import hashlib, json
 import continuity
+import shot_motion as sm
 
 SCHEMA = "ahos.scene_contract"
 VERSION = 1
@@ -12,14 +13,6 @@ ENGINES = ("script", "staging", "camera", "animation", "object_state", "audio", 
 
 def _hash(obj):
     return hashlib.sha256(json.dumps(obj, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
-
-
-def _obj_state(track, which):
-    pts = [p for p in (track or []) if isinstance(p, dict)]
-    if not pts:
-        return None
-    p = pts[0] if which == "first" else pts[-1]
-    return {"holder": p.get("holder"), "at": p.get("at")}
 
 
 def _dialogue(raw):
@@ -40,12 +33,19 @@ def from_beat_sheet(sheet, plan=None, *, project_id, episode_id, asset_versions=
         scene = b.get("scene_id") or "SC00"; sid = b.get("shot_id") or f"{scene.lower()}_s{i:03d}"
         cast = list(pl["cast"]) if pl else list(b.get("characters", []))
         motion = (pl or {}).get("motion") or {c: {"x0": v.get("x0"), "x1": v.get("x1", v.get("x0"))} for c, v in (ch.get("motion") or {}).items()}
-        ents = {c: {"x": (m.get("x0") if m.get("x0") is not None else None)} for c, m in motion.items()}
-        exs = {c: {"x": (m.get("x1") if m.get("x1") is not None else m.get("x0"))} for c, m in motion.items()}
+        ents = {c: {"x": (sm.entry_x(m) if m.get("x0") is not None else None)} for c, m in motion.items()}       # plan başında çizilen konum
+        exs = {c: {"x": next((v for v in (m.get("x_end"), m.get("x1"), m.get("x0")) if v is not None), None)} for c, m in motion.items()}
         eo, xo, events = {}, {}, []
-        for ob in ch.get("objects", []):
-            n = ob.get("prop", "obj"); tr = ob.get("track") or []
-            eo[n] = _obj_state(tr, "first"); xo[n] = _obj_state(tr, "last")
+        objects = ((pl or {}).get("choreo") or {}).get("objects")            # planlayıcının (taşınan nesneler dahil) izleri
+        objects = ch.get("objects", []) if objects is None else objects
+        targets = (pl or {}).get("targets") or {}; dur = float(b["t_end"]) - float(b["t_start"])
+        for ob in objects:
+            n = continuity.object_name(ob); tr = ob.get("track") or []
+            if n in eo:
+                gaps.append({"shot": sid, "engine": "object_state", "rule": "DUP_OBJECT", "why": f"aynı kimlikte iki nesne izi: {n} (ayrı 'id' verin)"})
+            if tr and tr[-1].get("t", 0) > dur + 0.05:
+                gaps.append({"shot": sid, "engine": "object_state", "rule": "OBJECT_EVENT_OUTSIDE", "why": f"{n}: iz {tr[-1]['t']} sn'de bitiyor, plan {dur:.2f} sn; plan sonu durumu belirsiz"})
+            eo[n] = continuity.object_point(tr, "first", targets); xo[n] = continuity.object_point(tr, "last", targets)
             for k, p in enumerate(tr):
                 if p.get("holder") != (tr[k - 1].get("holder") if k else p.get("holder")):
                     events.append({"id": f"{sid}.o{len(events):02d}", "kind": "object", "t": p.get("t"), "object": n, "holder": p.get("holder")})
@@ -60,7 +60,7 @@ def from_beat_sheet(sheet, plan=None, *, project_id, episode_id, asset_versions=
         caps = sorted({f"piece:{p[0] if isinstance(p, (list, tuple)) else p}" for p in (pl or {}).get("pieces", [])})
         sg = list((pl or {}).get("capability_gaps", []))
         gaps += [{"shot": sid, "engine": "render", "why": g} for g in sg]
-        gaps += [{"shot": sid, "engine": "staging", "why": f"çelişki: {n.get('rule')} {n.get('actor')}: {n.get('why')}"} for n in (pl or {}).get("staging_notes", []) if n.get("kind") == "conflict"]
+        gaps += [{"shot": sid, "engine": "staging", "rule": "STAGING_CONFLICT", "why": f"çelişki: {n.get('rule')} {n.get('actor')}: {n.get('why')}"} for n in (pl or {}).get("staging_notes", []) if n.get("kind") == "conflict"]
         shots.append({"shot_id": sid, "scene_id": scene, "index": i, "t_start": float(b["t_start"]), "t_end": float(b["t_end"]), "loc": b.get("location"),
                       "transition": b.get("transition"), "cast": cast, "entry": {"actors": ents, "objects": eo}, "exit": {"actors": exs, "objects": xo},
                       "camera_intent": {"preset": (pl or {}).get("camera") or b.get("camera"), "focus": (pl or {}).get("focus"), "targets": [t for t in (ch.get("gaze") or {}).values()]},

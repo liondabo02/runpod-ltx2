@@ -12,6 +12,7 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 import shot_planner as sp  # noqa: E402
 import animatic_worker as aw  # noqa: E402
+import shot_motion as sm  # noqa: E402
 import puppet2d as pp2  # noqa: E402
 import render2d as r2  # noqa: E402
 
@@ -65,7 +66,10 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
     sheet = json.load(open(os.path.join(episode_dir, "beat_sheet.json"), encoding="utf-8"))
     rdir = os.path.join(episode_dir, "render"); os.makedirs(rdir, exist_ok=True)
     import object_state, setpieces2d
-    _H = {c['id']: json.load(open(os.path.join(assets, c['id'] + '.spec.json'), encoding='utf-8')).get('height_m', 1.2) if os.path.exists(os.path.join(assets, c['id'] + '.spec.json')) else 1.2 for c in bible['characters']}
+    _H = {}
+    for c in bible["characters"]:
+        spec_p = os.path.join(assets, c["id"] + ".spec.json")
+        _H[c["id"]] = json.load(open(spec_p, encoding="utf-8")).get("height_m", 1.2) if os.path.exists(spec_p) else 1.2
     locs_ = setpieces2d.load_locations(series_dir)
     bad = []                                            # ön kontrol: geçersiz nesne izi (ışınlanma, havada bırakma, tanımsız imha...) sessizce çizilmez; planlamaya geri bildirilir
     for bi, b in enumerate(sheet.get("beats", [])):
@@ -75,14 +79,14 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
         for oi, ob in enumerate((b.get("choreo") or {}).get("objects", [])):
             for pr in object_state.validate(ob.get("track") or [], b.get("characters") or None, tg_, sk_):
                 bad.append(f"vuruş {b.get('id', bi)} nesne {oi} ({ob.get('prop')}): {pr}")
-            import copy, staging                              # yerleşim çözücü planlayıcıda da uygulanır: ön kontrol, ÇÖZÜLMÜŞ konumlarla yapılır
-            mo = copy.deepcopy((b.get("choreo") or {}).get("motion") or {})
-            staging.resolve(mo, (b.get("choreo") or {}).get("objects", []), {c: _H.get(c, 1.2) for c in (b.get("characters") or [])}, tg_)
-            def hx(cid, t_, _m=mo):
-                m_ = _m.get(cid) or {}; d_ = max(0.1, float(b.get("t_end", 0)) - float(b.get("t_start", 0)))
-                return float(m_.get("x0", 0)) + (float(m_.get("x1", m_.get("x0", 0))) - float(m_.get("x0", 0))) * min(1.0, max(0.0, t_ / d_))
-            for pr in object_state.throw_problems(ob.get("track") or [], hx, tg_):
-                bad.append(f"vuruş {b.get('id', bi)} nesne {oi} ({ob.get('prop')}): {pr}")
+    if not bad:                                          # atış okunabilirliği: çizimle AYNI konum kaynağından (planlayıcı + süreklilik + yerleşim), ayrı tahmin yok
+        for pb in sp.plan(episode_dir, bible, assets, t0, t1)["beats"]:
+            dur_ = pb["t_end"] - pb["t_start"]
+            def hx(cid, t_, _b=pb, _d=dur_):
+                return sm.motion_x(_b["motion"][cid], t_, _d, _H.get(cid, 1.2)) if cid in _b["motion"] else 0.0
+            for ob in pb["choreo"]["objects"]:
+                for pr in object_state.throw_problems(ob.get("track") or [], hx, pb["targets"]):
+                    bad.append(f"vuruş {pb['i']} nesne {ob.get('prop')}: {pr}")
     if bad:
         return {"status": "BLOCKED", "error": "NESNE_IZI_GECERSIZ", "problems": bad}
     blender = find_blender() if engine != "2d" else "n/a"
@@ -95,10 +99,7 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
         pp = os.path.join(rdir, f"plan_{si}.json")
         json.dump(plan, open(pp, "w", encoding="utf-8"), ensure_ascii=False)
         if engine == "2d":
-            designs = {}
-            for ch in bible["characters"]:
-                spp = os.path.join(assets, f"{ch['id']}.spec.json")
-                designs[ch["id"]] = pp2.derive_design(ch, json.load(open(spp, encoding="utf-8")) if os.path.exists(spp) else {})
+            designs = pp2.designs_for(bible, assets)
             hp = r2.handoff_problems(plan, designs)
             if hp:
                 return {"status": "BLOCKED", "error": "EL_DEGISTIRME_ULASILAMAZ", "problems": problems + hp}
