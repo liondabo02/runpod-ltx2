@@ -216,6 +216,41 @@ def handoff_problems(plan, designs):
     return probs
 
 
+CROUCH_DOWN_S, CROUCH_UP_S, CROUCH_MIN_S = 0.9, 0.9, 0.45      # çömelme / doğrulma süresi ve sıkışınca en kısa süre (sn)
+
+
+def _walk_end(m, dur):
+    """Plan içinde yürüyüşün bittiği an (yürümüyorsa 0)."""
+    if m.get("approach"):
+        return 0.85 * float(m["approach"]["walk_s"])
+    if m.get("kind") in ("walk", "carry", "run") and abs(m.get("x1", m.get("x0", 0)) - m.get("x0", 0)) > 0.05:
+        return 0.85 * float(m.get("walk_s") or dur)
+    return 0.0
+
+
+def crouch_times(beat, e):
+    """El değiştirme çömelmesinin zamanları (vuruş içi sn): (iniş başı, iniş sonu, doğrulma başı, doğrulma sonu).
+    Yürüyen oyuncu varmadan çömelmeye başlamaz (süre yetmiyorsa en kısa süre korunur); plan sınırı dışına taşmaz."""
+    dur = beat["t_end"] - beat["t_start"]; mo = beat.get("motion") or {}
+    down_end = max(e["t_start"] + 0.1, CROUCH_MIN_S)
+    walked = max((_walk_end(mo[c], dur) for c in (e["by"], e["to"]) if c in mo), default=0.0)
+    down0 = max(0.0, min(max(down_end - CROUCH_DOWN_S, walked), down_end - CROUCH_MIN_S))
+    up0 = max(down_end, e["t"] + 0.2)
+    up1 = max(up0 + CROUCH_MIN_S, min(up0 + CROUCH_UP_S, dur))
+    return down0, down_end, up0, up1
+
+
+def crouch_envelope(beat, e, lt):
+    a, b, c, d = crouch_times(beat, e)
+    if lt <= a or lt >= d:
+        return 0.0
+    if lt < b:
+        return pp_smooth((lt - a) / (b - a))
+    if lt <= c:
+        return 1.0
+    return 1.0 - pp_smooth((lt - c) / (d - c))
+
+
 def apply_handoff_reach(beat, items, lt):
     """El değiştirme penceresinde iki karakterin kolu buluşma noktasına uzanır (yönlü uzanma). Zarf: yaklaşma -> tutma -> bırakma."""
     by = {i[0]: i for i in items}
@@ -225,9 +260,12 @@ def apply_handoff_reach(beat, items, lt):
                 continue
             ts, tc = e["t_start"], e["t"]; D = max(0.2, tc - ts)
             t0, t1 = ts - 0.4, tc + 0.4
-            if not (t0 <= lt <= t1):
+            c0, _c1, _c2, c3 = crouch_times(beat, e)
+            if not (min(t0, c0) <= lt <= max(t1, c3)):
                 continue
-            if lt < ts + 0.3 * D:
+            if not (t0 <= lt <= t1):
+                w = 0.0                                          # yalnız çömelme sürüyor: kollar henüz/artık eylem pozunda
+            elif lt < ts + 0.3 * D:
                 w = pp_smooth((lt - t0) / (0.4 + 0.3 * D))
             elif lt <= tc - 0.3 * D:
                 w = 1.0
@@ -236,13 +274,15 @@ def apply_handoff_reach(beat, items, lt):
             ga, ra = by[e["by"]], by[e["to"]]
             xg, xr = ga[2]["x"], ra[2]["x"]
             sg_, sr_ = pick_hand(beat, e["by"]), pick_hand(beat, e["to"])
-            tall = ga if ga[1]["height"] >= ra[1]["height"] else ra                    # boy farkı: uzun olan eğilir/çömelir (buluşma noktası alçalır)
-            if tall[1]["height"] > 1.25 * min(ga[1]["height"], ra[1]["height"]):
-                tall[2]["sq"] = tall[2].get("sq", 1.0) - 0.07 * w; tall[2]["lean"] += 0.10 * w; tall[2]["head"][0] += 0.12 * w
+            wc = crouch_envelope(beat, e, lt)                    # boy farkı: omzu yüksek olan gerçekten çömelir (buluşma noktası alçalır, baş kısa olanınkine yaklaşır)
+            for who, drop in zip((ga, ra), pp.kneel_drops(ga[1], ra[1])):
+                if drop > 0.0 and wc > 0.0:
+                    who[2]["crouch"] = max(who[2].get("crouch", 0.0), drop * wc); who[2]["head"][0] += 0.12 * wc * min(1.0, drop / (0.1 * who[1]["height"]))
             gx, gh = pp.shoulder_offset(ga[1], ga[2], sg_); rx, rh = pp.shoulder_offset(ra[1], ra[2], sr_)
-            mx, mh = pp.meeting_point(ga[1], (xg + gx, gh), ra[1], (xr + rx, rh))
-            for (cid, des, p, *_), side, xs_ in ((ga, sg_, xg), (ra, sr_, xr)):
-                if pp.view_of(p) == "side":
+            span = 2.0 * object_state.grip_of(ob.get("prop", ""), ob.get("scale", 0.55))          # kavrama noktası nesnenin ortası sayılır
+            ha_, hb_ = pp.grip_points(ga[1], (xg + gx, gh), ra[1], (xr + rx, rh), span)
+            for (cid, des, p, *_), side, xs_, (mx, mh) in ((ga, sg_, xg, ha_), (ra, sr_, xr, hb_)):
+                if w <= 0.0 or pp.view_of(p) == "side":
                     continue
                 old = list(p["aL"]) if side == "L" else list(p["aR"])
                 pp.arm_toward(des, p, side, mx - xs_, mh)

@@ -25,7 +25,8 @@ def draw_profile(cv, des, pose, st, fx, fy, ppm, t, P):
     jump = pose["z"] * ppm; sit = max(0.0, -pose["z"]) * ppm
     by = fy - jump
     sq_ = float(pose.get("sq", 1.0))
-    hip_y = by - leg_h; torso_bot = hip_y - sit
+    cr = P.crouch_of(des, pose) * ppm
+    hip_y = by - leg_h + cr; torso_bot = hip_y - sit
     torso_top = torso_bot - torso_h * sq_
     lean = pose.get("lean", 0.0) * torso_h * 0.5 * d                      # ileri eğilme yüz yönüne
     head_cy = torso_top - head_h * 0.40 + pose["head"][0] * head_h * 0.06
@@ -57,7 +58,13 @@ def draw_profile(cv, des, pose, st, fx, fy, ppm, t, P):
             top = (fx, torso_bot)
         k = 1.0 if near else 0.80
         lw = des.get("lowerwear", "shorts"); lc = des.get("lower_color", shorts)
-        if lw == "pants":
+        if cr > 0.5 and sit <= 1 and lw != "skirt":                        # bükülü bacak: diz yüz yönüne
+            ankle = (foot[0], foot[1] - Hh * 0.025); knee = P._knee(top, ankle, leg_h, d)
+            col_ = lc if lw == "pants" else skin
+            cv.capsule(top, knee, Hh * 0.054, Hh * 0.048, shade(col_, k), INK, ow); cv.capsule(knee, ankle, Hh * 0.048, Hh * 0.043, shade(col_, k), INK, ow)
+            if lw != "pants":
+                cv.capsule(top, ((top[0] + knee[0]) / 2, (top[1] + knee[1]) / 2), Hh * 0.056, Hh * 0.052, shade(shorts, k), INK, ow)
+        elif lw == "pants":
             cv.capsule(top, (foot[0], foot[1] - Hh * 0.025), Hh * 0.054, Hh * 0.045, shade(lc, k), INK, ow)
         elif lw != "skirt":
             cv.capsule(top, (foot[0], foot[1] - Hh * 0.03), Hh * 0.042, Hh * 0.038, shade(skin, k), INK, ow)
@@ -162,7 +169,8 @@ def hand_offset(des, pose, side):
     torso_h = Hh * {"infant": 0.22, "toddler": 0.25, "child": 0.27, "adult": 0.30}[cls]
     d = facing(pose); sq_ = float(pose.get("sq", 1.0))
     jump = pose["z"]; sit = max(0.0, -pose["z"])
-    torso_top = -jump - leg_h - sit - torso_h * sq_
+    import puppet2d as _P
+    torso_top = -jump - leg_h - sit - torso_h * sq_ + _P.crouch_of(des, pose)
     lean = pose.get("lean", 0.0) * torso_h * 0.5 * d
     fwd, out = pose["aL"] if side == "L" else pose["aR"]
     ang = max(-1.2, min(2.6, -fwd * 0.9 + abs(out) * 0.35))

@@ -220,13 +220,49 @@ def _elbow(sh, hand, arm_len, sg):
     return ((sh[0] + hand[0]) / 2 + nx * hgt, (sh[1] + hand[1]) / 2 + ny * hgt)
 
 
+# ---------------------------------------------------------------- çömelme (tek geometri: çizim, el konumu, omuz ve erişim ölçüsü aynı değeri kullanır)
+LEG_K = {"infant": 0.20, "toddler": 0.24, "child": 0.28, "adult": 0.38}
+CROUCH_MAX_K = 0.75       # kalça en çok bacak boyunun bu kadarı alçalır (ayaklar yerde, diz bükülür)
+KNEE_FRONT_K = 0.55
+KNEEL_SLACK_K = 0.5       # omuz farkının (kısa olanın kol boyunun bu katı kadar) küçük kısmı çömelmeden kolla kapanır
+
+
+def crouch_of(des, pose):
+    """Pozdaki çömelme miktarı (metre), fiziksel sınıra kırpılmış."""
+    return max(0.0, min(float(pose.get("crouch", 0.0)), CROUCH_MAX_K * des["height"] * LEG_K[des["class"]]))
+
+
+def _standing(x):
+    return {"x": x, "z": 0.0, "yaw": 0.0, "lean": 0.0, "sq": 1.0}
+
+
+def kneel_drops(des_a, des_b):
+    """El değiştirmede kim ne kadar çömelmeli: (a_metre, b_metre). Yalnız omzu yüksek olan çömelir; benzer boylarda 0 (eşik sıçraması yok, sürekli)."""
+    ha = shoulder_offset(des_a, _standing(0.0), "R")[1]; hb = shoulder_offset(des_b, _standing(0.0), "R")[1]
+    slack = KNEEL_SLACK_K * 0.27 * min(des_a["height"], des_b["height"])
+    need = max(0.0, abs(ha - hb) - slack)
+    da = crouch_of(des_a, {"crouch": need}) if ha > hb else 0.0
+    db = crouch_of(des_b, {"crouch": need}) if hb > ha else 0.0
+    return da, db
+
+
+def _knee(hip, foot, leg_len, outward):
+    """Kalça ile ayak arasında diz: iki eşit parça; diz yatayda 'outward' (+1/-1) yönüne bükülür."""
+    dx, dy = foot[0] - hip[0], foot[1] - hip[1]; d = math.hypot(dx, dy) or 1e-6
+    half = max(leg_len, d) / 2.0; off = math.sqrt(max(0.0, half * half - (d / 2.0) ** 2))
+    nx, ny = -dy / d, dx / d
+    if nx * outward < 0:
+        nx, ny = -nx, -ny
+    return (hip[0] + foot[0]) / 2 + nx * off, (hip[1] + foot[1]) / 2 + ny * off
+
+
 def shoulder_offset(des, pose, side):
     """Omzun ayağa göre konumu (metre): (dx, yükseklik). hand_offset ile aynı geometri."""
     if view_of(pose) == "side":
         Hh = des["height"]; cls = des["class"]
         leg_h = Hh * {"infant": 0.20, "toddler": 0.24, "child": 0.28, "adult": 0.38}[cls]
         torso_h = Hh * {"infant": 0.22, "toddler": 0.25, "child": 0.27, "adult": 0.30}[cls]
-        top = -pose["z"] - leg_h - max(0.0, -pose["z"]) - torso_h * float(pose.get("sq", 1.0))
+        top = -pose["z"] - leg_h - max(0.0, -pose["z"]) - torso_h * float(pose.get("sq", 1.0)) + crouch_of(des, pose)
         d = 1.0 if pose.get("yaw", 0.0) >= 0 else -1.0
         return pose.get("lean", 0.0) * torso_h * 0.5 * d * 0.8, -(top + torso_h * 0.16)
     Hh = des["height"]; cls = des["class"]
@@ -237,7 +273,7 @@ def shoulder_offset(des, pose, side):
     squash = (1.0 + max(0.0, jump) / (Hh * 3.0)) * sq_
     torso_w /= max(0.7, sq_) ** 0.5
     bturn = max(-1.0, min(1.0, pose.get("yaw", 0.0) * 1.25)); torso_w *= 1.0 - 0.30 * abs(bturn)
-    torso_top = -jump - leg_h - sit - torso_h * squash
+    torso_top = -jump - leg_h - sit - torso_h * squash + crouch_of(des, pose)
     sg = -1 if side == "L" else 1
     return sg * torso_w * 0.52, -(torso_top + torso_h * 0.14)
 
@@ -257,15 +293,36 @@ def arm_toward(des, pose, side, tx, th):
     return ratio
 
 
+HAND_R_K = 0.052          # el yarıçapı / boy (draw_grip ile aynı oran)
+GRIP_SPLIT_K = 1.0        # iki elin kavrama noktaları arasındaki dikey aralık / (iki el yarıçapının toplamı)
+
+
+def grip_points(des_a, sh_a, des_b, sh_b, span=None):
+    """El değiştirmede iki el AYNI noktaya binmez: nesnenin iki ayrı yerinden kavranır (önde çizilen üst noktadan = buluşma
+    çizgisi, arkadaki onun altından: öndekinin yüzü/eli arkadakinin elini örtmesin).
+    span: nesnenin kavranabilir dikey uzunluğu (m); aralık bunu aşamaz (küçük nesnede iki el de nesneye değmeli). Dönüş: ((x, h)_a, (x, h)_b)."""
+    mx, mh = meeting_point(des_a, sh_a, des_b, sh_b)
+    split = GRIP_SPLIT_K * HAND_R_K * (des_a["height"] + des_b["height"])
+    if span is not None:
+        split = min(split, max(0.0, span))
+    a_up = (-des_a["height"], sh_a[0]) > (-des_b["height"], sh_b[0])         # önde çizilen el üstte (derinlik sırası kuralıyla aynı anahtar: kısa önde; eşitse sağdaki)
+    up, down = (mx, mh), (mx, mh - split)
+    return (up, down) if a_up else (down, up)
+
+
 def handoff_reach_ratio(des_a, xa, des_b, xb, side_a=None, side_b=None):
     """İki karakter x konumlarında el değiştirebilir mi? Buluşma noktası (ortada, omuz yüksekliklerinin ortası); iki kol da yetişmeli. Dönen: en kötü ulaşılabilirlik oranı (≤1 uygun)."""
-    pa = {"x": xa, "z": 0.0, "yaw": 0.0, "lean": 0.0, "sq": 1.0}; pb = {"x": xb, "z": 0.0, "yaw": 0.0, "lean": 0.0, "sq": 1.0}
+    ka, kb = kneel_drops(des_a, des_b)                                      # çizimdeki ile aynı çömelme
+    pa = dict(_standing(xa), crouch=ka); pb = dict(_standing(xb), crouch=kb)
     sa = side_a or ("R" if xb > xa else "L"); sb = side_b or ("R" if xa > xb else "L")
     ax, ah = shoulder_offset(des_a, pa, sa); bx, bh = shoulder_offset(des_b, pb, sb)
-    mx, mh = meeting_point(des_a, (xa + ax, ah), des_b, (xb + bx, bh))
-    ra = math.hypot(mx - (xa + ax), mh - ah) / (des_a["height"] * 0.27)
-    rb = math.hypot(mx - (xb + bx), mh - bh) / (des_b["height"] * 0.27)
-    return max(ra, rb)
+    worst = 0.0
+    for span in (0.0, None):       # nesne boyu burada bilinmez: uzaklık hedef yüksekliğinde dışbükey olduğundan iki uç, her ara aralığı sınırlar
+        ga, gb = grip_points(des_a, (xa + ax, ah), des_b, (xb + bx, bh), span)
+        ra = math.hypot(ga[0] - (xa + ax), ga[1] - ah) / (des_a["height"] * 0.27)
+        rb = math.hypot(gb[0] - (xb + bx), gb[1] - bh) / (des_b["height"] * 0.27)
+        worst = max(worst, ra, rb)
+    return worst
 
 
 def meeting_point(des_a, sh_a, des_b, sh_b):
@@ -289,7 +346,7 @@ def hand_offset(des, pose, side):
     squash = (1.0 + max(0.0, jump) / (Hh * 3.0)) * sq_
     torso_w /= max(0.7, sq_) ** 0.5
     bturn = max(-1.0, min(1.0, pose.get("yaw", 0.0) * 1.25)); torso_w *= 1.0 - 0.30 * abs(bturn)
-    by = -jump; torso_top = by - leg_h - sit - torso_h * squash
+    by = -jump; torso_top = by - leg_h - sit - torso_h * squash + crouch_of(des, pose)
     sg = -1 if side == "L" else 1
     fwd, out = pose["aL"] if side == "L" else pose["aR"]
     ang = abs(out) * 1.0 if out * (1 if side == "L" else -1) >= 0 else -abs(out) * 0.4
@@ -357,7 +414,8 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
     # gölge
     cv.ellipse(fx, fy + Hh * 0.012, Hh * 0.30 * (1 - min(0.5, jump / (Hh * 1.5))), Hh * 0.05, shade((60, 110, 50), 0.8), None, 0)
 
-    hip_y = by - leg_h + sit * 0.0
+    cr = crouch_of(des, pose) * ppm      # çömelme: kalça ve üst gövde alçalır, ayaklar yerinde kalır
+    hip_y = by - leg_h + cr
     torso_bot = hip_y - sit
     torso_top = torso_bot - torso_h * squash
     head_cy = torso_top - head_h * 0.40 + nod * head_h * 0.06
@@ -416,7 +474,16 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
             else:
                 foot = (x0 + swing * leg_h * 0.22 * sg * 0.3, fy - Hh * 0.01 - lift - max(0, jump))
         lw = des.get("lowerwear", "shorts"); lc = des.get("lower_color", shorts)
-        if lw == "pants":      # yetişkin: bacak tamamen pantolon
+        if cr > 0.5 and sit <= 1 and lw != "skirt":      # bükülü bacak: uyluk + baldır, diz dışa
+            knee = _knee(top, (foot[0], foot[1] - Hh * 0.025), leg_h, sg)
+            knee = ((top[0] + foot[0]) / 2 + (knee[0] - (top[0] + foot[0]) / 2) * KNEE_FRONT_K, knee[1])      # ön görünüş: diz izleyiciye doğru bükülür (yana açılma kısalır)
+            ankle = (foot[0], foot[1] - Hh * 0.025)
+            if lw == "pants":
+                cv.capsule(top, knee, Hh * 0.058, Hh * 0.052, lc, INK, ow); cv.capsule(knee, ankle, Hh * 0.052, Hh * 0.047, lc, INK, ow)
+            else:
+                cv.capsule(top, knee, Hh * 0.045, Hh * 0.042, skin, INK, ow); cv.capsule(knee, ankle, Hh * 0.042, Hh * 0.040, skin, INK, ow)
+                cv.capsule(top, ((top[0] + knee[0]) / 2, (top[1] + knee[1]) / 2), Hh * 0.055, Hh * 0.050, shorts, INK, ow)
+        elif lw == "pants":      # yetişkin: bacak tamamen pantolon
             cv.capsule(top, (foot[0], foot[1] - Hh * 0.025), Hh * 0.058, Hh * 0.047, lc, INK, ow)
         elif lw == "skirt":    # uzun etek/elbise: bacak görünmez, yalnız ayak ucu
             pass
