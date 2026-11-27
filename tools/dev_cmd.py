@@ -77,6 +77,27 @@ def main():
         if br in ("main", "master", ""):
             sys.exit("main/master'a push yasak")
         sys.exit(run(["git", "push", "origin", br]))                # normal push; force yok
+    elif cmd == "dropbadref":                        # yalnız gösterdiği nesne YOK olan yerel dal işaretini siler (kullanıcı onayı: 27.11); sağlam dal reddedilir
+        name = sys.argv[2]
+        if name in ("main", "master") or "/" not in name and name == "":
+            sys.exit("korumalı dal")
+        ref = "refs/heads/" + name
+        sha = subprocess.run(["git", "rev-parse", "--verify", "-q", ref], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+        if not sha:
+            sha = subprocess.run(["git", "for-each-ref", "--format=%(objectname)", ref], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+        if not sha:
+            sys.exit(f"{ref} bulunamadı")
+        ok = subprocess.run(["git", "cat-file", "-e", sha], cwd=ROOT, capture_output=True).returncode == 0
+        if ok:
+            sys.exit(f"{ref} sağlam ({sha[:10]}): silinmedi")
+        print(f"{ref} -> {sha[:10]} nesnesi YOK; işaret siliniyor")
+        sys.exit(run(["git", "update-ref", "-d", ref]))
+    elif cmd == "pull":                              # uzak dalı yalnız ileri sarma ile al (birleştirme/ezme yok); kirli dosya uzak değişiklikle çakışırsa git reddeder
+        br = subprocess.run(["git", "branch", "--show-current"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+        if br in ("main", "master", ""):
+            sys.exit("main/master'a pull yasak")
+        code = run(["git", "-c", "fetch.negotiationAlgorithm=noop", "fetch"] + (["--depth=" + sys.argv[2]] if len(sys.argv) > 2 else []) + ["origin", br])      # yerel referanslardan biri bozuksa (bad object) müzakere onu taramasın
+        sys.exit(code or run(["git", "merge", "--ff-only", "origin/" + br]))
     elif cmd == "sha":      # yerel HEAD ile uzak dal SHA'sı aynı mı (push doğrulaması)
         br = subprocess.run(["git", "branch", "--show-current"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
         loc = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
