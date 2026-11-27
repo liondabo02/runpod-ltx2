@@ -156,20 +156,69 @@ def post(im, beat, t, lt, dur, total_s=480.0, first_of_scene=False):
     return im
 
 
-def dust(cv, cam, x, direction, t, run=False, H=1.0):
-    """Koşu/yürüyüşte ayak tozu ve (koşuda) hız çizgileri. Dünya koordinatı: x metre, zemin y=0. Karakterin ARKASINDA kalır."""
-    n = 5 if run else 3
-    for k in range(n):
-        ph = ((t * (2.6 if run else 1.5)) + k / n) % 1.0
-        bx = x - direction * (0.18 + 0.9 * ph * (1.4 if run else 0.8)) * H
-        by = 0.03 * H + 0.16 * H * ph
-        r = (0.035 + 0.07 * ph) * H
-        a = 1.0 - ph
-        col = (int(215 + 30 * (1 - a)), int(205 + 35 * (1 - a)), int(185 + 45 * (1 - a)))
-        cv.ellipse(cam.x(bx), cam.y(by), r * cam.s, r * 0.8 * cam.s, col, None, 0)
-    if run:
+# ---------------------------------------------------------------- ayak tozu
+# Toz bir ZAMAN SAYACINDAN değil, çizilen pozlardan doğar: bir ayak yere bastığı anda, bastığı yerde bir bulutçuk çıkar, dünyada orada kalır ve söner.
+# Ayrıca gövdenin o anki hızıyla kapılanır: karakter yavaşladıkça küçülür, durunca hiç çizilmez.
+DUST_V_OFF, DUST_V_FULL = 0.04, 0.16      # gövde hızı (boy/sn): bunun altında toz yok / bunun üstünde tam boy
+DUST_LIFE = {"walk": 0.34, "run": 0.42}   # bulutçuğun ömrü (sn)
+DUST_R = {"walk": 0.036, "run": 0.062}    # en büyük yarıçap / boy
+DUST_HEEL = 0.07                          # bulutçuk ayak merkezinin bu kadar (boy) gerisinden, topuktan çıkar
+DUST_DT = 1.0 / 96                        # basış anını arama adımı (sn); parça saatine sabitli: aynı basış her karede aynı anı verir
+DUST_SPEED_WIN = 1.0 / 24                 # gövde hızının geriye dönük ölçüm penceresi (sn)
+
+
+def dust_plan(m, lt, dur, H):
+    """Plan hareketi m'nin lt anındaki tozu: {'puffs': [(x, y, yarıçap, yaş01)], 'gate': 0..1, 'dir': ±1, 'run': bool, 'travelled': m}.
+    Konumlar dünya metresi (zemin y=0). Yürüyüş/koşu parçası dışında (varış sonrası eylem, taşıma, bekleme) boştur."""
+    import shot_motion as sm
+    seg, t_, d_ = sm.segment(m, lt, dur)
+    out = {"puffs": [], "gate": 0.0, "dir": 1.0, "run": seg["kind"] == "run", "travelled": 0.0, "x": 0.0}
+    kind = seg["kind"]
+    if kind not in DUST_LIFE or abs(seg["x1"] - seg["x0"]) <= 0.05:
+        return out
+
+    def pose(t):
+        return sm.pose_at(kind, t, d_, seg.get("seed", 0), seg["x0"], seg["x1"], H, H * 0.45)
+
+    out["dir"] = direction = 1.0 if seg["x1"] >= seg["x0"] else -1.0
+    now = pose(t_)
+    out["x"] = now["x"]
+    out["travelled"] = abs(now["x"] - seg["x0"])
+    speed = abs(now["x"] - pose(max(0.0, t_ - DUST_SPEED_WIN))["x"]) / DUST_SPEED_WIN / H
+    gate = sm.smooth((speed - DUST_V_OFF) / (DUST_V_FULL - DUST_V_OFF))
+    out["gate"] = gate
+    if gate <= 0.0:
+        return out
+    life = DUST_LIFE[kind]
+    k0 = max(0, int((t_ - life) / DUST_DT))
+    prev = pose(k0 * DUST_DT)
+    for k in range(k0 + 1, int(t_ / DUST_DT + 1e-6) + 1):
+        cur = pose(k * DUST_DT)
+        age = (t_ - k * DUST_DT) / life
+        for side in "LR":
+            if prev.get("h" + side, 0.0) > 0.0 and cur.get("h" + side, 0.0) <= 0.0 and 0.0 <= age < 1.0:      # bu ayak şimdi bastı
+                fx = cur["x"] + cur.get("f" + side, 0.0) * H - direction * DUST_HEEL * H
+                r = DUST_R[kind] * H * gate * math.sin(math.pi * min(1.0, 0.12 + 0.88 * age)) ** 0.8          # küçük doğar, açılır, SIFIRA söner
+                if r > 1e-4:
+                    out["puffs"].append((fx - direction * 0.10 * H * age, 0.02 * H + 0.05 * H * age, r, age))
+        prev = cur
+    return out
+
+
+def dust(cv, cam, plan, t, H=1.0):
+    """dust_plan çıktısını çizer (koşuda hız çizgileri de). Çağıran, dekor parçalarından ÖNCE çizer: toz hedefin/dekorun önünü örtmez."""
+    direction = plan["dir"]
+    for x, y, r, age in plan["puffs"]:
+        col = (int(214 + 22 * age), int(203 + 28 * age), int(178 + 38 * age))
+        for dx, dy, k in ((0.0, 0.0, 1.0), (-0.95, -0.15, 0.68), (0.85, -0.25, 0.55)):         # üç loblu bulutçuk (tek düz daire taş gibi okunuyor)
+            cv.ellipse(cam.x(x + direction * dx * r), cam.y(y + dy * r), k * r * cam.s, k * r * 0.82 * cam.s, col, None, 0)
+    if plan["run"] and plan["gate"] > 0.0:
+        far = plan["travelled"]                                   # çizgi, koşulmamış yere uzanmaz
         for k in range(3):
             ly = (0.35 + 0.28 * k) * H
             ph = ((t * 3.1) + k * 0.37) % 1.0
-            x0 = x - direction * (0.45 + 0.5 * ph) * H
-            cv.line([(cam.x(x0), cam.y(ly)), (cam.x(x0 - direction * 0.55 * H), cam.y(ly))], (255, 255, 255), max(2.0, 0.02 * cam.s))
+            a = (0.45 + 0.5 * ph) * H
+            b = min(a + 0.55 * H * plan["gate"], far)
+            if b > a:
+                x0 = plan["x"] - direction * a
+                cv.line([(cam.x(x0), cam.y(ly)), (cam.x(plan["x"] - direction * b), cam.y(ly))], (255, 255, 255), max(2.0, 0.02 * cam.s))

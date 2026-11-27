@@ -63,3 +63,81 @@ def stance_report(rows, H, limits=None):
     if m["edge_step"] > L["edge_step"]:
         why.append(f"gövde dururken bacak tek karede sıçrıyor ({m['edge_step']:.3f} H)")
     return {k: round(v, 4) for k, v in m.items()}, why
+
+
+# ---------------------------------------------------------------- ayak tozu: ÇİZİLEN karelerden ölçü (toz formülünü bilmez)
+DUST_LIMITS = {
+    "still_speed": 0.02,      # boy/sn: son 'still_win' süresinde gövde bundan yavaşsa 'duruyor' -> toz pikseli olmamalı
+    "still_win": 1.0 / 12,
+    "still_px": 4,            # kenar yumuşatma payı (piksel)
+    "target_px": 4,           # dekor/hedef parçasının İÇİNE düşen toz pikseli payı
+    "trail_walk": 1.0,        # boy: toz gövde merkezinden en çok bu kadar geride (yürüyüş)
+    "trail_run": 1.7,         # boy: koşu (hız çizgileri dahil)
+    "start_back": 0.40,       # boy: yürüyüşün başladığı yerin en çok bu kadar gerisinde (topuk + yarıçap payı)
+    "ahead": 0.35,            # boy: gövde merkezinin en çok bu kadar önünde
+}
+
+
+def sample_dust(plan, designs, cid, times, still_win=DUST_LIMITS["still_win"]):
+    """Her an için iki kare çizilir (toz açık / kapalı); fark = ekrana GERÇEKTEN gelen toz. Yalnız ölçülen oyuncu yürürken kullanın.
+    Dönüş satırları: {'t','speed' (boy/sn),'px','target_px' (dekor parçasının içine düşen),'behind','ahead','before_start' (boy),'run'}."""
+    from PIL import ImageChops, ImageFilter
+    import fx_layer, readability, render2d, setpieces2d, shot_motion as sm
+    H = designs[cid]["height"]
+    rows = []
+    for t in times:
+        beat = next(b for b in plan["beats"] if b["t_start"] <= t < b["t_end"])
+        lt, dur, m = t - beat["t_start"], beat["t_end"] - beat["t_start"], beat["motion"][cid]
+        trace = {}
+        on = render2d.frame(plan, designs, t, trace=trace)
+        real = fx_layer.dust
+        fx_layer.dust = lambda *a, **k: None
+        try:
+            off = render2d.frame(plan, designs, t)
+        finally:
+            fx_layer.dust = real
+        mask = ImageChops.difference(on, off).convert("L").point(lambda v: 255 if v > 8 else 0)
+        x = sm.motion_x(m, lt, dur, H)
+        back = max(0.0, lt - still_win)
+        speed = abs(x - sm.motion_x(m, back, dur, H)) / max(1e-6, lt - back) / H if lt > back else 0.0
+        seg = sm.segment(m, lt, dur)[0]
+        row = {"t": round(t, 4), "speed": speed, "px": mask.histogram()[255], "target_px": 0,
+               "behind": 0.0, "ahead": 0.0, "before_start": 0.0, "run": seg["kind"] == "run"}
+        if row["px"]:
+            cam = trace["cam"]
+            pieces = readability._mask(lambda cv, cm: setpieces2d.draw(cv, cm, beat.get("loc"), t, pieces=beat.get("pieces")), cam)
+            inner = pieces.filter(ImageFilter.MinFilter(5))                 # kenar yumuşatma pikselleri sayılmaz
+            row["target_px"] = ImageChops.darker(mask, inner).histogram()[255]
+            x0px, _y0, x1px, _y1 = mask.getbbox()
+            lo, hi = (cam.cx + (v - cam.x(cam.cx)) / cam.s for v in (x0px, x1px))
+            d = 1.0 if seg["x1"] >= seg["x0"] else -1.0
+            rear, front = (lo, hi) if d > 0 else (hi, lo)
+            row["behind"] = max(0.0, d * (x - rear)) / H
+            row["ahead"] = max(0.0, d * (front - x)) / H
+            row["before_start"] = max(0.0, d * (seg["x0"] - rear)) / H
+        rows.append(row)
+    return rows
+
+
+def dust_report(rows, limits=None):
+    """sample_dust satırlarından (ölçüm, sorun listesi): duran gövdede toz yok; toz hedef/dekorun önünü örtmez; yürünen yolun yakınında kalır."""
+    L = dict(DUST_LIMITS, **(limits or {}))
+    still = [r for r in rows if r["speed"] <= L["still_speed"]]
+    m = {"frames": len(rows), "dusty_frames": sum(1 for r in rows if r["px"] > L["still_px"]),
+         "still_dust_px": max((r["px"] for r in still), default=0), "target_dust_px": max((r["target_px"] for r in rows), default=0),
+         "max_behind": max((r["behind"] for r in rows), default=0.0), "max_ahead": max((r["ahead"] for r in rows), default=0.0),
+         "max_before_start": max((r["before_start"] for r in rows), default=0.0)}
+    why = []
+    if m["still_dust_px"] > L["still_px"]:
+        bad = next(r for r in still if r["px"] > L["still_px"])
+        why.append(f"gövde dururken toz çiziliyor ({bad['t']:.2f} sn, {bad['px']} px)")
+    if m["target_dust_px"] > L["target_px"]:
+        why.append(f"toz dekor/hedef parçasının önünü örtüyor ({m['target_dust_px']} px)")
+    far = [r for r in rows if r["behind"] > L["trail_run" if r["run"] else "trail_walk"]]
+    if far:
+        why.append(f"toz gövdeden çok geride ({max(r['behind'] for r in far):.2f} boy)")
+    if m["max_before_start"] > L["start_back"]:
+        why.append(f"toz hiç yürünmeyen yerde ({m['max_before_start']:.2f} boy, başlangıcın gerisinde)")
+    if m["max_ahead"] > L["ahead"]:
+        why.append(f"toz oyuncunun önünde ({m['max_ahead']:.2f} boy)")
+    return {k: (round(v, 4) if isinstance(v, float) else v) for k, v in m.items()}, why
