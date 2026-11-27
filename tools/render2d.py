@@ -71,6 +71,38 @@ def blink_at(t, seed):
     return (r < 0.27 and ph < 0.14) or (0.27 <= r < 0.32 and (ph < 0.12 or 0.30 < ph < 0.42))
 
 
+LAUGH_PERIOD_S, LAUGH_SHUT_S = 2.4, 0.9        # gülen karakter gözünü dalga dalga kapatır; arada gülen gözle bakar
+ACTION_LOOK_LEAD_S, ACTION_LOOK_TAIL_S = 0.5, 0.3     # nesne eylemi: hazırlıktan temas/varış sonrasına kadar gözler açık
+
+
+def action_look(beat, lt):
+    """Şu an izlenecek bir nesne eylemi varsa bakılacak yer: ('x', dünya_x) hedef ya da ('who', (veren, alan)); yoksa None."""
+    for ob in (beat.get("choreo") or {}).get("objects", []):
+        tr = ob.get("track") or []
+        for e in object_state.events(tr):
+            if not (e["t_start"] - ACTION_LOOK_LEAD_S <= lt <= e["t"] + ACTION_LOOK_TAIL_S):
+                continue
+            if e["type"] == "handoff":
+                return ("who", (e["by"], e["to"]))
+            if e["type"] == "pickup":
+                return ("who", (e["by"],))
+            k = next(k for k in tr if k["t"] == e["t"] and "at" in k)
+            at = _tg(beat).get(k["at"]) if isinstance(k["at"], str) else k["at"]
+            if at:
+                return ("x", float(at[0]))
+    return None
+
+
+def eyes_state(emotion, lt, seed, blink, watching):
+    """(göz kırpma, gülerken gözler açık mı). watching: nesne eylemi sürerken göz kapanmaz (ne kırpma ne gülme)."""
+    if watching:
+        return False, True
+    if emotion != "laugh":
+        return blink, False
+    shut = (lt + _hash(int(seed), 11) * LAUGH_PERIOD_S) % LAUGH_PERIOD_S < LAUGH_SHUT_S
+    return blink, not shut
+
+
 def emphasis(cues, lt):
     """Açık ünlü (C/D) başlangıçlarında kısa vurgu darbeleri: kafa/kaş/el için."""
     e = 0.0
@@ -613,8 +645,19 @@ def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False):
             emo = mood_
         slot = int(t / 1.6 + m["seed"])
         dart = (_hash(slot, m["seed"], 3) - 0.5) * 1.4
-        st = {"mouth": letters.get(cid, "X"), "blink": blink_at(t, m["seed"]), "emotion": emo,
-              "gaze": look * 0.9 + (0 if look else dart), "brow": e, "pulse": e}
+        gaze_ = look * 0.9 + (0 if look else dart)
+        watch = action_look(beat, lt)
+        if watch:                                                      # eylem sürerken herkes hedefe / eli işleyen ortağa bakar
+            if watch[0] == "x":
+                tx_ = watch[1]
+            else:
+                others_ = [px[c] for c in watch[1] if c != cid and c in px]
+                tx_ = others_[0] if others_ else None
+            if tx_ is not None and abs(tx_ - p["x"]) > 0.05:
+                gaze_ = 0.9 if tx_ > p["x"] else -0.9
+        blink_, open_ = eyes_state(emo, lt, m["seed"], blink_at(t, m["seed"]), bool(watch))
+        st = {"mouth": letters.get(cid, "X"), "blink": blink_, "emotion": emo, "eyes_open": open_,
+              "gaze": gaze_, "brow": e, "pulse": e}
         body_ = lambda c, cm, d_=d, p_=p, st_=st: pp.draw_character(c, d_, p_, st_, cm.x(p_["x"]), cm.y(0.0), cm.s, t)
         body_(cv, cam)
         if emit is not None:

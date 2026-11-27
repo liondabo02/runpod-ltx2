@@ -664,7 +664,7 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         reach[sg] = max(reach[sg], sg * (cx - hx) + rx)
         if "eyes" in hide:
             pass
-        elif st.get("blink") or emo == "laugh":
+        elif st.get("blink") or (emo == "laugh" and not st.get("eyes_open")):
             cv.line(cv.arc_pts(cx, eye_y + ery * 0.1, rx, ery * 0.6, math.pi * 1.1, math.pi * 1.9), INK, ow * 1.1) if emo == "laugh" else \
                 cv.line([(cx - rx, eye_y + ery * 0.15), (cx + rx, eye_y + ery * 0.15)], INK, ow * 1.2)
         else:

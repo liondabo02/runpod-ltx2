@@ -113,7 +113,7 @@ def draw_profile(cv, des, pose, st, fx, fy, ppm, t, P):
     hide = st.get("hide", ())
     if "eyes" in hide:
         pass
-    elif st.get("blink") or emo == "laugh":
+    elif st.get("blink") or (emo == "laugh" and not st.get("eyes_open")):
         cv.line([(ex_ - erx, ey_ + ery * 0.15), (ex_ + erx, ey_ + ery * 0.15)], INK, ow * 1.2)
     else:
         cv.ellipse(ex_, ey_, erx, ery, (255, 255, 255), INK, ow * 0.45)
