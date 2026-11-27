@@ -109,12 +109,32 @@ def start_daemon():
 def stop_daemon():
     os.makedirs(Q, exist_ok=True); open(os.path.join(Q, "STOP"), "w").write("1"); return "durdurma isteği verildi (iş bitince kapanır)"
 
+LOCAL_HOSTS = ("127.0.0.1", "localhost", "::1")
+
+def request_allowed(host, origin, port):
+    """Yalnız bu bilgisayarın kendi ofis sayfası. Host: DNS yönlendirme saldırısına, Origin: başka sitelerin komut göndermesine karşı.
+    Alan adı TAM karşılaştırılır ('localhost.ornek.com' geçmez)."""
+    try:
+        h = urlparse("//" + (host or ""))
+        if h.hostname not in LOCAL_HOSTS or (h.port or 80) != port:
+            return False
+        if origin is None:
+            return True
+        o = urlparse(origin)
+        return o.scheme == "http" and o.hostname in LOCAL_HOSTS and (o.port or 80) == port
+    except ValueError:
+        return False
+
 class H(BaseHTTPRequestHandler):
     def log_message(self, *a): pass
+    def _allowed(self):
+        return request_allowed(self.headers.get("Host"), self.headers.get("Origin"), self.server.server_address[1])
     def _json(self, o, code=200):
         b = json.dumps(o, ensure_ascii=False).encode("utf-8")
         self.send_response(code); self.send_header("Content-Type", "application/json; charset=utf-8"); self.send_header("Content-Length", str(len(b))); self.end_headers(); self.wfile.write(b)
     def do_GET(self):
+        if not self._allowed():
+            return self.send_error(403)
         u = urlparse(self.path)
         if u.path in ("/", "/index.html", "/insan", "/canli"):
             page = {"/insan": "index_insan.html", "/canli": "index_canli.html"}.get(u.path, "index.html")
@@ -149,7 +169,7 @@ class H(BaseHTTPRequestHandler):
                 except OSError: break
                 left -= len(d)
     def do_POST(self):
-        if self.headers.get("Origin") and "localhost" not in self.headers["Origin"] and "127.0.0.1" not in self.headers["Origin"]:
+        if not self._allowed():
             return self.send_error(403)
         n = int(self.headers.get("Content-Length") or 0)
         try: d = json.loads(self.rfile.read(n) or b"{}")

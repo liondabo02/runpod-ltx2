@@ -262,7 +262,13 @@ def main():
     sd = os.path.dirname(os.path.abspath(a.series))
     m = run_chunked(a.episode_dir, bible, a.t0, a.t1, sd, a.chunk_s, a.engine, a.samples) if a.chunk_s > 0 else run(a.episode_dir, bible, a.t0, a.t1, sd, a.engine, a.samples)
     print(json.dumps(m, ensure_ascii=False, indent=2))
+    return exit_code(m)
+
+
+def exit_code(manifest):
+    """Yalnız PASSED başarıdır; engel/eksik sonuç çağırana sıfır olmayan kodla bildirilir."""
+    return 0 if (manifest or {}).get("status") == "PASSED" else 2
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

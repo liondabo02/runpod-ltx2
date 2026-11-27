@@ -6,6 +6,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 ROOT = os.path.dirname(HERE)
 import render_worker as rw  # noqa: E402
 import video_qa as vqa  # noqa: E402
+import worker_events as we  # noqa: E402
 
 
 def main():
@@ -24,10 +25,14 @@ def main():
     print("RENDER:", json.dumps(rm, ensure_ascii=False)[:600])
     if rm.get("status") != "PASSED":
         sys.exit(2)
-    vq = vqa.check(rm["clip"], t1)
+    with we.working("video_qa", "videoyu teknik olarak denetliyor") as act:
+        vq = vqa.check(rm["clip"], t1)
+        (act.done if vq["verdict"] == "PASS" else act.failed)("sonuç %s %s" % (vq["verdict"], "; ".join(vq["problems"][:2])))
     json.dump(vq, open(os.path.join(out, "video_quality_report.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=2)
     print("VIDEO_QA:", vq["verdict"], "; ".join(vq["problems"]))
     print("CLIP:", rm["clip"])
+    if vq["verdict"] != "PASS":
+        sys.exit(3)   # video üretildi ama denetimden geçmedi: iş başarılı sayılmaz
 
 
 if __name__ == "__main__":
