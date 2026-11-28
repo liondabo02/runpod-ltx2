@@ -369,6 +369,18 @@ def arm_swing(pose, side, sg):
     return sg * float(pose.get("sw" + side, 0.0))
 
 
+def far_arm(pose):
+    """Gövdenin ARKASINDA çizilecek kol ('L' | 'R') ya da None. Üç-çeyrek yürüyüşte gövde gidiş yönüne döner; gidiş yönündeki omuz
+    izleyiciden uzaklaşır: o kol arkada, öbürü önde sallanır (iki kol da önde olunca simetrik açılıp kapanıyor gibi okunur).
+    Yalnız serbest salınan kol arkaya geçer: uzanan, tutan, taşıyan ya da jest yapan kol her zaman önde (nesne katmanı değişmez)."""
+    if view_of(pose) != "three_quarter":
+        return None
+    side = "R" if pose.get("yaw", 0.0) > 0 else "L"
+    if ("sw" + side) not in pose or ("d" + side) in pose or (pose.get("hand") and pose.get("hand_side") == side):
+        return None
+    return side
+
+
 def hand_offset(des, pose, side):
     """Elin ayağa göre konumu METRE olarak: (dx, yükseklik). Çizimle aynı geometri (ppm=1); nesne ele gerçekten bağlansın diye.
     side: 'L' | 'R' (ekranda sol/sağ el, ön görünüşte). Profilde puppet_side kullanılır."""
@@ -617,6 +629,34 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         cv.ellipse(hx, head_cy + head_h * 0.50, head_w * 0.66, head_h * 0.34, shade(sc_, 0.88), INK, ow)
         cv.ellipse(hx, head_cy + head_h * 0.06, head_w * 0.64, head_h * 0.66, sc_, INK, ow)
 
+    # ---- kollar (uzak kol gövdeden ÖNCE, yani arkada; yakın kol gövdeden sonra, yani önde)
+    arm_len = Hh * 0.27
+
+    def draw_arm(side):
+        sg = -1 if side == "L" else 1
+        fwd, out = pose["aL"] if side == "L" else pose["aR"]
+        ang = abs(out) * 1.0 if out * (1 if side == "L" else -1) >= 0 else -abs(out) * 0.4
+        ang = max(-0.5, ang) + arm_swing(pose, side, sg)
+        ln = arm_len * (1.0 - 0.28 * min(1.0, abs(fwd) / 1.3))
+        sh = (fx + sg * torso_w * 0.52, torso_top + torso_h * 0.14)
+        bent = ("d" + side) in pose                                  # yönlü uzanma: gerçek dirsek bükülmesi (kısa menzilde kol kısalmaz, bükülür)
+        if bent:
+            ln = min(arm_len, pose["d" + side] * ppm)
+        hand = (sh[0] + sg * math.sin(ang) * ln, sh[1] + math.cos(ang) * ln)
+        if bent and ln < arm_len * 0.985:
+            elb = _elbow(sh, hand, arm_len, sg)
+            cv.capsule(sh, elb, Hh * 0.036, Hh * 0.032, skin, INK, ow); cv.capsule(elb, hand, Hh * 0.032, Hh * 0.030, skin, INK, ow)
+            cv.capsule(sh, ((sh[0] + elb[0]) / 2, (sh[1] + elb[1]) / 2), Hh * 0.045, Hh * 0.040, shirt, INK, ow)
+        else:
+            cv.capsule(sh, hand, Hh * 0.036, Hh * 0.030, skin, INK, ow)
+            mid = (sh[0] + (hand[0] - sh[0]) * 0.42, sh[1] + (hand[1] - sh[1]) * 0.42)
+            cv.capsule(sh, mid, Hh * 0.045, Hh * 0.040, shirt, INK, ow)
+        _hand(cv, hand, Hh * 0.052, skin, sg, fwd, ow, t, st.get("emotion", "neutral"), pose.get("hand") if pose.get("hand_side") == side else None)
+
+    behind = far_arm(pose)
+    if behind:
+        draw_arm(behind)
+
     # ---- bacaklar
     legs_ = leg_lines(pose, fx, fy, Hh, leg_h, torso_h, torso_w, torso_bot, jump, sit)
     for side, sg in (("L", -1), ("R", 1)):
@@ -653,27 +693,9 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         cv.poly([(fx - torso_w * 0.55, torso_bot - torso_h * 0.14), (fx + torso_w * 0.55, torso_bot - torso_h * 0.14),
                  (fx + torso_w * 0.55, torso_bot), (fx - torso_w * 0.55, torso_bot)], des.get("lower_color", shorts), None, 0)
         cv.line([(fx - torso_w * 0.55, torso_bot - torso_h * 0.14), (fx + torso_w * 0.55, torso_bot - torso_h * 0.14)], INK, ow * 0.8)
-    # ---- kollar
-    arm_len = Hh * 0.27
-    for side, sg in (("L", -1), ("R", 1)):
-        fwd, out = pose["aL"] if side == "L" else pose["aR"]
-        ang = abs(out) * 1.0 if out * (1 if side == "L" else -1) >= 0 else -abs(out) * 0.4
-        ang = max(-0.5, ang) + arm_swing(pose, side, sg)
-        ln = arm_len * (1.0 - 0.28 * min(1.0, abs(fwd) / 1.3))
-        sh = (fx + sg * torso_w * 0.52, torso_top + torso_h * 0.14)
-        bent = ("d" + side) in pose                                  # yönlü uzanma: gerçek dirsek bükülmesi (kısa menzilde kol kısalmaz, bükülür)
-        if bent:
-            ln = min(arm_len, pose["d" + side] * ppm)
-        hand = (sh[0] + sg * math.sin(ang) * ln, sh[1] + math.cos(ang) * ln)
-        if bent and ln < arm_len * 0.985:
-            elb = _elbow(sh, hand, arm_len, sg)
-            cv.capsule(sh, elb, Hh * 0.036, Hh * 0.032, skin, INK, ow); cv.capsule(elb, hand, Hh * 0.032, Hh * 0.030, skin, INK, ow)
-            cv.capsule(sh, ((sh[0] + elb[0]) / 2, (sh[1] + elb[1]) / 2), Hh * 0.045, Hh * 0.040, shirt, INK, ow)
-        else:
-            cv.capsule(sh, hand, Hh * 0.036, Hh * 0.030, skin, INK, ow)
-            mid = (sh[0] + (hand[0] - sh[0]) * 0.42, sh[1] + (hand[1] - sh[1]) * 0.42)
-            cv.capsule(sh, mid, Hh * 0.045, Hh * 0.040, shirt, INK, ow)
-        _hand(cv, hand, Hh * 0.052, skin, sg, fwd, ow, t, st.get("emotion", "neutral"), pose.get("hand") if pose.get("hand_side") == side else None)
+    for side in "LR":
+        if side != behind:
+            draw_arm(side)
     # ---- boyun + kafa
     cv.capsule((fx, torso_top + 2), (fx, torso_top - head_h * 0.1), Hh * 0.03, Hh * 0.03, skin, INK, ow)
     head_pts_c = (hx, head_cy)

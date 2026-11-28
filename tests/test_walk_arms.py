@@ -83,15 +83,19 @@ def test_reach_blend_fades_the_swing_without_a_jump():
 
 def test_drawn_hand_follows_hand_offset_while_swinging(monkeypatch):
     des = design("adult")
-    seen, real = [], pp._hand
-    monkeypatch.setattr(pp, "_hand", lambda cv, pos, *a, **k: (seen.append(pos), real(cv, pos, *a, **k)))
+    seen, real = {}, pp._hand
+    def spy(cv, pos, r, skin, sg, *a, **k):                      # taraf sg'den okunur: uzak kol arkada olduğu için çizim sırası değişebilir
+        seen["L" if sg < 0 else "R"] = pos
+        real(cv, pos, r, skin, sg, *a, **k)
+    monkeypatch.setattr(pp, "_hand", spy)
     ppm = 200.0
     for p in walk(1.9, ROUTES[0], 0)[20:60:5]:
         if pp.view_of(p) == "side":
             continue
         seen.clear()
         pp.draw_character(pp.Cv(500, 600, ss=1), des, p, {"mouth": "X", "blink": 0, "emotion": "neutral", "gaze": 0.0}, 250, 560, ppm, 0.0)
-        for side, pos in zip("LR", seen):
+        assert sorted(seen) == ["L", "R"]
+        for side, pos in seen.items():
             dx, h = pp.hand_offset(des, p, side)
             assert abs((pos[0] - 250) / ppm - dx) < 0.03 and abs((560 - pos[1]) / ppm - h) < 0.05, (side, pos, dx, h)
 
