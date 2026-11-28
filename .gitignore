@@ -56,3 +56,7 @@ studio/agents/memory/
 models/piper/
 models/kokoro/
 out/piper_real/
+
+# V12 ses kimliği: sahibin kaynak sesi depoya girmez
+voice_source/
+*.voice_source.wav
