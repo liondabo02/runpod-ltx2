@@ -5,6 +5,7 @@ Motor hiçbir projeye özgü ad bilmez; veri proje dosyalarından gelir. Eski ve
 import hashlib, json
 import continuity
 import shot_motion as sm
+import voice_worker as vw
 
 SCHEMA = "ahos.scene_contract"
 VERSION = 1
@@ -15,17 +16,14 @@ def _hash(obj):
     return hashlib.sha256(json.dumps(obj, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
 
 
-def _dialogue(raw):
-    out = []
-    for part in str(raw or "").split("|"):
-        if ":" in part:
-            c, t = part.split(":", 1)
-            out.append((c.strip(), t.strip()))
-    return out
+def _dialogue(raw, cast=None, characters=None):
+    """[(konuşan, metin)] — ses işçisi ve diyalog kapısıyla AYNI ayrıştırıcı (ikinci bir ayrıştırıcı sözleşmeyle sesi ayrı düşürür)."""
+    return [(str(c or ""), t) for c, t in vw.parse_dialogue(raw, cast or None, characters)]
 
 
-def from_beat_sheet(sheet, plan=None, *, project_id, episode_id, asset_versions=None, languages=("tr",), window=None):
-    """sheet: beat_sheet.json; plan: shot_planner.plan çıktısı (varsa konumlar oradan). window=(t0,t1): yalnız bu aralıktaki vuruşlar (dizin numarası korunur)."""
+def from_beat_sheet(sheet, plan=None, *, project_id, episode_id, asset_versions=None, languages=("tr",), window=None, characters=None):
+    """sheet: beat_sheet.json; plan: shot_planner.plan çıktısı (varsa konumlar oradan). window=(t0,t1): yalnız bu aralıktaki vuruşlar (dizin numarası korunur).
+    characters: {kimlik: {"name": ..}} (dizi verisi); verilirse satır içi 'Ad: .. Ad: ..' biçimi de bölünür ve ad kimliğe çevrilir."""
     pb = {b["i"]: b for b in (plan or {}).get("beats", [])}
     shots, gaps = [], []
     for i, b in enumerate(sheet["beats"]):
@@ -52,8 +50,11 @@ def from_beat_sheet(sheet, plan=None, *, project_id, episode_id, asset_versions=
                 if p.get("holder") != (tr[k - 1].get("holder") if k else p.get("holder")):
                     events.append({"id": f"{sid}.o{len(events):02d}", "kind": "object", "t": p.get("t"), "object": n, "holder": p.get("holder")})
         lines = (pl or {}).get("lines") or []
-        for k, (c, text) in enumerate(_dialogue(b.get("dialogue"))):
-            ln = next((l for l in lines if l["char"] == c), None)
+        said = {}                                                     # aynı konuşanın n. repliği planın n. satırıdır (hepsi ilk satırın zamanını almaz)
+        for k, (c, text) in enumerate(_dialogue(b.get("dialogue"), b.get("characters"), characters)):
+            mine = sorted((l for l in lines if l["char"] == c), key=lambda l: l["start"])
+            ln = mine[said.get(c, 0)] if said.get(c, 0) < len(mine) else None
+            said[c] = said.get(c, 0) + 1
             for lang in languages:
                 events.append({"id": f"{sid}.d{k:02d}.{lang}", "kind": "dialogue", "char": c, "lang": lang, "text": text if lang == languages[0] else None,
                                "t_start": ln["start"] if ln else None, "t_end": ln["end"] if ln else None})
