@@ -71,7 +71,7 @@ PROJECTS = {
 }
 
 
-def make_project(tmp_path, name, moods_text):
+def make_project(tmp_path, name, moods_text, motion=None):
     chars = PROJECTS[name]
     root = tmp_path / name
     (root / "assets").mkdir(parents=True)
@@ -81,7 +81,7 @@ def make_project(tmp_path, name, moods_text):
     a, b = chars[0][0], chars[1][0]
     ep = root / "ep"; ep.mkdir()
     sheet = {"beats": [{"t_start": 0, "t_end": 14, "characters": [a, b], "camera": "geniş", "location": "bir_yer", "action": "Konuşurlar.",
-                        "choreo": {"motion": {a: {"kind": "idle", "x0": -0.8}, b: {"kind": "idle", "x0": 0.8}}}}]}
+                        "choreo": {"motion": motion or {a: {"kind": "idle", "x0": -0.8}, b: {"kind": "idle", "x0": 0.8}}}}]}
     (ep / "beat_sheet.json").write_text(json.dumps(sheet, ensure_ascii=False), encoding="utf-8")
     items, t = [], 0.3
     for i, text in enumerate(moods_text):

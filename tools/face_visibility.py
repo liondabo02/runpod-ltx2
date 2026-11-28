@@ -86,6 +86,18 @@ def measure_lines(des, emotion="neutral", view=("front", 0.0, 0.0), mouth="X", b
     return out
 
 
+def nose_over_eye(des, emotion="neutral", view=("side_r", 0.9, 0.0)):
+    """Profilde burnun ve gözün çizildiği piksellerin ortak sayısı (0 olmalı). İki öğe ayrı ayrı, öteki çizilmeden ölçülür:
+    çizim sırası birini ötekinin altında saklasa da çakışma görünür."""
+    p = pose(*view)
+    st = {"mouth": "X", "blink": 0, "emotion": emotion, "gaze": 0.0, "brow": 0.0, "pulse": 0.0}
+    bare = dict(des, hair_style="bald", accessory="none")
+    none = render(bare, p, dict(st, hide=("eyes", "nose")))
+    eyes = _changed(render(bare, p, dict(st, hide=("nose",))), none)
+    nose = _changed(render(bare, p, dict(st, hide=("eyes",))), none)
+    return ImageChops.darker(eyes, nose).histogram()[255]
+
+
 def line_failures(m, limits=None):
     L = dict(MIN_LINE_VISIBLE, **(limits or {}))
     why = []
@@ -136,10 +148,12 @@ def check_designs(designs, ids):
         rows = sweep(designs[cid], emotions=GATE_EMOTIONS, views=GATE_VIEWS, blinks=(0,))
         lines = [((e, v[0]), m, line_failures(m)) for e, mouth, blink in GATE_LINE_STATES for v in GATE_VIEWS
                  for m in (measure_lines(designs[cid], e, v, mouth, blink),)]
-        out[cid] = {"checked": len(rows) + len(lines), "worst": {k: round(min(m[k] for _key, m, _w in rows), 3) for k in ("eyes", "brows")},
+        sides = [((e, v[0]), nose_over_eye(designs[cid], e, v)) for e in GATE_EMOTIONS for v in GATE_VIEWS if v[0].startswith("side")]
+        out[cid] = {"checked": len(rows) + len(lines) + len(sides), "worst": {k: round(min(m[k] for _key, m, _w in rows), 3) for k in ("eyes", "brows")},
                     "worst_lines": {k: round(min(m[k] for _key, m, _w in lines if k in m), 3) for k in LINE_ITEMS},
                     "fails": [{"emotion": key[0], "view": key[1], "why": why} for key, _m, why in rows if why]
-                             + [{"emotion": key[0], "view": key[1], "why": why} for key, _m, why in lines if why]}
+                             + [{"emotion": key[0], "view": key[1], "why": why} for key, _m, why in lines if why]
+                             + [{"emotion": key[0], "view": key[1], "why": [f"burun göze biniyor ({n} px)"]} for key, n in sides if n]}
     return out
 
 

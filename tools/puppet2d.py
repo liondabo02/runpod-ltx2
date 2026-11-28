@@ -147,20 +147,23 @@ def derive_design(ch, spec):
 
 
 # ---------------------------------------------------------------- ağız şekilleri (Rhubarb A-H, X)
-def draw_mouth(cv, mx, my, mw, mh, letter, ol=INK, emo="neutral", skin=None):
+REST_O_RX, REST_O_RY = 0.20, 0.34          # şaşkın dinlenme ağzının yarıçapları (ağız genişliği / yüksekliği katı)
+def draw_mouth(cv, mx, my, mw, mh, letter, ol=INK, emo="neutral", skin=None, lw=1.0):
     dark, tongue = (110, 30, 45), (235, 110, 120)
     if skin is not None:                        # ağız içi tenle aynı parlaklıktaysa koyulaşır (çok koyu tende dudak çizgisi açık renktir)
         dark = next((c for c in (dark, shade(dark, 0.6), shade(dark, 0.3)) if abs(luma(c) - luma(skin)) >= FACE_LINE_LUM - 4), dark)
     L = letter if letter in "ABCDEFGHX" else "X"
     if L == "X":
+        if emo in ("surprise", "scared"):   # konuşmayan şaşkın / korkmuş yüz: açık yuvarlak ağız (kapalı gülümseme değil)
+            cv.ellipse(mx, my + mh * 0.18, mw * REST_O_RX, mh * REST_O_RY, dark, ol, 2.6 * lw); return
         if emo == "sad":        # somurtma: ağız aşağı kıvrık
-            cv.line(cv.arc_pts(mx, my + mh * 0.55, mw * 0.4, mh * 0.45, math.pi + 0.3, 2 * math.pi - 0.3), ol, 3.2); return
+            cv.line(cv.arc_pts(mx, my + mh * 0.55, mw * 0.4, mh * 0.45, math.pi + 0.3, 2 * math.pi - 0.3), ol, 3.2 * lw); return
         if emo == "angry":      # sıkılı dudak
-            cv.line([(mx - mw * 0.4, my + mh * 0.1), (mx + mw * 0.4, my + mh * 0.1)], ol, 4.0); return
+            cv.line([(mx - mw * 0.4, my + mh * 0.1), (mx + mw * 0.4, my + mh * 0.1)], ol, 4.0 * lw); return
         if emo == "sly":        # yan sırıtma
-            cv.line([(mx - mw * 0.35, my + mh * 0.12), (mx + mw * 0.05, my + mh * 0.2), (mx + mw * 0.45, my - mh * 0.1)], ol, 3.4); return
+            cv.line([(mx - mw * 0.35, my + mh * 0.12), (mx + mw * 0.05, my + mh * 0.2), (mx + mw * 0.45, my - mh * 0.1)], ol, 3.4 * lw); return
         k = 0.8 if emo in ("happy", "laugh") else 0.55
-        cv.line(cv.arc_pts(mx, my - mh * 0.4, mw * (0.62 if emo in ("happy", "laugh") else 0.5), mh * k, 0.2, math.pi - 0.2), ol, 3.2); return
+        cv.line(cv.arc_pts(mx, my - mh * 0.4, mw * (0.62 if emo in ("happy", "laugh") else 0.5), mh * k, 0.2, math.pi - 0.2), ol, 3.2 * lw); return
     if L == "A":
         cv.line([(mx - mw * 0.42, my), (mx + mw * 0.42, my)], ol, 3.6); return
     shapes = {"B": (0.50, 0.30), "C": (0.60, 0.62), "D": (0.78, 0.95), "E": (0.45, 0.55), "F": (0.26, 0.40), "G": (0.55, 0.32), "H": (0.60, 0.70)}
