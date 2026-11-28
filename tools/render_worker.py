@@ -68,6 +68,11 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
     assets = os.path.join(series_dir, "assets")
     sheet = json.load(open(os.path.join(episode_dir, "beat_sheet.json"), encoding="utf-8"))
     rdir = os.path.join(episode_dir, "render"); os.makedirs(rdir, exist_ok=True)
+    import episode_length                                # süre kapısı: dizinin istediği en az süreden kısa plan TAM BÖLÜM olarak render edilmez
+    _len = episode_length.check(sheet, bible, t0, t1)
+    json.dump(_len, open(os.path.join(rdir, "episode_length_gate.json"), "w", encoding="utf-8"), ensure_ascii=False)
+    if _len["problems"]:
+        return {"status": "BLOCKED", "error": "BOLUM_COK_KISA", "problems": episode_length.messages(_len)}
     import dialogue_check                                # diyalog kapısı (planlayıcıdan önce): senaryodaki replik eksik/eski/bozuksa film üretilmez
     _dlg = dialogue_check.check(episode_dir, bible, t0, t1, allow_estimated=os.environ.get("AHOS_ALLOW_ESTIMATED_VOICE") == "1", sheet=sheet)
     json.dump(_dlg, open(os.path.join(rdir, "dialogue_gate.json"), "w", encoding="utf-8"), ensure_ascii=False)
