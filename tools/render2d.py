@@ -1,5 +1,5 @@
 """AHOS 2D kare çizici: plan + poz -> PNG kareleri (çok işlemcili, kaldığı yerden devam)."""
-import json, math, multiprocessing, os, shutil, sys, time
+import copy, json, math, multiprocessing, os, shutil, sys, time
 from concurrent.futures import ProcessPoolExecutor
 from PIL import Image
 
@@ -507,8 +507,9 @@ def speaker_at(beat, t):
     return next((ln["char"] for ln in reversed(beat.get("lines") or []) if ln["start"] <= t < ln["end"]), None)
 
 
-def camera_choice(beat, t):
-    """t anının kurgu kararı (saf veri; çizim ve poz hesabı yok): (plan türü, odak, yaklaşma oranı). frame() ve kadraj ihtiyacı aynı kararı kullanır."""
+def layered_choice(beat, t):
+    """Katmanların (kurgu listesi, konuşan, tepki, şaşırma, gösterme, temas) t anında tek tek istediği plan: (plan türü, odak, yaklaşma oranı).
+    Bu HAM istektir; ekrandaki plan camera_choice'tur."""
     lt = t - beat["t_start"]
     speaker, focus = speaker_at(beat, t), beat.get("focus")
     reaction = reaction_target(beat, t)               # tepki planı: replik bitince / uzun replikin ortasında dinleyene kesilir
@@ -528,23 +529,112 @@ def camera_choice(beat, t):
     return preset, focus, ph
 
 
-def _choice_spans(beat):
-    """Vuruşun kurgu kararı aralıkları: [((tür, odak), başlangıç, bitiş)] (vuruş içi sn)."""
-    dur, out = beat["t_end"] - beat["t_start"], []
-    for k in range(max(1, int(math.ceil(dur / CHOICE_STEP_S - 1e-6)))):
-        lt = k * CHOICE_STEP_S
-        key = camera_choice(beat, beat["t_start"] + lt)[:2]
-        if out and out[-1][0] == key:
-            out[-1][2] = min(dur, lt + CHOICE_STEP_S)
-        else:
-            out.append([key, lt, min(dur, lt + CHOICE_STEP_S)])
-    return [tuple(r) for r in out]
+def _layer_key(beat, lt):
+    """Ham isteğin plan kimliği: (tür, yakın planda odak, sabit kadrajda pencere sırası)."""
+    preset, focus, _ph = layered_choice(beat, beat["t_start"] + lt)
+    wins = action_staging.hold_windows(beat) if preset == "action" else pointing.shot_windows(beat) if preset == "point" else ()
+    win = next((i for i, w in enumerate(wins) if w[0] <= lt <= w[1]), None)
+    return preset, focus if preset in CLOSE_PRESETS else None, None if win is None else (beat["t_start"], win)
+
+
+def _layer_segments(beat):
+    """Vuruşun ham isteğinin plan dilimleri (mutlak sn); sınırlar ikiye bölerek bulunur. parts: o planın gerçekten istendiği aralıklar."""
+    t0, dur = beat["t_start"], beat["t_end"] - beat["t_start"]
+    last_lt = max(0.0, dur - 1e-6)
+    out, lo, key = [], 0.0, _layer_key(beat, 0.0)
+    first = 0.0
+    n = max(1, int(math.ceil(dur / CHOICE_STEP_S - 1e-6)))
+    for k in range(1, n + 1):
+        hi = min(last_lt, k * CHOICE_STEP_S)
+        while True:
+            now = _layer_key(beat, hi)
+            if now == key:
+                break
+            a, b = lo, hi
+            while b - a > 1e-7:
+                m = (a + b) / 2
+                a, b = (m, b) if _layer_key(beat, m) == key else (a, m)
+            out.append((key, first, b, a))
+            first, lo, key = b, b, _layer_key(beat, b)
+        lo = hi
+    out.append((key, first, dur, last_lt))
+    return [{"key": k_, "a": t0 + a, "b": t0 + b, "bounds": None if k_[2] is None else (t0, beat["t_end"]),
+             "parts": [(beat, a, last)]} for k_, a, b, last in out]
+
+
+_CUT_CACHE = {}
+
+
+def _run_of(plan, beat):
+    """beat'in içinde olduğu kesintisiz sahne parçası (aynı mekân ve kadro, sürekli geçiş); pencere dışı komşular plan['context']'tedir."""
+    order = _timeline(plan)
+    i = next((n for n, b_ in enumerate(order) if b_ is beat), None)
+    if i is None:
+        return [beat]
+    a = b = i
+    while a > 0 and shot_cuts.continues(order[a - 1], order[a]):
+        a -= 1
+    while b + 1 < len(order) and shot_cuts.continues(order[b], order[b + 1]):
+        b += 1
+    return order[a:b + 1]
+
+
+def final_cut(plan, beat):
+    """Kesintisiz sahne parçasının SON plan dizisi (bütün katmanlar birleştikten sonra, anlık kırıntılar eritilmiş). Plan verisi değişince yeniden hesaplanır."""
+    run = _run_of(plan, beat)
+    code = (layered_choice, reaction_target, shot_cuts.at, shot_cuts.dissolve_crumbs, action_staging.hold_windows, pointing.shot_windows,
+            pointing.window_at, listener_reaction.MIN_SHOT_S)
+    key = tuple(id(b_) for b_ in run)
+    hit = _CUT_CACHE.get(key)
+    if hit is None or hit[0] != code or hit[1] != run:
+        segs = [s_ for b_ in run for s_ in _layer_segments(b_)]
+        if len(_CUT_CACHE) >= 256:
+            _CUT_CACHE.clear()
+        hit = _CUT_CACHE[key] = (code, copy.deepcopy(run), shot_cuts.dissolve_crumbs(segs, listener_reaction.MIN_SHOT_S))
+    return hit[2]
+
+
+def chosen_shot(plan, beat, t):
+    """t anının ekrandaki planı: {'preset','focus','ph','window','src_lt'}. src_lt: bu planın verisinin okunacağı vuruş içi an
+    (plan komşu kırıntıyı üstlendiyse kendi istendiği en yakın an; yoksa t'nin kendisi)."""
+    segs = final_cut(plan, beat)
+    seg = next((s_ for s_ in reversed(segs) if s_["a"] <= t + 1e-6), segs[0])
+    lt = t - beat["t_start"]
+    preset, focus, window = seg["key"]
+    raw = layered_choice(beat, t)
+    if _layer_key(beat, lt) == seg["key"]:
+        return {"preset": preset, "focus": raw[1], "ph": raw[2], "window": window, "src_lt": lt}
+
+    def gap(part):
+        b_, a, b = part
+        return max(b_["t_start"] + a - t, t - (b_["t_start"] + b), 0.0)
+    src, a, b = min(seg["parts"], key=gap)
+    src_lt = max(a, min(b, t - src["t_start"]))
+    _p, src_focus, ph = layered_choice(src, src["t_start"] + src_lt)
+    return {"preset": preset, "focus": focus or (src_focus if src_focus in beat["cast"] else raw[1]), "ph": ph, "window": window,
+            "src_lt": src_lt if window is not None else lt}
+
+
+def camera_choice(plan, beat, t):
+    """t anının kurgu kararı (saf veri; çizim ve poz hesabı yok): (plan türü, odak, yaklaşma oranı). frame() ve kadraj ihtiyacı aynı kararı kullanır."""
+    c = chosen_shot(plan, beat, t)
+    return c["preset"], c["focus"], c["ph"]
+
+
+def _choice_spans(plan, beat):
+    """Vuruşun ekrandaki plan aralıkları: [((tür, odak), başlangıç, bitiş)] (vuruş içi sn), son plan dizisinden."""
+    t0, dur, out = beat["t_start"], beat["t_end"] - beat["t_start"], []
+    for s_ in final_cut(plan, beat):
+        a, b = max(0.0, s_["a"] - t0), min(dur, s_["b"] - t0)
+        if b - a > 1e-6:
+            out.append((s_["key"][:2], a, b))
+    return out
 
 
 def close_run(plan, beat, lt, key):
     """lt anını içeren, aynı yüzdeki kesintisiz yakın çekim: [(vuruş, a, b)] (vuruş içi sn).
     Çekim sürekli geçişte vuruş sınırını aşar; planın üretim penceresi dışındaki komşuları plan['context'] verisindedir."""
-    own = _choice_spans(beat)
+    own = _choice_spans(plan, beat)
     hit = [r for r in own if r[0] == key and r[1] - CHOICE_STEP_S <= lt <= r[2] + CHOICE_STEP_S]
     if not hit:
         return [(beat, lt, lt)]
@@ -563,7 +653,7 @@ def close_run(plan, beat, lt, key):
             nxt = order[j]
             if not (shot_cuts.continues(nxt, cur) if step < 0 else shot_cuts.continues(cur, nxt)):
                 break
-            spans = _choice_spans(nxt)
+            spans = _choice_spans(plan, nxt)
             edge = spans[-1] if step < 0 else spans[0]
             if edge[0] != key:
                 break
@@ -716,14 +806,16 @@ def camera_raw(plan, designs, beat, t, items):
     sp_ln = next((ln for ln in beat["lines"] if ln["char"] == speaker and ln["start"] <= t < ln["end"]), None)
     E = emphasis(sp_ln.get("cues", []), t - sp_ln["start"]) if speaker else 0.0
     avg = sum(xs) / len(xs) if xs else 0.0
-    preset, focus, ph = camera_choice(beat, t)
+    chosen = chosen_shot(plan, beat, t)
+    preset, focus, ph, src_lt = (chosen[k] for k in ("preset", "focus", "ph", "src_lt"))
     reaction = reaction_target(beat, t)
-    act_ = action_staging.framing(beat, designs, lt, sc.BASE_PPM)      # temas penceresi: sabit aksiyon kadrajı (tepki/yakın plan/ek plan kesmesi yapılmaz)
-    out = {"focus": focus, "crop": None, "reaction": reaction, "opened_from": None}
+    reaction = reaction if preset in CLOSE_PRESETS and reaction == focus else None
+    act_ = action_staging.framing(beat, designs, src_lt, sc.BASE_PPM) if preset == "action" else None      # temas penceresi: sabit aksiyon kadrajı (tepki/yakın plan/ek plan kesmesi yapılmaz)
+    out = {"focus": focus, "crop": None, "reaction": reaction, "opened_from": None, "src_lt": src_lt}
     if act_:
         return dict(out, cam=sc.Cam(act_["cx"], act_["cy"], act_["zoom"]), preset="action", rule=("action",))
     if preset == "point":
-        pt_ = pointing.framing(beat, designs, lt, sc.BASE_PPM)
+        pt_ = pointing.framing(beat, designs, src_lt, sc.BASE_PPM)
         if pt_:
             return dict(out, cam=sc.Cam(pt_["cx"], pt_["cy"], pt_["zoom"]), preset="point", rule=("point",))
     if preset in CLOSE_PRESETS and focus in designs:        # yakın plan: alt kenar ya ayak zeminini gösterir ya kasıtlı olarak üst bedenden keser
@@ -735,8 +827,6 @@ def camera_raw(plan, designs, beat, t, items):
             cx, cy, zoom = group_framing(beat, designs, xs, "medium", ph)
             return dict(out, cam=sc.Cam(cx, cy, zoom), preset="medium", rule=("opened", focus), opened_from=preset)
         fx = xs[beat["cast"].index(focus)] if focus in beat["cast"] else avg
-        if speaker and speaker in beat["cast"] and not reaction:
-            fx = xs[beat["cast"].index(speaker)]
         E_cam = E * follow_steadiness(beat, designs, focus, lt) if focus == speaker else 0.0     # vurgu itmesi yalnız duran KONUŞANIN planında: takip planı ve dinleyen planı nabız gibi atmaz
         cy, zoom = close_base(preset, designs[focus], ph, E_cam)
         cy, zoom, crop = crop_safe_framing(cy, zoom, designs[focus], sc.BASE_PPM, needs, ph, E_cam if preset == "close" else 0.0)
@@ -753,11 +843,10 @@ def camera_raw(plan, designs, beat, t, items):
     return dict(out, cam=cam, preset=preset, rule=(preset,))
 
 
-def _decision_key(beat, t):
+def _decision_key(plan, beat, t):
     """Kadraj kuralının değişebileceği anları bulmak için ucuz veri anahtarı (poz hesabı yok)."""
-    lt = t - beat["t_start"]
-    return camera_choice(beat, t)[:2] + (next((i for i, w in enumerate(action_staging.hold_windows(beat)) if w[0] <= lt <= w[1]), None),
-                                         next((i for i, w in enumerate(pointing.shot_windows(beat)) if w[0] <= lt <= w[1]), None))
+    c = chosen_shot(plan, beat, t)
+    return c["preset"], c["focus"], c["window"]
 
 
 def _timeline(plan):
@@ -770,15 +859,15 @@ def _changes_before(plan, beat, t):
     order = _timeline(plan)
     i = next((n for n, b_ in enumerate(order) if b_ is beat), None)
     limit, cur, hi = t - shot_cuts.SOFT_MAX_S, beat, t
-    key = _decision_key(cur, hi)
+    key = _decision_key(plan, cur, hi)
     while hi > limit:
         lo = max(cur["t_start"], hi - CHOICE_STEP_S)
-        k = _decision_key(cur, lo)
+        k = _decision_key(plan, cur, lo)
         if k != key:
             a, b = lo, hi
             while b - a > 1e-5:                            # sınır ikiye bölerek bulunur
                 m = (a + b) / 2
-                a, b = (m, b) if _decision_key(cur, m) == k else (a, m)
+                a, b = (m, b) if _decision_key(plan, cur, m) == k else (a, m)
             yield b, cur, cur
         key, hi = k, lo
         if hi <= cur["t_start"] + 1e-9:
@@ -788,7 +877,7 @@ def _changes_before(plan, beat, t):
             at = cur["t_start"]
             yield at, prev, cur
             cur, i, hi = prev, i - 1, at - 1e-5
-            key = _decision_key(cur, hi)
+            key = _decision_key(plan, cur, hi)
 
 
 def soft_camera(plan, designs, beat, t, items, _memo=None):
@@ -930,7 +1019,7 @@ def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False, came
     cam, preset, focus, crop, reaction = (view_[k] for k in ("cam", "preset", "focus", "crop", "reaction"))
     act_ids_ = {c for ev_ in action_staging._events(beat) for c in (ev_["by"], ev_.get("to")) if c} if preset == "action" else set()
     if preset == "point":                       # gösterme kadrajının katılanları: gösteren ve gösterilen oyuncu
-        its_ = pointing.window_at(beat, lt)[2]
+        its_ = pointing.window_at(beat, view_["src_lt"])[2]
         act_ids_ = {c for it_ in its_ for c in (it_["by"], it_.get("to") if isinstance(it_.get("to"), str) else None) if c}
 
     def skipped_(cid_, d_, p_):      # yakın planda odak dışı karakterin yüzü kenarda yarım kesilecekse çizilmez (kazara kesik yüz yok)

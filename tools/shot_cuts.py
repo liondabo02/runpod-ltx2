@@ -120,3 +120,64 @@ def at(beat, lt):
     s = rows[k]
     u = max(0.0, min(1.0, (lt - s["start"]) / max(s["end"] - s["start"], 0.1)))
     return s["preset"], s["push_from"] + (s["push_to"] - s["push_from"]) * u, k
+
+
+# ---------------------------------------------------------------- son plan seçimi: anlık plan kırıntısı eritilir
+CRUMB_EPS = 1e-3
+
+
+def _fits(target, piece):
+    """target planı piece'in süresini üstlenebilir mi? Sabit kadraj (bounds dolu) yalnız kendi vuruşunun içinde uzayabilir."""
+    b = target["bounds"]
+    return b is None or (piece["a"] >= b[0] - 1e-6 and piece["b"] <= b[1] + 1e-6)
+
+
+def _join_equal(segs):
+    out = []
+    for s in segs:
+        if s["b"] - s["a"] <= 1e-9:
+            continue
+        if out and out[-1]["key"] == s["key"]:
+            out[-1] = dict(out[-1], b=s["b"], parts=out[-1]["parts"] + s["parts"])
+        else:
+            out.append(s)
+    return out
+
+
+def dissolve_crumbs(segs, min_s):
+    """Bütün kamera katmanlarının BİRLEŞİMİNDEN çıkan kesintisiz plan dizisinde min_s'den kısa plan bırakmaz.
+    segs: [{'key', 'a', 'b', 'bounds': None | (a, b), 'parts': [kaynak aralıkları]}] (mutlak sn, bitişik, sıralı).
+    En kısa kırıntıdan başlanır: iki yanı aynı plansa üçü tek plan olur; değilse ÖNCEKİ plan uzar (sıradaki kesme zamanında kalır),
+    olamıyorsa sonraki plan erken başlar. Sabit kadraj (bounds dolu) kısaysa kendisi kısaltılmaz: yanındaki serbest plandan süre alır.
+    Hiçbir yere eritilemeyen kırıntı olduğu gibi kalır (ölçü ve render kapısı bildirir)."""
+    segs = _join_equal([dict(s, parts=list(s["parts"])) for s in segs])
+    stuck = set()
+    for _ in range(4 * len(segs) + 4):
+        short = [(s["b"] - s["a"], i) for i, s in enumerate(segs)
+                 if s["b"] - s["a"] < min_s - CRUMB_EPS and (s["a"], s["b"]) not in stuck]
+        if len(segs) < 2 or not short:
+            break
+        i = min(short)[1]
+        x = segs[i]
+        prev, nxt = segs[i - 1] if i else None, segs[i + 1] if i + 1 < len(segs) else None
+        if x["bounds"] is not None:
+            before = x["b"] - x["a"]
+            if nxt is not None and nxt["bounds"] is None:
+                end = max(x["b"], min(x["a"] + min_s, x["bounds"][1], nxt["b"]))
+                x["b"] = nxt["a"] = end
+            if x["b"] - x["a"] < min_s - CRUMB_EPS and prev is not None and prev["bounds"] is None:
+                start = min(x["a"], max(x["b"] - min_s, x["bounds"][0], prev["a"]))
+                x["a"] = prev["b"] = start
+            if x["b"] - x["a"] > before + 1e-9:
+                segs = _join_equal(segs)
+                continue
+        if prev is not None and _fits(prev, x):
+            prev["b"] = x["b"]
+        elif nxt is not None and _fits(nxt, x):
+            nxt["a"] = x["a"]
+        else:
+            stuck.add((x["a"], x["b"]))
+            continue
+        del segs[i]
+        segs = _join_equal(segs)
+    return segs

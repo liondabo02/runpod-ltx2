@@ -50,6 +50,7 @@ DEFAULTS = {
     "point_hand_visible": 0.75,    # gösteren el ve ön kol örnek noktalarının başka oyuncu/ön plan altında kalmayan oranı
     "point_angle_deg": 20.0,       # omuz->el doğrusu ile omuz->hedef doğrusu arasındaki en büyük açı
     "point_margin_px": 8,          # hedef merkezi ve gösterenin omzu/eli ekran kenarından en az bu kadar içeride
+    "short_fps": 24,               # anlık plan ölçüsünün örnekleme hızı
     "lead_s": 0.3, "tail_s": 0.3, "fps": 12,
     # kap içine atış (entry): nesne ağızdan, yukarıdan girip ağız çizgisinde parça parça kaybolmalı
     "entry_fps": 24,
@@ -509,6 +510,36 @@ def camera_pops(plan, designs, cfg=DEFAULTS):
     return out
 
 
+def short_shots(plan, designs, cfg=DEFAULTS):
+    """ÇİZİLEN kamerada göz yakalayamayacak kadar kısa planlar: [{'t0','t1','shot','preset','focus'}]. Kurgu listesi, aksiyon,
+    gösterme ve tepki katmanları ayrı ayrı kurala uysa da BİRLEŞİMLERİ kırıntı bırakabilir; burada kare kare seçilen plana bakılır.
+    Plan türü (yakın planda ayrıca odak) değişince yeni plan sayılır; sahne/mekân/kadro değişimi de sınırdır. Üretim penceresinin iki
+    ucundaki yarım plan ölçülmez (komşusu pencere dışında)."""
+    fps = cfg["short_fps"]
+    segs, prev = [], None
+    for beat in plan["beats"]:
+        for i in range(int(round((beat["t_end"] - beat["t_start"]) * fps))):
+            t = beat["t_start"] + i / fps
+            tr = {}
+            r2.frame(plan, designs, t, trace=tr, camera_only=True)
+            if not tr:
+                continue
+            key = (tr["preset"], tr["focus"] if tr["preset"] in r2.CLOSE_PRESETS else None)
+            joined = prev is not None and (tr["beat"] is prev or shot_cuts.continues(prev, tr["beat"]))
+            if not segs or segs[-1]["key"] != key or not joined:
+                segs.append({"key": key, "t0": t, "t1": t, "shot": beat.get("shot_id") or str(beat.get("i"))})
+            segs[-1]["t1"] = t + 1.0 / fps
+            prev = tr["beat"]
+    return [{"t0": round(s["t0"], 3), "t1": round(s["t1"], 3), "shot": s["shot"], "preset": s["key"][0], "focus": s["key"][1]}
+            for s in segs[1:-1] if s["t1"] - s["t0"] < listener_reaction.MIN_SHOT_S - 1.0 / fps - 1e-6]
+
+
+def short_shot_problems(report):
+    return [{"engine": "camera", "rule": "SHOT_FLASH", "shot": r["shot"],
+             "why": f"{r['t0']:.2f}-{r['t1']:.2f} sn yalnız {r['t1'] - r['t0']:.2f} sn süren {r['preset']} planı (en az {listener_reaction.MIN_SHOT_S} sn)"}
+            for r in report]
+
+
 def camera_pop_problems(report):
     return [{"engine": "camera", "rule": "CAMERA_JUMP", "shot": r["shot"],
              "why": f"{r['t']:.2f} sn kadraj tek karede atlıyor ({r['from']}->{r['to']}, ölçek x{r['zoom']}, kayma {r['dx']}/{r['dy']} px)"}
@@ -621,7 +652,7 @@ def pointing_problems(report):
     return [{"engine": "camera", "rule": w["rule"], "shot": r["shot"], "why": w["why"]} for r in report for w in r["why"]]
 
 
-__all__ = ["measure_pointing", "pointing_problems", "camera_pops", "camera_pop_problems", "face_change", "reaction_shots", "reaction_problems", "DEFAULTS", "action_events", "window", "sample", "measure_event", "measure_plan", "problems",
+__all__ = ["short_shots", "short_shot_problems", "measure_pointing", "pointing_problems", "camera_pops", "camera_pop_problems", "face_change", "reaction_shots", "reaction_problems", "DEFAULTS", "action_events", "window", "sample", "measure_event", "measure_plan", "problems",
            "actor_cover", "measure_occlusion", "occlusion_problems"]
 
 

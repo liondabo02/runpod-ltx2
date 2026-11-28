@@ -154,6 +154,13 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
         if _jump:
             return {"status": "BLOCKED", "error": "KAMERA_ATLAMASI",
                     "problems": [f"[{x['engine']}] {x['rule']} {x['shot']}: {x['why']}" for x in _jump]}
+    if engine == "2d":                                   # kurgu kapısı: katmanların birleşimi göz yakalayamayacak kadar kısa plan bırakamaz
+        import readability
+        _short = readability.short_shots(_plan, pp2.designs_for(bible, assets))
+        json.dump({"short_shots": _short}, open(os.path.join(rdir, "short_shots.json"), "w", encoding="utf-8"), ensure_ascii=False)
+        if _short:
+            return {"status": "BLOCKED", "error": "ANLIK_PLAN",
+                    "problems": [f"[{x['engine']}] {x['rule']} {x['shot']}: {x['why']}" for x in readability.short_shot_problems(_short)]}
     blender = find_blender() if engine != "2d" else "n/a"
     if not blender:
         return {"status": "BLOCKED", "error": "BLENDER_MISSING"}
