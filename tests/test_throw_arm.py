@@ -11,6 +11,7 @@ import render2d as r2
 FPS = 24
 RELEASE, WINDOW = 2.0, (1.2, 3.8)       # sentetik izde bırakma anı ve ölçülen pencere (sn)
 MAX_STEP = 0.60                          # bir karede dirsek/el (omuza göre) en çok bu kadar kol boyu yer değiştirir
+MAX_REACH_STEP = 0.40                    # bir karede elin OMUZA UZAKLIĞI en çok bu kadar kol boyu değişir (düzgün harekette en çok 0,33; yalnız açı karışırsa 0,54)
 MIN_REACH_AFTER = 0.90                   # bırakmadan sonra boş el omuza en az bu kadar uzak (göğse katlanmaz)
 MAX_INWARD = 0.12                        # dirsek omuzdan gövde ortasına doğru en çok bu kadar kol boyu girebilir
 
@@ -36,6 +37,9 @@ def arm_problems(plan, des, cid):
         step = max(math.dist(a[0], b[0]), math.dist(a[1], b[1]))
         if step > MAX_STEP:
             out.append(("SICRAMA", round(t, 3), round(step, 2)))
+        reach_step = abs(math.hypot(*b[1]) - math.hypot(*a[1]))
+        if reach_step > MAX_REACH_STEP:
+            out.append(("MESAFE_SICRAMASI", round(t, 3), round(reach_step, 2)))
     for t, (el, ha) in rows:
         if t > RELEASE and math.hypot(*ha) < MIN_REACH_AFTER:
             out.append(("GOGSE_KIVRIK", round(t, 3), round(math.hypot(*ha), 2)))
@@ -90,7 +94,7 @@ def test_angle_only_blend_is_caught_as_a_jump(tmp_path, monkeypatch):
         pose[key] = [old[0] + (pose[key][0] - old[0]) * w, old[1] + (pose[key][1] - old[1]) * w]
     monkeypatch.setattr(pp, "arm_blend", angle_only)
     bad = arm_problems(*setup(tmp_path, "yetiskin_saga"))
-    assert "SICRAMA" in kinds(bad), bad[:6]
+    assert "MESAFE_SICRAMASI" in kinds(bad), bad[:6]
 
 
 def test_elbow_folded_into_the_torso_is_caught(tmp_path, monkeypatch):

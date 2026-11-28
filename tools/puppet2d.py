@@ -324,6 +324,30 @@ def kneel_leg_shape(legs, knees, Hh):
     return {"flare": flare, "gap": min(gaps) if gaps else 0.0}
 
 
+FACE_CLEAR_M = 0.05          # göğüste tutulan nesne ile yüz elipsi arasında kalan en az pay (m)
+
+
+def face_ellipse(des, pose):
+    """Ön / üç-çeyrek görünüşte çizilen baş elipsi, ayağa göre metre: (merkez dx, merkez yüksekliği, yatay yarıçap, dikey yarıçap).
+    Çizimle aynı geometri (salınım ve baş sallama payı hariç)."""
+    Hh = des["height"]; cls = des["class"]
+    head_h = Hh - LEG_K[cls] * Hh - TORSO_K[cls] * Hh + Hh * 0.05
+    head_w = head_h * 1.12 * des.get("face_w", 1.0)
+    face = max(-1.0, min(1.0, pose.get("head", [0.0, 0.0, 0.0])[2] * 0.7 + pose.get("yaw", 0.0) * 0.55))
+    sq_ = float(pose.get("sq", 1.0)); jump = pose.get("z", 0.0); sit = max(0.0, -jump)
+    torso_top_h = jump + LEG_K[cls] * Hh + sit + TORSO_K[cls] * Hh * (1.0 + max(0.0, jump) / (Hh * 3.0)) * sq_ - crouch_of(des, pose)
+    return (face * 0.07 * head_w, torso_top_h + head_h * 0.40, head_w * 0.52 * (1.0 - 0.07 * abs(face)), head_h * 0.52)
+
+
+def below_face(des, pose, x_lo, x_hi):
+    """[x_lo, x_hi] (ayağa göre m) aralığındaki bir şeyin yüze binmeden çıkabileceği en büyük yükseklik; yüzün yanından geçiyorsa None."""
+    cx, cy, rx, ry = face_ellipse(des, pose)
+    near = 0.0 if x_lo <= cx <= x_hi else min(abs(x_lo - cx), abs(x_hi - cx))
+    if near >= rx:
+        return None
+    return cy - ry * math.sqrt(1.0 - (near / rx) ** 2) - FACE_CLEAR_M
+
+
 def _standing(x):
     return {"x": x, "z": 0.0, "yaw": 0.0, "lean": 0.0, "sq": 1.0}
 

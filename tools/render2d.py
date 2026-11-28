@@ -431,6 +431,23 @@ def pp_smooth(x):
     x = min(1.0, max(0.0, x)); return x * x * (3 - 2 * x)
 
 
+CHEST_HOLD_DROP_K = 0.20      # göğüs tutuşunda el omzun kol boyunun bu katı kadar altındadır
+CHEST_HOLD_FLOOR_K = 0.90     # yüzden kaçınmak için el en çok bu kadar iner (daha aşağısı kalçada sallanan nesne okunur)
+
+
+def chest_hold_height(des, pose, hand_dx, shoulder_h, prop, scale):
+    """Göğüste tutan elin yüksekliği: göğüs hizası; nesnenin ÇİZİLEN üstü yüze binecekse el o kadar iner (yüzü kapatan ya da ağza
+    dayanan nesne 'su içiyor' okunur). Uzun nesnede alt sınır geçerlidir (o durum bu kuralla çözülmez)."""
+    arm = des["height"] * 0.27
+    below, above, half = props2d.extent(prop, scale)
+    grip = object_state.grip_of(prop, scale)
+    h = shoulder_h - CHEST_HOLD_DROP_K * arm
+    lim = pp.below_face(des, pose, hand_dx - half, hand_dx + half)
+    if lim is not None:
+        h = min(h, lim - max(0.0, above - grip))
+    return max(shoulder_h - CHEST_HOLD_FLOOR_K * arm, h)
+
+
 def carry_info(beat, cid, lt):
     """Karakter şu an bir nesne taşıyorsa {'prop','weight','style','hand','reach'} (ağırlık merkezi: yük gövdeden ne kadar önde), yoksa None."""
     best = None
@@ -447,7 +464,7 @@ def carry_info(beat, cid, lt):
         w = object_state.weight_of(ob["prop"])
         if best is None or w > best["weight"]:
             sty = object_state.carry_style(ob["prop"])
-            best = {"prop": ob["prop"], "weight": w, "style": sty, "hand": pick_hand(beat, cid),
+            best = {"prop": ob["prop"], "scale": ob.get("scale", 0.55), "weight": w, "style": sty, "hand": pick_hand(beat, cid),
                     "reach": 0.25 if sty == "two_hand_front" else 0.15}
     return best
 
@@ -983,7 +1000,8 @@ def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False, came
                         gz_ = ((beat.get("choreo") or {}).get("gaze") or {}).get(cid)
                         dn = (1.0 if px[gz_] > px[cid] else -1.0) if gz_ in px and gz_ != cid else (1.0 if ci["hand"] == "R" else -1.0)
                         ln_ = Hm * 0.27; shx_, shh_ = pp.shoulder_offset(d, p, ci["hand"])
-                        pp.arm_toward(d, p, ci["hand"], shx_ + dn * 0.12 * ln_, shh_ - 0.20 * ln_)
+                        tx_ = shx_ + dn * 0.12 * ln_
+                        pp.arm_toward(d, p, ci["hand"], tx_, chest_hold_height(d, p, tx_, shh_, ci["prop"], ci["scale"]))
         look = 0.0
         gz = ((beat.get("choreo") or {}).get("gaze") or {}).get(cid)       # yönetmen bakışı: konuşulan kişiye/nesneye
         if gz in px and gz != cid:
