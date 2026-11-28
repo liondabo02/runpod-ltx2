@@ -3,8 +3,11 @@ Her temas olayı (al / ver / bırak / çöpe at) penceresinde, renderer'ın GER�
 piksel maskeleriyle şunlar ölçülür: nesne, temas eden el(ler), oyuncular ve atış/bırakma hedefi KADRAJDA ve ÖRTÜLMEMİŞ mi;
 kamera bu pencerede başka yere kesiyor mu (aksiyon kadrajı süreklidir); nesne seçilebilecek kadar büyük mü.
 Bu ölçü 'seyirci anladı' demek DEĞİLDİR: yalnız görünürlük/kadraj için gerekli koşulları denetler. Eşikler yapılandırılabilir ve insan izlemesiyle doğrulanmamıştır."""
+import math
+
 from PIL import Image, ImageChops, ImageDraw
 import action_staging
+import listener_reaction
 import object_state
 import props2d
 import puppet2d as pp
@@ -29,6 +32,10 @@ DEFAULTS = {
     "crop_fps": 4,
     "crop_leg_tol": 0.85,         # odakta olmayan oyuncuda alt kenar kalça yüksekliğinin en az bu katında olmalı (benzer boy payı); odakta kalçanın üstünde
     "crop_object_margin_px": 20,  # yakın planda odağın tuttuğu nesnenin alt kenarı ekran altından en az bu kadar yukarıda
+    # tepki planı: kamera dinleyene kesiyorsa o planda gerçekten tepki görünmeli
+    "react_face_min": 0.015,      # planın ilerisindeki karede yüz, aynı pozun ifadesiz yüzünden baş kutusu piksellerinin en az bu oranında farklı
+    "react_gaze_min": 0.5,        # göz bebeği konuşandan yana en az bu kadar kayık (nesne eylemi izleniyorsa aranmaz)
+    "react_sample_at": 0.7,       # ölçülen kare: planın bu oranındaki an (ifade oturmuş olmalı)
     "lead_s": 0.3, "tail_s": 0.3, "fps": 12,
     # kap içine atış (entry): nesne ağızdan, yukarıdan girip ağız çizgisinde parça parça kaybolmalı
     "entry_fps": 24,
@@ -371,7 +378,78 @@ def occlusion_problems(report):
             for r in report]
 
 
-__all__ = ["DEFAULTS", "action_events", "window", "sample", "measure_event", "measure_plan", "problems",
+def face_change(design, pose, state, cam):
+    """Çizilen yüz, aynı pozda ve aynı kamerada ifadesiz çizilen yüzden ne kadar farklı? Dönüş: baş kutusundaki değişen piksel oranı (0..1)."""
+    calm = dict(state, emotion="neutral", brow=0.0, blink=False, eyes_open=True)
+    shown = dict(state, blink=False)                              # göz kırpma ifade sayılmaz
+    masks = []
+    for st in (shown, calm):
+        cv = pp.Cv()
+        pp.draw_character(cv, design, pose, st, cam.x(pose["x"]), cam.y(0.0), cam.s, 0.0)
+        masks.append(cv.done().convert("RGB"))
+    Hh = design["height"]
+    chin = r2.head_chin_k(design)
+    box = (max(0, int(cam.x(pose["x"] - 0.30 * Hh))), max(0, int(cam.y(Hh * r2.HEAD_TOP_K + pose.get("z", 0.0)))),
+           min(W, int(cam.x(pose["x"] + 0.30 * Hh)) + 1), min(H, int(cam.y(Hh * chin + pose.get("z", 0.0))) + 1))
+    if box[2] <= box[0] or box[3] <= box[1]:
+        return 0.0
+    r, g, b = ImageChops.difference(masks[0].crop(box), masks[1].crop(box)).split()
+    diff = ImageChops.lighter(ImageChops.lighter(r, g), b).point(lambda v: 255 if v > 28 else 0)
+    return diff.histogram()[255] / float((box[2] - box[0]) * (box[3] - box[1]))
+
+
+def reaction_shots(plan, designs, cfg=DEFAULTS):
+    """Kameranın GERÇEKTEN dinleyene kestiği planlar (çizimle aynı kamera kararı) ve her birinin ölçümü:
+    [{'shot','listener','speaker','t0','t1','seconds','cut_by_beat_end','face','gaze','watching','emotion'}]."""
+    step = 1.0 / cfg["fps"]
+    out = []
+    for beat in plan.get("beats", []):
+        for w in listener_reaction.camera_windows(beat, r2.action_blocks(beat)):
+            seen = []
+            k = int(math.ceil(w["t0"] / step - 1e-6))
+            while k * step < min(w["t1"], beat["t_end"]) - 1e-9:
+                tr = {}
+                r2.frame(plan, designs, k * step, trace=tr, camera_only=True)
+                if tr.get("preset") == "close" and tr.get("focus") == w["listener"]:
+                    seen.append(k * step)
+                k += 1
+            if not seen:
+                continue
+            at = seen[min(len(seen) - 1, int(len(seen) * cfg["react_sample_at"]))]
+            tr = {}
+            r2.frame(plan, designs, at, trace=tr)
+            items = {i[0]: i for i in tr["items"]}
+            who, spk = w["listener"], w["speaker"]
+            st = tr["states"].get(who)
+            row = {"shot": beat.get("shot_id") or str(beat.get("i")), "listener": who, "speaker": spk, "t0": round(seen[0], 3),
+                   "t1": round(seen[-1] + step, 3), "seconds": round(len(seen) * step, 3), "sample_t": round(at, 3),
+                   "cut_by_beat_end": seen[-1] + step >= beat["t_end"] - 1e-6, "face": 0.0, "gaze": 0.0, "watching": False, "emotion": None}
+            if st is not None:                                          # None: dinleyen o karede hiç çizilmedi
+                _c, d, p, *_ = items[who]
+                toward = (1.0 if items[spk][2]["x"] > p["x"] else -1.0) if spk in items else 0.0
+                row.update(face=round(face_change(d, p, st, tr["cam"]), 4), gaze=round(st["gaze"] * toward, 3),
+                           watching=bool(st["watching"]), emotion=st["emotion"])
+            out.append(row)
+    return out
+
+
+def reaction_problems(report, cfg=DEFAULTS):
+    """Üretim kapısı biçimi: boş tepki planı (ifadesiz ya da konuşana bakmayan dinleyen) ve anlık kesme."""
+    out = []
+    for r in report:
+        why = []
+        if r["seconds"] < listener_reaction.MIN_SHOT_S - 1.0 / cfg["fps"] - 1e-6 and not r["cut_by_beat_end"]:
+            why.append(("REACTION_FLASH", "camera", f"plan {r['seconds']:.2f} sn sürüyor (en az {listener_reaction.MIN_SHOT_S} sn)"))
+        if r["face"] < cfg["react_face_min"]:
+            why.append(("REACTION_NO_EXPRESSION", "acting", f"yüz ifadesizden yalnız %{100 * r['face']:.1f} farklı (en az %{100 * cfg['react_face_min']:.1f})"))
+        if not r["watching"] and r["gaze"] < cfg["react_gaze_min"]:
+            why.append(("REACTION_NOT_LOOKING", "acting", f"dinleyen konuşana bakmıyor (bakış ölçüsü {r['gaze']})"))
+        out += [{"rule": rule, "engine": eng, "shot": r["shot"], "why": f"{r['listener']} tepki planı {r['t0']:.2f}-{r['t1']:.2f} sn: {text}"}
+                for rule, eng, text in why]
+    return out
+
+
+__all__ = ["face_change", "reaction_shots", "reaction_problems", "DEFAULTS", "action_events", "window", "sample", "measure_event", "measure_plan", "problems",
            "actor_cover", "measure_occlusion", "occlusion_problems"]
 
 

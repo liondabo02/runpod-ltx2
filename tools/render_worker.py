@@ -127,6 +127,15 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
         if _crop["violations"]:
             return {"status": "BLOCKED", "error": "KADRAJ_ALTTAN_KESIK",
                     "problems": [f"[{x['engine']}] {x['rule']} {x['shot']}: {x['why']}" for x in readability.crop_problems(_crop)]}
+    if engine == "2d":                                   # tepki planı kapısı: kamera dinleyene kesiyorsa tepki çizilen yüzde görünmeli ve plan göz yakalayacak kadar sürmeli
+        import readability
+        _shots = readability.reaction_shots(_plan, pp2.designs_for(bible, assets))
+        json.dump({"shots": _shots, "thresholds": {k: v for k, v in readability.DEFAULTS.items() if k.startswith("react_")}},
+                  open(os.path.join(rdir, "reaction_shots.json"), "w", encoding="utf-8"), ensure_ascii=False)
+        _empty = readability.reaction_problems(_shots)
+        if _empty:
+            return {"status": "BLOCKED", "error": "TEPKI_PLANI_BOS",
+                    "problems": [f"[{x['engine']}] {x['rule']} {x['shot']}: {x['why']}" for x in _empty]}
     blender = find_blender() if engine != "2d" else "n/a"
     if not blender:
         return {"status": "BLOCKED", "error": "BLENDER_MISSING"}

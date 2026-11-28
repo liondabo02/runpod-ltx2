@@ -11,6 +11,7 @@ import scenes2d as sc  # noqa: E402
 import props2d
 import object_state  # noqa: E402
 import action_staging  # noqa: E402
+import listener_reaction  # noqa: E402
 import setpieces2d  # noqa: E402
 import fx_layer  # noqa: E402
 try:
@@ -463,6 +464,11 @@ def head_safe_framing(cy, zoom, tallest, base_ppm):
     return max(cy, top - (360.0 - HEAD_MARGIN_PX) / (base_ppm * zoom)), zoom
 
 
+def head_chin_k(design):
+    """Çenenin boya oranı (baş kutusunun alt sınırı): küçük oyuncuda baş büyüktür."""
+    return 0.50 if design["height"] < 1.3 else 0.70
+
+
 def _head_cropped(cam, x, H):
     """Başın/saçın/omzun ekran sınırında KISMEN kesilip kesilmediği (tamamen içerde/tamamen dışarıda sorun değil).
     Çocukta baş büyük (çene ~0.50H), yetişkinde çene ~0.70H; alt kenarda ön plan çimi (y>640) yüzü örter."""
@@ -550,28 +556,16 @@ def crop_safe_framing(cy, zoom, design, base_ppm, needs=None, ph=0.0, E=0.0):
     return max(top - (pp.H / 2 - HEAD_MARGIN_PX) / s, min(cy, (FEET_MAX_PX - pp.H / 2) / s)), zoom, "full"
 
 
-REACT_AFTER = 1.0      # replik bittikten sonra dinleyene kesme süresi (sn)
-REACT_MID = 0.9        # uzun replikin ortasında tepki süresi (sn)
-REACT_MIN_LINE = 3.0   # bu süreden uzun replikte orta tepki
-
-
 def reaction_target(beat, t):
-    """Tepki planında kamera kimde olmalı? Yalnız >1 karakter varsa; konuşan olmayan (dinleyen) karakter döner, yoksa None."""
-    cast = beat.get("cast") or []
-    if len(cast) < 2 or not beat.get("lines"):
-        return None
-    lines = beat["lines"]
-    for ln in lines:
-        d = ln["end"] - ln["start"]
-        others = [c for c in cast if c != ln["char"]]
-        if not others:
-            continue
-        if ln["end"] <= t < ln["end"] + REACT_AFTER and not any(l["start"] <= t < l["end"] for l in lines):
-            return others[0]                              # replik bitti, kimse konuşmuyor: dinleyen yüz
-        mid = ln["start"] + 0.62 * d
-        if d >= REACT_MIN_LINE and mid <= t < mid + REACT_MID:
-            return others[0]                              # uzun replikte araya tepki
-    return None
+    """Tepki planında kamera kimde olmalı? (karar: listener_reaction; dinleyen yoksa None). Aksiyon kadrajı süren aralıklar tepki planına sayılmaz."""
+    return listener_reaction.target(beat, t, action_blocks(beat))
+
+
+def action_blocks(beat):
+    """Sabit aksiyon kadrajının sürdüğü aralıklar (mutlak sn)."""
+    if "t_start" not in beat or "t_end" not in beat:
+        return []
+    return [(beat["t_start"] + w[0], beat["t_start"] + w[1]) for w in action_staging.hold_windows(beat)]
 
 
 def poses_at(plan, designs, t):
@@ -654,6 +648,12 @@ def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False, came
         elif speaker and cid != speaker and speaker in px:            # dinleyen konuşana bakar
             look = 1.0 if px[speaker] > px[cid] else -1.0
             p["head"][2] += 0.7 * look
+        hear = None if spk else listener_reaction.performance(beat, cid, t)
+        if hear and hear["speaker"] in px:                           # dinleyici oyunculuğu: replik bitince de konuşandan kopmaz, baş hareketiyle karşılık verir
+            if not (gz in px and gz != cid) and speaker is None:
+                look = 1.0 if px[hear["speaker"]] > px[cid] else -1.0
+                p["head"][2] += listener_reaction.TURN * look * hear["weight"]
+            p["head"][0] += hear["nod"]
         if spk:                                                      # vurgulu hecede baş, kaş, el
             p["head"][0] += 0.14 * E
             p["z"] += 0.012 * Hm * E
@@ -724,6 +724,7 @@ def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False, came
         return None
     cv = pp.Cv()
     layers = [] if trace is not None else None
+    states = {} if trace is not None else None
     emit = (lambda kind_, key_, fn_, at_=None: layers.append((kind_, key_, fn_, at_))) if trace is not None else None
     sc.scene_back(cv, beat["scene"], cam, t, light=beat.get("light", ""))
     if _prof().get("dust", True):                       # ayak tozu + hız çizgisi: zemine ait, dekor parçalarının ARKASINDA (hedefin önünü örtmez)
@@ -750,9 +751,17 @@ def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False, came
         mood_ = spk_mood.get(cid) or beat.get("mood", "neutral")
         if emo == "neutral" and mood_ != "neutral":
             emo = mood_
+        hear = listener_reaction.performance(beat, cid, t) if cid != speaker else None
+        brow_ = e
+        if hear and hear["emotion"]:
+            brow_ = max(e, hear["brow"])
+            if m["kind"] not in EMO:                                   # kendi eylem duygusu (gülme, şaşırma...) varsa o korunur
+                emo = hear["emotion"]
         slot = int(t / 1.6 + m["seed"])
         dart = (_hash(slot, m["seed"], 3) - 0.5) * 1.4
         gaze_ = look * 0.9 + (0 if look else dart)
+        if hear and hear["speaker"] in px and hear["emotion"]:          # dinleyen göz gezdirmez: konuşana bakar
+            gaze_ = 0.9 if px[hear["speaker"]] > p["x"] else -0.9
         watch = action_look(beat, lt)
         if watch:                                                      # eylem sürerken herkes hedefe / eli işleyen ortağa bakar
             if watch[0] == "x":
@@ -762,9 +771,11 @@ def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False, came
                 tx_ = others_[0] if others_ else None
             if tx_ is not None and abs(tx_ - p["x"]) > 0.05:
                 gaze_ = 0.9 if tx_ > p["x"] else -0.9
-        blink_, open_ = eyes_state(emo, lt, m["seed"], blink_at(t, m["seed"]), bool(watch))
+        blink_, open_ = eyes_state(emo, lt, m["seed"], blink_at(t, m["seed"]), bool(watch) or bool(hear and cid == reaction_target(beat, t)))     # tepki planındaki yüz gözü kapalı yakalanmaz
         st = {"mouth": letters.get(cid, "X"), "blink": blink_, "emotion": emo, "eyes_open": open_,
-              "gaze": gaze_, "brow": e, "pulse": e}
+              "gaze": gaze_, "brow": brow_, "pulse": e}
+        if states is not None:
+            states[cid] = dict(st, watching=watch)
         body_ = lambda c, cm, d_=d, p_=p, st_=st: pp.draw_character(c, d_, p_, st_, cm.x(p_["x"]), cm.y(0.0), cm.s, t)
         body_(cv, cam)
         if emit is not None:
@@ -788,7 +799,7 @@ def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False, came
     sc.scene_front(cv, beat["scene"], cam, t)
     if trace is not None:
         emit("front", "scene_front", lambda c, cm: sc.scene_front(c, beat["scene"], cm, t))
-        trace.update(cam=cam, preset=preset, crop=crop, focus=focus, items=items, layers=layers, beat=beat, lt=lt)
+        trace.update(cam=cam, preset=preset, crop=crop, focus=focus, items=items, layers=layers, states=states, beat=beat, lt=lt)
     im = grade(cv.done(), beat.get("light") or "", t)
     try:
         return fx_layer.post(im, beat, t, lt, dur, float(plan.get("total_s", 480.0)), bool(beat.get("first_of_scene")))
@@ -830,7 +841,7 @@ def grade(im, light, t):
 
 _G = {}
 ENGINE_FILES = ("render2d.py", "puppet2d.py", "scenes2d.py", "setpieces2d.py", "props2d.py", "fx_layer.py", "bg_art.py", "shot_motion.py", "puppet_side.py", "object_state.py",
-                "shot_planner.py", "style_profile.py", "mood_engine.py", "action_staging.py", "staging.py", "continuity.py")
+                "shot_planner.py", "style_profile.py", "mood_engine.py", "action_staging.py", "staging.py", "continuity.py", "listener_reaction.py")
 
 
 def available_mem_mb():
