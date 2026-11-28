@@ -36,8 +36,45 @@ def jobs():
         if not m: continue
         try: j = json.load(open(os.path.join(Q, f), encoding="utf-8"))
         except Exception: continue
-        res.append({"id": m.group(1), "state": m.group(2), "command": j.get("command", ""), "error": j.get("error", "")})
+        try: at = os.path.getmtime(os.path.join(Q, f))
+        except OSError: at = None
+        res.append({"id": m.group(1), "state": m.group(2), "command": j.get("command", ""), "error": j.get("error", ""), "at": at})
     return res[-30:]
+
+
+_ENG = {"at": 0.0, "data": None}
+def engine_panel(root=ROOT, max_age=60.0, now=None):
+    """Ofisin 'Stüdyo motorları' paneli: yetenek haritası (kanıttan hesaplanır), dizi formüllerinin hazırlığı,
+    Yazılım Şirketi'nin son kabul kapısı sonuçları. Salt okunur; 60 sn önbellek."""
+    now = time.time() if now is None else now
+    if _ENG["data"] is not None and now - _ENG["at"] < max_age and root == ROOT:
+        return _ENG["data"]
+    import engine_gaps, series_formula
+    rep = engine_gaps.check(root)
+    forms = []
+    for fid in series_formula.format_ids(root):
+        try:
+            r = series_formula.readiness(series_formula.load(fid, root), root, rep)
+        except (OSError, ValueError, KeyError) as e:
+            forms.append({"format": fid, "ad": fid, "hata": str(e)}); continue
+        names = {x["id"]: x["yetenek"] for x in r["yetenekler"]}
+        forms.append({"format": r["format"], "ad": r["ad"], "gerekli": r["gerekli"], "sayim": r["sayim"],
+                      "eksik": ["%s %s" % (i, names.get(i, "")) for i in r["eksik"]]})
+    kabul = []
+    try:
+        with open(os.path.join(root, "runtime", "software-dept", "kabul.jsonl"), encoding="utf-8") as f:
+            for line in f.readlines()[-5:]:
+                try: k = json.loads(line)
+                except ValueError: continue
+                kabul.append({"at": k.get("at"), "sonuc": k.get("sonuc"), "neden": k.get("neden"), "head": str(k.get("head", ""))[:7]})
+    except OSError:
+        pass
+    data = {"toplam": rep["toplam"], "yetenek_sayisi": rep["yetenek_sayisi"], "motorlar": rep["motorlar"],
+            "insan_onayi": len(rep["insan_onayi_bekleyen"]), "eksikler": rep["eksikler"][:12],
+            "formuller": forms, "kabul": kabul[::-1], "not": "VAR = kod + onu sınayan test; profesyonel kalite değildir"}
+    if root == ROOT:
+        _ENG.update(at=now, data=data)
+    return data
 
 def videos():
     v = []
@@ -143,6 +180,9 @@ class H(BaseHTTPRequestHandler):
             self.send_response(200); self.send_header("Content-Type", "text/html; charset=utf-8"); self.send_header("Content-Length", str(len(b))); self.end_headers(); self.wfile.write(b)
         elif u.path == "/api/status": self._json(status())
         elif u.path == "/api/live": self._json(live_status())
+        elif u.path == "/api/motorlar":
+            try: self._json(engine_panel())
+            except Exception as e: self._json({"error": "motor paneli okunamadı: %s" % e}, 500)
         elif u.path == "/api/report":
             st = status()["latest_report"]
             self._json({"text": open(os.path.join(REPORTS, st), encoding="utf-8").read() if st else "Henüz rapor yok."})

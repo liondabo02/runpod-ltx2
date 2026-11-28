@@ -1,0 +1,253 @@
+{
+ "id": "koy_toplulugu",
+ "surum": 1,
+ "ad": "Küçük Köy Topluluğu",
+ "esinlenme": "Avrupa çizgi roman kökenli topluluk dizileri geleneği: gizli bir köyde, her biri tek belirgin özelliğiyle tanınan küçük karakterler, bilge bir büyük ve dışarıdan gelen bir tehdit. Sorun, özelliklerin çarpışması ve sonunda işbirliğiyle çözülür. Yalnız TÜR ve YAPI alınır; tür, renk, isim ve görünüş tamamen özgündür.",
+ "anahtar_kelimeler": [
+  "köy",
+  "topluluk",
+  "küçük",
+  "bilge",
+  "işbirliği",
+  "masal"
+ ],
+ "kitle_yasi": "4-8",
+ "hedef_sure_sn": [
+  480,
+  720
+ ],
+ "ton": "sıcak, masalsı, hafif komik; ders konuşmayla değil davranışla verilir",
+ "gorsel": {
+  "renk_betigi": {
+   "koy_hayati": "pastel gün ışığı",
+   "tehdit": "soğuk gölgeli",
+   "isbirligi_cozum": "altın saat"
+  },
+  "imza": "her karakterin özelliğini taşıyan tek bir aksesuar"
+ },
+ "roller": [
+  {
+   "id": "bilge_buyuk",
+   "ad": "Bilge büyük",
+   "tanim": "köyün yaşlısı; öğüt verir ama çözümü topluluk bulur",
+   "min": 1,
+   "max": 1
+  },
+  {
+   "id": "ozellik_karakteri",
+   "ad": "Özellik karakteri",
+   "tanim": "tek belirgin özelliğiyle tanınır (ör. telaşlı, mucit, şakacı); 'ozellik' alanı zorunlu ve herkesinki farklı",
+   "min": 4,
+   "max": 12
+  },
+  {
+   "id": "dis_tehdit",
+   "ad": "Dış tehdit",
+   "tanim": "köyü bulmak isteyen beceriksiz kötü",
+   "min": 0,
+   "max": 1
+  },
+  {
+   "id": "kotu_hayvan",
+   "ad": "Kötünün hayvanı",
+   "tanim": "kötünün yardımcısı; çoğu zaman ona ihanet eder",
+   "min": 0,
+   "max": 1
+  }
+ ],
+ "yapi": [
+  {
+   "slot": "koy_hayati",
+   "ad": "Köy hayatı",
+   "tanim": "köyün sıradan günü; karakterler özellikleriyle tanıtılır",
+   "adet": [
+    1,
+    1
+   ],
+   "zorunlu": true,
+   "pay": [
+    0.05,
+    0.18
+   ]
+  },
+  {
+   "slot": "sorun",
+   "ad": "Sorun",
+   "tanim": "bir aksilik ya da istek köyü etkiler",
+   "adet": [
+    1,
+    1
+   ],
+   "zorunlu": true,
+   "pay": [
+    0.06,
+    0.18
+   ]
+  },
+  {
+   "slot": "ozellik_carpismasi",
+   "ad": "Özellik çarpışması",
+   "tanim": "her karakter sorunu kendi özelliğiyle çözmeye çalışır ve işi büyütür",
+   "adet": [
+    1,
+    1
+   ],
+   "zorunlu": true,
+   "pay": [
+    0.15,
+    0.4
+   ]
+  },
+  {
+   "slot": "tehdit",
+   "ad": "Tehdit",
+   "tanim": "dış tehdit fırsat bulur ya da durumu kötüleştirir",
+   "adet": [
+    1,
+    1
+   ],
+   "zorunlu": false,
+   "pay": [
+    0.08,
+    0.25
+   ],
+   "muzik": "tehdit teması"
+  },
+  {
+   "slot": "sarki_ani",
+   "ad": "Şarkı anı",
+   "tanim": "kısa, akılda kalan topluluk şarkısı ya da ritim anı",
+   "adet": [
+    0,
+    1
+   ],
+   "zorunlu": false,
+   "pay": [
+    0.03,
+    0.1
+   ],
+   "muzik": "dizi teması"
+  },
+  {
+   "slot": "isbirligi_cozum",
+   "ad": "İşbirliği çözümü",
+   "tanim": "özellikler birleşince sorun çözülür",
+   "adet": [
+    1,
+    1
+   ],
+   "zorunlu": true,
+   "pay": [
+    0.1,
+    0.3
+   ]
+  },
+  {
+   "slot": "ders_kapanis",
+   "ad": "Ders ve kapanış",
+   "tanim": "kutlama; ders davranışla gösterilir, tek cümleyle özetlenmez",
+   "adet": [
+    1,
+    1
+   ],
+   "zorunlu": true,
+   "pay": [
+    0.03,
+    0.12
+   ]
+  }
+ ],
+ "kurallar": [
+  {
+   "tur": "slot_karakter",
+   "slot": "ozellik_carpismasi",
+   "rol": "ozellik_karakteri",
+   "en_az": 3,
+   "neden": "en az üç farklı özellik çarpışmalı"
+  },
+  {
+   "tur": "slot_karakter",
+   "slot": "isbirligi_cozum",
+   "en_az": 3,
+   "neden": "çözüm topluluğun işi olmalı"
+  },
+  {
+   "tur": "diyalog_orani",
+   "min": 0.5,
+   "max": 0.95
+  },
+  {
+   "tur": "yasak_kelime",
+   "kelimeler": [
+    "kan",
+    "öldü",
+    "ölüm",
+    "öldür",
+    "silah",
+    "bıçak",
+    "yaralandı",
+    "hastane",
+    "intihar"
+   ]
+  }
+ ],
+ "oyuncu_kurallari": [
+  {
+   "tur": "benzersiz_alan",
+   "rol": "ozellik_karakteri",
+   "alan": "ozellik"
+  }
+ ],
+ "tekrar_eden_unsurlar": [
+  "köyün ortak selamlaşması (özgün)",
+  "kötünün tekrar eden başarısız planı",
+  "bilge büyüğün kısa öğüdü"
+ ],
+ "gerekli_yetenekler": [
+  "SEN-02",
+  "SEN-03",
+  "SEN-06",
+  "SEN-07",
+  "KAR-01",
+  "KAR-03",
+  "ANI-06",
+  "ANI-10",
+  "ANI-12",
+  "KAM-01",
+  "KAM-03",
+  "MEK-01",
+  "MEK-02",
+  "MEK-04",
+  "SES-02",
+  "SES-05",
+  "MUZ-01",
+  "MUZ-02",
+  "URE-01"
+ ],
+ "yasak_isimler": [
+  "scooby",
+  "scooby-doo",
+  "shaggy",
+  "velma",
+  "daphne",
+  "fred jones",
+  "scrappy",
+  "tom",
+  "jerry",
+  "spike",
+  "tuffy",
+  "şirin",
+  "sirin",
+  "şirinler",
+  "smurf",
+  "gargamel",
+  "azman",
+  "şirin baba",
+  "sirin baba",
+  "papa smurf",
+  "şirine",
+  "smurfette",
+  "mystery machine",
+  "esrarengiz makine"
+ ]
+}

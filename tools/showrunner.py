@@ -23,6 +23,7 @@ import render_worker as rw  # noqa: E402
 import video_qa as vqa  # noqa: E402
 import series_memory as sm  # noqa: E402
 import script_fidelity as sf  # noqa: E402
+import series_formula as sfm  # noqa: E402
 import worker_events as we  # noqa: E402
 
 ROOT = os.path.dirname(HERE)
@@ -116,22 +117,31 @@ def normalize_bible(raw):
 
 
 def director_make_bible(command, series_id=None):
+    fid = sfm.detect(command)                      # dizi formülü (gizem-komedi, sessiz kovalamaca, köy topluluğu...) ya da None
+    fmt = sfm.load(fid) if fid else None
     user = (f"Sahibin komutu: {command}\n"
-            "EN AZ 2 karakter (biri çocuk), EN AZ 2 mekân yaz. id'ler yalnız küçük ASCII harf/rakam/alt çizgi (ör. pelin, kaan, bahce); Türkçe harf KULLANMA.\n"
+            + (sfm.director_block(fmt) + "\n" if fmt else "")
+            + ("EN AZ 2 karakter (formüldeki rol sayılarına uy; hayvan karakterlerde species alanını yaz)" if fmt else "EN AZ 2 karakter (biri çocuk)")
+            + ", EN AZ 2 mekân yaz. id'ler yalnız küçük ASCII harf/rakam/alt çizgi (ör. pelin, kaan, bahce); Türkçe harf KULLANMA.\n"
             'JSON: {"title":"","tone":"","age_band":"3-6","visual_style":{"look":"","palette":["#hex"]},'
             '"characters":[{"id":"kucuk_harf_id","name":"","age":5,"gender":"female|male","species":"human","role":"","personality":"",'
+            + ('"formula_role":"","ozellik":"",' if fmt else "") +
             '"look":"siluet, oran, renk, ayırt edici özellik","relationships":{},"voice_hint":"yaş/cinsiyet/ton",'
             '"safety_notes":[]}],'
             '"locations":[{"id":"kucuk_harf_id","name":"","light_by_time":{"sabah":"","aksam":""}}]}')
     last = None
     for _ in range(3):
         raw = normalize_bible(wr.llm_json(DIRECTOR_SYS, user, need=["title", "characters", "locations"]))
+        if fid:
+            raw["format_id"] = fid
         last = raw
         voice_errs = voice_card_errors(raw)
-        if len(raw.get("characters", [])) >= 2 and len(raw.get("locations", [])) >= 1 and not voice_errs:
+        cast_errs = sfm.cast_errors(raw, fmt) if fmt else []
+        if len(raw.get("characters", [])) >= 2 and len(raw.get("locations", [])) >= 1 and not voice_errs and not cast_errs:
             return raw
         user += "\nÖNCEKİ DENEME YETERSİZDİ: en az 2 karakter ve 2 mekân yaz." + (
-            " Her karakter için sayısal 'age' ve 'gender' alanını ('female' ya da 'male') yaz: " + "; ".join(voice_errs) if voice_errs else "")
+            " Her karakter için sayısal 'age' ve 'gender' alanını ('female' ya da 'male') yaz: " + "; ".join(voice_errs) if voice_errs else "") + (
+            " Dizi formülü sorunları: " + "; ".join(cast_errs) if cast_errs else "")
     return last
 
 
@@ -151,7 +161,7 @@ def voice_card_errors(b):
 
 
 def check_bible(b):
-    errs = voice_card_errors(b)
+    errs = voice_card_errors(b) + sfm.cast_errors(b)   # formülsüz dizide cast_errors boş döner
     ids = [c.get("id") for c in b.get("characters", [])]
     if not ids: errs.append("karakter yok")
     if len(set(ids)) != len(ids): errs.append("karakter id'leri tekrar ediyor")
@@ -173,6 +183,8 @@ def finish_bible(raw, series_id):
          "continuity": {"episodes": [], "running_facts": []},
          "episode_defaults": {"min_seconds": 480, "max_cost_eur": 1.0},
          "owner_approval": {"identity": "PENDING", "episode_final": "PENDING"}}
+    if raw.get("format_id"):
+        b["format_id"] = raw["format_id"]               # dizi formülü: senaryo odası ve denetçi bununla çalışır
     for c in raw.get("characters", []):
         c = dict(c)
         c["identity_lock"] = {"reference_png": "", "sha256": "", "model_hash": "", "rig_hash": ""}

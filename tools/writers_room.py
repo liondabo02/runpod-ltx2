@@ -16,6 +16,7 @@ from validate_beat_sheet import validate  # noqa: E402
 import lessons  # noqa: E402
 import llm_guard  # noqa: E402
 import worker_events as we  # noqa: E402
+import series_formula as sfm  # noqa: E402
 
 ACT_SECONDS = 40
 PASS_SCORE = 80
@@ -102,6 +103,34 @@ def llm_json(system, user, temperature=0.7, need=None, tries=7):
             last = e
             time.sleep(min(4 * (i + 1), 25))
     raise RuntimeError(f"LLM geçerli JSON üretemedi ({tries} deneme): {last}")
+
+def formula_of(bible):
+    """Bible bir dizi formülü (studio/formats) taşıyorsa onu döndürür; yoksa ya da okunamazsa None (eski davranış)."""
+    try:
+        return sfm.of_bible(bible)
+    except (OSError, ValueError) as e:
+        say("Dizi formülü okunamadı, formülsüz devam: %s" % e)
+        return None
+
+
+def _quiet(fmt):
+    """Formül az diyalog istiyorsa (ör. sessiz kovalamaca) genel 'her vuruşta diyalog' kuralı uygulanmaz."""
+    return bool(fmt) and any(r["tur"] == "diyalog_orani" and r["max"] <= 0.3 for r in fmt.get("kurallar", []))
+
+
+def formula_check(errs, beats, bible, seconds):
+    """Doğrulayıcı hatalarına formül denetimini ekler. Döner: (hatalar, formül uyarıları).
+    Sahibin senaryosu varsa formül yalnız UYARI verir (replik/süre/karakter değiştirilmez)."""
+    fmt = formula_of(bible)
+    if not fmt:
+        return errs, []
+    if _quiet(fmt):
+        errs = [e for e in errs if not e.startswith("diyalog çok az")]
+    ferr = ["FORMUL " + e for e in sfm.episode_errors(beats, fmt, bible, seconds)]
+    if SOURCE["text"]:
+        return errs, ferr
+    return errs + ferr, []
+
 
 def bible_summary(bible):
     chars = [{"id": c["id"], "name": c.get("name"), "age": c.get("age"), "role": c.get("role"),
@@ -198,22 +227,32 @@ def write_outline(bible, idea, seconds):
              f'JSON: {{"title":"","logline":"","acts":[{{"act":1,"summary":"","location_id":"","goal":"","obstacle":""}}]}}')
         return llm_json(WRITER_SYS + " " + FAITHFUL + lessons.prompt_block("writer"), u, need=["acts"])
     n = max(1, round(seconds / ACT_SECONDS))
+    fmt = formula_of(bible)
     u = (f"Bible: {bible_summary(bible)}\nFikir: {idea}\nToplam {seconds} sn, {n} perde. "
-         f'JSON: {{"title":"","logline":"","acts":[{{"act":1,"summary":"","location_id":"","goal":"","obstacle":""}}]}}')
+         + (sfm.writer_block(fmt, seconds) + " Perde özetlerini bu iskelete göre kur. " if fmt else "")
+         + f'JSON: {{"title":"","logline":"","acts":[{{"act":1,"summary":"","location_id":"","goal":"","obstacle":""}}]}}')
     return llm_json(WRITER_SYS + lessons.prompt_block("writer"), u, need=["acts"])
 
 
 def write_act(bible, outline, act_no, t0, t1, notes=None, prev_tail=None):
     a = outline["acts"][act_no - 1]
     src = _source_slice(act_no, len(outline["acts"])) if SOURCE["text"] else ""
+    fmt = formula_of(bible)
+    total = outline.get("_seconds") or (t1 * len(outline["acts"]) / max(1, act_no))  # build() yazar
+    talk = ("diyalog oranı aşağıdaki formüle uysun (anlatım görsel, müzik ve ses efektiyle)" if _quiet(fmt)
+            else "her vuruşta en az bir diyalog satırı olsun")
+    extra = ""
+    if fmt:
+        extra = sfm.writer_block(fmt, total, t0, t1) + " Formül kuralları genel yazım kurallarından önce gelir.\n"
     u = (f"Bible: {bible_summary(bible)}\nPerde {act_no}/{len(outline['acts'])}: {json.dumps(a, ensure_ascii=False)}\n"
          f"{('BU PERDENİN SENARYO METNİ (sadık kal):' + chr(10) + src + chr(10)) if src else ''}"
-         f"Zaman aralığı: {t0}-{t1} sn. TAM OLARAK {need_beats(t0, t1)} vuruş yaz (vuruş başına 6-9 sn), aralıksız ve kesintisiz; her vuruşta en az bir diyalog satırı olsun.\n"
+         f"Zaman aralığı: {t0}-{t1} sn. TAM OLARAK {need_beats(t0, t1)} vuruş yaz (vuruş başına 6-9 sn), aralıksız ve kesintisiz; {talk}.\n"
+         + extra
          + (f"Önceki perde sonu: {prev_tail}\n" if prev_tail else "")
          + (f"Düzeltilecek eleştiriler: {json.dumps(notes, ensure_ascii=False)}\n" if notes else "")
          + 'JSON: {"beats":[{"t_start":0,"t_end":6,"scene_id":"","location":"<bible id>","light_time":"",'
            '"characters":["<bible id>"],"action":"","dialogue":"","emotion":{"valence":0,"arousal":0,"intensity":0},'
-           '"camera":"","sound":"","safety_note":""}]}')
+           '"camera":"","sound":"","safety_note":""' + (',"formula_slot":"","gag_motif":""' if fmt else "") + '}]}')
     return llm_json(WRITER_SYS + (" " + FAITHFUL if SOURCE["text"] else "") + lessons.prompt_block("writer"), u, need=["beats"])["beats"]
 
 
@@ -322,6 +361,7 @@ def build(bible, outline, seconds, notes_by_act=None, cache=None, out_dir=None):
     """Perdeler paralel yazılır (AHOS_ACT_PARALLEL, varsayılan 3): ücretsiz LLM'ler yavaş; süreklilik için önceki perdenin PLANI verilir."""
     from concurrent.futures import ThreadPoolExecutor
     n = len(outline["acts"]); step = seconds / n
+    outline["_seconds"] = seconds                 # dizi formülü iskeleti bölümün toplam süresine göre çizilir
     locs = {l["id"] for l in bible.get("locations", [])}
     lock = __import__("threading").Lock()
     done = {}
@@ -407,6 +447,7 @@ def run(bible, idea, seconds, out_dir, rounds=2):
     n = len(outline["acts"]); step = seconds / n
     for r in range(rounds + 1):
         errs, warns = validate({"beats": beats}, bible, seconds)
+        errs, fwarn = formula_check(errs, beats, bible, seconds)
         say(f"Tur {r}: doğrulayıcı hata {len(errs)}; eleştirmen puanlıyor...")
         try:
             total, crit = critique(beats, bible)
@@ -414,7 +455,8 @@ def run(bible, idea, seconds, out_dir, rounds=2):
             total, crit = 0, {"scores": {}, "findings": [], "note": str(e)}
         safety_ok = crit["scores"].get("guvenlik", 10) >= 10
         say(f"Tur {r}: puan {total}, hata {len(errs)}")
-        history.append({"round": r, "validator_errors": errs, "score": total, "findings": crit.get("findings", [])})
+        history.append({"round": r, "validator_errors": errs, "score": total, "findings": crit.get("findings", []),
+                        **({"formula_warnings": fwarn} if fwarn else {})})
         key = (len(errs), -total)
         if best is None or key < best[0]:
             best = (key, beats, errs, total)
@@ -440,7 +482,8 @@ def run(bible, idea, seconds, out_dir, rounds=2):
     n_fix = proofread(beats)
     n_names = fix_names(beats, bible)
     errs, _ = validate({"beats": beats}, bible, seconds)
-    history.append({"proofread_changes": n_fix, "name_fixes": n_names})
+    errs, fwarn = formula_check(errs, beats, bible, seconds)
+    history.append({"proofread_changes": n_fix, "name_fixes": n_names, **({"formula_warnings": fwarn} if fwarn else {})})
     sheet = save(out_dir, outline, beats, seconds, bible, history, errs, total)
     last = {"validator_errors": errs, "score": total, "proofread_changes": n_fix, "name_fixes": n_names}
     return sheet, [h for h in history if "score" in h] + [last]

@@ -129,6 +129,32 @@
    ]
   },
   {
+   "id": "SEN-09",
+   "motor": "senaryo",
+   "isci": "writers_room",
+   "skill": "studio-screenwriting",
+   "yetenek": "Dizi formülü: tür yapısı (gizem-komedi, sessiz kovalamaca, köy topluluğu) ile rol kadrosu, bölüm iskeleti ve yapı denetimi",
+   "kanit": [
+    {
+     "modul": "tools/series_formula.py",
+     "sembol": "episode_errors"
+    },
+    {
+     "modul": "tools/series_formula.py",
+     "sembol": "cast_errors"
+    },
+    {
+     "modul": "tools/writers_room.py",
+     "sembol": "formula_check"
+    }
+   ],
+   "test": [
+    "tests/test_series_formula.py"
+   ],
+   "insan_onayi": true,
+   "not": "yapı denetimidir; komik zamanlama ve hikâye kalitesi sahibin onayıdır"
+  },
+  {
    "id": "KAR-01",
    "motor": "karakter",
    "isci": "character",

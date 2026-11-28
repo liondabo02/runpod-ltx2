@@ -57,4 +57,5 @@ Eksik yetenek için önce açık görevi Yazılım Şirketi'ne bildir; olmayan a
 - SEN-05 Konu -> senaryo -> sahne -> üretim -> QA izlenebilirliği [KISMI]: `tools/action_trace.py` — açık: P1, P1a
 - SEN-06 Ayrı senaryo kalite değerlendirmesi (rubrik; üretenden bağımsız) [YOK]: araç yok — açık: P1
 - SEN-07 Çocuk programı yazım kalıpları ölçüsü (tekrar, çağrı-cevap, ödül anı) [YOK]: araç yok
+- SEN-09 Dizi formülü: tür yapısı (gizem-komedi, sessiz kovalamaca, köy topluluğu) ile rol kadrosu, bölüm iskeleti ve yapı denetimi [VAR, insan onayı]: `tools/series_formula.py`, `tools/writers_room.py`
 <!-- MOTORLAR:BITIS -->

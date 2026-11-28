@@ -1,0 +1,234 @@
+{
+ "id": "sessiz_kovalamaca",
+ "surum": 1,
+ "ad": "Sessiz Kovalamaca Komedisi",
+ "esinlenme": "Sinema kısa filmi geleneğindeki neredeyse diyalogsuz, müzikle senkron kovalamaca komedisi: büyük ve kendinden emin bir avcı ile küçük ve kurnaz bir kaçan arasında giderek büyüyen şakalar. Yalnız TÜR ve YAPI alınır; karakterler, türler, isimler ve şakalar özgündür.",
+ "anahtar_kelimeler": [
+  "kovalamaca",
+  "sessiz",
+  "slapstick",
+  "kedi fare",
+  "avcı",
+  "kaçan",
+  "şaka zinciri"
+ ],
+ "kitle_yasi": "4-10",
+ "hedef_sure_sn": [
+  480,
+  600
+ ],
+ "ton": "abartılı fiziksel komedi; acı geçicidir, kimse kalıcı zarar görmez; küçük olan zekâsıyla kazanır",
+ "gorsel": {
+  "renk_betigi": {
+   "kurulum": "sıcak ev içi",
+   "doruk": "doygun, yüksek kontrast"
+  },
+  "imza": "abartılı ezme-esneme, hazırlık pozları, hız çizgileri"
+ },
+ "roller": [
+  {
+   "id": "avci",
+   "ad": "Avcı",
+   "tanim": "büyük, kendinden emin, planları hep geri teper",
+   "min": 1,
+   "max": 1
+  },
+  {
+   "id": "kurnaz_kacan",
+   "ad": "Kurnaz kaçan",
+   "tanim": "küçük, zeki, avcıyı kendi tuzağına düşürür",
+   "min": 1,
+   "max": 1
+  },
+  {
+   "id": "ucuncu_taraf",
+   "ad": "Üçüncü taraf",
+   "tanim": "ev sahibi ya da iri bir hayvan; avcıyı cezalandıran kural koyucu",
+   "min": 0,
+   "max": 2
+  }
+ ],
+ "yapi": [
+  {
+   "slot": "kurulum",
+   "ad": "Kurulum",
+   "tanim": "ödül nesnesi ve rekabetin nedeni tek bakışta anlaşılır",
+   "adet": [
+    1,
+    1
+   ],
+   "zorunlu": true,
+   "pay": [
+    0.04,
+    0.15
+   ]
+  },
+  {
+   "slot": "kizisma",
+   "ad": "Kızışma",
+   "tanim": "ilk küçük şakalar; avcı bir plan kurar",
+   "adet": [
+    1,
+    1
+   ],
+   "zorunlu": true,
+   "pay": [
+    0.08,
+    0.25
+   ]
+  },
+  {
+   "slot": "gag",
+   "ad": "Şaka",
+   "tanim": "hazırlık -> eylem -> sonuç; fiziksel şaka ve ses efekti",
+   "adet": [
+    8,
+    60
+   ],
+   "zorunlu": true,
+   "serbest": true,
+   "muzik": "müzik eylemi taklit eder",
+   "ses": "abartılı efekt zorunlu"
+  },
+  {
+   "slot": "doruk",
+   "ad": "Doruk",
+   "tanim": "en büyük set-piece; şakalar zincirleme birbirini tetikler",
+   "adet": [
+    1,
+    1
+   ],
+   "zorunlu": true,
+   "pay": [
+    0.08,
+    0.25
+   ],
+   "muzik": "en hızlı tempo"
+  },
+  {
+   "slot": "ters_kose",
+   "ad": "Ters köşe",
+   "tanim": "güç dengesi tersine döner ya da üçüncü taraf devreye girer",
+   "adet": [
+    1,
+    1
+   ],
+   "zorunlu": true,
+   "pay": [
+    0.03,
+    0.12
+   ]
+  },
+  {
+   "slot": "kapanis",
+   "ad": "Kapanış",
+   "tanim": "son küçük şaka ve görsel kapanış (iris)",
+   "adet": [
+    1,
+    1
+   ],
+   "zorunlu": true,
+   "pay": [
+    0.02,
+    0.08
+   ]
+  }
+ ],
+ "kurallar": [
+  {
+   "tur": "diyalog_orani",
+   "min": 0.0,
+   "max": 0.15,
+   "neden": "anlatım görsel ve müzikle olmalı"
+  },
+  {
+   "tur": "dakikada",
+   "slot": "gag",
+   "en_az": 1.2
+  },
+  {
+   "tur": "alan_dolu",
+   "slot": "gag",
+   "alan": "sound",
+   "neden": "her şakanın bir ses efekti olmalı"
+  },
+  {
+   "tur": "motif_tekrar",
+   "alan": "gag_motif",
+   "en_az": 3,
+   "neden": "üç kuralı: aynı şaka motifi üç kez, her seferinde büyüyerek"
+  },
+  {
+   "tur": "slot_rol",
+   "slot": "ters_kose",
+   "rol": "kurnaz_kacan"
+  },
+  {
+   "tur": "yasak_kelime",
+   "kelimeler": [
+    "kan",
+    "öldü",
+    "ölüm",
+    "öldür",
+    "silah",
+    "bıçak",
+    "yaralandı",
+    "hastane",
+    "intihar"
+   ]
+  }
+ ],
+ "tekrar_eden_unsurlar": [
+  "avcının 'sinsi yürüyüşü'",
+  "kaçanın kısa zafer pozu",
+  "üçüncü tarafın uyarı işareti"
+ ],
+ "gerekli_yetenekler": [
+  "SEN-06",
+  "KAR-01",
+  "KAR-03",
+  "ANI-01",
+  "ANI-03",
+  "ANI-04",
+  "ANI-05",
+  "ANI-06",
+  "ANI-12",
+  "ANI-13",
+  "KAM-02",
+  "KAM-05",
+  "KAM-07",
+  "SES-04",
+  "SES-07",
+  "MUZ-02",
+  "MUZ-03",
+  "EFX-02",
+  "EFX-03",
+  "URE-01"
+ ],
+ "yasak_isimler": [
+  "scooby",
+  "scooby-doo",
+  "shaggy",
+  "velma",
+  "daphne",
+  "fred jones",
+  "scrappy",
+  "tom",
+  "jerry",
+  "spike",
+  "tuffy",
+  "şirin",
+  "sirin",
+  "şirinler",
+  "smurf",
+  "gargamel",
+  "azman",
+  "şirin baba",
+  "sirin baba",
+  "papa smurf",
+  "şirine",
+  "smurfette",
+  "mystery machine",
+  "esrarengiz makine"
+ ]
+}

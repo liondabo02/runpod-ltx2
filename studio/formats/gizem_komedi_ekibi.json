@@ -1,0 +1,309 @@
+{
+ "id": "gizem_komedi_ekibi",
+ "surum": 1,
+ "ad": "Gizem-Komedi Ekibi",
+ "esinlenme": "Cumartesi sabahı gizem-komedi çizgi film geleneği: genç bir ekip ve korkak ama sevimli bir hayvan yardımcı, 'doğaüstü' görünen olayın arkasındaki insanı ipuçlarıyla ortaya çıkarır. Yalnız TÜR ve YAPI alınır; karakter, isim, araç, slogan ve görünüş tamamen özgündür.",
+ "anahtar_kelimeler": [
+  "gizem",
+  "dedektif",
+  "hayalet",
+  "esrarengiz",
+  "ipucu",
+  "maske",
+  "canavar"
+ ],
+ "kitle_yasi": "6-10",
+ "hedef_sure_sn": [
+  480,
+  720
+ ],
+ "ton": "ürkütücü ama güvenli; korku her zaman komediyle çözülür; doğaüstü yoktur, her olayın mantıklı açıklaması vardır",
+ "gorsel": {
+  "renk_betigi": {
+   "soguk_acilis": "gece mavisi-mor, yüksek kontrast",
+   "sorusturma": "loş sıcak",
+   "kovalamaca": "doygun, hızlı",
+   "maske_dusurme": "aydınlık, sıcak"
+  },
+  "imza": "ekibin kendine özgü bir aracı ya da çantası olabilir (özgün tasarım)"
+ },
+ "roller": [
+  {
+   "id": "lider",
+   "ad": "Lider",
+   "tanim": "planları kurar, ekibi böler",
+   "min": 1,
+   "max": 1
+  },
+  {
+   "id": "akilli",
+   "ad": "Akıllı",
+   "tanim": "ipuçlarını not eder ve sonunda bağlar",
+   "min": 1,
+   "max": 1
+  },
+  {
+   "id": "korkak_yardimci",
+   "ad": "Korkak yardımcı",
+   "tanim": "aç ve ürkek; kovalamacaların merkezinde, kazara kahraman",
+   "min": 1,
+   "max": 2
+  },
+  {
+   "id": "hayvan_yardimci",
+   "ad": "Hayvan yardımcı",
+   "tanim": "konuşkan ya da yarım konuşan hayvan; imza şakaların sahibi",
+   "min": 1,
+   "max": 1
+  },
+  {
+   "id": "supheli",
+   "ad": "Şüpheli",
+   "tanim": "bölüm boyunca şüphelenilen yerel karakterler; kostümlü 'canavar' bunlardan biridir",
+   "min": 2,
+   "max": 6
+  }
+ ],
+ "yapi": [
+  {
+   "slot": "soguk_acilis",
+   "ad": "Soğuk açılış",
+   "tanim": "bir tanık 'doğaüstü' görünen bir şeyle korkutulur; jenerik öncesi kanca",
+   "adet": [
+    1,
+    1
+   ],
+   "zorunlu": true,
+   "pay": [
+    0.03,
+    0.1
+   ],
+   "muzik": "gerilim teması",
+   "kamera": "alt açı, gölge"
+  },
+  {
+   "slot": "varis",
+   "ad": "Varış",
+   "tanim": "ekip olay yerine gelir, durumu öğrenir, şüphelilerden biriyle tanışır",
+   "adet": [
+    1,
+    1
+   ],
+   "zorunlu": true,
+   "pay": [
+    0.05,
+    0.15
+   ]
+  },
+  {
+   "slot": "sorusturma",
+   "ad": "Soruşturma",
+   "tanim": "ekip ayrılır; şüphelilerle konuşma, mekân araması",
+   "adet": [
+    1,
+    1
+   ],
+   "zorunlu": true,
+   "pay": [
+    0.12,
+    0.35
+   ]
+  },
+  {
+   "slot": "ipucu",
+   "ad": "İpucu",
+   "tanim": "kamerada açıkça gösterilen somut bir ipucu (nesne, iz, söz); izleyici de görebilmeli",
+   "adet": [
+    3,
+    8
+   ],
+   "zorunlu": true,
+   "serbest": true,
+   "kamera": "ipucuna yakın plan"
+  },
+  {
+   "slot": "kovalamaca",
+   "ad": "Kovalamaca",
+   "tanim": "korkak ikili kostümlüyle karşılaşır; müzikli, kapı-koridor şakalı kaçış",
+   "adet": [
+    1,
+    3
+   ],
+   "zorunlu": true,
+   "pay": [
+    0.08,
+    0.25
+   ],
+   "muzik": "hızlı kovalamaca teması",
+   "kamera": "takip planı",
+   "ses": "koşu adımları, kapı çarpması"
+  },
+  {
+   "slot": "imza_an",
+   "ad": "İmza an",
+   "tanim": "hayvan yardımcının tekrar eden şakası (yemek, korku, ödül)",
+   "adet": [
+    2,
+    4
+   ],
+   "zorunlu": true,
+   "serbest": true
+  },
+  {
+   "slot": "tuzak_plani",
+   "ad": "Tuzak planı",
+   "tanim": "lider tuzağı anlatır, korkak ikili yem olmayı istemez, ödülle ikna olur",
+   "adet": [
+    1,
+    1
+   ],
+   "zorunlu": true,
+   "pay": [
+    0.04,
+    0.12
+   ]
+  },
+  {
+   "slot": "tuzak_aksiligi",
+   "ad": "Tuzak aksiliği",
+   "tanim": "tuzak komik biçimde ters gider ama kostümlü yine de yakalanır",
+   "adet": [
+    1,
+    1
+   ],
+   "zorunlu": true,
+   "pay": [
+    0.04,
+    0.12
+   ],
+   "ses": "zincirleme gürültü"
+  },
+  {
+   "slot": "maske_dusurme",
+   "ad": "Maske düşürme",
+   "tanim": "kostümlü bir şüpheli çıkar; akıllı ipuçlarını tek tek bağlar",
+   "adet": [
+    1,
+    1
+   ],
+   "zorunlu": true,
+   "pay": [
+    0.05,
+    0.15
+   ],
+   "muzik": "çözüm vurgusu"
+  },
+  {
+   "slot": "kapanis_espri",
+   "ad": "Kapanış esprisi",
+   "tanim": "ekip güler; hayvan yardımcının son şakası",
+   "adet": [
+    1,
+    1
+   ],
+   "zorunlu": true,
+   "pay": [
+    0.02,
+    0.08
+   ]
+  }
+ ],
+ "kurallar": [
+  {
+   "tur": "once",
+   "slot": "ipucu",
+   "en_az": 3,
+   "once_slot": "maske_dusurme",
+   "neden": "çözüm adil olmalı: izleyici ipuçlarını önceden görmeli"
+  },
+  {
+   "tur": "slot_rol",
+   "slot": "maske_dusurme",
+   "rol": "supheli",
+   "neden": "kötü önceden tanıtılmış bir şüpheli olmalı"
+  },
+  {
+   "tur": "slot_rol",
+   "slot": "kovalamaca",
+   "rol": "korkak_yardimci",
+   "neden": "kovalamacanın merkezi korkak ikilidir"
+  },
+  {
+   "tur": "diyalog_orani",
+   "min": 0.45,
+   "max": 0.95
+  },
+  {
+   "tur": "yasak_kelime",
+   "kelimeler": [
+    "kan",
+    "öldü",
+    "ölüm",
+    "öldür",
+    "silah",
+    "bıçak",
+    "yaralandı",
+    "hastane",
+    "intihar",
+    "gerçek hayalet",
+    "gerçekten hayalet"
+   ]
+  }
+ ],
+ "tekrar_eden_unsurlar": [
+  "ekibin 'ayrılalım' kararı",
+  "hayvan yardımcının ödül/yemek düşkünlüğü",
+  "kötünün yakalanınca söylediği sitem cümlesi (özgün)"
+ ],
+ "gerekli_yetenekler": [
+  "SEN-02",
+  "SEN-03",
+  "SEN-06",
+  "KAR-01",
+  "KAR-03",
+  "ANI-01",
+  "ANI-05",
+  "ANI-09",
+  "ANI-12",
+  "ANI-13",
+  "KAM-02",
+  "KAM-03",
+  "KAM-07",
+  "MEK-03",
+  "MEK-04",
+  "SES-02",
+  "SES-04",
+  "SES-05",
+  "SES-07",
+  "MUZ-01",
+  "MUZ-02",
+  "EFX-03",
+  "URE-01"
+ ],
+ "yasak_isimler": [
+  "scooby",
+  "scooby-doo",
+  "shaggy",
+  "velma",
+  "daphne",
+  "fred jones",
+  "scrappy",
+  "tom",
+  "jerry",
+  "spike",
+  "tuffy",
+  "şirin",
+  "sirin",
+  "şirinler",
+  "smurf",
+  "gargamel",
+  "azman",
+  "şirin baba",
+  "sirin baba",
+  "papa smurf",
+  "şirine",
+  "smurfette",
+  "mystery machine",
+  "esrarengiz makine"
+ ]
+}

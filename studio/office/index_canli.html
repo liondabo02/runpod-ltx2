@@ -35,6 +35,10 @@ input,select{font:inherit;background:#15111f;color:#fff;border:1px solid #4c4366
 .satir{border-bottom:1px solid #342d47;padding:4px 0;font-size:12.5px}
 .satir b{color:#9be3c0}.satir.failed b{color:#ff8f8f}
 .soluk{opacity:.65;font-size:12px}
+.cubuk{display:flex;height:9px;border-radius:5px;overflow:hidden;background:#2a2438;margin:3px 0 6px}
+.cubuk span{display:block;height:100%}
+.msat{display:grid;grid-template-columns:105px 1fr;gap:6px;align-items:center;font-size:12.5px}
+.fsat{margin-bottom:8px;font-size:12.5px}
 a{color:#a9ccff;display:block}
 @media(max-width:850px){body{height:auto}main{grid-template-columns:1fr}#alan{height:64vh}aside{border:0}}
 </style></head><body>
@@ -49,6 +53,8 @@ a{color:#a9ccff;display:block}
 <form class="yaz" id="form"><input id="giris" placeholder="Örn: Park kuralları hakkında yeni bölüm hazırla" autocomplete="off"><button class="ana">Gönder</button></form></section>
 <section><h2 id="kimAd">Çalışan</h2><div id="kim" class="soluk">Bir çalışana dokun.</div></section>
 <section><h2 id="ekipAd">Ekip</h2><div id="ekip"></div></section>
+<section><h2>Stüdyo motorları</h2><div id="motor" class="soluk">Yükleniyor…</div></section>
+<section><h2>Dizi formülleri</h2><div id="formul" class="soluk">Yükleniyor…</div></section>
 <section><h2>Gerçek olay akışı</h2><div id="akis" class="soluk">Henüz olay yok.</div></section>
 <section><h2>Son videolar</h2><div id="vid" class="soluk">Henüz video yok.</div></section>
 </aside></main>
@@ -250,13 +256,29 @@ function panel(){if(!veri)return;
   w.history.slice().reverse().forEach(e=>k.append(olaySatiri(e,false)))}
  if(veri.feed.length){$('akis').className='';$('akis').replaceChildren(...veri.feed.slice(-25).reverse().map(e=>olaySatiri(e,true)))}
  if(veri.videos.length){$('vid').replaceChildren(...veri.videos.map(v=>{const l=el('a',v.when+'  '+v.path);l.href='/video/'+encodeURI(v.path);l.target='_blank';return l}))}
- const n=s=>veri.jobs.filter(j=>j.state===s).length;$('ozet').textContent=`Sırada ${n('pending')} · çalışan ${n('running')} · hatalı ${n('failed')}`}
+ const n=s=>veri.jobs.filter(j=>j.state===s).length,yeniHata=hataSay(veri.jobs,veri.now);
+ $('ozet').textContent=`Sırada ${n('pending')} · çalışan ${n('running')} · hatalı (son 24 saat) ${yeniHata}`+(n('failed')-yeniHata?` · eski hata kaydı ${n('failed')-yeniHata}`:'')}
+// Eski (24 saatten önceki) başarısız iş kayıtları bugünkü sorun gibi sayılmaz; dosyalar silinmez, ayrı gösterilir.
+function hataSay(js,now){return js.filter(j=>j.state==='failed'&&(j.at==null||now-j.at<86400)).length}
+const DURUMLAR=[['VAR','#4fe08a','var'],['KISMI','#e6c34a','kısmi'],['TESTSIZ','#f0a050','testsiz'],['YOK','#ff6b6b','yok'],['KANIT_BOZUK','#c084fc','kanıt bozuk']];
+function cubuk(say){const top=DURUMLAR.reduce((a,d)=>a+(say[d[0]]||0),0)||1,c=el('div',null,'cubuk');
+ DURUMLAR.forEach(d=>{const n=say[d[0]]||0;if(n){const p=el('span');p.style.width=(100*n/top)+'%';p.style.background=d[1];p.title=d[2]+': '+n;c.append(p)}});return c}
+function motorPanel(m){if(m.error){$('motor').textContent=m.error;return}
+ const ozet=el('div',`${m.yetenek_sayisi} yetenek: `+DURUMLAR.filter(d=>m.toplam[d[0]]).map(d=>`${d[2]} ${m.toplam[d[0]]}`).join(' · ')+` · insan onayı bekleyen ${m.insan_onayi}`);
+ const satirlar=Object.entries(m.motorlar).sort().map(([ad,say])=>{const s=el('div',null,'msat');s.append(el('span',ad),cubuk(say));return s});
+ const k=el('div',null,'soluk');k.textContent=m.not+(m.kabul.length?` · son kabul kapısı: ${m.kabul[0].sonuc} (${m.kabul[0].head})`:'');
+ $('motor').className='';$('motor').replaceChildren(ozet,...satirlar,k);
+ $('formul').className='';$('formul').replaceChildren(...m.formuller.map(f=>{const s=el('div',null,'fsat');
+  if(f.hata){s.append(el('b',f.ad),el('div',f.hata,'soluk'));return s}
+  s.append(el('b',`${f.ad} — ${f.gerekli} yetenek`),cubuk(f.sayim),el('div',f.eksik.length?'Eksik: '+f.eksik.join(', '):'Gereken yeteneklerin hepsi kodda var (kalite onayı ayrı).','soluk'));return s}))}
+async function motorCek(){try{motorPanel(await api('/api/motorlar'))}catch(e){$('motor').textContent='motor paneli okunamadı'}setTimeout(motorCek,60000)}
 async function api(p,body){const y=await fetch(p,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{});const j=await y.json();if(!y.ok)throw new Error(j.error||y.status);return j}
 async function cek(){try{const v=await api('/api/live');fark=v.now-Date.now()/1000;
   for(const e of v.feed){const k=[e.at,e.worker,e.kind,e.job].join('|');if(!gorulen.has(k)){gorulen.add(k);if(!ilk&&e.kind==='start'&&e.worker!=='showrunner')ziyaret.push(e.worker)}}
   ilk=false;veri=v;kopuk=false;$('pil').className='pill '+(v.daemon.alive?'on':'off');$('pil').textContent='stüdyo: '+v.daemon.state}
  catch(e){kopuk=true;ziyaret.length=0;$('ozet').textContent='';$('pil').className='pill off';$('pil').textContent='ofis sunucusuna ulaşılamıyor'}
  panel();if(kopuk)$('ozet').textContent='';setTimeout(cek,1000)}
+motorCek();
 function mesaj(kim,metin,kaynak){const m=el('div',metin,'m '+kim);if(kaynak)m.append(el('small',kaynak));$('sohbet').append(m);$('sohbet').scrollTop=1e9;return m}
 const KAYNAK={kayit:'kaynak: stüdyo kayıtları',kural:'ofis kuralı (yapay zekâ cevabı değil)',model:'yapay zekâ modeli cevabı'};
 function oneriKutusu(m,p){const k=el('div',null,'oneri'),onay=el('button',p.action==='cancel'?'Onayla, işi durdur':'Onayla, ekibe ver','ana'),vaz=el('button','Vazgeç');
