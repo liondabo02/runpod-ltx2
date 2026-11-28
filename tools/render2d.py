@@ -449,6 +449,20 @@ def carry_info(beat, cid, lt):
     return best
 
 
+HEAD_TOP_K = 1.08          # başın tepesi (saç/başlık payıyla) / boy
+HEAD_MARGIN_PX = 12.0      # geniş/orta planda en uzun başın üstünde kalan en az pay
+FEET_MAX_PX = 690.0        # kamera yükselirken ayak zemini bundan aşağı inemez; inecekse kadraj açılır
+
+
+def head_safe_framing(cy, zoom, tallest, base_ppm):
+    """Geniş/orta plan için (cy, zoom): en uzun oyuncunun başı üstten kesilmez. Yeten kadraj aynen kalır."""
+    if tallest <= 0:
+        return cy, zoom
+    top = tallest * HEAD_TOP_K
+    zoom = min(zoom, (FEET_MAX_PX - HEAD_MARGIN_PX) / (base_ppm * top))
+    return max(cy, top - (360.0 - HEAD_MARGIN_PX) / (base_ppm * zoom)), zoom
+
+
 def _head_cropped(cam, x, H):
     """Başın/saçın/omzun ekran sınırında KISMEN kesilip kesilmediği (tamamen içerde/tamamen dışarıda sorun değil).
     Çocukta baş büyük (çene ~0.50H), yetişkinde çene ~0.70H; alt kenarda ön plan çimi (y>640) yüzü örter."""
@@ -609,6 +623,8 @@ def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False):
     if preset in ("wide", "medium") and len(xs) > 1:            # kadraj güvenliği: tüm oyuncular kadraja sığsın
         lo, hi = min(xs), max(xs); half = (hi - lo) / 2 + 0.7
         zoom = max(0.8, min(zoom, 5.12 / (2 * half))); cx = (lo + hi) / 2
+    if preset in ("wide", "medium"):
+        cy, zoom = head_safe_framing(cy, zoom, max((designs[c]["height"] for c in beat["cast"]), default=0.0), sc.BASE_PPM)
     cam = sc.Cam(cx, cy, zoom)
     if preset == "insert" and beat.get("props"):
         ix, iy = props2d.place(beat["props"][0], xs, [designs[c]["height"] for c in beat["cast"]], t, lt, dur)
