@@ -13,6 +13,8 @@ import object_state  # noqa: E402
 import action_staging  # noqa: E402
 import pointing  # noqa: E402
 import listener_reaction  # noqa: E402
+import continuity  # noqa: E402
+import pose_blend  # noqa: E402
 import shot_cuts  # noqa: E402
 import setpieces2d  # noqa: E402
 import fx_layer  # noqa: E402
@@ -777,6 +779,144 @@ def action_blocks(beat):
     return [(beat["t_start"] + w[0], beat["t_start"] + w[1]) for w in action_staging.hold_windows(beat) + pointing.shot_windows(beat)]
 
 
+def _speech(beat, t):
+    """O anda konuşan ve vurgu şiddeti: (konuşan | None, 0..1)."""
+    ln = next((ln for ln in beat["lines"] if ln["start"] <= t < ln["end"]), None)
+    speaker = next((ln_["char"] for ln_ in reversed(beat["lines"]) if ln_["start"] <= t < ln_["end"]), None)
+    if speaker is None:
+        return None, 0.0
+    cues = next((ln_["cues"] for ln_ in beat["lines"] if ln_["char"] == speaker and ln_["start"] <= t < ln_["end"]), [])
+    start = next((ln_["start"] for ln_ in beat["lines"] if ln_["char"] == speaker and ln_["start"] <= t < ln_["end"]), 0)
+    return speaker, emphasis(cues, t - start)
+
+
+def actor_state(beat, designs, cid, lt, px):
+    """Oyuncunun o andaki AYRIK durumu (tek kaynak: poz hesabı ve geçiş imzası aynı kararı okur).
+    Dönüş: hareket sözlüğü, eylem türü, yerel zaman ve süreler, yönetmen tepkisi sürüyor mu, taşıma bilgisi, 'duran taşıyor' mu."""
+    m, dur = beat["motion"][cid], beat["t_end"] - beat["t_start"]
+    rc = ((beat.get("choreo") or {}).get("react") or {}).get(cid)           # yönetmen tepkisi: belirli andan sonra (ör. şaşırma)
+    m, seg_t, seg_d = sm.segment(m, lt, dur)             # yaklaşma yürüyüşü varsa o parça; yoksa eylemin kendisi
+    lte, kind_e = seg_t, m["kind"]
+    reacting = bool(rc) and lt >= float(rc["t"])
+    if reacting:
+        lte, kind_e = lt - float(rc["t"]), rc["kind"]
+        m = dict(m); m["kind"] = kind_e; m["x0"] = m["x1"] = _x_at(px, cid, m); seg_d = dur
+    reach_w, _carry_w = object_effects(beat, cid, lt)
+    dur_e = seg_d
+    if reach_w and kind_e in ("idle", "look") and not rc:      # nesne teması yaklaşıyor ve karakter boşta: uzanma hazırlığı otomatik
+        lte, dur_e, kind_e = reach_w[0], reach_w[1], "reach"
+        m = dict(m); m["kind"] = "reach"; m["x0"] = m["x1"] = _x_at(px, cid, m)
+    ci = carry_info(beat, cid, lt)
+    stationary = (kind_e not in ("walk", "carry", "run")) or (kind_e == "walk" and (abs(m["x1"] - m["x0"]) < 0.02 or lt >= 0.9 * seg_d))      # yürüyüp varmış karakter de duran sayılır
+    return {"m": m, "kind": kind_e, "lte": lte, "dur": dur_e, "seg_d": seg_d, "reacting": reacting, "carry": ci, "stationary": stationary}
+
+
+def _history(plan, cid, beat, t):
+    """t anı için bu oyuncunun kesintisiz geçmişindeki vuruş: bu vuruş ya da aynı mekânda hemen önceki (zaman atlaması yoksa)."""
+    while beat is not None and t < beat["t_start"] - 1e-9:
+        prev = None
+        if beat.get("transition_kind") not in continuity.FREE:
+            prev = next((b for b in plan["beats"] if abs(b["t_end"] - beat["t_start"]) < 1e-6 and b.get("loc") == beat.get("loc")
+                         and cid in b["cast"]), None)
+        beat = prev
+    return beat if beat is not None and cid in beat["cast"] else None
+
+
+def _positions(beat, designs, lt):
+    dur = beat["t_end"] - beat["t_start"]
+    return {c: sm.motion_x(beat["motion"][c], lt, dur, designs[c]["height"]) for c in beat["cast"]}
+
+
+def pose_signature(plan, designs, beat, cid, t):
+    """Pozu değiştiren ayrık kararların imzası; bu değişince beden yeni poza geçişle varır (pose_blend)."""
+    b = _history(plan, cid, beat, t)
+    if b is None:
+        return None
+    lt = t - b["t_start"]
+    px = _positions(b, designs, lt)
+    st = actor_state(b, designs, cid, lt, px)
+    ci = st["carry"]
+    speaker = _speech(b, t)[0]
+    hear = None if speaker == cid else listener_reaction.performance(b, cid, t)
+    gz = ((b.get("choreo") or {}).get("gaze") or {}).get(cid)
+    side = px[gz] > px[cid] if gz in px and gz != cid else None              # bakılan oyuncu öbür yana geçerse baş yön değiştirir
+    return (b["t_start"], st["kind"], st["reacting"], speaker, hear and hear["speaker"], side,
+            None if not ci else (ci["hand"], ci["style"], ci["prop"], st["stationary"]))
+
+
+def actor_pose(plan, designs, beat, cid, t, px):
+    """Oyuncunun t anındaki taban pozu (temas katmanlarından önce), durum değişimlerinde geçişli: (poz, hareket, bakış, vurgu)."""
+    now = _base_pose(plan, designs, beat, cid, t, px)
+
+    def raw(t_):
+        if abs(t_ - t) < 1e-12:
+            return now[0]
+        b = _history(plan, cid, beat, t_)
+        return _base_pose(plan, designs, b, cid, t_, _positions(b, designs, t_ - b["t_start"]))[0]
+    p = pose_blend.apply(raw, lambda t_: pose_signature(plan, designs, beat, cid, t_), t, designs[cid]["height"])
+    return (p,) + now[1:]
+
+
+def _base_pose(plan, designs, beat, cid, t, px):
+    """Tek anın geçişsiz taban pozu: (poz, hareket, bakış, vurgu)."""
+    lt = t - beat["t_start"]
+    speaker, E = _speech(beat, t)
+    d = designs[cid]
+    Hm = d["height"]
+    st_ = actor_state(beat, designs, cid, lt, px)
+    m, kind_e, lte, dur_e, seg_d = (st_[k] for k in ("m", "kind", "lte", "dur", "seg_d"))
+    args = (kind_e, 0, dur_e, m["seed"], m["x0"], m["x1"], Hm, Hm * 0.45)
+    spk = (cid == speaker)
+    p = sm.pose_at(args[0], lte, *args[2:], speaking=spk)
+    # takip (follow-through): kollar gövdeden, kafa da biraz geriden gelir
+    pa = sm.pose_at(args[0], max(0.0, lte - 0.11), *args[2:], speaking=spk)
+    ph_ = sm.pose_at(args[0], max(0.0, lte - 0.05), *args[2:], speaking=spk)
+    p["aL"], p["aR"], p["head"] = list(pa["aL"]), list(pa["aR"]), list(ph_["head"])
+    ci = st_["carry"]
+    if ci:                                                     # taşıma: ağırlık + taşıma biçimi (yük önde/yanda/omuzda) -> denge, kol pozu
+        adj = object_state.carry_adjust(ci["weight"], ci["style"], ci["reach"])
+        p["lean"] += adj["lean"]; p["sq"] = p.get("sq", 1.0) + adj["sq"]; p["head"][0] += adj["head_nod"]
+        if kind_e != "reach":                                  # tepki (şaşırma/gülme) sırasında da tutan kol nesneyi taşımaya devam eder
+            ha = "aL" if ci["hand"] == "L" else "aR"; sg_ = 1 if ci["hand"] == "L" else -1
+            for s_ in (("L", "R") if adj["arms"] == "both_front" else (ci["hand"],)):
+                p.pop("sw" + s_, None)                          # taşıyan kol yürüyüş salınımına katılmaz
+            if adj["arms"] == "both_front":
+                for a_ in ("aL", "aR"):
+                    p[a_][0] = -0.95
+                p["aL"][1] = 0.30; p["aR"][1] = -0.30
+            elif adj["arms"] == "one_up":
+                p[ha][0] = -0.40; p[ha][1] = sg_ * 1.6
+            else:
+                p[ha][0] = -0.35; p[ha][1] = sg_ * 0.25
+                p["head"][1] += -sg_ * adj["side_tilt"]
+                if st_["stationary"] and ci["weight"] < 1.5 and ci["style"] != "two_hand_front":
+                    # duran kişi hafif nesneyi kalça hizasında sallamaz: dirseği bükük, nesne göğüs hizasında önde tutar (boy ve kola göre; çocuk yüzüyle aynı hizaya düşmez)
+                    gz_ = ((beat.get("choreo") or {}).get("gaze") or {}).get(cid)
+                    dn = (1.0 if px[gz_] > px[cid] else -1.0) if gz_ in px and gz_ != cid else (1.0 if ci["hand"] == "R" else -1.0)
+                    ln_ = Hm * 0.27; shx_, shh_ = pp.shoulder_offset(d, p, ci["hand"])
+                    tx_ = shx_ + dn * 0.12 * ln_
+                    pp.arm_toward(d, p, ci["hand"], tx_, chest_hold_height(d, p, tx_, shh_, ci["prop"], ci["scale"]))
+    look = 0.0
+    gz = ((beat.get("choreo") or {}).get("gaze") or {}).get(cid)       # yönetmen bakışı: konuşulan kişiye/nesneye
+    if gz in px and gz != cid:
+        look = 1.0 if px[gz] > px[cid] else -1.0
+        p["head"][2] += 0.8 * look
+    elif speaker and cid != speaker and speaker in px:            # dinleyen konuşana bakar
+        look = 1.0 if px[speaker] > px[cid] else -1.0
+        p["head"][2] += 0.7 * look
+    hear = None if spk else listener_reaction.performance(beat, cid, t)
+    if hear and hear["speaker"] in px:                           # dinleyici oyunculuğu: replik bitince de konuşandan kopmaz, baş hareketiyle karşılık verir
+        if not (gz in px and gz != cid) and speaker is None:
+            look = 1.0 if px[hear["speaker"]] > px[cid] else -1.0
+            p["head"][2] += listener_reaction.TURN * look * hear["weight"]
+        p["head"][0] += hear["nod"]
+    if spk:                                                      # vurgulu hecede baş, kaş, el
+        p["head"][0] += 0.14 * E
+        p["z"] += 0.012 * Hm * E
+        p["aR"][1] = (p["aR"][1] if p["aR"][1] else -0.2) - 0.5 * E
+    return p, m, look, E if spk else 0.0
+
+
 def poses_at(plan, designs, t):
     """O anın çizilecek oyuncu pozları (frame ile aynı hesap; çizim yapılmaz)."""
     return frame(plan, designs, t, poses_only=True)
@@ -957,70 +1097,8 @@ def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False, came
     for cid in beat["cast"]:
         px[cid] = sm.motion_x(beat["motion"][cid], lt, dur, designs[cid]["height"])
     for cid in beat["cast"]:
-        m, d = beat["motion"][cid], designs[cid]
-        Hm = d["height"]
-        rc = ((beat.get("choreo") or {}).get("react") or {}).get(cid)           # yönetmen tepkisi: belirli andan sonra (ör. şaşırma)
-        m, seg_t, seg_d = sm.segment(m, lt, dur)             # yaklaşma yürüyüşü varsa o parça; yoksa eylemin kendisi
-        lte, kind_e = seg_t, m["kind"]
-        if rc and lt >= float(rc["t"]):
-            lte, kind_e = lt - float(rc["t"]), rc["kind"]
-            m = dict(m); m["kind"] = kind_e; m["x0"] = m["x1"] = _x_at(px, cid, m); seg_d = dur
-        reach_w, carry_w = object_effects(beat, cid, lt)
-        dur_e = seg_d
-        if reach_w and kind_e in ("idle", "look") and not rc:      # nesne teması yaklaşıyor ve karakter boşta: uzanma hazırlığı otomatik
-            lte, dur_e, kind_e = reach_w[0], reach_w[1], "reach"
-            m = dict(m); m["kind"] = "reach"; m["x0"] = m["x1"] = _x_at(px, cid, m)
-        args = (kind_e, 0, dur_e, m["seed"], m["x0"], m["x1"], Hm, Hm * 0.45)
-        spk = (cid == speaker)
-        p = sm.pose_at(args[0], lte, *args[2:], speaking=spk)
-        # takip (follow-through): kollar gövdeden, kafa da biraz geriden gelir
-        pa = sm.pose_at(args[0], max(0.0, lte - 0.11), *args[2:], speaking=spk)
-        ph_ = sm.pose_at(args[0], max(0.0, lte - 0.05), *args[2:], speaking=spk)
-        p["aL"], p["aR"], p["head"] = list(pa["aL"]), list(pa["aR"]), list(ph_["head"])
-        ci = carry_info(beat, cid, lt)
-        if ci:                                                     # taşıma: ağırlık + taşıma biçimi (yük önde/yanda/omuzda) -> denge, kol pozu
-            adj = object_state.carry_adjust(ci["weight"], ci["style"], ci["reach"])
-            p["lean"] += adj["lean"]; p["sq"] = p.get("sq", 1.0) + adj["sq"]; p["head"][0] += adj["head_nod"]
-            if kind_e != "reach":                                  # tepki (şaşırma/gülme) sırasında da tutan kol nesneyi taşımaya devam eder
-                ha = "aL" if ci["hand"] == "L" else "aR"; sg_ = 1 if ci["hand"] == "L" else -1
-                for s_ in (("L", "R") if adj["arms"] == "both_front" else (ci["hand"],)):
-                    p.pop("sw" + s_, None)                          # taşıyan kol yürüyüş salınımına katılmaz
-                if adj["arms"] == "both_front":
-                    for a_ in ("aL", "aR"):
-                        p[a_][0] = -0.95
-                    p["aL"][1] = 0.30; p["aR"][1] = -0.30
-                elif adj["arms"] == "one_up":
-                    p[ha][0] = -0.40; p[ha][1] = sg_ * 1.6
-                else:
-                    p[ha][0] = -0.35; p[ha][1] = sg_ * 0.25
-                    p["head"][1] += -sg_ * adj["side_tilt"]
-                    stationary_ = (kind_e not in ("walk", "carry", "run")) or (kind_e == "walk" and (abs(m["x1"] - m["x0"]) < 0.02 or lt >= 0.9 * seg_d))      # yürüyüp varmış karakter de duran sayılır
-                    if stationary_ and ci["weight"] < 1.5 and ci["style"] != "two_hand_front":
-                        # duran kişi hafif nesneyi kalça hizasında sallamaz: dirseği bükük, nesne göğüs hizasında önde tutar (boy ve kola göre; çocuk yüzüyle aynı hizaya düşmez)
-                        gz_ = ((beat.get("choreo") or {}).get("gaze") or {}).get(cid)
-                        dn = (1.0 if px[gz_] > px[cid] else -1.0) if gz_ in px and gz_ != cid else (1.0 if ci["hand"] == "R" else -1.0)
-                        ln_ = Hm * 0.27; shx_, shh_ = pp.shoulder_offset(d, p, ci["hand"])
-                        tx_ = shx_ + dn * 0.12 * ln_
-                        pp.arm_toward(d, p, ci["hand"], tx_, chest_hold_height(d, p, tx_, shh_, ci["prop"], ci["scale"]))
-        look = 0.0
-        gz = ((beat.get("choreo") or {}).get("gaze") or {}).get(cid)       # yönetmen bakışı: konuşulan kişiye/nesneye
-        if gz in px and gz != cid:
-            look = 1.0 if px[gz] > px[cid] else -1.0
-            p["head"][2] += 0.8 * look
-        elif speaker and cid != speaker and speaker in px:            # dinleyen konuşana bakar
-            look = 1.0 if px[speaker] > px[cid] else -1.0
-            p["head"][2] += 0.7 * look
-        hear = None if spk else listener_reaction.performance(beat, cid, t)
-        if hear and hear["speaker"] in px:                           # dinleyici oyunculuğu: replik bitince de konuşandan kopmaz, baş hareketiyle karşılık verir
-            if not (gz in px and gz != cid) and speaker is None:
-                look = 1.0 if px[hear["speaker"]] > px[cid] else -1.0
-                p["head"][2] += listener_reaction.TURN * look * hear["weight"]
-            p["head"][0] += hear["nod"]
-        if spk:                                                      # vurgulu hecede baş, kaş, el
-            p["head"][0] += 0.14 * E
-            p["z"] += 0.012 * Hm * E
-            p["aR"][1] = (p["aR"][1] if p["aR"][1] else -0.2) - 0.5 * E
-        items.append((cid, d, p, m, look, E if spk else 0.0))
+        p, m, look, e_ = actor_pose(plan, designs, beat, cid, t, px)
+        items.append((cid, designs[cid], p, m, look, e_))
         xs.append(p["x"])
     apply_throw_swing(beat, items, lt)                   # atışta kol savurma
     apply_handoff_reach(beat, items, lt)                 # el değiştirmede eller buluşma noktasına uzanır
@@ -1167,7 +1245,7 @@ def grade(im, light, t):
 
 
 _G = {}
-ENGINE_FILES = ("render2d.py", "puppet2d.py", "scenes2d.py", "setpieces2d.py", "props2d.py", "fx_layer.py", "bg_art.py", "shot_motion.py", "puppet_side.py", "object_state.py",
+ENGINE_FILES = ("render2d.py", "puppet2d.py", "scenes2d.py", "setpieces2d.py", "props2d.py", "fx_layer.py", "bg_art.py", "shot_motion.py", "puppet_side.py", "object_state.py", "pose_blend.py",
                 "shot_planner.py", "style_profile.py", "mood_engine.py", "action_staging.py", "staging.py", "continuity.py", "listener_reaction.py", "shot_cuts.py",
                 "pointing.py")
 

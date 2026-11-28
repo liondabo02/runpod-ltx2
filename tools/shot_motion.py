@@ -85,6 +85,13 @@ def arm_fwd(p, side, a):
     (p["aL"] if side == "L" else p["aR"])[0] = -a
 
 
+def blend_arm(p, side, out, fwd, w):
+    """Kolu o anki açılarından (w=0) verilen dışa/öne açıya (w=1) sürekli geçirir."""
+    a = p["aL"] if side == "L" else p["aR"]
+    a[1] += ((out if side == "L" else -out) - a[1]) * w
+    a[0] += (-fwd - a[0]) * w
+
+
 try:
     import style_profile as _stp
 except Exception:       # profil yoksa varsayılan davranış
@@ -92,6 +99,10 @@ except Exception:       # profil yoksa varsayılan davranış
 
 
 IDLE_ARM_BASE, IDLE_ARM_LIFT = 0.12, 0.36       # boşta kıpırtının kol açısı (radyan): el gevşek kalır (puppet2d.REST_ARM_ANG altı)
+IDLE_ARM_BLEND = 0.5                            # boşta kıpırtı kolu, kıpırtı şiddeti bu değere varana kadar o anki pozdan açılır
+ACCENT_BLEND = 0.12                             # konuşma vurgusu kolu, vurgu penceresinin (0..0,5) bu kadarlık iki ucunda açılır/döner
+JUMP_PUSH, JUMP_ARM = 0.25, 0.40                # zıplamada itişin ve kol savurmasının/indirmesinin havada kalma içindeki payı
+SURPRISE_HOLD_S, SURPRISE_DIP_S = 0.25, 0.14    # şaşırmanın tepe tutma süresi ve hazırlık çömelmesi (sn)
 
 
 # ---------------------------------------------------------------- ayak izleri (birim: bir adım çevrimi boyu D; konum = gidilen yol)
@@ -246,13 +257,18 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
         cyc = (ph * 3.0) % 1.0
         j = max(0.0, math.sin(math.pi * min(1.0, max(0.0, (cyc - 0.22) / 0.62))))        # havada kalma
         p["z"] = 0.22 * H * j
-        if cyc < 0.22:                                   # HAZIRLIK: çömel, kollar geriye
+        if cyc < 0.22:                                   # HAZIRLIK: çömel, kollar önceki inişten geriye
             c = smooth(cyc / 0.22)
             p["sq"] = 1.0 - 0.16 * c; p["lean"] = 0.10 * c
-            arm_out(p, "L", 0.2); arm_out(p, "R", 0.2); arm_fwd(p, "L", -0.6 * c); arm_fwd(p, "R", -0.6 * c)
-        elif cyc < 0.84:                                 # HAVA: uzama, kollar yukarı
-            p["sq"] = 1.0 + 0.10 * j
-            arm_out(p, "L", 2.5); arm_out(p, "R", 2.5)
+            for side_ in "LR":
+                arm_out(p, side_, 0.5 - 0.3 * c); arm_fwd(p, side_, -0.6 * c)
+        elif cyc < 0.84:                                 # HAVA: uzama, kollar yukarı savrulur ve inişe iner (evre sınırlarında poz sürekli)
+            u = (cyc - 0.22) / 0.62
+            push = 1.0 - smooth(u / JUMP_PUSH)           # hazırlık çömelmesinin kalanı itişte açılır
+            p["sq"] = 1.0 + 0.10 * j - 0.16 * push; p["lean"] = 0.10 * push
+            for side_ in "LR":
+                arm_out(p, side_, 0.2 + 2.3 * smooth(u / JUMP_ARM) - 2.0 * smooth((u - (1.0 - JUMP_ARM)) / JUMP_ARM))
+                arm_fwd(p, side_, -0.6 * push)
             p["lL"] = p["lR"] = 0.25 * j
         else:                                            # İNİŞ: ezilme + sekme
             c = math.sin(math.pi * (cyc - 0.84) / 0.16)
@@ -269,8 +285,11 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
         p["head"][0] = -0.3; p["lean"] = -0.08
         arm_fwd(p, "L", 0.5); arm_fwd(p, "R", 0.5)
     elif kind == "surprise":
-        k = math.exp(-3.0 * t)
-        p["sq"] = 1.0 + 0.12 * k if t > 0.08 else 1.0 - 0.10 * (1.0 - t / 0.08)   # önce küçük çömelme, sonra uzama
+        k = math.exp(-3.0 * max(0.0, t - SURPRISE_HOLD_S))      # tepe, pozdan poza geçiş bitene kadar korunur, sonra söner
+        if t < SURPRISE_DIP_S:                                  # önce küçük çömelme, sonra uzama: ikisi de sıfırdan sürekli
+            p["sq"] = 1.0 - 0.10 * math.sin(math.pi * t / SURPRISE_DIP_S)
+        else:
+            p["sq"] = 1.0 + 0.12 * k * smooth((t - SURPRISE_DIP_S) / SURPRISE_DIP_S)
         p["z"] = 0.12 * H * k
         arm_out(p, "L", 0.3 + 1.6 * k); arm_out(p, "R", 0.3 + 1.6 * k)
         p["head"][0] = -0.15 * k; p["lean"] = -0.12 * k
@@ -310,7 +329,9 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
         if h2 > 0.45 and loc < 0.5:                      # vurgu: baş vurur, bir el yukarı-öne açılır
             e = math.sin(math.pi * loc / 0.5)
             side = "R" if h2 > 0.72 else "L"
-            en = prof.get("energy", 1.0); arm_out(p, side, 0.4 + 0.9 * e * en); arm_fwd(p, side, 0.6 * e * en)
+            en = prof.get("energy", 1.0)
+            w_ = smooth(min(loc, 0.5 - loc) / ACCENT_BLEND)       # vurgu pozu o anki koldan açılır ve ona döner (tek karede atlamaz)
+            blend_arm(p, side, 0.4 + 0.9 * e * en, 0.6 * e * en, w_)
             if e > 0.55:                                  # vurgu tepesinde jest eli: işaret / yumruk / başparmak (kişiliğe göre)
                 g_ = (None, "fist", "thumb")[int(h2 * 7) % 3]      # işaret parmağı rastgele seçilmez: gösterme hedefi olan veridir (pointing)
                 if g_:
@@ -325,7 +346,7 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
             p["x"] += 0.10 * math.sin(W * 0.11 * t + s) * (H / 1.0) * 0.5 * smooth(t / SWAY_IN_S)   # ağırlık kaydırma (plan başında sıfırdan açılır)
         if h > 0.55:                                  # boşta kıpırtı: kol hafifçe açılır; yataya yakın kalkmaz (hedefsiz 'gösterme' gibi okunuyordu)
             side = "R" if h > 0.78 else "L"
-            arm_out(p, side, IDLE_ARM_BASE + IDLE_ARM_LIFT * bump); arm_fwd(p, side, 0.4 * bump)
+            blend_arm(p, side, IDLE_ARM_BASE + IDLE_ARM_LIFT * bump, 0.4 * bump, smooth(bump / IDLE_ARM_BLEND))
             p["head"][2] += 0.3 * bump * (1 if h > 0.78 else -1)
         elif h < 0.2:                                 # kafa eğ, düşün
             p["head"][2] += 0.35 * bump; p["lean"] += 0.05 * bump

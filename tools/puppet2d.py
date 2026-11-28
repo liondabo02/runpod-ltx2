@@ -431,14 +431,26 @@ def arm_blend(des, pose, side, tx, th, w):
     return ratio
 
 
+def bend_weight(pose, side):
+    """Dirsek bükümünün ağırlığı 0..1: yönlü uzanma yokken kol düzdür; uzanmaya geçişte büküm ağırlıkla açılır (dirsek tek karede sıçramaz)."""
+    if ("d" + side) not in pose:
+        return 0.0
+    return max(0.0, min(1.0, float(pose.get("rw" + side, 1.0))))
+
+
+def elbow_point(sh, hand, arm_len, sg, bend=1.0):
+    """Dirsek (ekran y aşağı): düz kolun orta noktası ile tam bükülü dirsek arasında 'bend' ağırlığı."""
+    mx, my = (sh[0] + hand[0]) / 2, (sh[1] + hand[1]) / 2
+    ex, ey = _elbow(sh, hand, arm_len, sg)
+    return (mx + (ex - mx) * bend, my + (ey - my) * bend)
+
+
 def arm_joints(des, pose, side):
     """Çizilen kolun (omuz, dirsek, el) noktaları, ayağa göre metre: (dx, yükseklik). Ön/üç-çeyrek görünüş; çizimle aynı geometri."""
     full = des["height"] * 0.27
     sx, sh = shoulder_offset(des, pose, side); hx, hh = hand_offset(des, pose, side)
-    if ("d" + side) in pose and math.hypot(hx - sx, hh - sh) < full * 0.985:
-        ex, ey = _elbow((sx, -sh), (hx, -hh), full, -1 if side == "L" else 1)
-        return (sx, sh), (ex, -ey), (hx, hh)
-    return (sx, sh), ((sx + hx) / 2, (sh + hh) / 2), (hx, hh)
+    ex, ey = elbow_point((sx, -sh), (hx, -hh), full, -1 if side == "L" else 1, bend_weight(pose, side))
+    return (sx, sh), (ex, -ey), (hx, hh)
 
 
 HAND_R_K = 0.052          # el yarıçapı / boy (draw_grip ile aynı oran)
@@ -760,8 +772,8 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         if bent:
             ln = min(arm_len, pose["d" + side] * ppm)
         hand = (sh[0] + sg * math.sin(ang) * ln, sh[1] + math.cos(ang) * ln)
-        if bent and ln < arm_len * 0.985:
-            elb = _elbow(sh, hand, arm_len, sg)
+        if bent:
+            elb = elbow_point(sh, hand, arm_len, sg, bend_weight(pose, side))
             cv.capsule(sh, elb, Hh * 0.036, Hh * 0.032, skin, INK, ow); cv.capsule(elb, hand, Hh * 0.032, Hh * 0.030, skin, INK, ow)
             cv.capsule(sh, ((sh[0] + elb[0]) / 2, (sh[1] + elb[1]) / 2), Hh * 0.045, Hh * 0.040, shirt, INK, ow)
         else:
@@ -770,7 +782,7 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
             cv.capsule(sh, mid, Hh * 0.045, Hh * 0.040, shirt, INK, ow)
         aim = None
         if pose.get("aim") == side:
-            base = _elbow(sh, hand, arm_len, sg) if bent and ln < arm_len * 0.985 else sh
+            base = elbow_point(sh, hand, arm_len, sg, bend_weight(pose, side)) if bent else sh
             reach = math.hypot(hand[0] - base[0], hand[1] - base[1]) or 1.0
             aim = ((hand[0] - base[0]) / reach, (hand[1] - base[1]) / reach)
         _hand(cv, hand, Hh * 0.052, skin, sg, fwd, ow, t, st.get("emotion", "neutral"), pose.get("hand") if pose.get("hand_side") == side else None,

@@ -58,6 +58,12 @@ DEFAULTS = {
     "entry_side_tol_m": 0.04,     # son görünen karede nesne ağız açıklığının yanlarından en çok bu kadar taşabilir
     "entry_last_visible": 0.65,   # kaybolmadan önceki son karede nesnenin en çok bu oranı görünür (havada birden yok olmaz)
     "entry_max_step_m": 0.40,     # ardışık karede nesne merkezinin en büyük yolu (sıçrama)
+    # genel poz sıçraması: omuz, dirsek, el, baş ve ayakların GÖVDEYE göre yer değiştirmesi, oyuncunun kendi kol boyu biriminde
+    "jump_fps": 96,
+    "jump_step": 0.08,            # bir örnek aralığındaki (1/96 sn) adım bundan büyükse süreklilik daha ince aralıkta sınanır
+    "jump_subdiv": 8,
+    "jump_ratio": 0.60,           # ince aralıklardan biri adımın bu oranını tek başına taşıyorsa hareket sürekli değil: poz ışınlanıyor
+    "jump_speed": 0.30,           # sürekli olsa da bir örnek aralığında bundan büyük adım (>29 kol boyu/sn) kare üzerinde atlama okunur
 }
 SENT = (1, 2, 3)
 W, H = pp.W, pp.H
@@ -546,6 +552,86 @@ def camera_pop_problems(report):
             for r in report]
 
 
+def pose_points(des, pose):
+    """Pozun izlenen noktaları, gövdeye (x) göre ve kol boyu biriminde: {ad: (dx, yükseklik)}. Çizimle aynı eklem geometrisi."""
+    n = 0.27 * des["height"]
+    out = {}
+    for side in "LR":
+        if pp.view_of(pose) == "side":
+            import puppet_side
+            sh, ha = pp.shoulder_offset(des, pose, side), puppet_side.hand_offset(des, pose, side)
+            el = ((sh[0] + ha[0]) / 2, (sh[1] + ha[1]) / 2)
+        else:
+            sh, el, ha = pp.arm_joints(des, pose, side)
+        out.update({"omuz_" + side: sh, "dirsek_" + side: el, "el_" + side: ha,
+                    "ayak_" + side: (pose.get("f" + side, 0.0) * des["height"], pose.get("h" + side, 0.0) * des["height"])})
+    face = pp.face_ellipse(des, pose)
+    out["bas"] = (face[0], face[1])
+    return {k: (v[0] / n, v[1] / n) for k, v in out.items()}
+
+
+def pose_jumps(plan, designs, cfg=DEFAULTS):
+    """Çizime giden pozdan (taban hareket + temas katmanları) ani poz atlamaları: [{'t','shot','actor','joint','step','kind','views'}].
+    kind 'teleport': adım ince aralıkta küçülmüyor (poz tek anda yer değiştiriyor); 'speed': sürekli ama tek karede atlama okunacak kadar hızlı;
+    'view': atlama görünüş değişiminde (ön <-> profil çizimi); bu ayrı bir kusurdur (dönüş çizimi), 'blocking': False yazılır.
+    Vuruş sınırı da ölçülür; zaman atlaması ya da mekân değişimi olan sınır ölçülmez. Aynı oyuncunun bitişik bulguları tek satırdır (en büyüğü)."""
+    cfg = dict(DEFAULTS, **(cfg or {}))
+    dt = 1.0 / cfg["jump_fps"]
+    memo = {}
+
+    def sample(t):
+        if t not in memo:
+            beat = next((b for b in plan["beats"] if b["t_start"] <= t < b["t_end"]), None)
+            memo[t] = None if beat is None else (beat, {it[0]: (pose_points(it[1], it[2]), pp.view_of(it[2])) for it in r2.poses_at(plan, designs, t)})
+        return memo[t]
+
+    def worst(a, b):
+        return max((math.dist(a[k], b[k]), k) for k in a)
+    start = min((b["t_start"] for b in plan["beats"]), default=0.0)
+    end = max((b["t_end"] for b in plan["beats"]), default=0.0)
+    rows = []
+    prev = None
+    for i in range(int(math.ceil((end - start) / dt - 1e-9))):
+        t = start + i * dt
+        cur = sample(t)
+        if prev is not None and cur is not None:
+            (b0, a0), (b1, a1) = prev[1], cur
+            for cid in a1:
+                if cid not in a0 or (b0 is not b1 and r2._history(plan, cid, b1, prev[0]) is not b0):
+                    continue
+                step, joint = worst(a0[cid][0], a1[cid][0])
+                if step <= cfg["jump_step"]:
+                    continue
+                n = int(cfg["jump_subdiv"])
+                pts = [a0[cid]] + [sample(prev[0] + (t - prev[0]) * k / n)[1][cid] for k in range(1, n)] + [a1[cid]]
+                fine, k_ = max((math.dist(x[0][joint], y[0][joint]), k) for k, (x, y) in enumerate(zip(pts, pts[1:])))
+                if fine > cfg["jump_ratio"] * step:
+                    kind = "view" if pts[k_][1] != pts[k_ + 1][1] and "side" in (pts[k_][1], pts[k_ + 1][1]) else "teleport"
+                elif step > cfg["jump_speed"]:
+                    kind = "speed"
+                else:
+                    continue
+                row = {"t": round(t, 3), "shot": b1.get("shot_id") or str(b1.get("i")), "actor": cid, "joint": joint, "step": round(step, 3),
+                       "kind": kind, "blocking": kind != "view"}
+                last = next((r for r in reversed(rows) if r["actor"] == cid and r["kind"] == kind), None)
+                if last is not None and t - last["t_last"] <= 4 * dt:
+                    if step > last["step"]:
+                        last.update({k: row[k] for k in ("t", "shot", "joint", "step")})
+                    last["t_last"] = t
+                else:
+                    rows.append(dict(row, t_last=t))
+        prev = None if cur is None else (t, cur)
+    for r in rows:
+        del r["t_last"]
+    return rows
+
+
+def pose_jump_problems(report):
+    return [{"engine": "motion", "rule": "POSE_JUMP", "shot": r["shot"],
+             "why": f"{r['actor']}: {r['t']:.2f} sn {r['joint']} tek karede atlıyor ({r['step']} kol boyu, {'ışınlanma' if r['kind'] == 'teleport' else 'aşırı hız'})"}
+            for r in report if r["blocking"]]
+
+
 def _point_sample(plan, designs, beat, item, lt, cfg):
     """Gösterme jestinin bir anı, ÇİZİLEN katmanlardan: {'preset','target_visible','target_inside','arm_inside','angle_deg'}."""
     tr = {}
@@ -652,7 +738,7 @@ def pointing_problems(report):
     return [{"engine": "camera", "rule": w["rule"], "shot": r["shot"], "why": w["why"]} for r in report for w in r["why"]]
 
 
-__all__ = ["short_shots", "short_shot_problems", "measure_pointing", "pointing_problems", "camera_pops", "camera_pop_problems", "face_change", "reaction_shots", "reaction_problems", "DEFAULTS", "action_events", "window", "sample", "measure_event", "measure_plan", "problems",
+__all__ = ["pose_points", "pose_jumps", "pose_jump_problems", "short_shots", "short_shot_problems", "measure_pointing", "pointing_problems", "camera_pops", "camera_pop_problems", "face_change", "reaction_shots", "reaction_problems", "DEFAULTS", "action_events", "window", "sample", "measure_event", "measure_plan", "problems",
            "actor_cover", "measure_occlusion", "occlusion_problems"]
 
 
