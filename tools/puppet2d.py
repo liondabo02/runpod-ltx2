@@ -280,13 +280,48 @@ def head_share(design):
 
 
 CROUCH_MAX_K = 0.75       # kalça en çok bacak boyunun bu kadarı alçalır (ayaklar yerde, diz bükülür)
-KNEE_FRONT_K = 0.55
+KNEEL_FLARE_K = 0.030        # ön / üç-çeyrek çömelmede diz, ayağın en çok boyun bu katı kadar dışına çıkar (diz izleyiciye bükülür; yana açılırsa bağdaş okunur)
+KNEEL_FLARE_MAX_K = 0.045    # ölçü sınırı: diz kalça-bilek doğrusundan boyun bu katından fazla ayrılamaz
 KNEEL_SLACK_K = 0.5       # omuz farkının (kısa olanın kol boyunun bu katı kadar) küçük kısmı çömelmeden kolla kapanır
 
 
 def crouch_of(des, pose):
     """Pozdaki çömelme miktarı (metre), fiziksel sınıra kırpılmış."""
     return max(0.0, min(float(pose.get("crouch", 0.0)), CROUCH_MAX_K * des["height"] * LEG_K[des["class"]]))
+
+
+def front_knee(top, foot, Hh, leg_h, cr, sg):
+    """Ön / üç-çeyrek görünüşte bükülü bacağın (diz, bilek) noktaları (ekran px). Uyluk izleyiciye doğru kısalır: baldır neredeyse dik,
+    diz bileğin biraz dışında ve kalça ile bilek arasının ortasındadır; açıklık çömelmeyle birlikte sıfırdan artar (sıçrama yok)."""
+    ankle = (foot[0], foot[1] - Hh * 0.025)
+    k = max(0.0, min(1.0, cr / max(1e-6, CROUCH_MAX_K * leg_h)))
+    return (foot[0] + sg * Hh * KNEEL_FLARE_K * k, (top[1] + ankle[1]) / 2), ankle
+
+
+def kneel_leg_shape(legs, knees, Hh):
+    """Çizilen iki bacağın okunurluk ölçüsü. legs: leg_lines çıktısı; knees: {'L'|'R': (diz, bilek)}.
+    'flare': dizin kalça-bilek doğrusundan yatay ayrılması / boy (büyükse bacaklar baklava/bağdaş okunur);
+    'gap': aynı yükseklikte sağ bacak çizgisi eksi sol bacak çizgisi, en küçük değer / boy (negatifse bacaklar birbirini keser)."""
+    lines, flare = {}, 0.0
+    for side in "LR":
+        top = legs[side][0]; knee, ankle = knees[side]
+        u = (knee[1] - top[1]) / ((ankle[1] - top[1]) or 1e-6)
+        flare = max(flare, abs(knee[0] - (top[0] + (ankle[0] - top[0]) * u)) / Hh)
+        lines[side] = [top, knee, ankle]
+
+    def x_at(line, y):
+        for (x0, y0), (x1, y1) in zip(line, line[1:]):
+            if min(y0, y1) - 1e-6 <= y <= max(y0, y1) + 1e-6:
+                return x0 + (x1 - x0) * ((y - y0) / ((y1 - y0) or 1e-6))
+        return None
+    gaps = []
+    lo = max(lines["L"][0][1], lines["R"][0][1]); hi = min(lines["L"][-1][1], lines["R"][-1][1])
+    for i in range(33):
+        y = lo + (hi - lo) * i / 32
+        a, b = x_at(lines["L"], y), x_at(lines["R"], y)
+        if a is not None and b is not None:
+            gaps.append((b - a) / Hh)
+    return {"flare": flare, "gap": min(gaps) if gaps else 0.0}
 
 
 def _standing(x):
@@ -727,9 +762,7 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         top, foot = legs_[side]
         lw = des.get("lowerwear", "shorts"); lc = des.get("lower_color", shorts)
         if cr > 0.5 and sit <= 1 and lw != "skirt":      # bükülü bacak: uyluk + baldır, diz dışa
-            knee = _knee(top, (foot[0], foot[1] - Hh * 0.025), leg_h, sg)
-            knee = ((top[0] + foot[0]) / 2 + (knee[0] - (top[0] + foot[0]) / 2) * KNEE_FRONT_K, knee[1])      # ön görünüş: diz izleyiciye doğru bükülür (yana açılma kısalır)
-            ankle = (foot[0], foot[1] - Hh * 0.025)
+            knee, ankle = front_knee(top, foot, Hh, leg_h, cr, sg)
             if lw == "pants":
                 cv.capsule(top, knee, Hh * 0.058, Hh * 0.052, lc, INK, ow); cv.capsule(knee, ankle, Hh * 0.052, Hh * 0.047, lc, INK, ow)
             else:

@@ -175,3 +175,63 @@ def test_transfer_draws_the_fingers_of_both_participants_on_top(tmp_path, name):
     assert sorted(grips) == sorted([giver, taker]), order
     obj = order.index(("object", "bottle"))
     assert all(order.index(("grip", c)) > obj for c in (giver, taker))
+
+
+# ---------------------------------------------------------------- H19: çömelen bacaklar bağdaş/baklava okunmaz, birbirini kesmez
+def _drawn_leg_shapes(monkeypatch, d, crouch, yaw):
+    """Çizimin KENDİ bacak noktalarından ölçü: draw_character'ın kullandığı leg_lines ve front_knee çıktıları yakalanır."""
+    seen = {"knees": []}
+    lines, knee = pp.leg_lines, pp.front_knee
+    def spy_lines(*a):
+        seen["Hh"], seen["legs"] = a[3], lines(*a)
+        return seen["legs"]
+    def spy_knee(*a):
+        seen["knees"].append(knee(*a))
+        return seen["knees"][-1]
+    monkeypatch.setattr(pp, "leg_lines", spy_lines)
+    monkeypatch.setattr(pp, "front_knee", spy_knee)
+    pose = {"x": 0.0, "z": 0.0, "yaw": yaw, "lean": 0.0, "sq": 1.0, "view": "front", "crouch": crouch,
+            "head": [0.0, 0.0, 0.0], "aL": [0.0, 0.1], "aR": [0.0, -0.1], "lL": 0.0, "lR": 0.0}
+    st = {"mouth": "X", "blink": 0, "emotion": "neutral", "gaze": 0.0, "brow": 0.0, "pulse": 0.0}
+    cam = sc.Cam(0.0, 0.9, 1.2)
+    rd._mask(lambda cv, cm: pp.draw_character(cv, d, pose, st, cm.x(0.0), cm.y(0.0), cm.s, 0.0), cam)
+    monkeypatch.setattr(pp, "leg_lines", lines)
+    monkeypatch.setattr(pp, "front_knee", knee)
+    assert len(seen["knees"]) == 2, "çömelmiş pozda iki bacak da bükülü çizilmeli"
+    return pp.kneel_leg_shape(seen["legs"], dict(zip("LR", seen["knees"])), seen["Hh"])
+
+
+BODIES = [(1.9, 40), (1.6, 70), (1.25, 8), (0.98, 6)]
+
+
+@pytest.mark.parametrize("height,age", BODIES)
+@pytest.mark.parametrize("wear", ["pants", "shorts"])
+def test_crouched_legs_do_not_open_into_a_diamond_or_cross(monkeypatch, height, age, wear):
+    d = dict(design(height, age), lowerwear=wear)
+    deepest = pp.CROUCH_MAX_K * height * pp.LEG_K[d["class"]]
+    for yaw in (0.0, 0.3, -0.3):
+        for frac in (0.15, 0.4, 0.7, 1.0):
+            shape = _drawn_leg_shapes(monkeypatch, d, deepest * frac, yaw)
+            assert shape["flare"] <= pp.KNEEL_FLARE_MAX_K, (yaw, frac, shape)
+            assert shape["gap"] >= 0.0, (yaw, frac, shape)
+
+
+def test_leg_shape_measure_catches_the_old_sideways_knee_and_crossed_legs(monkeypatch):
+    d = dict(design(1.9, 40), lowerwear="pants")
+
+    def old_knee(top, foot, Hh, leg_h, cr, sg):                      # düzeltmeden önceki diz: iki eşit parça, yana açılır
+        ankle = (foot[0], foot[1] - Hh * 0.025)
+        k = pp._knee(top, ankle, leg_h, sg)
+        return ((top[0] + foot[0]) / 2 + (k[0] - (top[0] + foot[0]) / 2) * 0.55, k[1]), ankle
+    monkeypatch.setattr(pp, "front_knee", old_knee)
+    bad = _drawn_leg_shapes(monkeypatch, d, 0.5, 0.0)
+    assert bad["flare"] > 2 * pp.KNEEL_FLARE_MAX_K, bad
+    legs = {"L": ((-10.0, 0.0), (10.0, 100.0)), "R": ((10.0, 0.0), (-10.0, 100.0))}
+    crossed = pp.kneel_leg_shape(legs, {"L": ((0.0, 50.0), (10.0, 100.0)), "R": ((0.0, 50.0), (-10.0, 100.0))}, 200.0)
+    assert crossed["gap"] < 0.0
+
+
+def test_knee_flare_grows_from_zero_so_the_bend_starts_without_a_step():
+    top, foot = (0.0, 0.0), (0.0, 100.0)
+    xs = [pp.front_knee(top, foot, 400.0, 150.0, 1.0 + i, 1)[0][0] for i in range(0, 112)]
+    assert xs[0] < 0.2 and max(abs(b - a) for a, b in zip(xs, xs[1:])) < 0.2
