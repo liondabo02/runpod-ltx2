@@ -168,4 +168,4 @@ def test_depth_order_participants_front_shorter_participant_foremost():
     des = {c: d for c, d, _p in items}
     give = {"choreo": {"objects": [{"prop": "bottle", "track": [{"t": 0, "holder": "kisa"}, {"t": 1, "holder": "kisa"}, {"t": 2, "holder": "uzun"}]}]}}
     assert [i[0] for i in action_staging.draw_order(give, des, items)] == ["seyirci", "uzun", "kisa"]
-    assert [i[0] for i in action_staging.draw_order({"choreo": {"objects": []}}, des, items)] == ["kisa", "uzun", "seyirci"]      # aksiyonsuz plan: eski sıra
+    assert [i[0] for i in action_staging.draw_order({"choreo": {"objects": []}}, des, items)] == ["uzun", "seyirci", "kisa"]      # aksiyonsuz plan: uzun arkada (Y1: kısa oyuncu örtülmez)

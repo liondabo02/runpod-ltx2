@@ -116,6 +116,13 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
         if _unread:
             return {"status": "BLOCKED", "error": "AKSIYON_OKUNAMIYOR",
                     "problems": [f"[{x['engine']}] {x['rule']} {x['shot']}: {x['why']}" for x in _unread]}
+    if engine == "2d":                                   # bloklama kapısı: temassız anlarda bir oyuncu diğerini uzun süre büyük ölçüde kapatamaz
+        _occ = readability.measure_occlusion(_plan, pp2.designs_for(bible, assets))
+        json.dump({"occluded": _occ, "thresholds": {k: v for k, v in readability.DEFAULTS.items() if k.startswith("occl_")}},
+                  open(os.path.join(rdir, "occlusion.json"), "w", encoding="utf-8"), ensure_ascii=False)
+        if _occ:
+            return {"status": "BLOCKED", "error": "OYUNCU_ORTULUYOR",
+                    "problems": [f"[{x['engine']}] {x['rule']} {x['shot']}: {x['why']}" for x in readability.occlusion_problems(_occ)]}
     blender = find_blender() if engine != "2d" else "n/a"
     if not blender:
         return {"status": "BLOCKED", "error": "BLENDER_MISSING"}

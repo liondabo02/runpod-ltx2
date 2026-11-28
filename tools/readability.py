@@ -4,6 +4,7 @@ piksel maskeleriyle şunlar ölçülür: nesne, temas eden el(ler), oyuncular ve
 kamera bu pencerede başka yere kesiyor mu (aksiyon kadrajı süreklidir); nesne seçilebilecek kadar büyük mü.
 Bu ölçü 'seyirci anladı' demek DEĞİLDİR: yalnız görünürlük/kadraj için gerekli koşulları denetler. Eşikler yapılandırılabilir ve insan izlemesiyle doğrulanmamıştır."""
 from PIL import Image, ImageChops, ImageDraw
+import action_staging
 import object_state
 import puppet2d as pp
 import scenes2d as sc
@@ -18,6 +19,11 @@ DEFAULTS = {
     "pass_ratio": 0.85,           # penceredeki örneklerin en az bu oranı her ölçütü sağlamalı
     "min_object_px": 14,          # nesnenin ekrandaki uzun kenarı (1280x720)
     "max_cuts": 0,                # pencere içinde kamera sıçraması sayısı
+    # temassız anlarda oyuncular arası örtme (bloklama)
+    "occl_visible": 0.60,         # oyuncunun kadrajdaki pikselinin en az bu oranı diğer oyunculardan açık
+    "occl_head_visible": 0.90,    # baş bölgesinin (siluetin üst payı = baş boyu / boy) en az bu oranı açık: yüz asıl okunan yer
+    "occl_max_s": 1.0,            # bundan uzun süren örtme sorun (yanından yürüyüp geçme gibi kısa kesişme serbest)
+    "occl_fps": 4,
     "lead_s": 0.3, "tail_s": 0.3, "fps": 12,
     # kap içine atış (entry): nesne ağızdan, yukarıdan girip ağız çizgisinde parça parça kaybolmalı
     "entry_fps": 24,
@@ -288,4 +294,82 @@ def problems(report):
     return out
 
 
-__all__ = ["DEFAULTS", "action_events", "window", "sample", "measure_event", "measure_plan", "problems"]
+def _head_share(design):
+    """Siluet yüksekliğinin baş payı (puppet2d oranları: boy - bacak - gövde + %5)."""
+    return 1.0 - pp.LEG_K[design["class"]] - pp.TORSO_K[design["class"]] + 0.05
+
+
+def actor_cover(plan, designs, beat, lt):
+    """Tek anda her çizilen oyuncunun diğer OYUNCULARDAN açık kalan payı: {kimlik: {'body': oran, 'head': oran, 'by': örten|None}}.
+    Kadraj dışı pay sayılmaz."""
+    tr = {}
+    if r2.frame(plan, designs, beat["t_start"] + lt, trace=tr) is None:
+        return {}
+    cam = tr["cam"]
+    people = [(key, _mask(fn, cam)) for kind, key, fn, _at in tr["layers"] if kind == "character"]
+    out = {}
+    for i, (cid, own) in enumerate(people):
+        total = _count(own)
+        if not total:
+            continue
+        over = people[i + 1:]
+        if not over:
+            out[cid] = {"body": 1.0, "head": 1.0, "by": None}
+            continue
+        seen = _minus(own, _union([m for _c, m in over]))
+        x0, y0, x1, y1 = own.getbbox()
+        d = designs[cid]
+        top = cam.y(d["height"])                                  # baş payı oyuncunun boyundan: alttan kesilen kadrajda da aynı yer
+        head = (0, 0, W, max(0, min(H, int(round(top + _head_share(d) * d["height"] * cam.s)))))
+        h_all = _count(own.crop(head)) if head[3] else 0
+        by = max(over, key=lambda cm: total - _count(_minus(own, cm[1])))[0]
+        out[cid] = {"body": _count(seen) / total, "head": _count(seen.crop(head)) / h_all if h_all else 1.0, "by": by}
+    return out
+
+
+def measure_occlusion(plan, designs, cfg=None):
+    """Temas penceresi DIŞINDA (temasta eller bilerek buluşur; orayı aksiyon ölçüsü denetler) bir oyuncunun diğerini uzun süre
+    büyük ölçüde kapatması. Dönüş: [{'beat','shot','actor','by','from','to','seconds','worst'}] (yalnız süre sınırını aşanlar)."""
+    cfg = dict(DEFAULTS, **(cfg or {}))
+    step = 1.0 / cfg["occl_fps"]
+    out = []
+    for beat in plan.get("beats", []):
+        if len(beat.get("cast") or []) < 2:
+            continue
+        dur = beat["t_end"] - beat["t_start"]
+        busy = [(a, b) for a, b, _e in action_staging.hold_windows(beat)]
+        runs = {}
+
+        def close(cid):
+            r = runs.pop(cid, None)
+            if r and r["n"] * step > cfg["occl_max_s"] + 1e-9:
+                out.append({"beat": beat.get("i"), "shot": beat.get("shot_id"), "actor": cid, "by": r["by"],
+                            "from": round(beat["t_start"] + r["a"], 2), "to": round(beat["t_start"] + r["b"], 2),
+                            "seconds": round(r["n"] * step, 2), "body": round(r["body"], 3), "head": round(r["head"], 3)})
+        for k in range(int(dur * cfg["occl_fps"])):
+            lt = (k + 0.5) * step
+            cover = {} if any(a <= lt <= b for a, b in busy) else actor_cover(plan, designs, beat, lt)
+            hidden = {c: v for c, v in cover.items() if v["body"] < cfg["occl_visible"] or v["head"] < cfg["occl_head_visible"]}
+            for cid in list(runs):
+                if cid not in hidden:
+                    close(cid)
+            for cid, v in hidden.items():
+                r = runs.setdefault(cid, {"a": lt, "b": lt, "n": 0, "body": 1.0, "head": 1.0, "by": v["by"]})
+                r["b"] = lt; r["n"] += 1
+                if min(v["body"], v["head"]) < min(r["body"], r["head"]):
+                    r["by"] = v["by"]
+                r["body"] = min(r["body"], v["body"]); r["head"] = min(r["head"], v["head"])
+        for cid in list(runs):
+            close(cid)
+    return out
+
+
+def occlusion_problems(report):
+    """Üretim kapısı biçimi; sorumlu motor bloklama."""
+    return [{"rule": "ACTOR_OCCLUDED", "engine": "staging", "shot": r["shot"],
+             "why": f"{r['actor']} {r['from']:.2f}-{r['to']:.2f} sn arasında ({r['seconds']:.2f} sn) {r['by']} tarafından kapatılıyor (en kötü: gövde %{100 * r['body']:.0f}, baş %{100 * r['head']:.0f} görünür)"}
+            for r in report]
+
+
+__all__ = ["DEFAULTS", "action_events", "window", "sample", "measure_event", "measure_plan", "problems",
+           "actor_cover", "measure_occlusion", "occlusion_problems"]

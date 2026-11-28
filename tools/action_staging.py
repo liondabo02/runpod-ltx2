@@ -148,11 +148,11 @@ def _events(beat):
 
 
 def draw_order(beat, designs, items):
-    """items: [(cid, tasarım, poz, ...)] -> arkadan öne sıra."""
+    """items: [(cid, tasarım, poz, ...)] -> arkadan öne sıra. Temasa katılanlar katılmayanların önünde; her grupta uzun arkada, kısa önde:
+    kısa oyuncu uzunun yalnız gövdesini örter, uzunun yüzü üstte açık kalır. Sıra x'e bağlı değildir (yan yana geçerken katman yer değiştirmez);
+    eşit boyda x belirler."""
     act = {c for e in _events(beat) for c in (e["by"], e.get("to")) if c}
-    if not act:
-        return sorted(items, key=lambda it: it[2]["x"])
-    return sorted(items, key=lambda it: (it[0] in act, -it[1]["height"] if it[0] in act else 0.0, it[2]["x"]))
+    return sorted(items, key=lambda it: (it[0] in act, -it[1]["height"], it[2]["x"]))
 
 
 def hold_windows(beat):
