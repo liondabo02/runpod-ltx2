@@ -250,6 +250,40 @@ def far_eye(sg, face):
     return sg * face > 0.2
 
 
+EYE_MARGIN_OW = 0.6       # göz akı baş dış çizgisinden en az bu kadar (çizgi kalınlığının katı) içeride durur
+EYE_APART_OW = 0.6        # içeri alınan göz öbür gözle en az bu aralığı bırakır
+
+
+def eye_overhang(cx, cy, rx, ry, head, margin):
+    """Göz elipsi (merkez, yarıçaplar) baş elipsinin (cx, cy, rx, ry) 'margin' içeride kalan sınırını yatayda en çok kaç px aşıyor (eksi: pay)."""
+    hx, hy, hr, hry = head
+    worst = -1e9
+    for i in range(48):
+        a = 2.0 * math.pi * i / 48
+        x, y = cx + rx * math.cos(a), cy + ry * math.sin(a)
+        worst = max(worst, abs(x - hx) - hr * math.sqrt(max(0.0, 1.0 - ((y - hy) / hry) ** 2)) + margin)
+    return worst
+
+
+def eyes_inside_head(eyes, eye_y, ry, head, ow):
+    """Dönük yüzde dış çizgiyi aşan göz içeri alınır; öbür göze yaklaşırsa kalan pay gözü daraltarak kapanır.
+    eyes: {-1: (cx, rx), 1: (cx, rx)} -> aynı biçimde. Taşmayan göz hiç değişmez; düzeltme dönüş miktarında süreklidir."""
+    out = dict(eyes)
+    for sg in (-1, 1):
+        for _ in range(4):
+            cx, rx = out[sg]
+            need = eye_overhang(cx, eye_y, rx, ry, head, ow * EYE_MARGIN_OW)
+            if need <= 0.05:
+                break
+            cx -= sg * need
+            ox, orx = out[-sg]
+            short = ow * EYE_APART_OW - (sg * (cx - ox) - rx - orx)          # iki göz arasında eksik kalan aralık
+            if short > 0:
+                cx, rx = cx + sg * short / 2.0, rx - short / 2.0
+            out[sg] = (cx, rx)
+    return out
+
+
 def view_of(pose):
     """Görünüş sınıfı: 'front' | 'three_quarter' | 'side'. Gövde dönüşü = yaw*1.25."""
     if pose.get("view") in ("front", "three_quarter", "side"):
@@ -897,10 +931,12 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
     if emo == "surprise":
         erx *= 1.12; ery *= 1.2
     hide = st.get("hide", ())          # yalnız ölçüm: yüz öğesini çizmeden aynı kare (face_visibility.py)
+    outline = ((hx - face * head_w * 0.02, head_cy, head_w * 0.52, head_h * 0.50) if species == "hedgehog"
+               else (hx - face * head_w * 0.03, head_cy, head_w * 0.52 * (1.0 - 0.07 * abs(face)), head_h * 0.52))
+    placed = eyes_inside_head({sg_: (hx + sg_ * ex * (1.0 - 0.16 * abs(face)) + face * head_w * 0.19,
+                                     erx * (FAR_EYE_K if far_eye(sg_, face) else 1.0)) for sg_ in (-1, 1)}, eye_y, ery, outline, ow)
     for sg in (-1, 1):
-        cx = hx + sg * ex * (1.0 - 0.16 * abs(face)) + face * head_w * 0.19
-        far = far_eye(sg, face)
-        rx = erx * (FAR_EYE_K if far else 1.0)
+        cx, rx = placed[sg]
         eyes_x[sg] = cx
         reach[sg] = max(reach[sg], sg * (cx - hx) + rx)
         if "eyes" in hide:
