@@ -221,7 +221,7 @@ def test_duplicate_object_identity_and_event_beyond_shot_are_flagged(tmp_path):
 def test_render_preflight_uses_same_positions_as_drawing(tmp_path, monkeypatch):
     """Ön kontrol ayrı konum tahmini yapmaz: planlayıcının yürüttüğü karakterle atış geçerliyse render başlar; gerçekten yakınsa engellenir."""
     import shutil, render_worker as rw
-    root = tmp_path / "k"; shutil.copytree(ROOT, root, ignore=shutil.ignore_patterns("render", "animatic"))
+    root = tmp_path / "k"; shutil.copytree(ROOT, root, ignore=shutil.ignore_patterns("render", "animatic", "audio", "visemes", "voice_manifest.json", "animatic_manifest.json"))
     bible = json.load(open(root / "series-bible.json", encoding="utf-8")); reached = []
     monkeypatch.setattr(rw.r2, "render_window", lambda plan_, des_, out_, **k: os.makedirs(out_, exist_ok=True) or reached.append(1) or {"missing": 1})
     ep900 = str(root / "episodes" / "e900_kabul")
