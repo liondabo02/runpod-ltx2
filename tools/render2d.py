@@ -151,13 +151,96 @@ def pick_hand(beat, holder, hand=None):
     return "R" if side > 0 else "L"
 
 
+SWAP_START_S = 0.10          # vuruşa elinde nesneyle giren oyuncu tercih ettiği ele bu andan itibaren geçirir (sn)
+SWAP_S = 0.60                # el değiştirme süresi: nesne bir elden ötekine görünür biçimde geçer
+SWAP_MIN_S = 0.35            # sonraki temas/atış yakınsa en kısa geçiş
+SWAP_BEFORE_ACT_S = 0.50     # geçiş, aynı oyuncunun bu vuruştaki ilk temas/atış hazırlığından en az bu kadar önce biter
+
+
+def hand_link(prev, beat):
+    """Planlayıcı vuruşları sırayla bağlar: elinde nesneyle bir önceki vuruştan kesintisiz gelen oyuncu hangi elle geldi?
+    beat['hand_in'] = {oyuncu: el} (yalnız bu vuruşun tercih ettiği elden farklıysa). El vuruş sınırında ışınlanmaz: o elle başlar, sonra görünür biçimde el değiştirir."""
+    beat["hand_in"] = {}
+    if prev is None or beat.get("transition_kind") in continuity.FREE or abs(prev["t_end"] - beat["t_start"]) > 1e-6 or prev.get("loc") != beat.get("loc"):
+        return beat["hand_in"]
+    pdur = prev["t_end"] - prev["t_start"]
+    for cid in beat.get("cast") or []:
+        if cid not in (prev.get("cast") or []):
+            continue
+        a, b = carry_info(prev, cid, pdur - 1e-6), carry_info(beat, cid, 0.0)
+        if a and b and a["prop"] == b["prop"] and a["hand"] != pick_hand(beat, cid):
+            beat["hand_in"][cid] = a["hand"]
+    return beat["hand_in"]
+
+
+def hand_swap(beat, cid):
+    """(eski el, yeni el, başlangıç, bitiş) vuruş içi sn, ya da None."""
+    old = (beat.get("hand_in") or {}).get(cid)
+    new = pick_hand(beat, cid)
+    if old not in ("L", "R") or old == new:
+        return None
+    first = beat["t_end"] - beat["t_start"]
+    for ob in (beat.get("choreo") or {}).get("objects", []):
+        for e in object_state.events(ob.get("track") or []):
+            if cid in (e.get("by"), e.get("to")):
+                first = min(first, e.get("t_start", e["t"]) - 0.45)               # atış hazırlığı / uzanma bundan önce başlamaz
+    end = min(SWAP_START_S + SWAP_S, first - SWAP_BEFORE_ACT_S)
+    start = max(0.0, min(SWAP_START_S, end - SWAP_MIN_S))
+    end = max(end, start + SWAP_MIN_S)
+    return old, new, start, end
+
+
+def hand_at(beat, cid, lt):
+    """O anda nesneyi tutan el: el değiştirmenin ortasına kadar eski, sonra yeni el."""
+    sw = hand_swap(beat, cid)
+    if sw and lt < (sw[2] + sw[3]) / 2:
+        return sw[0]
+    return pick_hand(beat, cid)
+
+
+def swap_weight(beat, cid, lt):
+    """El değiştirme sırasında iki kolun göğüs önüne uzanma ağırlığı 0..1 ve nesnenin eski elden yeni ele geçiş oranı 0..1 ya da None."""
+    sw = hand_swap(beat, cid)
+    if not sw or not (sw[2] <= lt <= sw[3]):
+        return None
+    a, b = sw[2], sw[3]; ramp = 0.3 * (b - a)
+    w = pp_smooth((lt - a) / ramp) * (1.0 - pp_smooth((lt - (b - ramp)) / ramp))
+    u = pp_smooth((lt - (a + ramp)) / max(1e-6, b - a - 2 * ramp))
+    return w, u, sw
+
+
 def _hold_pos(cid, items, designs, beat, lt, hand=None, grip=0.12):
-    """Nesne TABANININ dünya konumu: çizilen elin gerçek yeri (pp.hand_offset) eksi tutuş yüksekliği (nesne elin içinde, el tutuş noktasında)."""
+    """Nesne TABANININ dünya konumu: çizilen elin gerçek yeri (pp.hand_offset) eksi tutuş yüksekliği (nesne elin içinde, el tutuş noktasında).
+    El değiştirme sırasında nesne eski elden yeni ele sürekli geçer."""
     for cid_, d_, p_, m_, _lk, _e in items:
         if cid_ == cid:
-            dx, h = pp.hand_offset(d_, p_, pick_hand(beat, cid, hand))
+            sw = None if hand in ("L", "R") else swap_weight(beat, cid, lt)
+            if sw:
+                (ox, oh), (nx, nh) = (pp.hand_offset(d_, p_, s) for s in sw[2][:2])
+                u = sw[1]
+                dx, h = ox + (nx - ox) * u, oh + (nh - oh) * u
+            else:
+                dx, h = pp.hand_offset(d_, p_, hand if hand in ("L", "R") else hand_at(beat, cid, lt))
             return p_["x"] + dx, max(0.0, h - grip), d_["height"]
     return None
+
+
+def apply_hand_swap(beat, items, lt):
+    """El değiştirmede iki el göğüs önünde buluşur (nesne eski elden yeniye geçerken ikisi de nesnede)."""
+    for cid, des, p, *_ in items:
+        sw = swap_weight(beat, cid, lt)
+        if not sw or pp.view_of(p) == "side":
+            continue
+        w = sw[0]
+        ln = des["height"] * 0.27
+        sh = {s: pp.shoulder_offset(des, p, s) for s in "LR"}
+        mx = (sh["L"][0] + sh["R"][0]) / 2
+        mh = (sh["L"][1] + sh["R"][1]) / 2 - 0.65 * ln
+        split = pp.HAND_R_K * des["height"]
+        old, new = sw[2][0], sw[2][1]
+        for side in "LR":
+            up = (1.0 - sw[1]) if side == old else sw[1]           # nesneyi o an daha çok taşıyan el üstte (iki el aynı noktaya binmez)
+            pp.arm_blend(des, p, side, mx, mh + split * (2.0 * up - 1.0), w, inward=True)
 
 
 def object_owner(st):
@@ -212,7 +295,7 @@ def _objects_now(beat, items, lt, items_at=None):
         into = _entry_target(beat, tr, st)
         if into and lt > into[0]:
             own = None                                          # bırakıldı: elin değil, serbest nesne (parmak çizilmez)
-        out.append((ob, x, y, st, own, pick_hand(beat, own) if own else None))
+        out.append((ob, x, y, st, own, hand_at(beat, own, lt) if own else None))
     return out
 
 
@@ -274,6 +357,9 @@ def _draw_objects(cv, cam, beat, items, designs, lt, owner="__free__", emit=None
         if emit is not None:
             emit("object", ob.get("id") or ob.get("prop", "obj"), body, (x, y))
         grippers = [(own, hand)] if own is not None else []
+        sw_ = swap_weight(beat, own, lt) if own is not None else None
+        if sw_ and sw_[0] > 0.5:                                # kendi içinde el değiştirme: iki elin parmakları da nesnede
+            grippers = [(own, s_) for s_ in sw_[2][:2]]
         if st["state"] == "transfer":                           # el değiştirmede İKİ el de nesnede: alıcı elin parmakları da önde çizilir (verenin saçı/gövdesi alıcı eli örtmez)
             grippers = [(c, hand if c == own else pick_hand(beat, c)) for c in (st["holder"], st["to"])]
         for g_cid, g_hand in grippers:                          # parmaklar nesnenin ÖNÜNDE: avuç nesneyi kavrar
@@ -466,7 +552,7 @@ def carry_info(beat, cid, lt):
         w = object_state.weight_of(ob["prop"])
         if best is None or w > best["weight"]:
             sty = object_state.carry_style(ob["prop"])
-            best = {"prop": ob["prop"], "scale": ob.get("scale", 0.55), "weight": w, "style": sty, "hand": pick_hand(beat, cid),
+            best = {"prop": ob["prop"], "scale": ob.get("scale", 0.55), "weight": w, "style": sty, "hand": hand_at(beat, cid, lt),
                     "reach": 0.25 if sty == "two_hand_front" else 0.15}
     return best
 
@@ -917,6 +1003,24 @@ def _base_pose(plan, designs, beat, cid, t, px):
     return p, m, look, E if spk else 0.0
 
 
+def objects_at(plan, designs, t):
+    """O anın nesneleri (frame ile aynı hesap; kamera ve çizim yok): {anahtar: (x, y, durum, sahip, el)}; gizlenen nesne yazılmaz."""
+    beat = next((b for b in plan["beats"] if b["t_start"] <= t < b["t_end"]), None)
+    if beat is None:
+        return None
+    items = poses_at(plan, designs, t)
+    memo = {}
+
+    def items_at(t_):
+        if t_ not in memo:
+            memo[t_] = poses_at(plan, designs, beat["t_start"] + t_) or items
+        return memo[t_]
+    out = {}
+    for k, (ob, x, y, st, own, hand) in enumerate(_objects_now(beat, items, t - beat["t_start"], items_at)):
+        out[ob.get("id") or f"{ob.get('prop', 'obj')}#{k}"] = (x, y, st["state"], own, hand)
+    return out
+
+
 def poses_at(plan, designs, t):
     """O anın çizilecek oyuncu pozları (frame ile aynı hesap; çizim yapılmaz)."""
     return frame(plan, designs, t, poses_only=True)
@@ -1100,6 +1204,7 @@ def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False, came
         p, m, look, e_ = actor_pose(plan, designs, beat, cid, t, px)
         items.append((cid, designs[cid], p, m, look, e_))
         xs.append(p["x"])
+    apply_hand_swap(beat, items, lt)                     # önceki vuruştan başka elde gelen nesne görünür biçimde el değiştirir
     apply_throw_swing(beat, items, lt)                   # atışta kol savurma
     apply_handoff_reach(beat, items, lt)                 # el değiştirmede eller buluşma noktasına uzanır
     pointing.apply(beat, designs, items, lt)             # hedefli gösterme jesti: kol hedefe uzanır

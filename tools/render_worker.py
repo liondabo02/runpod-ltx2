@@ -182,6 +182,12 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
         _jumps = readability.pose_jumps(_plan, pp2.designs_for(bible, assets))
         json.dump({"jumps": _jumps, "thresholds": {k: v for k, v in readability.DEFAULTS.items() if k.startswith("jump_")}},
                   open(os.path.join(rdir, "pose_jumps.json"), "w", encoding="utf-8"), ensure_ascii=False)
+        _ojumps = readability.object_jumps(_plan, pp2.designs_for(bible, assets))
+        json.dump({"jumps": _ojumps, "thresholds": {k: v for k, v in readability.DEFAULTS.items() if k.startswith(("obj_", "jump_"))}},
+                  open(os.path.join(rdir, "object_jumps.json"), "w", encoding="utf-8"), ensure_ascii=False)
+        if _ojumps:
+            return {"status": "BLOCKED", "error": "NESNE_SICRAMASI",
+                    "problems": [f"[{x['engine']}] {x['rule']} {x['shot']}: {x['why']}" for x in readability.object_jump_problems(_ojumps)]}
         if readability.pose_jump_problems(_jumps):
             return {"status": "BLOCKED", "error": "POZ_SICRAMASI",
                     "problems": [f"[{x['engine']}] {x['rule']} {x['shot']}: {x['why']}" for x in readability.pose_jump_problems(_jumps)]}

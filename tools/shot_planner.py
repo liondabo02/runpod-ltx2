@@ -180,6 +180,9 @@ def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
         if out["beats"][-1]["props"] and not lines and bi % 3 == 2 and preset != "close":  # nesne ara planı (kesme)
             out["beats"][-1]["camera"] = "insert"
         shot_cuts.link(prev_beat_, out["beats"][-1])                  # kurgu sürekliliği pencere öncesi vuruşlardan da taşınır
+        if _pp is not None:                                            # tutan el sürekliliği: elde gelen nesne vuruş sınırında öbür ele ışınlanmaz
+            import render2d as _r2
+            _r2.hand_link(prev_beat_, out["beats"][-1])
         prev_beat_ = out["beats"][-1]
         every_.append((prev_beat_, in_win))
         if not in_win:

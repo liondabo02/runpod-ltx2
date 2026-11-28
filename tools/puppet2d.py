@@ -394,24 +394,29 @@ def shoulder_offset(des, pose, side):
     return sg * torso_w * 0.52, -(torso_top + torso_h * 0.14)
 
 
-def arm_toward(des, pose, side, tx, th):
+INWARD_MAX = 0.5          # kol gövdenin önünden içeri en çok bu açıyla (radyan) uzanır; çizim de aynı sınırı uygular
+INWARD_K = 0.4            # içeri açı pozda bu katla küçülerek çizilir (hand_offset / draw_arm)
+
+
+def arm_toward(des, pose, side, tx, th, inward=False):
     """Yönlü uzanma (hafif IK, ön görünüş): elin hedefe (ayağa göre dx, yükseklik) gitmesi için kol açısını ayarlar (pose'u yerinde değiştirir).
     Dönen: ulaşılabilirlik oranı = (omuz->hedef mesafe) / (kol boyu); ≤1 ise el hedefe ulaşır, >1 ise kısa kalır (kol uzayamaz)."""
     sg = -1 if side == "L" else 1
     shx, shh = shoulder_offset(des, pose, side)
     vx, vdown = tx - shx, -(th - shh)
     ln = des["height"] * 0.27
-    ang = max(0.0, min(3.0, math.atan2(sg * vx, vdown)))
+    ang = max(-INWARD_MAX if inward else 0.0, min(3.0, math.atan2(sg * vx, vdown)))
     ratio = math.hypot(vx, vdown) / ln
     key = "aL" if side == "L" else "aR"
-    pose[key][0] = 0.0; pose[key][1] = ang if side == "L" else -ang
+    raw = ang if ang >= 0.0 else ang / INWARD_K                                          # içeri açı çizimde INWARD_K ile küçülür: pozda büyütülür
+    pose[key][0] = 0.0; pose[key][1] = raw if side == "L" else -raw
     pose.pop("sw" + side, None)
     pose["rw" + side] = 1.0
     pose["d" + side] = min(math.hypot(vx, vdown), ln)                                   # el mesafesi: hedefe kadar; yakınsa dirsek bükülür, uzaksa kol tam gerilir
     return ratio
 
 
-def arm_blend(des, pose, side, tx, th, w):
+def arm_blend(des, pose, side, tx, th, w, inward=False):
     """Kolu o anki pozdan (w=0) hedefe uzanmış poza (w=1) sürekli geçirir. Açı ile birlikte EL MESAFESİ de karışır: yalnız açı karışsaydı
     pencere açılıp kapanırken el tek karede bükülü pozdan gergin poza (ya da tersi) sıçrardı."""
     key = "aL" if side == "L" else "aR"; old = list(pose[key]); full = des["height"] * 0.27
@@ -419,7 +424,7 @@ def arm_blend(des, pose, side, tx, th, w):
     had = ("d" + side) in pose
     old_rw = float(pose.get("rw" + side, 1.0 if had else 0.0))
     swing = float(pose.get("sw" + side, 0.0))
-    ratio = arm_toward(des, pose, side, tx, th)
+    ratio = arm_toward(des, pose, side, tx, th, inward)
     if swing and w < 1.0:
         pose["sw" + side] = swing * (1.0 - max(0.0, w))
     pose[key] = [old[0] + (pose[key][0] - old[0]) * w, old[1] + (pose[key][1] - old[1]) * w]

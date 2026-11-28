@@ -7,6 +7,7 @@ import math
 
 from PIL import Image, ImageChops, ImageDraw
 import action_staging
+import continuity
 import listener_reaction
 import object_state
 import pointing
@@ -63,7 +64,10 @@ DEFAULTS = {
     "jump_step": 0.08,            # bir örnek aralığındaki (1/96 sn) adım bundan büyükse süreklilik daha ince aralıkta sınanır
     "jump_subdiv": 8,
     "jump_ratio": 0.60,           # ince aralıklardan biri adımın bu oranını tek başına taşıyorsa hareket sürekli değil: poz ışınlanıyor
-    "jump_speed": 0.30,           # sürekli olsa da bir örnek aralığında bundan büyük adım (>29 kol boyu/sn) kare üzerinde atlama okunur
+    "jump_speed": 0.30,
+    # nesne sıçraması: dünya koordinatında nesne konumu (m), aynı örnekleme
+    "obj_step_m": 0.03,           # bir örnek aralığındaki adım bundan büyükse ince aralıkta sınanır
+    "obj_speed_m": 0.25,          # sürekli olsa da bir örnek aralığında (1/96 sn) bundan büyük yol (>24 m/sn) atlama okunur           # sürekli olsa da bir örnek aralığında bundan büyük adım (>29 kol boyu/sn) kare üzerinde atlama okunur
 }
 SENT = (1, 2, 3)
 W, H = pp.W, pp.H
@@ -167,7 +171,7 @@ def sample(plan, designs, beat, event, lt):
         centred = sc.Cam(p["x"], d["height"] * 0.5, cam.z)
         total = max(1, _count(_mask(layers[j][2], centred)))
         res[f"actor:{c}"] = min(1.0, _count(_minus(masks[j], later(j))) / total)
-        dx, hh = pp.hand_offset(d, p, r2.pick_hand(beat, c))
+        dx, hh = pp.hand_offset(d, p, r2.hand_at(beat, c, lt))
         disk, area = _disk(cam.x(p["x"] + dx), cam.y(hh), max(3.0, 0.045 * d["height"] * cam.s))
         top = max([k for k, lay in enumerate(layers) if lay[0] == "grip" and lay[1] == c] + [j])     # elde nesne varsa parmaklar sonradan yeniden çizilir
         occ = _union([masks[k] for k in range(top + 1, len(layers)) if layers[k][0] in ("character", "front") and layers[k][1] != c])
@@ -626,6 +630,64 @@ def pose_jumps(plan, designs, cfg=DEFAULTS):
     return rows
 
 
+def object_jumps(plan, designs, cfg=DEFAULTS):
+    """Dünya koordinatında nesne ışınlanması: [{'t','shot','object','step','kind','holder'}]. Pose_jumps ile aynı yöntem (ince aralıkta küçülmeyen adım = ışınlanma).
+    Kesintisiz vuruş sınırı da ölçülür (aynı nesne anahtarı); zaman atlaması/mekân değişimi ölçülmez; gizlenen ya da yeni çıkan nesne karşılaştırılmaz."""
+    cfg = dict(DEFAULTS, **(cfg or {}))
+    dt = 1.0 / cfg["jump_fps"]
+    memo = {}
+
+    def sample(t):
+        if t not in memo:
+            beat = next((b for b in plan["beats"] if b["t_start"] <= t < b["t_end"]), None)
+            memo[t] = None if beat is None else (beat, r2.objects_at(plan, designs, t))
+        return memo[t]
+
+    def joined(b0, b1):
+        return b0 is b1 or (b1.get("transition_kind") not in continuity.FREE and abs(b0["t_end"] - b1["t_start"]) < 1e-6 and b0.get("loc") == b1.get("loc"))
+    start = min((b["t_start"] for b in plan["beats"]), default=0.0)
+    end = max((b["t_end"] for b in plan["beats"]), default=0.0)
+    rows, prev = [], None
+    for i in range(int(math.ceil((end - start) / dt - 1e-9))):
+        t = start + i * dt
+        cur = sample(t)
+        if prev is not None and cur is not None and joined(prev[1][0], cur[0]):
+            a0, a1 = prev[1][1], cur[1]
+            for key, q in a1.items():
+                if key not in a0:
+                    continue
+                step = math.dist(a0[key][:2], q[:2])
+                if step <= cfg["obj_step_m"]:
+                    continue
+                n = int(cfg["jump_subdiv"])
+                pts = [a0[key]] + [(sample(prev[0] + (t - prev[0]) * k / n)[1] or {}).get(key) for k in range(1, n)] + [q]
+                if any(p_ is None for p_ in pts):
+                    continue
+                fine = max(math.dist(x[:2], y[:2]) for x, y in zip(pts, pts[1:]))
+                kind = "teleport" if fine > cfg["jump_ratio"] * step else ("speed" if step > cfg["obj_speed_m"] else None)
+                if kind is None:
+                    continue
+                row = {"t": round(t, 3), "shot": cur[0].get("shot_id") or str(cur[0].get("i")), "object": key, "step": round(step, 3), "kind": kind,
+                       "holder": q[3], "hands": [a0[key][4], q[4]]}
+                last = next((r for r in reversed(rows) if r["object"] == key and r["kind"] == kind), None)
+                if last is not None and t - last["t_last"] <= 4 * dt:
+                    if step > last["step"]:
+                        last.update({k: row[k] for k in ("t", "shot", "step", "holder", "hands")})
+                    last["t_last"] = t
+                else:
+                    rows.append(dict(row, t_last=t))
+        prev = None if cur is None else (t, cur)
+    for r in rows:
+        del r["t_last"]
+    return rows
+
+
+def object_jump_problems(report):
+    return [{"engine": "object", "rule": "OBJECT_JUMP", "shot": r["shot"],
+             "why": f"{r['object']}: {r['t']:.2f} sn tek karede {r['step']} m atlıyor ({'ışınlanma' if r['kind'] == 'teleport' else 'aşırı hız'}; sahip {r['holder']}, el {r['hands'][0]}->{r['hands'][1]})"}
+            for r in report]
+
+
 def pose_jump_problems(report):
     return [{"engine": "motion", "rule": "POSE_JUMP", "shot": r["shot"],
              "why": f"{r['actor']}: {r['t']:.2f} sn {r['joint']} tek karede atlıyor ({r['step']} kol boyu, {'ışınlanma' if r['kind'] == 'teleport' else 'aşırı hız'})"}
@@ -738,7 +800,7 @@ def pointing_problems(report):
     return [{"engine": "camera", "rule": w["rule"], "shot": r["shot"], "why": w["why"]} for r in report for w in r["why"]]
 
 
-__all__ = ["pose_points", "pose_jumps", "pose_jump_problems", "short_shots", "short_shot_problems", "measure_pointing", "pointing_problems", "camera_pops", "camera_pop_problems", "face_change", "reaction_shots", "reaction_problems", "DEFAULTS", "action_events", "window", "sample", "measure_event", "measure_plan", "problems",
+__all__ = ["object_jumps", "object_jump_problems", "pose_points", "pose_jumps", "pose_jump_problems", "short_shots", "short_shot_problems", "measure_pointing", "pointing_problems", "camera_pops", "camera_pop_problems", "face_change", "reaction_shots", "reaction_problems", "DEFAULTS", "action_events", "window", "sample", "measure_event", "measure_plan", "problems",
            "actor_cover", "measure_occlusion", "occlusion_problems"]
 
 
