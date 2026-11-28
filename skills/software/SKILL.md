@@ -67,7 +67,6 @@ ile "Yazılım Şirketi"nin bitmiş işi olarak ofis olay kaydına işlenir (PC'
 Bu işçinin kullandığı motorlar ve her yeteneğin kanıttan hesaplanan durumu.
 Eksik yetenek için önce açık görevi Yazılım Şirketi'ne bildir; olmayan aracı varmış gibi kullanma.
 
-- YAZ-01 Motor yetenek/skill eksik envanteri [VAR]: `tools/engine_gaps.py`
 - YAZ-02 Kırmızı-yeşil kabul kapısı (test eski kodda düşer, yenide geçer) [VAR]: `tools/software_dept.py`
 - YAZ-03 Departman işinin ofiste gerçek kayıtla görünmesi [VAR]: `tools/software_dept.py`
 <!-- MOTORLAR:BITIS -->

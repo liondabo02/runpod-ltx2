@@ -1143,7 +1143,7 @@
    "id": "YAZ-01",
    "motor": "yazilim",
    "isci": "software",
-   "skill": "software",
+   "skill": "studio-capability-scout",
    "yetenek": "Motor yetenek/skill eksik envanteri",
    "kanit": [
     {
