@@ -9,6 +9,7 @@ BEFORE_S = 1e-4              # değişimden hemen önceki an
 MAX_CHAIN = 4                # üst üste binen geçişlerde geriye en çok bu kadar değişim izlenir
 
 SCALARS = ("z", "sq", "lean", "yaw", "swL", "swR", "fL", "fR", "hL", "hR")     # konum (x) ve görünüş ('view', el biçimi) karışmaz
+FEET = ("fL", "fR", "hL", "hR")
 DEFAULTS = {"sq": 1.0}
 ARM_K = 0.27                 # kol boyu / boy
 FWD_SHORTEN = 0.28           # öne uzanan kol ekranda en çok bu oranda kısalır (çizimle aynı kural)
@@ -35,6 +36,8 @@ def blend(old, new, w, height):
     mix = lambda a, b: a + (b - a) * w
     out = dict(new)
     for k in SCALARS:
+        if k in FEET and new.get("planted"):        # basılı/adımlı ayak kendi başına süreklidir: eskiyle karıştırmak yerde sürükler
+            continue
         if k in old or k in new:
             out[k] = mix(float(old.get(k, DEFAULTS.get(k, 0.0))), float(new.get(k, DEFAULTS.get(k, 0.0))))
     for k in ("head", "aL", "aR"):

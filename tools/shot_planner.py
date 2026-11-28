@@ -141,6 +141,7 @@ def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
         carried_, obj_gaps_ = continuity.carry_objects(world_obj_, listed_, cast, te - ts, tg_)     # anılmayan nesne kaybolmaz
         objs_ = listed_ + carried_; gaps_ += obj_gaps_
         gaze_ = ch_.get("gaze", {}); react_ = ch_.get("react", {})
+        sm.mark_halt(mot, react_)                                       # yürüyüşü kesen tepki: çözücüler de frenlenen konumu görür
         stg_notes = staging.resolve(mot, objs_, heights_, tg_, prev_x=world_x_, reach_fn=reach_fn_, dur=te - ts)
         stg_notes += continuity.reconcile(mot, world_x_, trans_, heights_, te - ts, objs_, react_)  # koreografi işareti ışınlanma yaratamaz
         blk_ = action_staging.resolve(mot, objs_, heights_, tg_, world_x_, trans_, te - ts, react_)  # seyirci içinden geçmesin / atış koridorunda durmasın
@@ -155,6 +156,7 @@ def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
             pt_ = pointing.clear(view_, des_, world_x_, trans_, react_,
                                  {n_["actor"] for n_ in stg_notes if n_.get("kind") == "conflict"})
             stg_notes = action_staging.merge(stg_notes, pt_, mot, world_x_, trans_)
+        sm.mark_halt(mot, react_)                                       # çözücülerin yeniden kurduğu hareketlerde de aynı fren
         for c_, m_ in mot.items():                                      # sonraki plana süreklilik: plan sonunda ÇİZİLEN konum
             m_["x_end"] = round(sm.exit_x(m_, te - ts, heights_[c_], react_.get(c_)), 4)
             world_x_[c_] = m_["x_end"]

@@ -191,6 +191,12 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
         if readability.pose_jump_problems(_jumps):
             return {"status": "BLOCKED", "error": "POZ_SICRAMASI",
                     "problems": [f"[{x['engine']}] {x['rule']} {x['shot']}: {x['why']}" for x in readability.pose_jump_problems(_jumps)]}
+        _slides = readability.foot_slides(_plan, pp2.designs_for(bible, assets))
+        json.dump({"slides": _slides, "thresholds": {k: v for k, v in readability.DEFAULTS.items() if k.startswith("slide_")}},
+                  open(os.path.join(rdir, "foot_slides.json"), "w", encoding="utf-8"), ensure_ascii=False)
+        if _slides:
+            return {"status": "BLOCKED", "error": "AYAK_KAYMASI",
+                    "problems": [f"[{x['engine']}] {x['rule']} {x['shot']}: {x['why']}" for x in readability.foot_slide_problems(_slides)]}
     blender = find_blender() if engine != "2d" else "n/a"
     if not blender:
         return {"status": "BLOCKED", "error": "BLENDER_MISSING"}

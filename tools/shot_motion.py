@@ -103,6 +103,15 @@ IDLE_ARM_BLEND = 0.5                            # boşta kıpırtı kolu, kıpı
 ACCENT_BLEND = 0.12                             # konuşma vurgusu kolu, vurgu penceresinin (0..0,5) bu kadarlık iki ucunda açılır/döner
 JUMP_PUSH, JUMP_ARM = 0.25, 0.40                # zıplamada itişin ve kol savurmasının/indirmesinin havada kalma içindeki payı
 SURPRISE_HOLD_S, SURPRISE_DIP_S = 0.25, 0.14    # şaşırmanın tepe tutma süresi ve hazırlık çömelmesi (sn)
+PLANTED = ("idle", "look")                      # ayakları yerde duran eylemler: gövde ağırlık aktarır, ayaklar eylemin işaretinde kalır (render2d)
+IDLE_SHIFT_K, LOOK_SHIFT_K = 0.05, 0.04         # ağırlık aktarımı genliği (boy oranı): ayaklar yerindeyken bacakların okunur kaldığı aralık
+LOOK_TURN = 0.35                                # bakınırken yön değiştirme: salınım hızı bu oranın altındayken baş/gövde yumuşakça öbür yana döner
+# ---- yürüyüşü kesen tepki: fren + iki adımda durma
+BRAKE_S = 0.30                                  # fren süresi (sn); durma mesafesi sınırlanırsa kısalır
+BRAKE_MIN_S = 0.15
+STOP_MAX_K = 0.12                               # fren mesafesi en çok boyun bu oranı (geride kalan basılı ayak bacağın erişiminde kalır)
+STOP_STEP_S, GATHER_STEP_S = 0.20, 0.22         # ilk adım (havadaki / arkadaki ayak) ve toplama adımı süreleri (sn)
+STOP_LIFT_K = 0.045                             # durma adımında ayağın kalkma yüksekliği (boy oranı)
 
 
 # ---------------------------------------------------------------- ayak izleri (birim: bir adım çevrimi boyu D; konum = gidilen yol)
@@ -146,6 +155,11 @@ def foot_at(swings, p):
             return p + r0 + (r1 - r0) * (0.5 - 0.5 * math.cos(math.pi * u)), math.sin(math.pi * u), to - at
         at = to
     return at, 0.0, 0.0
+
+
+def sway_envelope(t, dur):
+    """Bekleme/bakınma ağırlık aktarımı eylem işaretinde başlar ve orada biter: sonraki plan ayakların durduğu yerden sürer."""
+    return smooth(t / SWAY_IN_S) * smooth((dur - t) / SWAY_IN_S)
 
 
 def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
@@ -205,6 +219,7 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
             lf = up * (0.18 if run_ else 0.10) * H * max(LIFT_MIN_STEP, min(1.0, size)) * min(1.0, D / D0)
             p["f" + key] = direction * (at * D - dpath) / H          # gövdeye göre, H'ye oran (puppet piksele çevirir); duruşta 0
             p["h" + key] = lf / H
+        p["planted"] = True                                  # ayaklar yola bağlı ve sürekli: poz geçişi eski ayağı karıştırmaz (basılı ayak sürüklenmez)
         if not carry:                                                                       # kol, aynı yandaki ayakla ters fazda; duruşta kendiliğinden 0
             a_sw = max(-ARM_SWING_MAX, min(ARM_SWING_MAX, ARM_SWING_K * (p["fR"] - p["fL"])))
             p["swL"], p["swR"] = a_sw, -a_sw
@@ -306,12 +321,10 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
     elif kind == "look":
         p["head"][2] = 0.9 * math.sin(W * 0.4 * t + s)
         p["head"][0] = 0.18; p["lean"] = 0.12 + 0.05 * math.sin(W * 0.8 * t)
-        p["x"] = x0 + 0.6 * math.sin(W * 0.12 * t + s) * smooth(t / SWAY_IN_S)      # t=0'da tam x0: plan başında sıçrama yok
-        v = 0.6 * W * 0.12 * math.cos(W * 0.12 * t + s)
-        sw = math.sin(W * 1.8 * t) * min(0.6, abs(v) * 1.2)
-        p["lL"], p["lR"] = -sw, sw
+        p["x"] = x0 + LOOK_SHIFT_K * H * math.sin(W * 0.12 * t + s) * sway_envelope(t, dur)      # ağırlık aktarır; yer değiştirmez (adımsız gezinme yok)
         arm_fwd(p, "L", 0.6 + 0.3 * math.sin(W * 0.9 * t)); arm_out(p, "R", 0.5)
-        p["yaw"] = 0.5 * (1 if v > 0 else -1)
+        turn = max(-1.0, min(1.0, math.cos(W * 0.12 * t + s) / LOOK_TURN))
+        p["yaw"] = 0.5 * math.sin(0.5 * math.pi * turn)                        # öbür yana dönüş sürekli (tek karede ters dönmez)
     # konuşurken doğal el/baş hareketi (yalnız sakin türlerde)
     if speaking and kind in ("idle", "look", "wave", "sit"):
         g = 0.5 + 0.5 * math.sin(W * 1.7 * t + s)
@@ -343,7 +356,7 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
         h = ((slot * 2654435761 + seed * 40503) & 0xFFFF) / 65535.0
         bump = math.sin(math.pi * min(1.0, loc / 0.45)) if loc < 0.45 else 0.0
         if kind != "sit":
-            p["x"] += 0.10 * math.sin(W * 0.11 * t + s) * (H / 1.0) * 0.5 * smooth(t / SWAY_IN_S)   # ağırlık kaydırma (plan başında sıfırdan açılır)
+            p["x"] += IDLE_SHIFT_K * H * math.sin(W * 0.11 * t + s) * sway_envelope(t, dur)   # ağırlık kaydırma (işaretten açılır, işarete döner)
         if h > 0.55:                                  # boşta kıpırtı: kol hafifçe açılır; yataya yakın kalkmaz (hedefsiz 'gösterme' gibi okunuyordu)
             side = "R" if h > 0.78 else "L"
             blend_arm(p, side, IDLE_ARM_BASE + IDLE_ARM_LIFT * bump, 0.4 * bump, smooth(bump / IDLE_ARM_BLEND))
@@ -369,17 +382,81 @@ def segment(m, lt, dur):
     return m, lt, dur
 
 
+def halt_info(m, dur, H):
+    """Yürüyüş ortasında gelen yönetmen tepkisi (m['halt_t']): o anki hız ve ayaklardan frenleme planı; yürümüyorsa None.
+    Beden kalan hızıyla kısa mesafede durur; havadaki (yoksa arkadaki) ayak durma noktasına basar, öbürü bu sırada BASILI kalır,
+    sonra toplanır. Hiçbir ayak yerdeyken sürüklenmez. Boy ve yöne göre türetilir; projeye özel sabit yok."""
+    th = m.get("halt_t")
+    if th is None:
+        return None
+    s, t_, d_ = segment(m, float(th), dur)
+    if s["kind"] not in ("walk", "run", "carry") or abs(float(s.get("x1", s["x0"])) - float(s["x0"])) < 0.02:
+        return None
+    at = lambda u: pose_at(s["kind"], max(0.0, u), d_, s.get("seed", 0), s["x0"], s["x1"], H, H * 0.45)
+    now = at(t_)
+    xr = now["x"]
+    v0 = (at(t_ + 1e-3)["x"] - at(t_ - 1e-3)["x"]) / (t_ + 1e-3 - max(0.0, t_ - 1e-3))
+    way = 1.0 if s["x1"] >= s["x0"] else -1.0
+    dist = min(abs(v0) * BRAKE_S / 2.0, STOP_MAX_K * H, abs(float(s["x1"]) - xr))
+    brake = max(BRAKE_MIN_S, 2.0 * dist / abs(v0)) if abs(v0) > 1e-3 else BRAKE_MIN_S
+    feet = {k: (xr + now.get("f" + k, 0.0) * H, now.get("h" + k, 0.0) * H) for k in "LR"}
+    first = max("LR", key=lambda k: (round(feet[k][1], 4), -way * feet[k][0]))
+    return {"xr": xr, "stop": xr + way * dist, "brake": brake, "feet": feet, "first": first, "H": H}
+
+
+def halt_x(info, tau):
+    u = min(1.0, max(0.0, tau / info["brake"]))
+    return info["xr"] + (info["stop"] - info["xr"]) * (2.0 * u - u * u)
+
+
+def halt_feet(info, tau):
+    """Frenden tau sn sonra ayaklar: {'L'|'R': (dünya x, yükseklik m)}."""
+    H, stop, out = info["H"], info["stop"], {}
+    for k in "LR":
+        a, h = info["feet"][k]
+        first = k == info["first"]
+        t0, span = (0.0, STOP_STEP_S) if first else (STOP_STEP_S, GATHER_STEP_S)
+        u = min(1.0, max(0.0, (tau - t0) / span))
+        e = smooth(u)
+        far = abs(stop - a) / H
+        lift = STOP_LIFT_K * H * max(0.35, min(1.0, far / 0.08)) if far > 0.01 else 0.0
+        rest = h * (1.0 - smooth(tau / STOP_STEP_S))                    # kalkık ayak ilk adım süresinde yere iner
+        out[k] = (a + (stop - a) * e, rest + lift * math.sin(math.pi * u))
+    return out
+
+
 def motion_x(m, lt, dur, H):
     """Plan içi lt anında karakterin dünya x konumu (tepki/uzanma bindirmeleri hariç taban hareket)."""
+    if m.get("halt_t") is not None and lt > float(m["halt_t"]):
+        info = halt_info(m, dur, H)
+        if info:
+            return halt_x(info, lt - float(m["halt_t"]))
     s, t_, d_ = segment(m, lt, dur)
     return pose_at(s["kind"], t_, d_, s.get("seed", 0), s["x0"], s["x1"], H, H * 0.45)["x"]
+
+
+def mark_halt(motion, react):
+    """Yönetmen tepkisi yürüyüş değilse oyuncunun yürüyüşü o anda frenlenir: taban hareket verisine 'halt_t' yazılır.
+    Planlayıcı, yerleşim çözücüler, süreklilik ve çizim aynı konumu okur (iki ayrı konum hesabı yok)."""
+    for cid, m in motion.items():
+        rc = (react or {}).get(cid)
+        if rc and rc.get("kind") not in ("walk", "run", "carry"):
+            m["halt_t"] = float(rc["t"])
+        else:
+            m.pop("halt_t", None)
+
+
+def reaction_dur(kind, t_react, dur):
+    """Tepki hareketinin süresi. Ayakları basılı bekleme/bakınma tepkisi plan sonunda işaretine döner (kalan süre); diğerleri planın süresi."""
+    return max(0.1, dur - t_react) if kind in PLANTED else dur
 
 
 def exit_x(m, dur, H, react=None):
     """Plan SONUNDA çizilen konum. react: {'t','kind'} yönetmen tepkisi (o andan sonra tepki hareketi, konum plan boyunca taban hareketten)."""
     x = motion_x(m, dur, dur, H)
     if react and dur >= float(react["t"]):
-        x = pose_at(react["kind"], dur - float(react["t"]), dur, m.get("seed", 0), x, x, H, H * 0.45)["x"]
+        left = dur - float(react["t"])
+        x = pose_at(react["kind"], left, reaction_dur(react["kind"], float(react["t"]), dur), m.get("seed", 0), x, x, H, H * 0.45)["x"]
     return x
 
 

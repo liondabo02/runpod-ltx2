@@ -886,7 +886,7 @@ def actor_state(beat, designs, cid, lt, px):
     reacting = bool(rc) and lt >= float(rc["t"])
     if reacting:
         lte, kind_e = lt - float(rc["t"]), rc["kind"]
-        m = dict(m); m["kind"] = kind_e; m["x0"] = m["x1"] = _x_at(px, cid, m); seg_d = dur
+        m = dict(m); m["kind"] = kind_e; m["x0"] = m["x1"] = _x_at(px, cid, m); seg_d = sm.reaction_dur(kind_e, float(rc["t"]), dur)
     reach_w, _carry_w = object_effects(beat, cid, lt)
     dur_e = seg_d
     if reach_w and kind_e in ("idle", "look") and not rc:      # nesne teması yaklaşıyor ve karakter boşta: uzanma hazırlığı otomatik
@@ -943,6 +943,28 @@ def actor_pose(plan, designs, beat, cid, t, px):
     return (p,) + now[1:]
 
 
+STAND_KINDS = ("idle", "look", "reach", "wave", "surprise", "laugh")      # ayakları basılı kalan duruş eylemleri
+
+
+def ground_feet(p, base, st, lt, dur, H):
+    """Ayaklar zeminde nerede? Yürüyüşü kesen tepkide frenleme adımları; bekleme/bakınma işaretindeki oyuncuda (tepki ve uzanma
+    hazırlığı dahil) gövde ağırlık aktarırken ayaklar işarette basılı kalır. 'planted': ayaklar kendi başına sürekli,
+    poz geçişi (pose_blend) onları eski pozla karıştırıp yerde sürüklemez."""
+    if st["reacting"] and st["kind"] in STAND_KINDS:
+        info = sm.halt_info(base, dur, H)
+        if info:
+            for side, (wx, h) in sm.halt_feet(info, lt - float(base["halt_t"])).items():
+                p["f" + side], p["h" + side] = (wx - p["x"]) / H, h / H
+            p["planted"] = True
+            return p
+    seg = sm.segment(base, lt, dur)[0]
+    if seg["kind"] in sm.PLANTED and st["kind"] in STAND_KINDS:
+        for side in "LR":
+            p["f" + side], p["h" + side] = (seg["x0"] - p["x"]) / H, 0.0
+        p["planted"] = True
+    return p
+
+
 def _base_pose(plan, designs, beat, cid, t, px):
     """Tek anın geçişsiz taban pozu: (poz, hareket, bakış, vurgu)."""
     lt = t - beat["t_start"]
@@ -954,6 +976,7 @@ def _base_pose(plan, designs, beat, cid, t, px):
     args = (kind_e, 0, dur_e, m["seed"], m["x0"], m["x1"], Hm, Hm * 0.45)
     spk = (cid == speaker)
     p = sm.pose_at(args[0], lte, *args[2:], speaking=spk)
+    ground_feet(p, beat["motion"][cid], st_, lt, beat["t_end"] - beat["t_start"], Hm)
     # takip (follow-through): kollar gövdeden, kafa da biraz geriden gelir
     pa = sm.pose_at(args[0], max(0.0, lte - 0.11), *args[2:], speaking=spk)
     ph_ = sm.pose_at(args[0], max(0.0, lte - 0.05), *args[2:], speaking=spk)

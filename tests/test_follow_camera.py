@@ -166,10 +166,11 @@ def close_chain(tmp_path, name, second="dance", camera_b="yakın", objects=None)
     root = tmp_path / name
     a, b = [c[0] for c in sorted(PROJECTS[name][:2], key=lambda c: -c[3])]       # odak: uzun olan (üst beden kadrajı)
 
-    def row(t0, kind, camera):
+    def row(t0, kind, camera, x=-1.0):
         return {"t_start": t0, "t_end": t0 + 4, "characters": [a, b], "camera": camera, "location": "yer", "action": "Durur.", "scene_id": "S",
-                "choreo": {"motion": {a: {"kind": kind, "x0": -1.0}, b: {"kind": "idle", "x0": 1.2}}}}
-    sheet = {"beats": [row(0, "idle", "yakın"), row(4, second, camera_b)]}
+                "choreo": {"motion": {a: {"kind": kind, "x0": x}, b: {"kind": "idle", "x0": 1.2}}}}
+    # ilk işaret 3,5 cm yanda: ikinci vuruş kısa bir toplama yürüyüşüyle başlar (eskiden bekleme salınımının yan etkisiydi; artık sahne verisinde açık)
+    sheet = {"beats": [row(0, "idle", "yakın", -0.965), row(4, second, camera_b)]}
     for i, obs in (objects or {}).items():
         sheet["beats"][i]["choreo"]["objects"] = obs(a)
     (root / "ep" / "beat_sheet.json").write_text(json.dumps(sheet, ensure_ascii=False), encoding="utf-8")

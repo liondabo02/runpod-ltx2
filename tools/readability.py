@@ -45,6 +45,11 @@ DEFAULTS = {
     "pop_jerk_px": 25,            # tek karelik kayma sıçraması: iki komşu karenin kaymasından bu kadar farklı (px, 1280x720)
     "cut_zoom_ratio": shot_cuts.CUT_ZOOM_RATIO,   # gerçek kesme: ölçek en az bu oranda değişir...
     "cut_shift_px": shot_cuts.CUT_SHIFT_PX,       # ...ya da merkez yatayda/dikeyde en az bu kadar kayar (kamera ile aynı kaynak)
+    # ayak kayması: yerde basılı ayak dünyada sürüklenemez (çizime giden pozdan)
+    "slide_fps": 48,
+    "slide_contact": 0.012,       # ayağın kalkma yüksekliği (boy oranı) bunun altındaysa basılı sayılır
+    "slide_speed": 0.06,          # basılı ayağın bu hızın (boy/sn) üstü kaymadır (foot_slide.SLIDE_LIMIT ile aynı)
+    "slide_dist": 0.035,          # kesintisiz kaymada toplam yol bu boy oranını geçerse sorun
     # gösterme jesti: jest boyunca hedef kadrajda ve açıkta, kol hedefe bakıyor
     "point_fps": 8,
     "point_target_visible": 0.60,  # gösterilen nesne/hedef piksellerinin kadrajda + örtülmemiş oranı
@@ -628,6 +633,71 @@ def pose_jumps(plan, designs, cfg=DEFAULTS):
     for r in rows:
         del r["t_last"]
     return rows
+
+
+def drawn_foot(des, pose, side):
+    """Çizime giden pozda ayağın (dünya x, kalkma yüksekliği); ikisi de boy oranı biriminde. Çizimle aynı kural (leg_lines):
+    adım alanı varsa ondan, yoksa bacak salınımından; havadaki gövde (z>0) ayakları da kaldırır. Kalça açıklığı sabit pay olduğu için ölçüye girmez."""
+    H = des["height"]
+    air = max(0.0, float(pose.get("z", 0.0))) / H
+    if ("f" + side) in pose:
+        return pose["x"] / H + pose["f" + side], pose.get("h" + side, 0.0) + air
+    leg = {"infant": 0.20, "toddler": 0.24, "child": 0.28, "adult": 0.38}[des["class"]]
+    swing, sg = float(pose.get("l" + side, 0.0)), (-1 if side == "L" else 1)
+    return pose["x"] / H + swing * leg * 0.22 * sg * 0.3, max(0.0, swing) * leg * 0.28 + air
+
+
+def foot_slides(plan, designs, cfg=DEFAULTS):
+    """Yerde basılı ayağın dünyada sürüklenmesi: [{'t','t_end','shot','actor','foot','dist','speed'}] (boy oranı, boy/sn).
+    Çizime giden pozdan (taban hareket + geçişler + temas katmanları). Kesintisiz vuruş sınırı da ölçülür; zaman atlaması / mekân
+    değişimi ölçülmez. Oturma (z<0) ayrı çizim yoludur, ölçülmez. Yalnız dist eşiğini geçen kesintisiz kaymalar yazılır."""
+    cfg = dict(DEFAULTS, **(cfg or {}))
+    dt = 1.0 / cfg["slide_fps"]
+    start = min((b["t_start"] for b in plan["beats"]), default=0.0)
+    end = max((b["t_end"] for b in plan["beats"]), default=0.0)
+    rows, run, prev = [], {}, None
+
+    def close(key):
+        r = run.pop(key, None)
+        if r is not None and r["dist"] > cfg["slide_dist"]:
+            rows.append(dict(r, dist=round(r["dist"], 3), speed=round(r["speed"], 3), t=round(r["t"], 3), t_end=round(r["t_end"], 3)))
+    for i in range(int(math.ceil((end - start) / dt - 1e-9))):
+        t = start + i * dt
+        beat = next((b for b in plan["beats"] if b["t_start"] <= t < b["t_end"]), None)
+        cur = {}
+        if beat is not None:
+            for it in r2.poses_at(plan, designs, t):
+                if float(it[2].get("z", 0.0)) < -1e-6:
+                    continue
+                for side in "LR":
+                    cur[(it[0], side)] = drawn_foot(it[1], it[2], side)
+        moving = set()
+        if prev is not None and beat is not None:
+            for key, (x, lift) in cur.items():
+                old = prev[1].get(key)
+                if old is None or (prev[0] is not beat and r2._history(plan, key[0], beat, t - dt) is not prev[0]):
+                    continue
+                step = abs(x - old[0])
+                if max(lift, old[1]) >= cfg["slide_contact"] or step <= cfg["slide_speed"] * dt:
+                    continue
+                moving.add(key)
+                r = run.setdefault(key, {"t": t - dt, "t_end": t, "shot": beat.get("shot_id") or str(beat.get("i")), "actor": key[0],
+                                         "foot": key[1], "dist": 0.0, "speed": 0.0})
+                r["t_end"] = t
+                r["dist"] += step
+                r["speed"] = max(r["speed"], step / dt)
+        for key in [k for k in run if k not in moving]:
+            close(key)
+        prev = None if beat is None else (beat, cur)
+    for key in list(run):
+        close(key)
+    return sorted(rows, key=lambda r: (r["t"], r["actor"], r["foot"]))
+
+
+def foot_slide_problems(report):
+    return [{"engine": "motion", "rule": "FOOT_SLIDE", "shot": r["shot"],
+             "why": f"{r['actor']}: {r['t']:.2f}-{r['t_end']:.2f} sn {r['foot']} ayağı yerdeyken boyun {r['dist']:.3f} katı sürükleniyor (en çok {r['speed']:.2f} boy/sn)"}
+            for r in report]
 
 
 def object_jumps(plan, designs, cfg=DEFAULTS):
