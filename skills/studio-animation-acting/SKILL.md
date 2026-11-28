@@ -45,7 +45,7 @@ Bu işçinin kullandığı motorlar ve her yeteneğin kanıttan hesaplanan durum
 Eksik yetenek için önce açık görevi Yazılım Şirketi'ne bildir; olmayan aracı varmış gibi kullanma.
 
 - ANI-01 Yürüyüşte basılı ayak, ayak kayması ölçü ve kapısı [KISMI]: `tools/foot_slide.py`, `tools/readability.py` — açık: H6b, H27, H28
-- ANI-02 Poz geçişi sıçramasız (poz sıçraması kapısı) [KISMI]: `tools/pose_blend.py`, `tools/readability.py` — açık: C2a
+- ANI-02 Poz geçişi sıçramasız (poz sıçraması kapısı) [VAR]: `tools/pose_blend.py`, `tools/readability.py`
 - ANI-03 Ezme-esneme (squash & stretch) [TESTSIZ]: `tools/puppet2d.py`
 - ANI-04 Hazırlık (anticipation) ve toparlanma ölçüsü [VAR]: `tools/motion_continuity.py`
 - ANI-05 Takip ve bindirme (saç, kulak, giysi gecikmesi) [YOK]: araç yok
@@ -54,7 +54,7 @@ Eksik yetenek için önce açık görevi Yazılım Şirketi'ne bildir; olmayan a
 - ANI-08 Göz kırpma (şaşırmada kırpmama dahil) [VAR]: `tools/render2d.py`
 - ANI-09 Bakış: eylemi izleme, önce bak sonra konuş [KISMI]: `tools/listener_reaction.py` — açık: H14
 - ANI-10 Dinleyen karakterin tepkisi [VAR, insan onayı]: `tools/listener_reaction.py`
-- ANI-11 Önden/üç-çeyrekten profile yumuşak dönüş [KISMI]: `tools/puppet_side.py` — açık: C2a, H23, H18
+- ANI-11 Önden/üç-çeyrekten profile yumuşak dönüş [KISMI]: `tools/puppet2d.py`, `tools/puppet_side.py`, `tools/render2d.py` — açık: C2b, H30, H18
 - ANI-12 Duygu ifadesi (kaş, ağız, göz) [KISMI, insan onayı]: `tools/puppet2d.py` — açık: H24
-- ANI-13 Nesne tutma, devir, atış, bırakma [KISMI]: `tools/continuity.py`, `tools/readability.py` — açık: C3a, C3b, C3c, C3d, C3e, C3f, C3g, C3h
+- ANI-13 Nesne tutma, devir, atış, bırakma [KISMI]: `tools/continuity.py`, `tools/puppet2d.py`, `tools/readability.py` — açık: C3a, C3b, C3c, C3d, C3e, C3f, C3g, C3h
 <!-- MOTORLAR:BITIS -->

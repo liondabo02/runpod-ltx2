@@ -247,13 +247,14 @@
     {
      "modul": "tools/readability.py",
      "sembol": "pose_jumps"
+    },
+    {
+     "modul": "tools/pose_blend.py",
+     "sembol": "side_weight"
     }
    ],
    "test": [
     "tests/test_pose_jumps.py"
-   ],
-   "acik_gorev": [
-    "C2a"
    ]
   },
   {
@@ -384,14 +385,24 @@
     {
      "modul": "tools/puppet_side.py",
      "sembol": "hand_offset"
+    },
+    {
+     "modul": "tools/render2d.py",
+     "sembol": "turn_pose"
+    },
+    {
+     "modul": "tools/puppet2d.py",
+     "sembol": "eyes_inside_head"
     }
    ],
    "test": [
-    "tests/test_side_view.py"
+    "tests/test_side_view.py",
+    "tests/test_pose_jumps.py",
+    "tests/test_far_eye_inside_head.py"
    ],
    "acik_gorev": [
-    "C2a",
-    "H23",
+    "C2b",
+    "H30",
     "H18"
    ]
   },
@@ -430,9 +441,14 @@
     {
      "modul": "tools/readability.py",
      "sembol": "object_jumps"
+    },
+    {
+     "modul": "tools/puppet2d.py",
+     "sembol": "keep_hand_off_feet"
     }
    ],
    "test": [
+    "tests/test_crouch_free_hand.py",
     "tests/test_contact_matrix.py",
     "tests/test_continuity_world.py"
    ],
