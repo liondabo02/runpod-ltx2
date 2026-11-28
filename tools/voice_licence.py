@@ -5,10 +5,18 @@ import os
 REGISTRY = {
     "mms_tts": {"code": "MIT/Apache (transformers)", "weights": "CC-BY-NC 4.0", "voice_data": "CC-BY-NC 4.0", "commercial": "no",
                 "source": "facebook/mms-tts-* model kartı; kurmancî (kmr) bu sesi kullanıyor"},
-    "piper_tr_dfki": {"code": "MIT (piper)", "weights": "MIT etiketli (rhasspy/piper-voices)", "voice_data": "CC BY-NC-SA 4.0 (DFKI Türkçe veri)", "commercial": "no",
+    "piper_tr_dfki": {"code": "GPL-3.0 (piper1-gpl; ayrı süreç olarak çağrılır)", "weights": "MIT etiketli (rhasspy/piper-voices)", "voice_data": "CC BY-NC-SA 4.0 (DFKI Türkçe veri)", "commercial": "no",
                       "source": "rhasspy/piper-voices tr_TR/dfki MODEL_CARD → github.com/marytts/dfki-ot-data"},
-    "piper_tr_fahrettin": {"code": "MIT (piper)", "weights": "?", "voice_data": "?", "commercial": "unverified", "source": "MODEL_CARD alınamadı"},
-    "piper_tr_fettah": {"code": "MIT (piper)", "weights": "?", "voice_data": "?", "commercial": "unverified", "source": "MODEL_CARD alınamadı"},
+    "piper_tr_fahrettin": {"code": "GPL-3.0 (piper1-gpl)", "weights": "?", "voice_data": "?", "commercial": "unverified", "source": "MODEL_CARD alınamadı"},
+    "piper_tr_fettah": {"code": "GPL-3.0 (piper1-gpl)", "weights": "?", "voice_data": "?", "commercial": "unverified", "source": "MODEL_CARD alınamadı"},
+    "piper_de_thorsten": {"code": "GPL-3.0 (piper1-gpl; ayrı süreç)", "weights": "model kartı: CC0", "voice_data": "CC0 (Thorsten-Voice; taban rdh CC0)", "commercial": "yes",
+                          "source": "rhasspy/piper-voices de_DE/thorsten/medium MODEL_CARD (2026-11-28); Piper LICENSING.md: modelin eğitim verisinin türevi sayılıp sayılmadığı belirsiz, hukuki tavsiye değildir"},
+    "piper_es_davefx": {"code": "GPL-3.0 (piper1-gpl; ayrı süreç)", "weights": "model kartı: CC0", "voice_data": "CC0 (OHF-Voice/voice-datasets; taban rdh CC0)", "commercial": "yes",
+                        "source": "rhasspy/piper-voices es_ES/davefx/medium MODEL_CARD (2026-11-28); aynı belirsizlik notu"},
+    "piper_fr_siwis": {"code": "GPL-3.0 (piper1-gpl)", "weights": "model kartı: CC-BY 4.0 (veri: Edinburgh datashare 2353)", "voice_data": "CC-BY 4.0, ama 'lessac' sesinden ince ayarlı: taban zinciri doğrulanmadı", "commercial": "unverified",
+                       "source": "rhasspy/piper-voices fr_FR/siwis/medium MODEL_CARD (2026-11-28); Training: Finetuned from lessac -> zincir lisansı kontrol edilmeli"},
+    "kokoro_82m": {"code": "Apache-2.0 (hexgrad/kokoro; kart kod lisansını belirtmiyor)", "weights": "Apache-2.0 (HF kartı)", "voice_data": "eğitim verisi kaynağı kartta belirtilmedi", "commercial": "unverified",
+                   "source": "huggingface.co/hexgrad/Kokoro-82M (2026-11-28); Türkçe ve Almanca yok"},
     "edge_tts": {"code": "MIT (edge-tts istemcisi)", "weights": "Microsoft bulut servisi (model yok)", "voice_data": "Microsoft", "commercial": "unverified",
                  "source": "Microsoft hizmet şartları; sahip kararı bekliyor (review_required)"},
     "xtts_v2": {"code": "MPL", "weights": "CPML", "voice_data": "kullanıcı referansı", "commercial": "no", "source": "Coqui CPML"},
@@ -18,6 +26,10 @@ REGISTRY = {
     "omnivoice": {"code": "Apache-2.0 (k2-fsa/OmniVoice)", "weights": "belirtilmedi", "voice_data": "belirtilmedi", "commercial": "unverified",
                   "source": "github.com/k2-fsa/OmniVoice; Türkçe desteği doğrulanmadı; yetkisiz klonlama yasak"},
 }
+
+# Piper model adı -> kayıt anahtarı (bilinmeyen model 'unverified' sayılır)
+PIPER_MODEL_KEYS = {"tr_TR-dfki-medium": "piper_tr_dfki", "tr_TR-fahrettin-medium": "piper_tr_fahrettin", "tr_TR-fettah-medium": "piper_tr_fettah",
+                    "de_DE-thorsten-medium": "piper_de_thorsten", "es_ES-davefx-medium": "piper_es_davefx", "fr_FR-siwis-medium": "piper_fr_siwis"}
 
 def commercial_mode():
     return os.environ.get("AHOS_COMMERCIAL", "1") != "0"        # varsayılan: ticari teslim (NC sesler engelli)

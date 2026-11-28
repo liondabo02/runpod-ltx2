@@ -122,10 +122,15 @@ def build_lang_dir(episode_dir, bible, code, lang_info, llm=None, tts=vw.tts_rea
                 rep["status"] = "REVIEW_REQUIRED"
         json.dump(rep, open(os.path.join(ldir, "localisation_report.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=2)
         return rep
-    man = vw.run(ldir, bible, tts=tts, visemes=visemes, lang=code)
+    import tts_local
+    loc = tts_local.resolve(code, lang_info) if lang_info.get("tts") != "mms" else {"engine": "mms", "note": ""}
+    if loc["engine"] == "piper":                         # yerel, lisansı denetlenmiş ses (dil başına model)
+        tts = lambda text, voice, rate, pitch, out_wav, _m=loc["model"]: vw.tts_piper(text, voice, rate, pitch, out_wav, model=_m)  # noqa: E731
+    man = vw.run(ldir, bible, tts=tts, visemes=visemes, lang=code, engine=tts_local.engine_info(loc) if loc["engine"] == "piper" else None)
     missing = [i for i in range(len(lines)) if i not in tr]
     rep = {"lang": code, "status": man["status"] if not missing else "NEEDS_REVISION", "lines": len(lines), "untranslated": missing,
-           "voice_problems": man["problems"], "dir": ldir, "licence_status": man.get("licence_status")}
+           "voice_problems": man["problems"], "dir": ldir, "licence_status": man.get("licence_status"), "tts_engine": man.get("tts_engine"),
+           "tts_note": loc.get("note", "")}
     if lang_info.get("native_review_required"):
         rep["native_review_required"] = True
         rep["quality_note"] = lang_info.get("quality_note", "anadili konuşan biri okumalı")

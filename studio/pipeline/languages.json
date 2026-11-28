@@ -18,7 +18,11 @@
       "male": "de-DE-ConradNeural",
       "child_female": "de-DE-AmalaNeural",
       "child_male": "de-DE-KasperNeural",
-      "order": 2
+      "order": 2,
+      "piper": {
+        "model": "de_DE-thorsten-medium",
+        "licence_key": "piper_de_thorsten"
+      }
     },
     "es": {
       "name": "Español",
@@ -27,7 +31,11 @@
       "male": "es-ES-AlvaroNeural",
       "child_female": "es-ES-ElviraNeural",
       "child_male": "es-ES-AlvaroNeural",
-      "order": 3
+      "order": 3,
+      "piper": {
+        "model": "es_ES-davefx-medium",
+        "licence_key": "piper_es_davefx"
+      }
     },
     "fr": {
       "name": "Français",
@@ -36,7 +44,11 @@
       "male": "fr-FR-HenriNeural",
       "child_female": "fr-FR-DeniseNeural",
       "child_male": "fr-FR-HenriNeural",
-      "order": 4
+      "order": 4,
+      "piper": {
+        "model": "fr_FR-siwis-medium",
+        "licence_key": "piper_fr_siwis"
+      }
     },
     "ar": {
       "name": "العربية",

@@ -143,9 +143,15 @@ def piper_model(voice_hint=""):
     return os.path.join(d, name + ".onnx")
 
 
-def tts_piper(text, voice, rate, pitch, out_wav):
-    """Açık kaynak (MIT) Piper Türkçe ses. Hız: length_scale; ton: ffmpeg ile perde kaydırma (çocuk/yaşlı)."""
-    model = piper_model()
+def tts_piper(text, voice, rate, pitch, out_wav, model=None):
+    """Yerel Piper sesi (piper-tts paketi GPL-3.0: yalnız ayrı süreç olarak çağrılır; SES MODELİ lisansı sese göre değişir ve burada denetlenir).
+    Hız: length_scale; ton: ffmpeg ile perde kaydırma (çocuk/yaşlı). model verilmezse AHOS_PIPER_MODEL (varsayılan tr_TR-dfki-medium)."""
+    model = model or piper_model()
+    import voice_licence
+    _name = os.path.splitext(os.path.basename(model))[0]
+    _ok, _msg = voice_licence.check(voice_licence.PIPER_MODEL_KEYS.get(_name, "piper_" + _name))
+    if not _ok:                                             # CC-BY-NC vb. ses ticari teslimde üretilmez
+        raise RuntimeError(_msg)
     if not os.path.exists(model):
         raise RuntimeError("Piper modeli yok: python tools/get_piper_voice.py")
     tmp = out_wav[:-4] + ".piper.wav"
@@ -194,7 +200,7 @@ def visemes_real(wav, out_json):
 import worker_events  # noqa: E402
 
 
-def run(episode_dir, bible, tts=tts_real, visemes=visemes_real, margin=0.3, lang="tr"):
+def run(episode_dir, bible, tts=tts_real, visemes=visemes_real, margin=0.3, lang="tr", engine=None):
     sheet = json.load(open(os.path.join(episode_dir, "beat_sheet.json"), encoding="utf-8"))
     chars = {c["id"]: c for c in bible["characters"]}
     adir = os.path.join(episode_dir, "audio"); vdir = os.path.join(episode_dir, "visemes")
@@ -238,8 +244,10 @@ def run(episode_dir, bible, tts=tts_real, visemes=visemes_real, margin=0.3, lang
         if used > budget - margin and used > 0:
             problems.append(f"beat[{bi}]: konuşma {used:.1f}s, vuruş {budget:.1f}s -> yazar kısaltmalı")
     status = "PASSED" if items and not problems else "NEEDS_REVISION"
-    man = {"stage": "voice+lipsync", "status": status, "cost_eur": 0, "licence_status": "review_required",
-           "licence_note": "edge-tts Microsoft hizmet şartlarına bağlı; ticari kullanım sahibin kararına kadar kapalı",
+    eng = engine or {"engine": "edge-tts", "licence_status": "review_required",
+                     "licence_note": "edge-tts Microsoft hizmet şartlarına bağlı; ticari kullanım sahibin kararına kadar kapalı"}
+    man = {"stage": "voice+lipsync", "status": status, "cost_eur": 0, "tts_engine": eng["engine"], "licence_status": eng["licence_status"],
+           "licence_note": eng["licence_note"],
            "lang": lang, "lines": len(items), "problems": problems, "items": items,
            "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds")}
     with open(os.path.join(episode_dir, "voice_manifest.json"), "w", encoding="utf-8") as f:
