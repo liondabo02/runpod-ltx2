@@ -120,3 +120,29 @@ def test_render_gate_blocks_sliding_feet_before_drawing(tmp_path, monkeypatch):
     assert any("FOOT_SLIDE" in p for p in out["problems"])
     assert json.loads((ep / "render" / "foot_slides.json").read_text(encoding="utf-8"))["slides"]
     assert not drawn
+
+
+# ---------------------------------------------------------------- şaşırmanın tepesi gözü kapalı yakalanmaz
+def eyes(plan, des, t):
+    tr = {}
+    r2.frame(plan, des, t, trace=tr)
+    return tr["states"]["a"]
+
+
+def blinks_during_startle(plan, des, t0):
+    out = []
+    for i in range(int(r2.STARTLE_OPEN_S * 24)):
+        if eyes(plan, des, t0 + i / 24)["blink"]:
+            out.append(round(t0 + i / 24, 3))
+    return out
+
+
+@pytest.mark.parametrize("cfg,t0", [(dict(kind="walk", react="surprise"), 2.5), (dict(kind="idle", react="surprise", heights=(1.9, 1.7)), 2.5),
+                                    (dict(kind="surprise"), 0.0), (dict(kind="idle", next_kind="surprise"), 6.0)])
+def test_eyes_stay_open_while_the_surprise_begins(tmp_path, monkeypatch, cfg, t0):
+    plan, des = tp.build(tmp_path, **cfg)[:2]
+    monkeypatch.setattr(r2, "blink_at", lambda t, seed: True)               # kırpma saati her an 'kırp' dese de
+    assert blinks_during_startle(plan, des, t0) == []
+    assert eyes(plan, des, t0 + r2.STARTLE_OPEN_S + 0.05)["blink"]          # sonrasında doğal kırpma sürer
+    monkeypatch.setattr(r2, "startled", lambda beat, cid, lt: False)        # bozma
+    assert blinks_during_startle(plan, des, t0)

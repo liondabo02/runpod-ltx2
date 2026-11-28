@@ -98,6 +98,21 @@ def action_look(beat, lt):
     return None
 
 
+STARTLE_OPEN_S = 0.9            # şaşırma başlar başlamaz gözler bu süre açık kalır (tepe okunur; sonra doğal kırpma döner)
+
+
+def startled(beat, cid, lt):
+    """Oyuncu şu an şaşırmanın başında mı? Yönetmen tepkisi ya da planın şaşırma eylemi; vuruş verisinden."""
+    rc = ((beat.get("choreo") or {}).get("react") or {}).get(cid)
+    if rc and lt >= float(rc["t"]):
+        return rc.get("kind") == "surprise" and lt - float(rc["t"]) < STARTLE_OPEN_S
+    m = beat["motion"].get(cid)
+    if m is None:
+        return False
+    seg, seg_t, _d = sm.segment(m, lt, beat["t_end"] - beat["t_start"])
+    return seg["kind"] == "surprise" and seg_t < STARTLE_OPEN_S
+
+
 def eyes_state(emotion, lt, seed, blink, watching):
     """(göz kırpma, gülerken gözler açık mı). watching: nesne eylemi sürerken göz kapanmaz (ne kırpma ne gülme)."""
     if watching:
@@ -1303,7 +1318,7 @@ def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False, came
                 tx_ = others_[0] if others_ else None
             if tx_ is not None and abs(tx_ - p["x"]) > 0.05:
                 gaze_ = 0.9 if tx_ > p["x"] else -0.9
-        blink_, open_ = eyes_state(emo, lt, m["seed"], blink_at(t, m["seed"]), bool(watch) or bool(hear and cid == reaction_target(beat, t)))     # tepki planındaki yüz gözü kapalı yakalanmaz
+        blink_, open_ = eyes_state(emo, lt, m["seed"], blink_at(t, m["seed"]), bool(watch) or startled(beat, cid, lt) or bool(hear and cid == reaction_target(beat, t)))     # tepki planındaki ve yeni şaşıran yüz gözü kapalı yakalanmaz
         st = {"mouth": letters.get(cid, "X"), "blink": blink_, "emotion": emo, "eyes_open": open_,
               "gaze": gaze_, "brow": brow_, "pulse": e}
         if states is not None:
