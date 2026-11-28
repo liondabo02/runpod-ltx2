@@ -51,3 +51,8 @@ deliverables/S01-PARK-KITE-001/keyframes/
 studio/jobs/
 studio/agents/memory/
 *.blend1
+
+# yerel ses modelleri ve üretilen deneme sesleri (büyük; lisans kartlarıyla birlikte yalnız yerelde tutulur)
+models/piper/
+models/kokoro/
+out/piper_real/
