@@ -3,6 +3,8 @@
 CEO kendi başına iş başlatmaz: görev ÖNERİR, sahip onaylayınca mevcut kuyruğa (studio_enqueue) girer.
 Durum soruları model kullanılmadan kayıtlardan yanıtlanır; böylece CEO ilerleme uyduramaz."""
 import json, os, re, urllib.request
+sys_path_ok = __import__('sys').path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import llm_guard  # noqa: E402
 
 # Çalışırken canlı bildirim gönderen işçiler (motor kodunda bağlı). Diğerleri için ofis 'çalışıyor' diyemez.
 INSTRUMENTED = ("showrunner", "director", "writers_room", "validator", "voice", "animatic", "character", "render", "video_qa")
@@ -108,6 +110,8 @@ def model_reply(msg, context, env=None, opener=urllib.request.urlopen, timeout=6
     env = os.environ if env is None else env
     base = env.get("AHOS_LLM_BASE", "http://localhost:20128/v1").rstrip("/")
     key = env.get("AHOS_LLM_KEY", "")
+    if not llm_guard.check(env.get("AHOS_LLM_MODEL", "auto"), base, env)["ok"]:
+        return None
     body = {"model": env.get("AHOS_LLM_MODEL", "auto"), "temperature": 0.4,
             "messages": [{"role": "system", "content": CEO_SYS + "\n\nKAYITLAR:\n" + context}, {"role": "user", "content": msg}]}
     hdr = {"Content-Type": "application/json", **({"Authorization": "Bearer " + key} if key else {})}

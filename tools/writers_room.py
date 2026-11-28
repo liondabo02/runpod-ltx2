@@ -14,6 +14,7 @@ import argparse, hashlib, json, os, re, sys, time, urllib.request, urllib.error
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from validate_beat_sheet import validate  # noqa: E402
 import lessons  # noqa: E402
+import llm_guard  # noqa: E402
 import worker_events as we  # noqa: E402
 
 ACT_SECONDS = 40
@@ -27,6 +28,9 @@ def say(msg):
 def llm_call(system, user, temperature=0.7):
     base = os.environ.get("AHOS_LLM_BASE", "http://localhost:20128/v1").rstrip("/")
     key = os.environ.get("AHOS_LLM_KEY", "")
+    g = llm_guard.check(os.environ.get("AHOS_LLM_MODEL", "auto"), base)
+    if not g["ok"]:
+        raise RuntimeError("LLM_ODENEK_ENGELI: " + g["reason"])
     body = {"model": os.environ.get("AHOS_LLM_MODEL", "auto"), "temperature": temperature,
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
     data = json.dumps(body).encode()
