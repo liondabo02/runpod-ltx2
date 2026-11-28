@@ -496,6 +496,33 @@ def ground_shadow(cv, fx, fy, Hh, jump):
     cv.ellipse(fx, fy + Hh * 0.012, Hh * 0.30 * (1 - min(0.5, max(0.0, jump) / (Hh * 1.5))), Hh * 0.05, shade(SHADOW, 0.8), None, 0)
 
 
+HIP_HALF_K = 0.24            # ön / üç-çeyrek görünüşte kalçanın gövde ortasından yarı açıklığı (gövde genişliğinin katı)
+
+
+def leg_lines(pose, fx, fy, Hh, leg_h, torso_h, torso_w, torso_bot, jump, sit):
+    """Ön / üç-çeyrek bacakların çizim noktaları: {'L'|'R': (kalça, ayak)} (ekran px).
+    Ayakların ekran sırası kalçalarınkine ters dönmek üzereyken (yana yürüyüşte öne geçen ayak öbür kalçanın ayağını geçer) kalçalar
+    gövde ortasında birleşir: bacaklar ters V olur, birbirinin içinden geçip X çizmez. Ayak noktaları değişmez (basılı ayak kaymaz)."""
+    feet = {}
+    for side, sg in (("L", -1), ("R", 1)):
+        swing = pose["lL"] if side == "L" else pose["lR"]
+        lift = max(0.0, swing) * leg_h * 0.28
+        x0 = fx + sg * torso_w * HIP_HALF_K
+        if sit > 1:
+            feet[side] = (x0 + sg * torso_w * 0.15, fy - Hh * 0.01 - lift)
+        elif ("f" + side) in pose:      # mesafeye bağlı adım: temas ayağı dünyada sabit
+            feet[side] = (x0 + pose["f" + side] * Hh, fy - Hh * 0.01 - pose["h" + side] * Hh - max(0, jump))
+        else:
+            feet[side] = (x0 + swing * leg_h * 0.22 * sg * 0.3, fy - Hh * 0.01 - lift - max(0, jump))
+    top_y = torso_bot if sit > 1 else torso_bot - torso_h * 0.04
+    # ayakların sırası, iki bacak ortak tepeden çıksa kısa bacağın ayağı hizasında ölçülür: kalkık (kısa) bacak da hesaba girer.
+    # Bu fark >= 0 ise kalçalar ne kadar açık olursa olsun bacaklar kesişmez; < 0 ise yalnız ortak tepe (open_k = 0) kesişmesizdir.
+    low = min(feet["L"][1], feet["R"][1])
+    reach = {s: (feet[s][0] - fx) * (max(1e-6, low - top_y) / max(1e-6, feet[s][1] - top_y)) for s in "LR"}
+    open_k = max(0.0, min(1.0, (reach["R"] - reach["L"]) / (2.0 * torso_w * HIP_HALF_K)))
+    return {side: ((fx + sg * torso_w * HIP_HALF_K * open_k, top_y), feet[side]) for side, sg in (("L", -1), ("R", 1))}
+
+
 def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
     """fx,fy: ayak ortası (ekran px). ppm: piksel/metre. st: {'mouth':harf,'blink':0/1,'emotion':str,'dir':-1..1}"""
     if view_of(pose) == "side":
@@ -581,19 +608,9 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         cv.ellipse(hx, head_cy + head_h * 0.06, head_w * 0.64, head_h * 0.66, sc_, INK, ow)
 
     # ---- bacaklar
+    legs_ = leg_lines(pose, fx, fy, Hh, leg_h, torso_h, torso_w, torso_bot, jump, sit)
     for side, sg in (("L", -1), ("R", 1)):
-        swing = pose["lL"] if side == "L" else pose["lR"]
-        lift = max(0.0, swing) * leg_h * 0.28
-        x0 = fx + sg * torso_w * 0.24
-        top = (x0, torso_bot - torso_h * 0.04)
-        if sit > 1:
-            foot = (x0 + sg * torso_w * 0.15, fy - Hh * 0.01 - lift)
-            top = (x0, torso_bot)
-        else:
-            if ("f" + side) in pose:      # mesafeye bağlı adım: temas ayağı dünyada sabit
-                foot = (x0 + pose["f" + side] * Hh, fy - Hh * 0.01 - pose["h" + side] * Hh - max(0, jump))
-            else:
-                foot = (x0 + swing * leg_h * 0.22 * sg * 0.3, fy - Hh * 0.01 - lift - max(0, jump))
+        top, foot = legs_[side]
         lw = des.get("lowerwear", "shorts"); lc = des.get("lower_color", shorts)
         if cr > 0.5 and sit <= 1 and lw != "skirt":      # bükülü bacak: uyluk + baldır, diz dışa
             knee = _knee(top, (foot[0], foot[1] - Hh * 0.025), leg_h, sg)
