@@ -216,6 +216,14 @@ def _hand(cv, pos, r, skin, sg, fwd, ow, t, emo, g=None, rest=0.0):
 
 
 # ---------------------------------------------------------------- karakter çizimi
+FAR_EYE_K = 0.82          # uzak gözün yatay daralması
+
+
+def far_eye(sg, face):
+    """Yüz 'face' kadar yana dönükken (artı: ekran sağı) sg yanındaki göz uzak mı? Yüzün döndüğü yandaki göz uzaktır."""
+    return sg * face > 0.2
+
+
 def view_of(pose):
     """Görünüş sınıfı: 'front' | 'three_quarter' | 'side'. Gövde dönüşü = yaw*1.25."""
     if pose.get("view") in ("front", "three_quarter", "side"):
@@ -724,7 +732,7 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         cv.ellipse(hx + head_w * 0.42, head_cy - head_h * 0.38, head_w * 0.12, head_h * 0.12, skin, INK, ow)
     else:
         for sg in (-1, 1):   # kulaklar (dönüşte uzak kulak kafanın arkasında kalır)
-            if sg * face < -0.55:
+            if sg * face > 0.55:                  # yüz sg yanına dönükse o yandaki kulak uzaktır
                 continue
             cv.ellipse(hx + sg * head_w * 0.50 * (1 - 0.25 * abs(face)), head_cy + head_h * 0.04, head_w * 0.09, head_h * 0.12, skin, INK, ow)
         cv.ellipse_cel(hx - face * head_w * 0.03, head_cy, head_w * 0.52 * (1.0 - 0.07 * abs(face)), head_h * 0.52, skin, INK, ow, rot=tilt * 0.3, k=0.86)
@@ -749,8 +757,8 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
     hide = st.get("hide", ())          # yalnız ölçüm: yüz öğesini çizmeden aynı kare (face_visibility.py)
     for sg in (-1, 1):
         cx = hx + sg * ex * (1.0 - 0.16 * abs(face)) + face * head_w * 0.19
-        far = (sg * face) < -0.2
-        rx = erx * (0.82 if far else 1.0)
+        far = far_eye(sg, face)
+        rx = erx * (FAR_EYE_K if far else 1.0)
         eyes_x[sg] = cx
         reach[sg] = max(reach[sg], sg * (cx - hx) + rx)
         if "eyes" in hide:
