@@ -122,3 +122,43 @@ def test_profile_listener_reaction_shot_passes_the_render_gate(tmp_path, name):
         views.append(pp.view_of({i[0]: i for i in tr["items"]}[s["listener"]][2]))
     assert "side" in views, (views, shots)                       # sınanan durum gerçekten profil
     assert readability.reaction_problems(shots) == [], list(zip(views, shots))
+
+
+# ---------------------------------------------------------------- gülen göz: alt kenar kapak çizgisiyle kapanır (ön, üç-çeyrek, profil)
+@pytest.mark.parametrize("view", (("front", 0.0, 0.0), ("three_quarter_l", -0.55, 0.0)) + SIDES, ids=lambda v: v[0])
+@pytest.mark.parametrize("emotion", ("happy", "laugh"))
+def test_smiling_eye_is_closed_by_a_lid_line(designs, view, emotion):
+    values = {c: round(fv.lower_lid_lined(d, view, emotion), 3) for c, d in designs.items()}
+    assert min(values.values()) >= 0.97, values
+
+
+def test_lid_measure_catches_an_eye_cut_without_a_line(designs, monkeypatch):
+    real = pp.Cv.poly
+
+    def unlined(self, pts, fill, ol=None, ow=3.0):
+        return real(self, pts, fill, None if fill == (255, 255, 255) else ol, ow)       # göz akı dış çizgisiz kesilir
+    monkeypatch.setattr(pp.Cv, "poly", unlined)
+    monkeypatch.setattr(pp, "LID_LINE_K", 0.01)
+    assert fv.lower_lid_lined(designs["mino"], ("front", 0.0, 0.0), "happy") < 0.9
+
+
+# ---------------------------------------------------------------- profil kaşı başın dışına (gökyüzüne) taşmaz
+def _brow_outside_px(des, view, emotion):
+    p = fv.pose(*view)
+    st = {"mouth": "X", "blink": 0, "emotion": emotion, "gaze": 0.0, "brow": lr.BROW, "pulse": 0.0}
+    without = fv.render(des, p, dict(st, hide=("brows",))).convert("RGB")
+    mask = fv._changed(fv.render(des, p, st), without)
+    sky = without.getpixel((2, 2))
+    return sum(1 for m, c in zip(mask.tobytes(), zip(*[ch.tobytes() for ch in without.split()])) if m and c == sky)
+
+
+@pytest.mark.parametrize("view", SIDES, ids=lambda v: v[0])
+def test_profile_brow_stays_on_the_head(designs, view):
+    bad = {(c, e): n for c, d in designs.items() for e in fv.EMOTIONS for n in (_brow_outside_px(d, view, e),) if n > 12}
+    assert bad == {}
+
+
+def test_sky_measure_catches_a_floating_brow(designs, monkeypatch):
+    """Bilerek bozma: başın içinde tutma kapatılır ve kaş yukarı itilir."""
+    monkeypatch.setattr(puppet_side, "_inside_head", lambda pts, hx, cy, rx, ry, d: [(x, y - 0.12 * ry) for x, y in pts])
+    assert _brow_outside_px(designs["mino"], SIDES[0], "surprise") > 12

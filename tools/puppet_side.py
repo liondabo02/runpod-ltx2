@@ -10,13 +10,13 @@ SIDE_THRESHOLD = 0.95        # |gövde dönüşü| bu değerden büyükse profil
 EYE_U, NOSE_U, NOSE_V, EAR_U, MOUTH_U = 0.23, 0.49, 0.13, 0.20, 0.27
 
 
-def _lids(emo, ex, ey, erx, ery, d):
+def _lids(P, emo, ex, ey, erx, ery, d):
     """Gözün üst ve alt sınırı: x -> y. Mutlu yüzde alt kapak ortada yukarı kabarır; üzgün/kızgın/sinsi yüzde üst kapak iner."""
     u = lambda x: max(-1.0, min(1.0, (x - ex) / erx))
     top = lambda x: ey - 2.0 * ery
     bot = lambda x: ey + 2.0 * ery
     if emo in ("happy", "laugh"):
-        bot = lambda x: ey + ery * (0.62 - 0.24 * (1.0 - u(x) ** 2))
+        bot = P.smile_lid(ex, ey, erx, ery)
     elif emo == "sad":                       # arka köşe daha düşük
         top = lambda x: ey - ery * (0.38 + 0.22 * u(x) * d)
     elif emo == "angry":                     # ön köşe daha düşük
@@ -26,24 +26,28 @@ def _lids(emo, ex, ey, erx, ery, d):
     return top, bot
 
 
-def _clipped(cv, cx, cy, rx, ry, top, bot, n=36):
-    """Elips noktaları üst/alt kapak sınırına kırpılır: dış çizgi kapağı izler, kopuk çizik kalmaz."""
-    pts = []
-    for i in range(n):
-        a = 2 * math.pi * i / n
-        x, y = cx + rx * math.cos(a), cy + ry * math.sin(a)
-        pts.append((x, min(bot(x), max(top(x), y))))
-    return pts
-
-
 def _brow(emo, ex, ey, erx, ery, d, raise_):
     """Profil kaşı: [arka uç, orta, ön uç]. Eğim ve yükseklik ifadeye göre."""
     back, front, arch = {"happy": (-0.28, -0.24, -0.30), "laugh": (-0.20, -0.30, -0.26), "curious": (-0.12, -0.85, -0.18),
-                         "surprise": (-0.62, -0.62, -0.34), "scared": (-0.40, -0.80, -0.10), "sad": (0.22, -0.55, 0.0),
+                         "surprise": (-0.36, -0.40, -0.20), "scared": (-0.22, -0.52, -0.06), "sad": (0.22, -0.55, 0.0),
                          "angry": (-0.30, 0.42, 0.0), "sly": (-0.35, 0.18, 0.0)}.get(emo, (0.0, 0.06, -0.06))
     y0 = ey - ery * 1.42 - ery * 0.35 * raise_
     x0, x1 = ex - d * erx * 1.0, ex + d * erx * 1.15
     return [(x0, y0 + back * ery), ((x0 + x1) / 2, y0 + (back + front) / 2 * ery + arch * ery), (x1, y0 + front * ery)]
+
+
+BROW_IN_K, BROW_FRONT_U = 0.88, 0.36        # kaş baş elipsinin bu oranının içinde kalır; ön ucu en çok bu kadar ileri gider
+
+
+def _inside_head(pts, hx, cy, rx, ry, d):
+    """Kalkan kaş baş siluetinin dışına (gökyüzüne) taşmaz: uç geri çekilir, yükseklik baş eğrisiyle sınırlanır."""
+    out = []
+    for x, y in pts:
+        u = min(BROW_FRONT_U, d * (x - hx) / (2.0 * rx))
+        x = hx + d * u * 2.0 * rx
+        k = (x - hx) / (rx * BROW_IN_K)
+        out.append((x, max(y, cy - ry * BROW_IN_K * math.sqrt(max(0.0, 1.0 - k * k)))))
+    return out
 
 
 def facing(pose):
@@ -167,13 +171,13 @@ def draw_profile(cv, des, pose, st, fx, fy, ppm, t, P):
             [(ex_ - erx, ey_ + ery * 0.15), (ex_ + erx, ey_ + ery * 0.15)]
         cv.line(shut, P.face_line(skin, INK), ow * 1.2)
     else:
-        top, bot = _lids(emo, ex_, ey_, erx, ery, d)
-        cv.poly(_clipped(cv, ex_, ey_, erx, ery, top, bot), (255, 255, 255), INK, ow * 0.45)
+        top, bot = _lids(P, emo, ex_, ey_, erx, ery, d)
+        cv.poly(P.clipped_ellipse(cv, ex_, ey_, erx, ery, top, bot), (255, 255, 255), INK, ow * 0.45)
         pr = erx * (0.46 if emo in ("surprise", "scared") else 0.66)
         gz = max(-1.0, min(1.0, float(st.get("gaze", 0.0)) * d))             # artı: yüzün baktığı yöne
         px_, py_ = ex_ + d * erx * (0.26 + 0.10 * gz), ey_ + ery * 0.08
-        cv.poly(_clipped(cv, px_, py_, pr, pr * 1.2, top, bot), des["iris"], None, 0)
-        cv.poly(_clipped(cv, px_, py_, pr * 0.55, pr * 0.7, top, bot), (15, 10, 15), None, 0)
+        cv.poly(P.clipped_ellipse(cv, px_, py_, pr, pr * 1.2, top, bot), des["iris"], None, 0)
+        cv.poly(P.clipped_ellipse(cv, px_, py_, pr * 0.55, pr * 0.7, top, bot), (15, 10, 15), None, 0)
         if emo in ("happy", "laugh", "sad", "angry", "sly"):                 # kapak çizgisi: kesik göz biçimi kopuk değil
             edge = bot if emo in ("happy", "laugh") else top
             xs = [ex_ + erx * k_ / 8.0 for k_ in range(-7, 8)]
@@ -184,7 +188,7 @@ def draw_profile(cv, des, pose, st, fx, fy, ppm, t, P):
     limit = P.window_top(ey_, rest_ery, ow)
     hw_limit = P.headwear_edge(ey_, rest_ery, ow * 0.9, ow)
     style_, acc_ = des["hair_style"], des.get("accessory")
-    brow_pts = _brow(emo, ex_, ey_, erx, ery, d, float(st.get("brow", 0.0)))
+    brow_pts = _inside_head(_brow(emo, ex_, ey_, erx, ery, d, float(st.get("brow", 0.0))), hx, head_cy, head_w * 0.50, head_h * 0.52, d)
     ml = st.get("mouth", "X")
     if emo == "laugh" and ml == "X": ml = "D"
     if "mouth" not in hide:

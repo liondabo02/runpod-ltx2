@@ -98,6 +98,28 @@ def nose_over_eye(des, emotion="neutral", view=("side_r", 0.9, 0.0)):
     return ImageChops.darker(eyes, nose).histogram()[255]
 
 
+def lower_lid_lined(des, view=("front", 0.0, 0.0), emotion="happy"):
+    """Gülen gözün alt kenarı dış çizgiyle kapanıyor mu? Gözün çizildiği her sütunda EN ALTTAKİ piksel çizgi rengi olmalı (0..1 oran).
+    Göz ten rengi bir yamayla kesilirse alt kenarda göz akı / göz bebeği açık kalır ya da kopuk çizikler olur."""
+    p = pose(*view)
+    st = {"mouth": "X", "blink": 0, "emotion": emotion, "gaze": 0.0, "brow": 0.0, "pulse": 0.0, "eyes_open": True}
+    bare = dict(des, hair_style="bald", accessory="none")
+    img = render(bare, p, st).convert("RGB")
+    mask = _changed(img, render(bare, p, dict(st, hide=("eyes",))))
+    box = mask.getbbox()
+    if not box:
+        return 0.0
+    px, mk = img.load(), mask.load()
+    lined = total = 0
+    for x in range(box[0], box[2]):
+        ys = [y for y in range(box[1], box[3]) if mk[x, y]]
+        if not ys:
+            continue
+        total += 1
+        lined += max(abs(a - b) for a, b in zip(px[x, max(ys)], pp.INK)) <= 14
+    return lined / total if total else 0.0
+
+
 def line_failures(m, limits=None):
     L = dict(MIN_LINE_VISIBLE, **(limits or {}))
     why = []

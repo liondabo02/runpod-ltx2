@@ -221,8 +221,25 @@ def _hand(cv, pos, r, skin, sg, fwd, ow, t, emo, g=None, rest=0.0):
     cv.ellipse(x - sg * r * 0.05, y + r * 0.08, r * 0.78, r * 0.7, skin, None, 0)
 
 
+# ---------------------------------------------------------------- göz kapakları (ön ve profil aynı biçim)
+def smile_lid(ex, ey, erx, ery):
+    """Gülen gözün alt kapağı: x -> ekran y. Köşelerde aşağıda, ortada yukarı kabarık."""
+    return lambda x: ey + ery * (0.62 - 0.24 * (1.0 - max(-1.0, min(1.0, (x - ex) / erx)) ** 2))
+
+
+def clipped_ellipse(cv, cx, cy, rx, ry, top, bot, n=44):
+    """Elips noktaları üst/alt kapak sınırına kırpılır: dış çizgi kapağı izler, kopuk çizik kalmaz."""
+    pts = []
+    for i in range(n):
+        a = 2 * math.pi * i / n
+        x, y = cx + rx * math.cos(a), cy + ry * math.sin(a)
+        pts.append((x, min(bot(x), max(top(x), y))))
+    return pts
+
+
 # ---------------------------------------------------------------- karakter çizimi
 FAR_EYE_K = 0.82          # uzak gözün yatay daralması
+LID_LINE_K = 0.8          # gülen gözün alt kapak çizgisi / dış çizgi kalınlığı
 
 
 def far_eye(sg, face):
@@ -779,14 +796,26 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
             cv.line(cv.arc_pts(cx, eye_y + ery * 0.1, rx, ery * 0.6, math.pi * 1.1, math.pi * 1.9), ink_, ow * 1.1) if emo == "laugh" else \
                 cv.line([(cx - rx, eye_y + ery * 0.15), (cx + rx, eye_y + ery * 0.15)], ink_, ow * 1.2)
         else:
-            cv.ellipse(cx, eye_y, rx, ery, (255, 255, 255), INK, ow * 0.45)
+            smile = emo in ("happy", "laugh")               # mutlu: alt göz kapağı yukarı kalkar (gülen göz); göz biçimi kapağa göre kesilir
+            lid_ = smile_lid(cx, eye_y, rx, ery) if smile else (lambda x: eye_y + 2.0 * ery)
+            open_ = lambda x: eye_y - 2.0 * ery
+            if smile:
+                cv.poly(clipped_ellipse(cv, cx, eye_y, rx, ery, open_, lid_), (255, 255, 255), INK, ow * 0.45)
+            else:
+                cv.ellipse(cx, eye_y, rx, ery, (255, 255, 255), INK, ow * 0.45)
             gx = cx + face * rx * 0.38 + st.get("gaze", 0) * rx * 0.25
             pr = rx * (0.46 if emo in ("surprise", "scared") else 0.62)           # korku/şaşkınlık: göz bebeği küçülür, beyaz görünür
-            cv.ellipse(gx, eye_y + ery * 0.08, pr, pr * 1.25, des["iris"], None, 0)
-            cv.ellipse(gx, eye_y + ery * 0.08, pr * 0.58, pr * 0.75, (15, 10, 15), None, 0)
+            for rx_, ry_, col_ in ((pr, pr * 1.25, des["iris"]), (pr * 0.58, pr * 0.75, (15, 10, 15))):
+                if smile:
+                    cv.poly(clipped_ellipse(cv, gx, eye_y + ery * 0.08, rx_, ry_, open_, lid_), col_, None, 0)
+                else:
+                    cv.ellipse(gx, eye_y + ery * 0.08, rx_, ry_, col_, None, 0)
             cv.ellipse(gx - pr * 0.28, eye_y - ery * 0.18, pr * 0.24, pr * 0.24, (255, 255, 255), None, 0)
-            if emo in ("happy", "laugh"):                   # mutlu: alt göz kapağı yukarı kalkar (gülen göz)
-                cv.poly([(cx - rx * 1.05, eye_y + ery * 1.1), (cx + rx * 1.05, eye_y + ery * 1.1), (cx + rx * 0.95, eye_y + ery * 0.42), (cx - rx * 0.95, eye_y + ery * 0.42)], skin, None, 0)
+            if smile:                                        # kapak çizgisi
+                xs_ = [cx + rx * k_ / 10.0 for k_ in range(-9, 10)]
+                edge_ = [(x_, lid_(x_)) for x_ in xs_ if lid_(x_) - eye_y < ery * math.sqrt(max(0.0, 1.0 - ((x_ - cx) / rx) ** 2))]
+                if len(edge_) > 1:
+                    cv.line(edge_, INK, ow * LID_LINE_K)
             lidk = {"angry": 0.34, "sly": 0.42, "sad": 0.22, "sleepy": 0.5, "laugh": 0.0}.get(emo, des.get("lid", 0.0) and 0.0)
             if lidk:
                 yl = eye_y - ery + 2 * ery * lidk
