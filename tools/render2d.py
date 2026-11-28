@@ -955,7 +955,30 @@ def actor_pose(plan, designs, beat, cid, t, px):
         b = _history(plan, cid, beat, t_)
         return _base_pose(plan, designs, b, cid, t_, _positions(b, designs, t_ - b["t_start"]))[0]
     p = pose_blend.apply(raw, lambda t_: pose_signature(plan, designs, beat, cid, t_), t, designs[cid]["height"])
+    p = turn_pose(p, lambda t_: side_view_at(plan, designs, beat, cid, t_), t, pp.view_of(now[0]))
     return (p,) + now[1:]
+
+
+def side_view_at(plan, designs, beat, cid, t):
+    """t anında oyuncu profil mi çiziliyor? (None: kesintisiz geçmiş yok.) Görünüş yalnız hareket pozundan gelir (_base_pose'un
+    sonraki katmanları yaw/view yazmaz; eşitlik testlidir), bu yüzden tam taban poz kurulmaz."""
+    b = _history(plan, cid, beat, t)
+    if b is None:
+        return None
+    st = actor_state(b, designs, cid, t - b["t_start"], _positions(b, designs, t - b["t_start"]))
+    m, H = st["m"], designs[cid]["height"]
+    return pp.view_of(sm.pose_at(st["kind"], st["lte"], st["dur"], m["seed"], m["x0"], m["x1"], H, H * 0.45)) == "side"
+
+
+def turn_pose(pose, side_at, t, view):
+    """Görünüş o anın hareketinden gelir (poz geçişinin karışan yaw'ından değil); ön <-> profil dönüşünde 'side_mix' (profil ağırlığı)
+    yazılır: kol eklemleri iki çizim geometrisi arasında sürekli geçer (puppet2d.arm_joints)."""
+    out = dict(pose, view=view)
+    out.pop("side_mix", None)
+    w = pose_blend.side_weight(side_at, t)
+    if w != (1.0 if view == "side" else 0.0):
+        out["side_mix"] = w
+    return out
 
 
 STAND_KINDS = ("idle", "look", "reach", "wave", "surprise", "laugh")      # ayakları basılı kalan duruş eylemleri

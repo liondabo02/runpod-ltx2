@@ -372,8 +372,23 @@ def _knee(hip, foot, leg_len, outward):
     return (hip[0] + foot[0]) / 2 + nx * off, (hip[1] + foot[1]) / 2 + ny * off
 
 
+def turning(pose):
+    """Ön <-> profil dönüşü sürüyor mu? 'side_mix': profil geometrisinin ağırlığı 0..1 (yoksa görünüşün kendi geometrisi)."""
+    return "side_mix" in pose and pose["side_mix"] != (1.0 if view_of(pose) == "side" else 0.0)
+
+
+def _turn_mix(fn, des, pose, side):
+    """Aynı pozun iki çizim geometrisindeki (ön ve profil) noktalarını profil ağırlığıyla karıştırır; fn -> nokta dizisi."""
+    plain = {k: v for k, v in pose.items() if k != "side_mix"}
+    a, b = fn(des, dict(plain, view="front"), side), fn(des, dict(plain, view="side"), side)
+    w = max(0.0, min(1.0, float(pose["side_mix"])))
+    return tuple((p[0] + (q[0] - p[0]) * w, p[1] + (q[1] - p[1]) * w) for p, q in zip(a, b))
+
+
 def shoulder_offset(des, pose, side):
     """Omzun ayağa göre konumu (metre): (dx, yükseklik). hand_offset ile aynı geometri."""
+    if turning(pose):
+        return _turn_mix(lambda d_, p_, s_: (shoulder_offset(d_, p_, s_),), des, pose, side)[0]
     if view_of(pose) == "side":
         Hh = des["height"]; cls = des["class"]
         leg_h = Hh * {"infant": 0.20, "toddler": 0.24, "child": 0.28, "adult": 0.38}[cls]
@@ -451,9 +466,13 @@ def elbow_point(sh, hand, arm_len, sg, bend=1.0):
 
 
 def arm_joints(des, pose, side):
-    """Çizilen kolun (omuz, dirsek, el) noktaları, ayağa göre metre: (dx, yükseklik). Ön/üç-çeyrek görünüş; çizimle aynı geometri."""
+    """Çizilen kolun (omuz, dirsek, el) noktaları, ayağa göre metre: (dx, yükseklik). Bütün görünüşler; çizimle aynı geometri."""
+    if turning(pose):
+        return _turn_mix(arm_joints, des, pose, side)
     full = des["height"] * 0.27
     sx, sh = shoulder_offset(des, pose, side); hx, hh = hand_offset(des, pose, side)
+    if view_of(pose) == "side":                                              # profil kolu düz çizilir
+        return (sx, sh), ((sx + hx) / 2, (sh + hh) / 2), (hx, hh)
     ex, ey = elbow_point((sx, -sh), (hx, -hh), full, -1 if side == "L" else 1, bend_weight(pose, side))
     return (sx, sh), (ex, -ey), (hx, hh)
 
@@ -518,6 +537,8 @@ def far_arm(pose):
 def hand_offset(des, pose, side):
     """Elin ayağa göre konumu METRE olarak: (dx, yükseklik). Çizimle aynı geometri (ppm=1); nesne ele gerçekten bağlansın diye.
     side: 'L' | 'R' (ekranda sol/sağ el, ön görünüşte). Profilde puppet_side kullanılır."""
+    if turning(pose):
+        return _turn_mix(lambda d_, p_, s_: (hand_offset(d_, p_, s_),), des, pose, side)[0]
     if view_of(pose) == "side":
         import puppet_side
         return puppet_side.hand_offset(des, pose, side)
@@ -539,6 +560,12 @@ def hand_offset(des, pose, side):
         ln = min(Hh * 0.27, pose["d" + side])
     shx, shy = sg * torso_w * 0.52, torso_top + torso_h * 0.14
     return shx + sg * math.sin(ang) * ln, -(shy + math.cos(ang) * ln)
+
+
+def draw_turn_arm(cv, sh, elb, hand, Hh, skin, shirt, ow, k=1.0):
+    """Dönüş sırasındaki kol (iki parça). Kol düzken düz çizimle aynı siluet (kısa yen kolun %42'sinde biter)."""
+    cv.capsule(sh, elb, Hh * 0.036, Hh * 0.031, shade(skin, k), INK, ow); cv.capsule(elb, hand, Hh * 0.031, Hh * 0.029, shade(skin, k), INK, ow)
+    cv.capsule(sh, (sh[0] + (elb[0] - sh[0]) * 0.84, sh[1] + (elb[1] - sh[1]) * 0.84), Hh * 0.044, Hh * 0.039, shade(shirt, k), INK, ow)
 
 
 def draw_grip(cv, des, pose, side, fx, fy, ppm):
@@ -777,7 +804,11 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         if bent:
             ln = min(arm_len, pose["d" + side] * ppm)
         hand = (sh[0] + sg * math.sin(ang) * ln, sh[1] + math.cos(ang) * ln)
-        if bent:
+        turn = turning(pose)
+        if turn:                                                     # profilden/profile dönüş: eklemler iki geometri arasında
+            sh, elb, hand = [(fx + dx_ * ppm, fy - h_ * ppm) for dx_, h_ in arm_joints(des, pose, side)]
+            draw_turn_arm(cv, sh, elb, hand, Hh, skin, shirt, ow)
+        elif bent:
             elb = elbow_point(sh, hand, arm_len, sg, bend_weight(pose, side))
             cv.capsule(sh, elb, Hh * 0.036, Hh * 0.032, skin, INK, ow); cv.capsule(elb, hand, Hh * 0.032, Hh * 0.030, skin, INK, ow)
             cv.capsule(sh, ((sh[0] + elb[0]) / 2, (sh[1] + elb[1]) / 2), Hh * 0.045, Hh * 0.040, shirt, INK, ow)
@@ -787,7 +818,7 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
             cv.capsule(sh, mid, Hh * 0.045, Hh * 0.040, shirt, INK, ow)
         aim = None
         if pose.get("aim") == side:
-            base = elbow_point(sh, hand, arm_len, sg, bend_weight(pose, side)) if bent else sh
+            base = elb if turn else (elbow_point(sh, hand, arm_len, sg, bend_weight(pose, side)) if bent else sh)
             reach = math.hypot(hand[0] - base[0], hand[1] - base[1]) or 1.0
             aim = ((hand[0] - base[0]) / reach, (hand[1] - base[1]) / reach)
         _hand(cv, hand, Hh * 0.052, skin, sg, fwd, ow, t, st.get("emotion", "neutral"), pose.get("hand") if pose.get("hand_side") == side else None,

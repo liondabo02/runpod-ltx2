@@ -1,6 +1,7 @@
 """Genel poz sıçraması (H5): oyuncunun omuz/dirsek/el/baş/ayak noktaları tek karede ışınlanamaz. Durum değişimleri (tepki, replik başı/sonu,
 yürüyüş sonu, taşıma, eylem türü, vuruş sınırı) geçişli olmalı; ölçü çizime giden pozdan, render kapısı POZ_SICRAMASI. Tamamen sentetik projeler."""
 import json
+import math
 
 import pytest
 
@@ -75,12 +76,93 @@ def test_throw_scenes_have_no_pose_teleport(tmp_path, name):
     assert not bad, bad[:6]
 
 
-def test_turn_between_front_and_profile_drawing_is_reported_but_does_not_block(tmp_path):
-    """Açık kusur (C2): ön <-> profil çizimi tek karede değişir. Ölçü bunu gizlemez, ayrı türde yazar."""
-    plan, des = build(tmp_path, kind="run")[:2]
+# ---------------------------------------------------------------- ön <-> profil dönüşü (C2a)
+TURNS = {
+    "kosu": dict(kind="run"),
+    "kosarken_sasirma": dict(kind="run", react="surprise"),
+    "kosarken_gulme_tasirken": dict(kind="run", react="laugh", hold="bottle"),
+    "kosu_iki_yetiskin": dict(kind="run", heights=(1.9, 1.7)),
+    "kosu_iki_cocuk_replikli": dict(kind="run", line=True, heights=(0.98, 1.1)),
+    "kosu_sonra_el_sallama": dict(kind="run", next_kind="wave", react="surprise"),
+}
+
+
+def views_over(plan, des, a, b, fps=96):
+    out = []
+    for k in range(int((b - a) * fps)):
+        pose = next(i for i in r2.poses_at(plan, des, a + k / fps) if i[0] == "a")[2]
+        out.append((a + k / fps, pp.view_of(pose), pose))
+    return out
+
+
+@pytest.mark.parametrize("name", sorted(TURNS))
+def test_front_profile_turn_has_no_single_frame_arm_jump(tmp_path, name):
+    plan, des = build(tmp_path, **TURNS[name])[:2]
+    seq = views_over(plan, des, 0.0, 11.9, fps=24)
+    assert any(v == "side" for _t, v, _p in seq) and any(v != "side" for _t, v, _p in seq), "sahne dönüş içermiyor"
     rows = rd.pose_jumps(plan, des)
-    assert any(r["kind"] == "view" and not r["blocking"] for r in rows), rows
-    assert not rd.pose_jump_problems(rows)
+    assert not rows, rows[:6]                       # 'view' türü dahil hiç satır yok
+
+
+@pytest.mark.parametrize("name", sorted(TURNS) + sorted(SCENES))
+def test_cheap_side_check_agrees_with_the_full_base_pose(tmp_path, name):
+    plan, des = build(tmp_path, **{**SCENES, **TURNS}[name])[:2]
+    for k in range(int(11.9 * 24)):
+        t = k / 24
+        beat = next(b for b in plan["beats"] if b["t_start"] <= t < b["t_end"])
+        for cid in beat["cast"]:
+            full = r2._base_pose(plan, des, beat, cid, t, r2._positions(beat, des, t - beat["t_start"]))[0]
+            assert r2.side_view_at(plan, des, beat, cid, t) == (pp.view_of(full) == "side"), (cid, t)
+
+
+def test_turn_starts_at_the_old_drawing_and_ends_at_the_new_one(tmp_path):
+    """Dönüşün başında kol eklemleri önceki görünüşün geometrisinde, TURN_S sonra yeni görünüşün kendi geometrisinde."""
+    plan, des = build(tmp_path, kind="run")[:2]
+    seq = views_over(plan, des, 0.0, 1.0, fps=960)
+    i = next(i for i in range(1, len(seq)) if (seq[i][1] == "side") != (seq[i - 1][1] == "side"))
+    before, after = seq[i - 1][2], seq[i][2]
+    assert pp.turning(after) and after["side_mix"] < 0.02
+    for side in "LR":
+        gap = max(math.dist(a, b) for a, b in zip(pp.arm_joints(des["a"], before, side), pp.arm_joints(des["a"], after, side)))
+        assert gap < 0.03 * des["a"]["height"], (side, gap)
+    later = views_over(plan, des, seq[i][0] + pose_blend.TURN_S + 0.01, seq[i][0] + pose_blend.TURN_S + 0.05)[0][2]
+    assert later["view"] == "side" and not pp.turning(later)
+
+
+@pytest.mark.parametrize("view,mix", [("side", 0.0), ("side", 0.5), ("front", 0.5), ("front", 1.0)])
+def test_drawn_hand_is_where_the_measure_says_during_a_turn(view, mix):
+    """Çizim ile ölçü aynı geometri: dönüş pozunda el pikseli hand_offset'in gösterdiği yerdedir (iki rig de)."""
+    des = pp.derive_design({"id": "q", "age": 30}, {"height_m": 1.75})
+    des["skin"] = (1, 254, 3)                       # sahnede başka yerde olmayan renk
+    pose = sm.base_pose(0.0)
+    pose.update({"view": view, "yaw": 0.8, "side_mix": mix, "aL": [-0.4, 1.5], "aR": [0.2, -1.5]})
+    cv = pp.Cv(1280, 720, 1)
+    ppm = 250.0
+    pp.draw_character(cv, des, pose, {"hide": ()}, 640.0, 660.0, ppm)
+    img = cv.done().convert("RGB")
+    for side in "LR":
+        dx, h = pp.hand_offset(des, pose, side)
+        x, y = int(round(640 + dx * ppm)), int(round(660 - h * ppm))
+        near = [img.getpixel((x + i, y + j)) for i in range(-9, 10) for j in range(-9, 10)]
+        assert any(g > 150 and r < 80 and b < 80 for r, g, b in near), (side, view, mix, x, y)
+
+
+def test_snapping_the_turn_is_caught_and_blocks(tmp_path, monkeypatch):
+    """Bilerek bozma: eski davranış (görünüş tek karede, geçişsiz) 'view' satırı üretir ve kapı bunu durdurur."""
+    monkeypatch.setattr(pose_blend, "side_weight", lambda side_at, t, window=0.25, depth=0: 1.0 if side_at(t) else 0.0)
+    rows = rd.pose_jumps(*build(tmp_path, kind="run")[:2])
+    assert any(r["kind"] == "view" for r in rows), rows
+    assert any("profil" in b["why"] for b in rd.pose_jump_problems(rows))
+
+
+def test_render_stops_before_drawing_when_a_turn_snaps(tmp_path, monkeypatch):
+    _p, _d, root, ep, bible = build(tmp_path, kind="run")
+    monkeypatch.setattr(pose_blend, "side_weight", lambda side_at, t, window=0.25, depth=0: 1.0 if side_at(t) else 0.0)
+    drawn = []
+    monkeypatch.setattr(r2, "render_window", lambda *a, **k: drawn.append(1))
+    m = render_worker.run(str(ep), bible, 0, 12, str(root))
+    assert m["status"] == "BLOCKED" and m["error"] == "POZ_SICRAMASI", m
+    assert not drawn
 
 
 def test_surprise_still_reaches_its_full_pose_after_the_transition(tmp_path):

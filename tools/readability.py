@@ -566,12 +566,7 @@ def pose_points(des, pose):
     n = 0.27 * des["height"]
     out = {}
     for side in "LR":
-        if pp.view_of(pose) == "side":
-            import puppet_side
-            sh, ha = pp.shoulder_offset(des, pose, side), puppet_side.hand_offset(des, pose, side)
-            el = ((sh[0] + ha[0]) / 2, (sh[1] + ha[1]) / 2)
-        else:
-            sh, el, ha = pp.arm_joints(des, pose, side)
+        sh, el, ha = pp.arm_joints(des, pose, side)
         out.update({"omuz_" + side: sh, "dirsek_" + side: el, "el_" + side: ha,
                     "ayak_" + side: (pose.get("f" + side, 0.0) * des["height"], pose.get("h" + side, 0.0) * des["height"])})
     face = pp.face_ellipse(des, pose)
@@ -582,7 +577,7 @@ def pose_points(des, pose):
 def pose_jumps(plan, designs, cfg=DEFAULTS):
     """Çizime giden pozdan (taban hareket + temas katmanları) ani poz atlamaları: [{'t','shot','actor','joint','step','kind','views'}].
     kind 'teleport': adım ince aralıkta küçülmüyor (poz tek anda yer değiştiriyor); 'speed': sürekli ama tek karede atlama okunacak kadar hızlı;
-    'view': atlama görünüş değişiminde (ön <-> profil çizimi); bu ayrı bir kusurdur (dönüş çizimi), 'blocking': False yazılır.
+    'view': atlama görünüş değişiminde (ön <-> profil çizimi tek karede değişiyor; dönüşte kol eklemleri geçişsiz).
     Vuruş sınırı da ölçülür; zaman atlaması ya da mekân değişimi olan sınır ölçülmez. Aynı oyuncunun bitişik bulguları tek satırdır (en büyüğü)."""
     cfg = dict(DEFAULTS, **(cfg or {}))
     dt = 1.0 / cfg["jump_fps"]
@@ -621,7 +616,7 @@ def pose_jumps(plan, designs, cfg=DEFAULTS):
                 else:
                     continue
                 row = {"t": round(t, 3), "shot": b1.get("shot_id") or str(b1.get("i")), "actor": cid, "joint": joint, "step": round(step, 3),
-                       "kind": kind, "blocking": kind != "view"}
+                       "kind": kind}
                 last = next((r for r in reversed(rows) if r["actor"] == cid and r["kind"] == kind), None)
                 if last is not None and t - last["t_last"] <= 4 * dt:
                     if step > last["step"]:
@@ -759,9 +754,10 @@ def object_jump_problems(report):
 
 
 def pose_jump_problems(report):
+    why = {"teleport": "ışınlanma", "speed": "aşırı hız", "view": "ön <-> profil çizimi geçişsiz değişiyor"}
     return [{"engine": "motion", "rule": "POSE_JUMP", "shot": r["shot"],
-             "why": f"{r['actor']}: {r['t']:.2f} sn {r['joint']} tek karede atlıyor ({r['step']} kol boyu, {'ışınlanma' if r['kind'] == 'teleport' else 'aşırı hız'})"}
-            for r in report if r["blocking"]]
+             "why": f"{r['actor']}: {r['t']:.2f} sn {r['joint']} tek karede atlıyor ({r['step']} kol boyu, {why[r['kind']]})"}
+            for r in report]
 
 
 def _point_sample(plan, designs, beat, item, lt, cfg):

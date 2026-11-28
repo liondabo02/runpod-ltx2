@@ -86,6 +86,11 @@ def draw_profile(cv, des, pose, st, fx, fy, ppm, t, P):
         sh = (fx + lean * 0.8, torso_top + torso_h * 0.16)
         hand = (sh[0] + d * math.sin(ang) * ln, sh[1] + math.cos(ang) * ln)
         k = 1.0 if near else 0.82
+        if P.turning(pose):                                              # önden dönüş sürüyor: eklemler iki geometri arasında
+            sh, elb, hand = [(fx + dx_ * ppm, fy - h_ * ppm) for dx_, h_ in P.arm_joints(des, pose, side)]
+            P.draw_turn_arm(cv, sh, elb, hand, Hh, skin, shirt, ow, k)
+            cv.ellipse(hand[0], hand[1], Hh * 0.046, Hh * 0.044, shade(skin, k), INK, ow * 0.9)
+            return
         cv.capsule(sh, hand, Hh * 0.034, Hh * 0.029, shade(skin, k), INK, ow)
         mid = (sh[0] + (hand[0] - sh[0]) * 0.42, sh[1] + (hand[1] - sh[1]) * 0.42)
         cv.capsule(sh, mid, Hh * 0.043, Hh * 0.039, shade(shirt, k), INK, ow)

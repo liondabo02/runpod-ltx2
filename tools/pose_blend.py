@@ -4,6 +4,7 @@ Durum değişiminin nedeni bilinmeden uygulanır: yeni bir durum eklenince geçi
 Temas katmanları (atış kolu, el değiştirme, gösterme) bu geçişten SONRA uygulanır: kendi ağırlıklarıyla süreklidir ve temas anı kaymaz."""
 
 TRANSITION_S = 0.25          # eski pozdan yenisine geçiş süresi (sn); en büyük kol hareketinde bile tek karede atlama sayılmayacak kadar uzun
+TURN_S = 0.25                # ön <-> profil dönüşünde kol eklemlerinin eski çizim geometrisinden yenisine geçiş süresi (sn)
 SCAN_S = 1.0 / 48            # durum değişimi bu aralıkla aranır, sonra ikiye bölerek yeri bulunur (bundan kısa süren durum görülmez)
 BEFORE_S = 1e-4              # değişimden hemen önceki an
 MAX_CHAIN = 4                # üst üste binen geçişlerde geriye en çok bu kadar değişim izlenir
@@ -72,6 +73,18 @@ def last_change(state_at, t, window=TRANSITION_S):
             return lo, hi
         hi = lo
     return None
+
+
+def side_weight(side_at, t, window=TURN_S, depth=0):
+    """t anında profil çiziminin ağırlığı 0..1. side_at(an) -> o an görünüş profil mi (None: kesintisiz geçmiş yok).
+    Görünüş değişince ağırlık eskisinden yenisine window süresinde sürekli geçer (üst üste binen dönüşler zincirlenir)."""
+    target = 1.0 if side_at(t) else 0.0
+    change = None if depth >= MAX_CHAIN else last_change(side_at, t, window)
+    if change is None:
+        return target
+    before, start = change
+    old = side_weight(side_at, before, window, depth + 1)
+    return old + (target - old) * smooth((t - start) / window)
 
 
 def apply(raw_at, state_at, t, height, depth=0):
