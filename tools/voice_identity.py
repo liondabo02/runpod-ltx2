@@ -56,6 +56,14 @@ def vocal_tract_cm(age, gender):
     return newborn + (adult - newborn) * min(1.0, max(0.0, a) / 18.0) ** 0.75
 
 
+def individuality(cid):
+    """Karakter kimliğinden sabit kişisel ton: perde ±2.5 yarım ton, ses yolu ±%5. Rastgele değil: aynı id her zaman aynı değer."""
+    import hashlib
+    h = hashlib.sha256(str(cid or "").encode("utf-8")).digest()
+    u1, u2 = h[0] / 255.0, h[1] / 255.0
+    return (u1 * 2 - 1) * 2.5, 1.0 + (u2 * 2 - 1) * 0.05
+
+
 def derive(card, source_f0, source_tract_cm=17.0):
     """-> {"params": {...}, "problems": [str]}. source_f0: kaynak sesin ölçülen ortanca perdesi (Hz)."""
     problems = []
@@ -65,11 +73,15 @@ def derive(card, source_f0, source_tract_cm=17.0):
     gender = _gender(card)
     if gender is None and float(age) >= 10:
         problems.append("CINSIYET_EKSIK: %s yaşındaki karakter için cinsiyet kartta yok (tahmin edilmez)" % age)
-    f0 = target_f0(age, gender)
+    species = str(card.get("species") or "human").strip().lower()
+    if species not in ("human", ""):
+        problems.append("INSAN_DISI: tür %r; perde/ses yolu insan ölçüsüne göre türetildi, voice.style ile tarif edilmeli" % species)
+    ind_st, ind_fr = individuality(card.get("id"))       # kişisel ton: aynı yaş/cinsiyette iki karakter aynı sesi almasın
+    f0 = target_f0(age, gender) * 2.0 ** (ind_st / 12.0)
     st = 12.0 * math.log2(f0 / float(source_f0))
-    formant = source_tract_cm / vocal_tract_cm(age, gender)
+    formant = source_tract_cm / vocal_tract_cm(age, gender) * ind_fr
     style = (card.get("voice") or {}).get("style") or {}
-    p = {"pitch_st": round(st, 2), "formant_ratio": round(formant, 3), "rate": 1.0, "breathiness": 0.0,
+    p = {"pitch_st": round(st, 2), "formant_ratio": round(formant, 3), "individual_st": round(ind_st, 2), "rate": 1.0, "breathiness": 0.0,
          "tremolo": 0.15 if float(age) >= 70 else 0.0, "target_f0_hz": round(f0, 1), "gender": gender, "age": age}
     for k, (lo, hi) in STYLE_KEYS.items():
         if k in style:
@@ -87,7 +99,17 @@ def distance(a, b):
     return math.hypot(a["pitch_st"] - b["pitch_st"], 12.0 * math.log2(a["formant_ratio"] / b["formant_ratio"]))
 
 
-def identities(characters, source_f0, scenes=None):
+MAX_AUTO_SPREAD_ST = 3.0
+
+
+def _styled(characters, cid):
+    for c in characters:
+        if c.get("id") == cid:
+            return "pitch_st" in ((c.get("voice") or {}).get("style") or {})
+    return False
+
+
+def identities(characters, source_f0, scenes=None, auto_spread=True):
     """Tüm karakterler için ayarlar + ayırt edilebilirlik. scenes: [[karakter id, ...], ...]; yoksa herkes birlikte sayılır."""
     out, problems = {}, []
     for c in characters:
@@ -95,18 +117,41 @@ def identities(characters, source_f0, scenes=None):
         out[c["id"]] = r["params"]
         problems += ["%s: %s" % (c["id"], m) for m in r["problems"]]
     groups = scenes or [list(out)]
-    seen = set()
+    pairs = []
     for g in groups:
         ids = [i for i in g if out.get(i)]
         for i in range(len(ids)):
             for j in range(i + 1, len(ids)):
                 key = tuple(sorted((ids[i], ids[j])))
-                if key in seen:
+                if key not in pairs:
+                    pairs.append(key)
+    target = MIN_PAIR_DISTANCE + 0.05
+    for _ in range(12 if auto_spread else 0):           # yakın çiftleri perdede it; bir itme başka çifti bozabilir, birkaç tur
+        moved = False
+        for a, b in pairs:
+            if distance(out[a], out[b]) >= MIN_PAIR_DISTANCE:
+                continue
+            mover = next((x for x in (b, a) if not _styled(characters, x)), None)   # stil sahibin tercihi: ona dokunulmaz
+            if mover is None:
+                continue
+            other = a if mover == b else b
+            df = 12.0 * math.log2(out[mover]["formant_ratio"] / out[other]["formant_ratio"])
+            dp = out[mover]["pitch_st"] - out[other]["pitch_st"]
+            need = math.sqrt(max(0.0, target * target - df * df)) - abs(dp)
+            shift = math.copysign(need, dp if dp != 0 else 1.0)
+            if abs(out[mover].get("auto_spread_st", 0.0) + shift) > MAX_AUTO_SPREAD_ST:
+                shift = -math.copysign(need + 2 * abs(dp), dp if dp != 0 else 1.0)   # öbür yöne dene
+                if abs(out[mover].get("auto_spread_st", 0.0) + shift) > MAX_AUTO_SPREAD_ST:
                     continue
-                seen.add(key)
-                d = distance(out[ids[i]], out[ids[j]])
-                if d < MIN_PAIR_DISTANCE:
-                    problems.append("SESLER_AYIRT_EDILEMIYOR: %s ve %s aynı sahnede, uzaklık %.2f < %.1f (stil ile ayırın)" % (key[0], key[1], d, MIN_PAIR_DISTANCE))
+            out[mover]["pitch_st"] = round(out[mover]["pitch_st"] + shift, 3)
+            out[mover]["auto_spread_st"] = round(out[mover].get("auto_spread_st", 0.0) + shift, 3)
+            moved = True
+        if not moved:
+            break
+    for a, b in pairs:
+        d = distance(out[a], out[b])
+        if d < MIN_PAIR_DISTANCE:
+            problems.append("SESLER_AYIRT_EDILEMIYOR: %s ve %s aynı sahnede, uzaklık %.2f < %.1f (stil ile ayırın)" % (a, b, d, MIN_PAIR_DISTANCE))
     return {"identities": out, "problems": problems}
 
 

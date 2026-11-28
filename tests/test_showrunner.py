@@ -58,7 +58,7 @@ class T(unittest.TestCase):
             self.assertEqual(r["steps"][0]["status"], "FAILED")
 
     def test_normalize_bible_fixes_ids(self):
-        raw = sr.normalize_bible({"characters": [{"id": "bulut_kız_id", "name": "B", "relationships": {"bulut_kız_id": "x"}}, {"id": "Kaan ID"}],
+        raw = sr.normalize_bible({"characters": [{"id": "bulut_kız_id", "name": "B", "age": 6, "relationships": {"bulut_kız_id": "x"}}, {"id": "Kaan ID", "age": 4}],
                                   "locations": [{"id": "bulut_bahçe_id"}]})
         self.assertEqual([c["id"] for c in raw["characters"]], ["bulut_kiz", "kaan"])
         self.assertEqual(raw["locations"][0]["id"], "bulut_bahce")

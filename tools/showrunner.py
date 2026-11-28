@@ -119,7 +119,7 @@ def director_make_bible(command, series_id=None):
     user = (f"Sahibin komutu: {command}\n"
             "EN AZ 2 karakter (biri çocuk), EN AZ 2 mekân yaz. id'ler yalnız küçük ASCII harf/rakam/alt çizgi (ör. pelin, kaan, bahce); Türkçe harf KULLANMA.\n"
             'JSON: {"title":"","tone":"","age_band":"3-6","visual_style":{"look":"","palette":["#hex"]},'
-            '"characters":[{"id":"kucuk_harf_id","name":"","age":5,"role":"","personality":"",'
+            '"characters":[{"id":"kucuk_harf_id","name":"","age":5,"gender":"female|male","species":"human","role":"","personality":"",'
             '"look":"siluet, oran, renk, ayırt edici özellik","relationships":{},"voice_hint":"yaş/cinsiyet/ton",'
             '"safety_notes":[]}],'
             '"locations":[{"id":"kucuk_harf_id","name":"","light_by_time":{"sabah":"","aksam":""}}]}')
@@ -127,14 +127,31 @@ def director_make_bible(command, series_id=None):
     for _ in range(3):
         raw = normalize_bible(wr.llm_json(DIRECTOR_SYS, user, need=["title", "characters", "locations"]))
         last = raw
-        if len(raw.get("characters", [])) >= 2 and len(raw.get("locations", [])) >= 1:
+        voice_errs = voice_card_errors(raw)
+        if len(raw.get("characters", [])) >= 2 and len(raw.get("locations", [])) >= 1 and not voice_errs:
             return raw
-        user += "\nÖNCEKİ DENEME YETERSİZDİ: en az 2 karakter ve 2 mekân yaz."
+        user += "\nÖNCEKİ DENEME YETERSİZDİ: en az 2 karakter ve 2 mekân yaz." + (
+            " Her karakter için sayısal 'age' ve 'gender' alanını ('female' ya da 'male') yaz: " + "; ".join(voice_errs) if voice_errs else "")
     return last
 
 
-def check_bible(b):
+def voice_card_errors(b):
+    """Ses kimliği motoru (voice_identity) her karakter için yaş ister; 10 yaş ve üstünde cinsiyet de (tahmin edilmez).
+    Dizi/film fark etmez: eksikse karakter sesleri ayrışmaz, bu yüzden bible aşamasında yakalanır."""
     errs = []
+    for c in b.get("characters", []) or []:
+        cid, age, g = c.get("id"), c.get("age"), str(c.get("gender") or "").strip().lower()
+        try:
+            a = float(age)
+        except (TypeError, ValueError):
+            errs.append(f"{cid}: yaş sayı değil ya da yok ({age!r})"); continue
+        if a >= 10 and g not in ("female", "male"):
+            errs.append(f"{cid}: {age} yaşında, cinsiyet ('female'/'male') yok")
+    return errs
+
+
+def check_bible(b):
+    errs = voice_card_errors(b)
     ids = [c.get("id") for c in b.get("characters", [])]
     if not ids: errs.append("karakter yok")
     if len(set(ids)) != len(ids): errs.append("karakter id'leri tekrar ediyor")
