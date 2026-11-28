@@ -199,7 +199,14 @@ class H(BaseHTTPRequestHandler):
         elif p == "/api/daemon": self._json({"ok": True, "msg": start_daemon() if d.get("do") == "start" else stop_daemon()})
         else: self.send_error(404)
 
+def safe_console():
+    """Çıktı bir dosyaya/boruya yönlendirilince Windows kod sayfası (ör. cp1252) Türkçe harfi yazamayabilir: sunucu bir mesaj yüzünden çökmez."""
+    for s in (sys.stdout, sys.stderr):
+        try: s.reconfigure(errors="replace")
+        except Exception: pass
+
 def main():
+    safe_console()
     port = int(os.environ.get("AHOS_OFFICE_PORT", "8787")); os.makedirs(Q, exist_ok=True)
     srv = ThreadingHTTPServer(("127.0.0.1", port), H)
     print("AHOS Sanal Ofis hazır: http://localhost:%d   (kapatmak için Ctrl+C)" % port, flush=True)
