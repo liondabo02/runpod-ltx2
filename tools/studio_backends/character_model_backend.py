@@ -87,6 +87,18 @@ def validate(target: Path) -> dict:
     return {"blend": blend, "glb": glb, "stats": stats, "previews": previews}
 
 
+def library_mismatch(verified: dict) -> str | None:
+    """Kitaplıktan yeniden kullanılan dosyalar kayıtlı sürümle aynı mı? Uyuşmazlık nedeni ya da None."""
+    try:
+        recorded = json.loads((LIBRARY / "model-manifest.json").read_text(encoding="utf-8"))["model_files"]
+        for kind in ("blend", "glb"):
+            if recorded[kind]["sha256"] != sha(verified[kind]):
+                return f"asset version mismatch: {kind} differs from the library manifest"
+    except (OSError, KeyError, TypeError, json.JSONDecodeError) as exc:
+        return f"library manifest unreadable: {type(exc).__name__}"
+    return None
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--plan", required=True)
@@ -121,6 +133,10 @@ def main(argv: list[str] | None = None) -> int:
             build(blender, LIBRARY)
         target = copy_artifacts(job)
         verified = validate(target)
+        mismatch = library_mismatch(verified) if reused else None
+        if mismatch:
+            print(mismatch, file=sys.stderr)
+            return 4
     except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
         print(str(exc), file=sys.stderr)
         return 4
@@ -147,8 +163,9 @@ def main(argv: list[str] | None = None) -> int:
         "license_basis": "Original procedural geometry generated in Blender; no third-party mesh/texture/model weights. Owner character IP.",
         "identity_note": "Technical 3D model only; not an owner-approved likeness. No IDENTITY_APPROVED claim.",
     }
-    (LIBRARY / "model-manifest.json").write_text(
-        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    if not reused:      # yeniden kullanım kitaplığı yalnız OKUR: kayıt ancak model yeniden kurulunca yazılır
+        (LIBRARY / "model-manifest.json").write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     evidence = {
         "stage": "character_model",
         "status": "PASSED",

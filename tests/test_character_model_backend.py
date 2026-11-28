@@ -15,6 +15,7 @@ from ahos_text_to_cartoon import parse_story  # noqa: E402
 LIB = ROOT / "studio" / "assets" / "character-library" / "aden" / "v1"
 MANIFEST = json.loads((LIB / "model-manifest.json").read_text(encoding="utf-8"))
 BACKEND = ROOT / "tools" / "studio_backends" / "character_model_backend.py"
+sys.path.insert(0, str(BACKEND.parent))
 
 
 def sha(path: Path) -> str:
@@ -84,3 +85,29 @@ def test_full_dispatch_advances_then_blocks_at_rig(tmp_path):
     assert result["stages"][1]["stage"] == "rig"
     assert result["stages"][1]["status"] == "BLOCKED"
     assert result["production_ready"] is False
+
+
+def _library_snapshot():
+    return {str(p.relative_to(LIB)): sha(p) for p in sorted(LIB.rglob("*")) if p.is_file()}
+
+
+def test_reuse_only_reads_the_library(tmp_path):
+    before = _library_snapshot()
+    assert dispatch_stage({"cast": ["aden"]}, tmp_path / "job", "character_model")["status"] == "VERIFIED_TECHNICAL"
+    assert _library_snapshot() == before
+
+
+def test_reuse_rejects_a_model_that_differs_from_the_recorded_version(tmp_path, monkeypatch, capsys):
+    import shutil
+    import character_model_backend as backend
+    copy = tmp_path / "library"
+    shutil.copytree(LIB, copy)
+    with open(copy / "aden-character-v1.glb", "ab") as handle:
+        handle.write(b"\0\0\0\0")
+    monkeypatch.setattr(backend, "LIBRARY", copy)
+    plan = tmp_path / "plan.json"
+    plan.write_text(json.dumps({"cast": ["aden"]}), encoding="utf-8")
+    manifest = (copy / "model-manifest.json").read_bytes()
+    code = backend.main(["--plan", str(plan), "--job-dir", str(tmp_path / "job"), "--evidence", str(tmp_path / "e.json")])
+    assert code == 4 and "asset version mismatch" in capsys.readouterr().err
+    assert (copy / "model-manifest.json").read_bytes() == manifest and not (tmp_path / "e.json").exists()
