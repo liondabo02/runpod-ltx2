@@ -257,7 +257,7 @@ def _probe_seconds(path):
 def run_chunked(episode_dir, bible, t0, t1, series_dir, chunk_s=30.0, engine="2d", samples=16, free_bytes=None, runner=run):
     """Parça parça üretim: pencereyi chunk_s'lik parçalara böler; her parça kendi klibine kodlanır ve süresi DOĞRULANIR.
     Disk, tüm pencerenin kareleri için yetmiyorsa, yalnız BU işin ürettiği ve kodlanıp doğrulanmış parçanın kareleri silinir
-    (başka işlerin/kullanıcının dosyalarına dokunulmaz); yetiyorsa hiçbir şey silinmez. Parçalar -c copy ile birleştirilir. Çökmede mevcut doğrulanmış parçalar yeniden üretilmez."""
+    (başka işlerin/kullanıcının dosyalarına dokunulmaz); yetiyorsa hiçbir şey silinmez. Parçalar -c copy ile birleştirilir. Çökmede mevcut doğrulanmış parçalar, GİRDİLERİ DEĞİŞMEDİYSE (clip_cache) yeniden üretilmez."""
     rdir = os.path.join(episode_dir, "render"); os.makedirs(rdir, exist_ok=True)
     fps = int(os.environ.get("AHOS_FPS", "12")); per_frame = 1.0e6
     free = free_bytes if free_bytes is not None else shutil.disk_usage(rdir).free
@@ -266,12 +266,18 @@ def run_chunked(episode_dir, bible, t0, t1, series_dir, chunk_s=30.0, engine="2d
     edges = []; a = t0
     while a < t1 - 1e-6:
         edges.append((a, min(t1, a + chunk_s))); a += chunk_s
-    parts = []; log = []
+    parts = []; log = []; draft = False
+    import clip_cache
     for (a, b) in edges:
         clip = os.path.join(rdir, f"clip_{int(a)}_{int(b)}.mp4")
-        dur = _probe_seconds(clip) if os.path.exists(clip) else None
-        if dur is not None and abs(dur - (b - a)) <= 0.25:               # doğrulanmış parça: yeniden üretme (devam/yeniden başlatma)
+        inputs = clip_cache.fingerprint(episode_dir, bible, series_dir, a, b, fps, engine, samples)      # üretimden ÖNCE: üretim sırasında değişen girdi sonraki koşuda yakalanır
+        ok, rec = clip_cache.reusable(clip, inputs)
+        dur = _probe_seconds(clip) if ok else None
+        if dur is not None and abs(dur - (b - a)) <= 0.25:               # doğrulanmış VE aynı girdili parça: yeniden üretme (devam/yeniden başlatma)
+            draft = draft or bool(rec.get("draft"))
             parts.append(clip); log.append({"chunk": [a, b], "status": "REUSED", "seconds": dur}); continue
+        remade = None if not os.path.exists(clip) else (rec if not ok else "klip süresi tutmuyor")
+        clip_cache.forget(clip)
         m = runner(episode_dir, bible, a, b, series_dir, engine, samples)
         if m.get("status") != "PASSED":
             return {"status": "BLOCKED", "error": m.get("error", "CHUNK_FAILED"), "chunk": [a, b], "problems": m.get("problems", []), "parts_done": log}
@@ -279,13 +285,14 @@ def run_chunked(episode_dir, bible, t0, t1, series_dir, chunk_s=30.0, engine="2d
         if dur is None or abs(dur - (b - a)) > 0.25:
             return {"status": "BLOCKED", "error": "CHUNK_SURE_UYUSMAZ", "chunk": [a, b], "problems": [f"klip {dur} sn, beklenen {b - a:.2f} sn"], "parts_done": log}
         parts.append(m["clip"]); freed = 0
+        clip_cache.record(m["clip"], inputs, m.get("draft", False)); draft = draft or bool(m.get("draft"))
         if purge:
             fdir = os.path.join(rdir, "frames")
             for i in range(int(round(a * fps)), int(round(b * fps)) + 1):
                 fp = os.path.join(fdir, f"f{i:05d}.png")
                 if os.path.exists(fp):
                     freed += os.path.getsize(fp); os.remove(fp)
-        log.append({"chunk": [a, b], "status": "DONE", "seconds": dur, "freed_mb": round(freed / 1e6)})
+        log.append({"chunk": [a, b], "status": "DONE", "seconds": dur, "freed_mb": round(freed / 1e6), **({"remade_because": remade} if remade else {})})
     lst = os.path.join(rdir, "concat.txt")
     open(lst, "w", encoding="utf-8").write("".join("file '%s'\n" % p_.replace("\\", "/") for p_ in parts))
     out = os.path.join(rdir, f"episode_{int(t0)}_{int(t1)}.mp4")
@@ -296,7 +303,7 @@ def run_chunked(episode_dir, bible, t0, t1, series_dir, chunk_s=30.0, engine="2d
     dur = _probe_seconds(out)
     if dur is None or abs(dur - (t1 - t0)) > 0.5 + 0.05 * len(parts):
         return {"status": "BLOCKED", "error": "BIRLESTIRME_SURE_UYUSMAZ", "problems": [f"birleşik {dur} sn, beklenen {t1 - t0:.1f} sn"], "parts_done": log}
-    return {"status": "PASSED", "clip": out, "seconds": dur, "chunks": log, "purge_mode": purge, "cost_eur": 0}
+    return {"status": "PASSED", "clip": out, "seconds": dur, "chunks": log, "purge_mode": purge, "draft": draft, "cost_eur": 0}
 
 
 def main():

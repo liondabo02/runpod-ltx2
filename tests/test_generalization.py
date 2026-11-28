@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "tools"))
 import shot_motion as sm, shot_planner as sp, render2d as r2, puppet2d as pp, staging, setpieces2d, object_state, render_worker as rw
 
 TOOLS = os.path.join(os.path.dirname(__file__), "..", "tools")
-ENGINE_FILES = ["dialogue_check.py", "face_visibility.py", "fx_layer.py", "motion_continuity.py", "continuity.py", "scene_contract.py", "staging.py", "render2d.py", "shot_planner.py", "setpieces2d.py", "object_state.py", "render_worker.py", "puppet2d.py", "shot_motion.py", "sfx_events.py", "action_staging.py", "readability.py", "puppet_side.py", "setpieces2d.py", "object_state.py"]
+ENGINE_FILES = ["clip_cache.py", "dialogue_check.py", "face_visibility.py", "fx_layer.py", "motion_continuity.py", "continuity.py", "scene_contract.py", "staging.py", "render2d.py", "shot_planner.py", "setpieces2d.py", "object_state.py", "render_worker.py", "puppet2d.py", "shot_motion.py", "sfx_events.py", "action_staging.py", "readability.py", "puppet_side.py", "setpieces2d.py", "object_state.py"]
 FORBIDDEN = ["e900", "harun", "aden", "park_trash_walk", "ahos-bizim", "SC01", "kabul"]
 
 
