@@ -15,6 +15,8 @@ try:
 except ImportError:
     mood_engine = None
 
+DEFAULT_HEIGHT_M = 1.1          # yalnız puppet2d yüklenemediğinde; puppet2d.DEFAULT_HEIGHT_M ile eşitliği testle korunur
+
 SCENE_RULES = [("stage", r"sahne|stand-?up|tiyatro|stage|mikrofon|konser"), ("room", r"^home_|mutfak|salon|giriş koridoru|ev giriş"), ("water", r"göl|gol\b|nehir|dere|deniz|su kenar|lake|river|sea|pond"), ("path", r"koridor|yol\b|patika|rüzgar|ruzgar|corridor|path|road|tepe|hill"), ("roof", r"çatı|cati|roof|tavan"), ("room", r"oda|ev\b|mutfak|salon|room|house|kitchen|sınıf"),
                ("village", r"köy|koy\b|mahalle|sokak|meydan|çarşı|carsi|pazar|village|street|square|market"),
                ("garden", r"bahçe|bahce|park|orman|çayır|garden|forest|meadow")]
@@ -64,6 +66,13 @@ def _icons(action):
         return []
 
 
+def spec_height(assets_dir, cid):
+    """Çizim modülü (Pillow) yokken boy: spec'ten, yoksa ortak varsayılan. Çizim modülü varken kaynak designs_for'dur."""
+    spec_p = os.path.join(assets_dir, f"{cid}.spec.json")
+    spec = json.load(open(spec_p, encoding="utf-8")) if os.path.exists(spec_p) else {}
+    return float(spec.get("height_m", getattr(_pp, "DEFAULT_HEIGHT_M", DEFAULT_HEIGHT_M)))
+
+
 def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
     fps = int(fps or os.environ.get("AHOS_FPS", "12"))
     sheet = json.load(open(os.path.join(episode_dir, "beat_sheet.json"), encoding="utf-8"))
@@ -72,17 +81,16 @@ def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
     names = {c["id"]: c.get("name", c["id"]) for c in bible["characters"]}
     out = {"fps": fps, "width": size[0], "height": size[1], "t0": t0, "t1": t1, "characters": {}, "beats": [],
            "total_s": float(sheet["beats"][-1]["t_end"]) if sheet.get("beats") else 480.0}
-    for ch in bible["characters"]:
-        glb = os.path.join(assets_dir, "character-model", f"{ch['id']}-model.glb")
-        spec_p = os.path.join(assets_dir, f"{ch['id']}.spec.json")
-        h = json.load(open(spec_p, encoding="utf-8")).get("height_m", 1.2) if os.path.exists(spec_p) else 1.2
-        out["characters"][ch["id"]] = {"glb": glb, "height": h, "name": names[ch["id"]]}
     des_ = {}
-    if _pp is not None:                                      # el değiştirme erişimi: çizimle AYNI ölçü ve aynı tasarım kaynağı (planlayıcı ayrı tahmin yapmaz)
+    if _pp is not None:                                      # boy ve el değiştirme erişimi: çizimle AYNI ölçü ve aynı tasarım kaynağı (planlayıcı ayrı tahmin yapmaz)
         try:
             des_ = _pp.designs_for(bible, assets_dir)
         except Exception:
             des_ = {}
+    for ch in bible["characters"]:
+        glb = os.path.join(assets_dir, "character-model", f"{ch['id']}-model.glb")
+        h = des_[ch["id"]]["height"] if ch["id"] in des_ else spec_height(assets_dir, ch["id"])
+        out["characters"][ch["id"]] = {"glb": glb, "height": h, "name": names[ch["id"]]}
     reach_fn_ = (lambda a, xa, b, xb: _pp.handoff_reach_ratio(des_[a], xa, des_[b], xb)) if _pp is not None and des_ else None
     world_x_ = {}; world_obj_ = {}; prev_meta_ = None       # birikmiş dünya durumu: kadraj dışındaki oyuncu/nesne de korunur
     locs_ = setpieces2d.load_locations(os.path.dirname(os.path.abspath(assets_dir)))        # proje verisi: mekân -> dekor parçaları (motor mekân adlarını bilmez)
@@ -139,7 +147,7 @@ def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
                                            {n_["actor"] for n_ in stg_notes if n_.get("kind") == "conflict"})
             stg_notes = action_staging.merge(stg_notes, sep_, mot, world_x_, trans_)
         for c_, m_ in mot.items():                                      # sonraki plana süreklilik: plan sonunda ÇİZİLEN konum
-            m_["x_end"] = round(sm.exit_x(m_, te - ts, heights_.get(c_, 1.2), react_.get(c_)), 4)
+            m_["x_end"] = round(sm.exit_x(m_, te - ts, heights_[c_], react_.get(c_)), 4)
             world_x_[c_] = m_["x_end"]
         continuity.update_objects(world_obj_, objs_, tg_)
         cam_text = (b.get("camera") or "").lower()

@@ -91,6 +91,9 @@ class Cv:
 
 
 # ---------------------------------------------------------------- karakter tasarımı
+DEFAULT_HEIGHT_M = 1.1          # spec yoksa ya da spec boy vermiyorsa: planlayıcı, kapılar ve çizim AYNI varsayılanı kullanır
+
+
 def designs_for(bible, assets_dir):
     """Tek kaynak: bible + <assets>/<id>.spec.json -> {id: tasarım}. Planlayıcı, render ve testler aynı boy/oranı kullanır."""
     import json as _j, os as _o
@@ -131,7 +134,7 @@ def derive_design(ch, spec):
     cls = spec.get("class") or ("infant" if age < 2 else "toddler" if age < 5 else "child" if age < 13 else "adult")
     iris = (60, 40, 20) if h % 2 else (30, 60, 110)
     return {"id": ch["id"], "species": species, "hair_style": style, "accessory": acc, "hair": hair, "skin": skin,
-            "shirt": shirt, "shorts": shorts, "accent": accent, "class": cls, "height": float(spec.get("height_m", 1.1)),
+            "shirt": shirt, "shorts": shorts, "accent": accent, "class": cls, "height": float(spec.get("height_m", DEFAULT_HEIGHT_M)),
             "iris": (rgb(spec["eye_color"]) if "eye_color" in spec else iris), "female": female, "age": age, "scarf": col("scarf", accent),
             "build": float(spec.get("build", 1.0)), "face_w": float(spec.get("face_w", 1.0)), "eye_scale": float(spec.get("eye_scale", 1.0)),
             "freckles": int(spec.get("freckles", 0)), "beard": spec.get("beard", "none"), "lashes": bool(spec.get("lashes", False)),

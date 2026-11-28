@@ -69,10 +69,7 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
     sheet = json.load(open(os.path.join(episode_dir, "beat_sheet.json"), encoding="utf-8"))
     rdir = os.path.join(episode_dir, "render"); os.makedirs(rdir, exist_ok=True)
     import object_state, setpieces2d
-    _H = {}
-    for c in bible["characters"]:
-        spec_p = os.path.join(assets, c["id"] + ".spec.json")
-        _H[c["id"]] = json.load(open(spec_p, encoding="utf-8")).get("height_m", 1.2) if os.path.exists(spec_p) else 1.2
+    _H = {cid: d["height"] for cid, d in pp2.designs_for(bible, assets).items()}      # çizilen boy (planlayıcıyla aynı kaynak)
     locs_ = setpieces2d.load_locations(series_dir)
     bad = []                                            # ön kontrol: geçersiz nesne izi (ışınlanma, havada bırakma, tanımsız imha...) sessizce çizilmez; planlamaya geri bildirilir
     for bi, b in enumerate(sheet.get("beats", [])):
@@ -86,7 +83,7 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
         for pb in sp.plan(episode_dir, bible, assets, t0, t1)["beats"]:
             dur_ = pb["t_end"] - pb["t_start"]
             def hx(cid, t_, _b=pb, _d=dur_):
-                return sm.motion_x(_b["motion"][cid], t_, _d, _H.get(cid, 1.2)) if cid in _b["motion"] else 0.0
+                return sm.motion_x(_b["motion"][cid], t_, _d, _H[cid]) if cid in _b["motion"] else 0.0
             for ob in pb["choreo"]["objects"]:
                 for pr in object_state.throw_problems(ob.get("track") or [], hx, pb["targets"]):
                     bad.append(f"vuruş {pb['i']} nesne {ob.get('prop')}: {pr}")
