@@ -1,6 +1,7 @@
 """Local-only AHOS story box. One prompt -> plan -> optional technical MP4."""
 from __future__ import annotations
 import json
+import os
 import sys
 import threading
 import uuid
@@ -153,8 +154,8 @@ class Handler(BaseHTTPRequestHandler):
                    "production_ready":False}
         output=OUTPUT/job
         output.mkdir(parents=True,exist_ok=False)
+        _save_job(output, initial)
         with GUARD: STATE[job]=initial
-        (output/"job.json").write_text(json.dumps(initial,ensure_ascii=False,indent=2),encoding="utf-8")
         threading.Thread(target=_worker,args=(job,),daemon=True).start()
         self.reply(202, {"job_id":job,"status":"queued",
                          "status_url":f"/api/jobs/{job}"})
@@ -163,15 +164,21 @@ class Handler(BaseHTTPRequestHandler):
         print("[studio] "+fmt%args,flush=True)
 
 
+def _save_job(output, state):
+    """job.json tek adımda değişir: okuyan ya eski ya yeni kaydın tamamını görür."""
+    tmp = output/"job.json.tmp"
+    tmp.write_text(json.dumps(state,ensure_ascii=False,indent=2),encoding="utf-8")
+    os.replace(tmp, output/"job.json")
+
+
 def _worker(job):
     with BUSY:
-        with GUARD:
-            state = STATE[job]
-            state["status"] = "running"
-            state = dict(state)
-            STATE[job] = state
         output = OUTPUT/job
-        (output/"job.json").write_text(json.dumps(state,ensure_ascii=False,indent=2),encoding="utf-8")
+        with GUARD:
+            state = dict(STATE[job], status="running")      # kopya: yayımlanmış kayıt yerinde değiştirilmez
+        _save_job(output, state)
+        with GUARD: STATE[job] = state
+        state = dict(state)
         try:
             if state["mode"] == "production":
                 draft = run_pipeline(state["prompt"], output, state["duration"], plan_only=True)
@@ -191,7 +198,7 @@ def _worker(job):
             state["status"]="failed"
             state["error"]=str(exc)[:800]
         state["production_ready"] = False
-        (output/"job.json").write_text(json.dumps(state,ensure_ascii=False,indent=2),encoding="utf-8")
+        _save_job(output, state)                            # önce disk, sonra görünürlük: 'tamamlandı' görünen iş kayıtlıdır
         with GUARD: STATE[job]=state
 
 

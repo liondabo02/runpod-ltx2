@@ -111,3 +111,34 @@ def test_production_mode_returns_real_blocker_not_fake_success(tmp_path,monkeypa
     finally:
         server.shutdown()
         server.server_close()
+
+
+def test_job_is_never_reported_finished_before_it_is_on_disk(tmp_path, monkeypatch):
+    """'completed' görünen iş diskte de tamdır: yavaş diskte bile bellek temizlenince (yeniden başlatma) aynı sonuç okunur."""
+    monkeypatch.setattr(ui, "OUTPUT", tmp_path)
+    with ui.GUARD: ui.STATE.clear()
+    real = Path.write_text
+
+    def slow(self, text, *args, **kwargs):
+        if self.name.startswith("job.json") and '"completed"' in text:     # bozma koşulu: son kayıt yavaş ve yarım görünür
+            real(self, text[: len(text) // 2], *args, **kwargs)
+            time.sleep(.6)
+        return real(self, text, *args, **kwargs)
+    monkeypatch.setattr(Path, "write_text", slow)
+    server = ThreadingHTTPServer(("127.0.0.1", 0), ui.Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        root = f"http://127.0.0.1:{server.server_port}"
+        _, queued = call(root + "/api/jobs", {"prompt": "Aden bahçede yürüyor.", "duration": 3, "mode": "plan"})
+        for _ in range(200):
+            _, current = call(root + "/api/jobs/" + queued["job_id"])
+            if current["status"] in ("completed", "failed"):
+                break
+            time.sleep(.02)
+        assert current["status"] == "completed"
+        with ui.GUARD: ui.STATE.clear()
+        _, persisted = call(root + "/api/jobs/" + queued["job_id"])
+        assert persisted["status"] == "completed" and persisted["result"] == current["result"]
+    finally:
+        server.shutdown()
+        server.server_close()
