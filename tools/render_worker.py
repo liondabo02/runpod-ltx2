@@ -68,6 +68,11 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
     assets = os.path.join(series_dir, "assets")
     sheet = json.load(open(os.path.join(episode_dir, "beat_sheet.json"), encoding="utf-8"))
     rdir = os.path.join(episode_dir, "render"); os.makedirs(rdir, exist_ok=True)
+    import dialogue_check                                # diyalog kapısı (planlayıcıdan önce): senaryodaki replik eksik/eski/bozuksa film üretilmez
+    _dlg = dialogue_check.check(episode_dir, bible, t0, t1, allow_estimated=os.environ.get("AHOS_ALLOW_ESTIMATED_VOICE") == "1", sheet=sheet)
+    json.dump(_dlg, open(os.path.join(rdir, "dialogue_gate.json"), "w", encoding="utf-8"), ensure_ascii=False)
+    if _dlg["problems"]:
+        return {"status": "BLOCKED", "error": "DIYALOG_EKSIK_VEYA_HATALI", "problems": dialogue_check.messages(_dlg)}
     import object_state, setpieces2d
     _H = {cid: d["height"] for cid, d in pp2.designs_for(bible, assets).items()}      # çizilen boy (planlayıcıyla aynı kaynak)
     locs_ = setpieces2d.load_locations(series_dir)
@@ -233,6 +238,7 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
     est = round(spf * 480 * 12 / 3600, 1) if spf else None
     man = {"status": "PASSED", "clip": out, "frames": len(pngs), "sec_per_frame": spf, "engine": st.get("engine"),
            "estimate_hours_for_480s": est, "cost_eur": 0, "problems": problems,
+           "voice": _dlg["voice"], "draft": _dlg["voice"] == "estimated",           # tahmini süreli sesle çizilen klip taslaktır, teslim değildir
            "note": "yerel render: para harcanmaz, süre harcanır"}
     json.dump(man, open(os.path.join(rdir, "render_manifest.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
     return man
@@ -299,10 +305,13 @@ def main():
     ap.add_argument("--from", dest="t0", type=float, default=0.0); ap.add_argument("--to", dest="t1", type=float, default=10.0)
     ap.add_argument("--engine", default="2d", help="2d (varsayılan) | toon | eevee | workbench"); ap.add_argument("--samples", type=int, default=16)
     ap.add_argument("--fps", type=int, default=None, help="kare hızı (12 varsayılan, 24 akıcı)")
+    ap.add_argument("--draft-voice", action="store_true", help="yalnız taslak: tahmini süre işaretli ses listesiyle çiz (manifest 'draft': true)")
     ap.add_argument("--chunk-s", type=float, default=0.0, help="parça parça üretim (sn); disk sınırlıysa kullanın")
     a = ap.parse_args()
     if a.fps:
         os.environ["AHOS_FPS"] = str(a.fps)
+    if a.draft_voice:
+        os.environ["AHOS_ALLOW_ESTIMATED_VOICE"] = "1"
     bible = json.load(open(a.series, encoding="utf-8"))
     sd = os.path.dirname(os.path.abspath(a.series))
     m = run_chunked(a.episode_dir, bible, a.t0, a.t1, sd, a.chunk_s, a.engine, a.samples) if a.chunk_s > 0 else run(a.episode_dir, bible, a.t0, a.t1, sd, a.engine, a.samples)

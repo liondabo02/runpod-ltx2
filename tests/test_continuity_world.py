@@ -224,7 +224,13 @@ def test_render_preflight_uses_same_positions_as_drawing(tmp_path, monkeypatch):
     root = tmp_path / "k"; shutil.copytree(ROOT, root, ignore=shutil.ignore_patterns("render", "animatic"))
     bible = json.load(open(root / "series-bible.json", encoding="utf-8")); reached = []
     monkeypatch.setattr(rw.r2, "render_window", lambda plan_, des_, out_, **k: os.makedirs(out_, exist_ok=True) or reached.append(1) or {"missing": 1})
-    m = rw.run(str(root / "episodes" / "e900_kabul"), bible, 0, 38, str(root))
+    ep900 = str(root / "episodes" / "e900_kabul")
+    blocked = rw.run(ep900, bible, 0, 38, str(root))                     # depodaki sahnede ses listesi yok: replikli film sessiz üretilemez
+    assert blocked["error"] == "DIYALOG_EKSIK_VEYA_HATALI" and not reached and any("SES_LISTESI_YOK" in p for p in blocked["problems"]), blocked
+    import dialogue_check
+    dialogue_check.write_estimate(ep900, bible)                          # açıkça tahmini işaretli taslak listesi (kopyada)
+    monkeypatch.setenv("AHOS_ALLOW_ESTIMATED_VOICE", "1")
+    m = rw.run(ep900, bible, 0, 38, str(root))
     # atış ön kontrolü, sözleşme ve okunabilirlik (boy farkında devir dahil: uzun olan çömelir) geçer; pencerenin tamamı çizime geçer
     assert m["error"] == "FRAMES_MISSING" and reached, m
     # bilerek: plan başında, yürümeye vakit bırakmayan ve kutunun dibinden yapılan atış

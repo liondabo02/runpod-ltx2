@@ -68,8 +68,8 @@ def build_timeline(episode_dir, items, beats, total_s, sr=16000):
         _cur[it["beat"]] = it["start_s"] + float(it.get("duration_s", 0)) + 0.3
     buf = [0] * int(total_s * sr)
     for it in items:
-        wp = os.path.join(episode_dir, it["wav"].replace("\\", "/"))
-        if not os.path.exists(wp):
+        wp = os.path.join(episode_dir, str(it.get("wav") or "").replace("\\", "/"))
+        if not it.get("wav") or not os.path.exists(wp):       # tahmini süreli (taslak) repliğin ses dosyası yoktur
             continue
         rate, data = read_wav(wp)
         if rate != sr: continue

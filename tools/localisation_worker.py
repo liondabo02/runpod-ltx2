@@ -94,12 +94,14 @@ def build_lang_dir(episode_dir, bible, code, lang_info, llm=None, tts=vw.tts_rea
     ldir = os.path.join(episode_dir, "lang", code)
     os.makedirs(ldir, exist_ok=True)
     out = json.loads(json.dumps(sheet))
+    out["language"] = code                                  # bölüm kopyasının dili: ses listesi bununla denetlenir (yanlış dil sesi)
     per_beat = {}
     for i, l in enumerate(lines):
         per_beat.setdefault(l["beat"], []).append("%s: %s" % (l["char"], tr.get(i, l["text"])))
     for bi, b in enumerate(out["beats"]):
         if bi in per_beat:
             b["dialogue"] = " | ".join(per_beat[bi])
+    out["untranslated_beats"] = sorted({l["beat"] for i, l in enumerate(lines) if i not in tr})     # bu vuruşlarda metin kaynak dilde kaldı: render kapısı durdurur
     json.dump(out, open(os.path.join(ldir, "beat_sheet.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=2)
     if lang_info.get("tts") == "mms":
         import tts_mms, voice_licence
