@@ -60,3 +60,4 @@ out/piper_real/
 # V12 ses kimliği: sahibin kaynak sesi depoya girmez
 voice_source/
 *.voice_source.wav
+models/hf/
