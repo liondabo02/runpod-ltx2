@@ -259,9 +259,12 @@ def birds(cv, cam, t):
         cv.line([(x - w, y + fl), (x, y), (x + w, y + fl)], INK, max(2, int(0.02 * cam.s)))
 
 
+FRINGE_MAX_PPM = BASE_PPM * 1.25      # ön plan çiminin ekran ölçeği üst sınırı: en uzun yaprak ~81 px (y >= 639)
+
+
 def _grass_fringe(cv, cam, t):
     """Kadrajın altında öndeki çim otları: derinlik hissi ve çerçeveleme (karakterlerin önünden geçer)."""
-    s = cam.s
+    s = min(cam.s, FRINGE_MAX_PPM)      # yakın planda çim büyüyüp gövdeyi/eli/nesneyi örtmesin: ekran boyu sınırlı
     for i in range(-40, 41):
         x = cam.x(i * 0.22)
         sw = math.sin(t * 1.4 + i * 0.7) * 0.025 * s

@@ -473,6 +473,83 @@ def _head_cropped(cam, x, H):
     outside_y = bot <= 0 or top >= 720
     return not ((inside_x and inside_y) or outside_x or outside_y)
 
+CROP_WAIST_PAD_K = 0.03    # kasıtlı üst beden kesmesi kalçanın bu kadar (boy katı) üstünden yapılır
+CROP_TOP_PX = 90.0         # üst beden planında itme (push-in) öncesi baş tepesinin üstünde kalan pay
+CROP_ZOOM_MAX = 3.6
+CROP_PUSH_PH, CROP_PUSH_E = 0.05, 0.04      # üst beden planında yavaş yaklaşma ve vurgu itmesi (alt kenar sabit kalır)
+CROP_OBJ_PAD_PX = 70.0     # tutulan konu nesnesinin alt kenarı ekran altından en az bu kadar yukarıda (ön plan çimi nesneyi örtmesin)
+
+
+def hip_height(design):
+    """Ayakta kalça yüksekliği (m): alt kadraj kenarı bunun altından geçerse bacak ortasından kesilmiş olur."""
+    return design["height"] * pp.LEG_K[design["class"]]
+
+
+def frame_bottom(cam):
+    """Ekranın alt kenarının dünya yüksekliği (m)."""
+    return cam.cy - (pp.H / 2) / cam.s
+
+
+def shot_needs(plan, designs, beat, cid):
+    """cid yakın plandayken kadrajın bilmesi gerekenler, aksiyon kadrajı dışındaki bütün plan boyunca (4 fps), çizimin gerçek pozlarından:
+    'held' elinde tuttuğu nesnelerin en alçak alt kenarı (m; tutmuyorsa None), 'rise' en yüksek zıplama (m), 'sink' en derin oturma (m).
+    Plan boyunca tek değerdir: kadraj kararı kare kare değişip kamerayı sıçratmaz."""
+    dur, memo = beat["t_end"] - beat["t_start"], {}
+
+    def at(t_):
+        if t_ not in memo:
+            memo[t_] = poses_at(plan, designs, beat["t_start"] + t_) or []
+        return memo[t_]
+    out = {"held": None, "rise": 0.0, "sink": 0.0}
+    action_spans = action_staging.hold_windows(beat)
+    for i in range(int(math.ceil(dur * 4))):
+        lt = i / 4.0
+        if lt >= dur or any(w[0] <= lt <= w[1] for w in action_spans):
+            continue
+        for it in at(lt):
+            if it[0] == cid:
+                z = float(it[2].get("z", 0.0))
+                out["rise"], out["sink"] = max(out["rise"], z), max(out["sink"], -z)
+        for ob, _x, y, _st, own, _h in _objects_now(beat, at(lt), lt, at):
+            if own == cid:
+                low = y - props2d.extent(ob.get("prop", ""), ob.get("scale", 0.55))[0]
+                out["held"] = low if out["held"] is None else min(out["held"], low)
+    return out
+
+
+SIT_FULL_K = 0.05          # bundan (boy katı) derin oturan oyuncu üst bedenden kesilmez: tam boy gösterilir
+
+
+def crop_safe_framing(cy, zoom, design, base_ppm, needs=None, ph=0.0, E=0.0):
+    """Yakın plan için (cy, zoom, kip). Alt kenar bacakların ortasından ya da konu nesnesinden geçmez:
+    'full'  ayak zemini kadrajda (yetiyorsa eski kadraj aynen kalır),
+    'upper' KASITLI üst beden kesmesi: alt kenar kalçanın üstünde, tutulan nesne tamamen içeride.
+    Eski kadraj bacaktan kesiyorsa üst bedene yaklaşılır; oyuncu oturuyorsa ya da tutulan nesne kalçadan aşağıdaysa tam boya açılır.
+    needs: shot_needs çıktısı."""
+    needs = needs or {}
+    held = needs.get("held")
+    Hh = design["height"]; top = Hh * HEAD_TOP_K + needs.get("rise", 0.0); hip = hip_height(design)
+    sits = needs.get("sink", 0.0) > SIT_FULL_K * Hh
+    s = base_ppm * zoom
+    if pp.H / 2 + cy * s <= FEET_MAX_PX:
+        return cy, zoom, "full"
+    if not sits:
+        cut_now = cy - (pp.H / 2) / s
+        if cut_now >= hip and pp.H / 2 - (top - cy) * s >= HEAD_MARGIN_PX and (held is None or cut_now <= held - CROP_OBJ_PAD_PX / s):
+            return cy, zoom, "upper"
+        k = CROP_OBJ_PAD_PX / (pp.H - CROP_TOP_PX)      # üst beden kadrajında nesne payı kadraj ölçeğiyle birlikte çözülür
+        low = None if held is None else (held - k * top) / (1.0 - k)
+        if low is None or low >= hip:
+            cut = hip + Hh * CROP_WAIST_PAD_K
+            if low is not None:
+                cut = min(cut, low)
+            z = min(CROP_ZOOM_MAX, (pp.H - CROP_TOP_PX) / (top - cut) / base_ppm) * (1.0 + CROP_PUSH_PH * ph) * (1.0 + CROP_PUSH_E * E)
+            return cut + (pp.H / 2) / (base_ppm * z), z, "upper"
+    zoom = min(zoom, (FEET_MAX_PX - HEAD_MARGIN_PX) / (base_ppm * top))
+    s = base_ppm * zoom
+    return max(top - (pp.H / 2 - HEAD_MARGIN_PX) / s, min(cy, (FEET_MAX_PX - pp.H / 2) / s)), zoom, "full"
+
+
 REACT_AFTER = 1.0      # replik bittikten sonra dinleyene kesme süresi (sn)
 REACT_MID = 0.9        # uzun replikin ortasında tepki süresi (sn)
 REACT_MIN_LINE = 3.0   # bu süreden uzun replikte orta tepki
@@ -502,9 +579,10 @@ def poses_at(plan, designs, t):
     return frame(plan, designs, t, poses_only=True)
 
 
-def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False):
+def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False, camera_only=False):
     """trace (dict) verilirse çizimin GERÇEK yerleşimi yazılır: kamera, pozlar ve çizim sırasıyla katmanlar [(tür, kimlik, çizici(cv, cam), nokta)].
-    Okunabilirlik ölçüsü bu kayıttan çalışır; ayrı bir yerleşim tahmini yapılmaz."""
+    Okunabilirlik ölçüsü bu kayıttan çalışır; ayrı bir yerleşim tahmini yapılmaz.
+    camera_only=True: çizim yapmadan aynı kamera kararını ve çizilecek oyuncuları döner (kadraj kapısı için)."""
     beat = next((b for b in plan["beats"] if b["t_start"] <= t < b["t_end"]), None)
     if beat is None:
         return None
@@ -625,13 +703,25 @@ def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False):
         zoom = max(0.8, min(zoom, 5.12 / (2 * half))); cx = (lo + hi) / 2
     if preset in ("wide", "medium"):
         cy, zoom = head_safe_framing(cy, zoom, max((designs[c]["height"] for c in beat["cast"]), default=0.0), sc.BASE_PPM)
+    crop = None
+    if preset in ("close", "xclose") and focus in designs:           # yakın plan: alt kenar ya ayak zeminini gösterir ya kasıtlı olarak üst bedenden keser
+        cy, zoom, crop = crop_safe_framing(cy, zoom, designs[focus], sc.BASE_PPM, shot_needs(plan, designs, beat, focus), ph, E if preset == "close" else 0.0)
     cam = sc.Cam(cx, cy, zoom)
     if preset == "insert" and beat.get("props"):
         ix, iy = props2d.place(beat["props"][0], xs, [designs[c]["height"] for c in beat["cast"]], t, lt, dur)
         cam = sc.Cam(ix, max(0.55, min(iy - 0.35, 1.0)), 1.05)      # ek plan: nesne + karakterler birlikte kadrajda (başsız/bacaksız kadraj yok)
     act_ = action_staging.framing(beat, designs, lt, sc.BASE_PPM)      # temas penceresi: sabit aksiyon kadrajı (tepki/yakın plan/ek plan kesmesi yapılmaz)
     if act_:
-        preset = "action"; cam = sc.Cam(act_["cx"], act_["cy"], act_["zoom"])
+        preset = "action"; cam = sc.Cam(act_["cx"], act_["cy"], act_["zoom"]); crop = None
+    act_ids_ = {c for ev_ in action_staging._events(beat) for c in (ev_["by"], ev_.get("to")) if c} if act_ else set()
+
+    def skipped_(cid_, d_, p_):      # yakın planda odak dışı karakterin yüzü kenarda yarım kesilecekse çizilmez (kazara kesik yüz yok)
+        return ((preset in ("close", "xclose") and cid_ != focus) or (preset == "action" and cid_ not in act_ids_)) and _head_cropped(cam, p_["x"], d_["height"])
+    if camera_only:
+        if trace is not None:
+            trace.update(cam=cam, preset=preset, crop=crop, focus=focus, items=items, beat=beat, lt=lt, items_at=items_at_,
+                         drawn=[i[0] for i in items if not skipped_(i[0], i[1], i[2])])
+        return None
     cv = pp.Cv()
     layers = [] if trace is not None else None
     emit = (lambda kind_, key_, fn_, at_=None: layers.append((kind_, key_, fn_, at_))) if trace is not None else None
@@ -653,10 +743,9 @@ def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False):
         if kind in BACK_PROPS and preset != "insert":
             wx, wy = props2d.place(kind, xs, [designs[c]["height"] for c in beat["cast"]], t, lt, dur)
             props2d.draw(cv, cam, kind, wx, wy, t, k_)
-    act_ids_ = {c for ev_ in action_staging._events(beat) for c in (ev_["by"], ev_.get("to")) if c} if act_ else set()
     for cid, d, p, m, look, e in action_staging.draw_order(beat, designs, items):
-        if ((preset in ("close", "xclose") and cid != focus) or (preset == "action" and cid not in act_ids_)) and _head_cropped(cam, p["x"], d["height"]):
-            continue                                        # yakın planda odak dışı karakterin yüzü kenarda yarım kesilecekse çizilmez (kazara kesik yüz yok)
+        if skipped_(cid, d, p):
+            continue
         emo = EMO.get(m["kind"], "neutral")
         mood_ = spk_mood.get(cid) or beat.get("mood", "neutral")
         if emo == "neutral" and mood_ != "neutral":
@@ -699,7 +788,7 @@ def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False):
     sc.scene_front(cv, beat["scene"], cam, t)
     if trace is not None:
         emit("front", "scene_front", lambda c, cm: sc.scene_front(c, beat["scene"], cm, t))
-        trace.update(cam=cam, preset=preset, items=items, layers=layers, beat=beat, lt=lt)
+        trace.update(cam=cam, preset=preset, crop=crop, focus=focus, items=items, layers=layers, beat=beat, lt=lt)
     im = grade(cv.done(), beat.get("light") or "", t)
     try:
         return fx_layer.post(im, beat, t, lt, dur, float(plan.get("total_s", 480.0)), bool(beat.get("first_of_scene")))

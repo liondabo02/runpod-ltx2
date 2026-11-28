@@ -6,6 +6,7 @@ Bu ölçü 'seyirci anladı' demek DEĞİLDİR: yalnız görünürlük/kadraj i�
 from PIL import Image, ImageChops, ImageDraw
 import action_staging
 import object_state
+import props2d
 import puppet2d as pp
 import scenes2d as sc
 import setpieces2d
@@ -24,6 +25,10 @@ DEFAULTS = {
     "occl_head_visible": 0.90,    # baş bölgesinin (siluetin üst payı = baş boyu / boy) en az bu oranı açık: yüz asıl okunan yer
     "occl_max_s": 1.0,            # bundan uzun süren örtme sorun (yanından yürüyüp geçme gibi kısa kesişme serbest)
     "occl_fps": 4,
+    # kazara alttan kesme (kadraj): ekran alt kenarı bacak ortasından ya da yakın planda konu nesnesinden geçemez
+    "crop_fps": 4,
+    "crop_leg_tol": 0.85,         # odakta olmayan oyuncuda alt kenar kalça yüksekliğinin en az bu katında olmalı (benzer boy payı); odakta kalçanın üstünde
+    "crop_object_margin_px": 20,  # yakın planda odağın tuttuğu nesnenin alt kenarı ekran altından en az bu kadar yukarıda
     "lead_s": 0.3, "tail_s": 0.3, "fps": 12,
     # kap içine atış (entry): nesne ağızdan, yukarıdan girip ağız çizgisinde parça parça kaybolmalı
     "entry_fps": 24,
@@ -368,3 +373,62 @@ def occlusion_problems(report):
 
 __all__ = ["DEFAULTS", "action_events", "window", "sample", "measure_event", "measure_plan", "problems",
            "actor_cover", "measure_occlusion", "occlusion_problems"]
+
+
+def crop_frame(plan, designs, t, cfg=DEFAULTS):
+    """t anında kamera kararından (çizimle aynı kod yolu) alttan kesme ihlalleri ve kasıtlı üst beden kesmesi bilgisi: (ihlaller, kip) ya da None."""
+    tr = {}
+    r2.frame(plan, designs, t, trace=tr, camera_only=True)
+    if not tr:
+        return None
+    cam, beat, lt = tr["cam"], tr["beat"], tr["lt"]
+    bottom, ground = r2.frame_bottom(cam), cam.y(0.0)
+    close = tr["preset"] in ("close", "xclose")
+    out = []
+    if ground > r2.FEET_MAX_PX + 0.5:
+        for cid, d, p, *_ in tr["items"]:
+            if cid not in tr["drawn"] or not 0 <= cam.x(p["x"]) <= W:
+                continue
+            focus = close and cid == tr["focus"]
+            need = r2.hip_height(d) * (1.0 if focus else cfg["crop_leg_tol"])
+            if bottom < need - 1e-6:
+                out.append({"rule": "ALTTAN_KAZARA_KESIK", "who": cid, "cut_m": round(bottom, 3), "hip_m": round(r2.hip_height(d), 3)})
+    if close and (beat.get("choreo") or {}).get("objects"):
+        for ob, x, y, _st, own, _h in r2._objects_now(beat, tr["items"], lt, tr["items_at"]):
+            if own is None or own != tr["focus"]:
+                continue
+            low_px = cam.y(y - props2d.extent(ob.get("prop", ""), ob.get("scale", 0.55))[0])
+            if low_px > H - cfg["crop_object_margin_px"] + 0.5:
+                out.append({"rule": "KONU_NESNE_ALTTAN_KESIK", "who": own, "prop": ob.get("prop"), "bottom_px": round(low_px, 1)})
+    return out, tr.get("crop"), tr["preset"]
+
+
+def measure_crop(plan, designs, cfg=DEFAULTS):
+    """Bütün plan: {'violations': [...birleştirilmiş zaman aralıkları], 'intentional': [kasıtlı üst beden kesmesi aralıkları]}."""
+    step = 1.0 / cfg["crop_fps"]
+    bad, upper = {}, {}
+
+    def extend(store, key, t, row):
+        spans = store.setdefault(key, [])
+        if spans and t - spans[-1]["t1"] <= step + 1e-6:
+            spans[-1]["t1"] = round(t, 3)
+        else:
+            spans.append(dict(row, t0=round(t, 3), t1=round(t, 3)))
+    for beat in plan["beats"]:
+        for i in range(int(round((beat["t_end"] - beat["t_start"]) * cfg["crop_fps"]))):
+            t = beat["t_start"] + i * step
+            res = crop_frame(plan, designs, t, cfg)
+            if res is None:
+                continue
+            shot = beat.get("shot_id") or str(beat.get("i"))
+            for v in res[0]:
+                extend(bad, (shot, v["rule"], v["who"]), t, dict(v, shot=shot))
+            if res[1] == "upper":
+                extend(upper, shot, t, {"shot": shot, "preset": res[2], "crop": "upper_intentional"})
+    return {"violations": [s for v in bad.values() for s in v], "intentional": [s for v in upper.values() for s in v]}
+
+
+def crop_problems(report):
+    return [{"engine": "camera", "rule": v["rule"], "shot": v["shot"],
+             "why": f"{v['who']}: {v['t0']:.2f}-{v['t1']:.2f} sn alt kadraj kenarı " + (f"bacak ortasından geçiyor ({v['cut_m']} m, kalça {v['hip_m']} m)" if v["rule"] == "ALTTAN_KAZARA_KESIK" else f"tutulan '{v.get('prop')}' nesnesini kesiyor")}
+            for v in report["violations"]]

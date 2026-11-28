@@ -123,6 +123,13 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
         if _occ:
             return {"status": "BLOCKED", "error": "OYUNCU_ORTULUYOR",
                     "problems": [f"[{x['engine']}] {x['rule']} {x['shot']}: {x['why']}" for x in readability.occlusion_problems(_occ)]}
+    if engine == "2d":                                   # kadraj kapısı: alt kenar bacak ortasından ya da yakın planda tutulan konu nesnesinden geçemez
+        _crop = readability.measure_crop(_plan, pp2.designs_for(bible, assets))
+        json.dump(dict(_crop, thresholds={k: v for k, v in readability.DEFAULTS.items() if k.startswith("crop_")}),
+                  open(os.path.join(rdir, "framing_crop.json"), "w", encoding="utf-8"), ensure_ascii=False)
+        if _crop["violations"]:
+            return {"status": "BLOCKED", "error": "KADRAJ_ALTTAN_KESIK",
+                    "problems": [f"[{x['engine']}] {x['rule']} {x['shot']}: {x['why']}" for x in readability.crop_problems(_crop)]}
     blender = find_blender() if engine != "2d" else "n/a"
     if not blender:
         return {"status": "BLOCKED", "error": "BLENDER_MISSING"}
