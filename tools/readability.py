@@ -294,11 +294,6 @@ def problems(report):
     return out
 
 
-def _head_share(design):
-    """Siluet yüksekliğinin baş payı (puppet2d oranları: boy - bacak - gövde + %5)."""
-    return 1.0 - pp.LEG_K[design["class"]] - pp.TORSO_K[design["class"]] + 0.05
-
-
 def actor_cover(plan, designs, beat, lt):
     """Tek anda her çizilen oyuncunun diğer OYUNCULARDAN açık kalan payı: {kimlik: {'body': oran, 'head': oran, 'by': örten|None}}.
     Kadraj dışı pay sayılmaz."""
@@ -320,7 +315,7 @@ def actor_cover(plan, designs, beat, lt):
         x0, y0, x1, y1 = own.getbbox()
         d = designs[cid]
         top = cam.y(d["height"])                                  # baş payı oyuncunun boyundan: alttan kesilen kadrajda da aynı yer
-        head = (0, 0, W, max(0, min(H, int(round(top + _head_share(d) * d["height"] * cam.s)))))
+        head = (0, 0, W, max(0, min(H, int(round(top + pp.head_share(d) * d["height"] * cam.s)))))
         h_all = _count(own.crop(head)) if head[3] else 0
         by = max(over, key=lambda cm: total - _count(_minus(own, cm[1])))[0]
         out[cid] = {"body": _count(seen) / total, "head": _count(seen.crop(head)) / h_all if h_all else 1.0, "by": by}

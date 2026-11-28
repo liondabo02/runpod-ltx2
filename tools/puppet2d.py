@@ -248,6 +248,11 @@ def _elbow(sh, hand, arm_len, sg):
 # ---------------------------------------------------------------- çömelme (tek geometri: çizim, el konumu, omuz ve erişim ölçüsü aynı değeri kullanır)
 LEG_K = {"infant": 0.20, "toddler": 0.24, "child": 0.28, "adult": 0.38}
 TORSO_K = {"infant": 0.22, "toddler": 0.25, "child": 0.27, "adult": 0.30}
+def head_share(design):
+    """Siluet yüksekliğinin baş payı (boy - bacak - gövde + %5). Örtme ölçüsü ve bloklama aynı değeri kullanır."""
+    return 1.0 - LEG_K[design["class"]] - TORSO_K[design["class"]] + 0.05
+
+
 CROUCH_MAX_K = 0.75       # kalça en çok bacak boyunun bu kadarı alçalır (ayaklar yerde, diz bükülür)
 KNEE_FRONT_K = 0.55
 KNEEL_SLACK_K = 0.5       # omuz farkının (kısa olanın kol boyunun bu katı kadar) küçük kısmı çömelmeden kolla kapanır

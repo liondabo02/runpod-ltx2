@@ -4,6 +4,7 @@
    koridorunda (atan ile hedef arasında) duruyorsa, işaretine en yakın uygun konuma alınır. Temasa katılanlar, yürüyen oyuncular ve hikâye DEĞİŞTİRİLMEZ.
    Yönetmenin işareti değiştiyse 'intent_x' ile açıkça raporlanır; uygun konum yoksa 'conflict' (sessizce geçilmez -> sözleşme kapısı).
 2) DERİNLİK (draw_order): aksiyonlu planda temasa katılanlar seyircinin önünde, katılanlardan KISA olan uzun olanın önünde çizilir. Plan boyunca sabittir.
+4) TEMASSIZ ÖRTME (separate): temas olayı olmayan planda eşit/yakın boylu iki oyuncu uzun süre üst üste kalırsa işaretlerden biri en az kaydırmayla ayrılır.
 3) KAMERA (framing): temas penceresinde tek ve sabit bir 'aksiyon' kadrajı: katılanlar, eller, nesnenin yerleri ve hedef birlikte; tepki/yakın plan kesmesi yapılmaz."""
 import continuity
 import object_state
@@ -17,6 +18,9 @@ PATH_SEP = 0.20           # yürürken izin verilen en az merkez aralığı (m);
 HOLD_LEAD, HOLD_TAIL = 0.6, 0.6      # aksiyon kadrajı olaydan bu kadar önce kurulur / sonra bırakılır (sn)
 GROUND_PX, TOP_PX, SIDE_PX = 590.0, 40.0, 80.0     # 1280x720: zemin ön plan çiminin üstünde kalsın; baş ve kenar payı
 ZOOM_MIN, ZOOM_MAX, ZOOM_ALL_MIN = 0.8, 1.7, 0.9
+# temassız örtme bloklaması: eşit/yakın boylu iki oyuncu yüz örtmemek için merkezleri en az OCCL_SEP_K * ortalama boy ayrı durur (piksel ölçüsüyle sınandı)
+OCCL_SEP_K, OCCL_MAX_S, OCCL_FPS = 0.58, 1.0, 4
+OCCL_SHIFT_MAX = 1.2      # bir işaret en çok bu kadar kaydırılır (m)
 
 
 def participants(objects):
@@ -141,6 +145,120 @@ def merge(stage_notes, block_notes, motion, prev_x, kind):
     prev = {} if kind in continuity.FREE else {c: float(v) for c, v in (prev_x or {}).items() if c in motion}
     bridged = {c for c, m in motion.items() if m.get("approach") or (c in prev and m["kind"] in continuity.MOVING)}
     return out + block_notes + continuity._crossings(motion, prev, sorted(prev), bridged)
+
+
+def needs_head_sep(a, b):
+    """İki tasarım üst üste geldiğinde çizim sırası yüzü kurtaramıyor mu? Kısa olan önde çizilir; tepesi uzunun çenesinin üstüne çıkıyorsa
+    (eşit/yakın boy) öndeki arkadakinin yüzünü kapatır: o zaman yan yana aralık gerekir."""
+    import puppet2d as pp                                   # yalnız tasarım oranı için; planlayıcı çizim modülü olmadan da yüklenebilir
+    short, tall = sorted((a, b), key=lambda d: d["height"])
+    return short["height"] > tall["height"] * (1.0 - pp.head_share(tall))
+
+
+def head_sep_m(a, b):
+    return OCCL_SEP_K * (a["height"] + b["height"]) / 2
+
+
+def _long_overlap(ma, mb, a, b, dur):
+    """İki hareket, gerekli aralıktan OCCL_MAX_S'den uzun süre daha yakın mı? Dönüş: en uzun kesintisiz süre (sn) ya da 0."""
+    need = head_sep_m(a, b); step = 1.0 / OCCL_FPS; run = worst = 0
+    for k in range(int(dur * OCCL_FPS)):
+        t = (k + 0.5) * step
+        close = abs(sm.motion_x(ma, t, dur, a["height"]) - sm.motion_x(mb, t, dur, b["height"])) < need - 1e-9
+        run = run + 1 if close else 0
+        worst = max(worst, run)
+    return worst * step if worst * step > OCCL_MAX_S + 1e-9 else 0.0
+
+
+def _blocked_pairs(motion, designs, dur):
+    ids = sorted(c for c in motion if c in designs)
+    return [(a, b) for i, a in enumerate(ids) for b in ids[i + 1:]
+            if needs_head_sep(designs[a], designs[b]) and _long_overlap(motion[a], motion[b], designs[a], designs[b], dur)]
+
+
+def _shifted(m, dx, which, p, heights, cid, free):
+    """İşareti dx kaydırılmış hareket. which: 'mark' (duran: tek işaret) | 'end' (yürüyüşün hedefi) | 'start' (yalnız serbest geçişte başlangıç)."""
+    if which == "mark":
+        x = round(float(m["x0"]) + dx, 3)
+        if abs(x) > continuity.XLIM:
+            return None
+        return _candidate(m, None if free else p, x, heights, cid)
+    key = "x1" if which == "end" else "x0"
+    x = round(float(m[key]) + dx, 3)
+    d0 = float(m["x1"]) - float(m["x0"])
+    c = dict(m, **{key: x})
+    if abs(x) > continuity.XLIM or (float(c["x1"]) - float(c["x0"])) * d0 <= 0:      # yürüyüş yönü tersine dönmez
+        return None
+    return c
+
+
+def separate(motion, objects, designs, prev_x, kind, dur, react=None, locked=()):
+    """TEMASSIZ planda yüz örtmesini bloklama KENDİSİ çözer: çizim sırasının kurtaramadığı (eşit/yakın boy) iki oyuncu OCCL_MAX_S'den uzun
+    süre üst üste kalıyorsa birinin işareti en az kaydırmayla ayrılır. Duran seyirci yürüyenden, nesnesiz oyuncu nesne tutandan önce oynatılır;
+    sağ-sol sırası, süreklilik (önceki bitişten yürüyerek) ve yürüyüş yönü korunur. Temas olaylı planlara dokunmaz. motion yerinde değişir.
+    Çözülemeyen çift 'unresolved' notu alır; son sözü piksel ölçüsüne dayanan render kapısı söyler."""
+    if any(object_state.events(ob.get("track") or []) for ob in objects or []):
+        return []
+    free = kind in continuity.FREE or not prev_x
+    prev_x = {} if free else {c: float(v) for c, v in prev_x.items() if c in motion}
+    heights = {c: designs[c]["height"] for c in motion if c in designs}
+    holders = participants(objects)
+    notes = []
+    for _round in range(len(motion)):
+        pairs = _blocked_pairs(motion, designs, dur)
+        if not pairs:
+            return notes
+        a, b = pairs[0]
+        options = []
+        for cid in (a, b):
+            if cid in locked:                               # süreklilik çelişkisi olan oyuncu oynatılmaz: çelişki notu silinmeden kapıya gider
+                continue
+            m = motion[cid]
+            if m["kind"] in continuity.MOVING:
+                whichs = ["end"] + ([] if cid in prev_x else ["start"])
+            else:
+                whichs = ["mark"]
+            for which in whichs:
+                options.append((m["kind"] in continuity.MOVING, cid in holders, cid, which))
+        best = None
+        for step in range(1, int(round(OCCL_SHIFT_MAX / 0.05)) + 1):        # önce en küçük kaydırma; eşitlikte duran ve eli boş oyuncu
+            for moving, holds, cid, which in sorted(options):
+                for dx in (0.05 * step, -0.05 * step):
+                    cand = _shifted(motion[cid], dx, which, prev_x.get(cid), heights, cid, cid not in prev_x)
+                    if cand is None:
+                        continue
+                    if which == "end":                      # uzayan yol plan süresinde yürünebilir kalmalı
+                        vmax = continuity.VMAX[cand["kind"]] * max(0.5, heights[cid] / 1.7)
+                        if abs(float(cand["x1"]) - float(cand["x0"])) / vmax + continuity.ACC_S > 0.85 * float(cand.get("walk_s") or dur) + 1e-6:
+                            continue
+                    ap = cand.get("approach")
+                    rc = (react or {}).get(cid)
+                    if ap and (ap["walk_s"] > dur or (rc and float(rc["t"]) < ap["walk_s"] - 1e-6)):
+                        continue
+                    trial = dict(motion, **{cid: cand})
+                    if any((sm.motion_x(motion[cid], t, dur, heights[cid]) - sm.motion_x(motion[o], t, dur, heights[o]))
+                           * (sm.motion_x(cand, t, dur, heights[cid]) - sm.motion_x(motion[o], t, dur, heights[o])) < 0
+                           for o in heights if o != cid for t in (0.0, dur)):      # sağ-sol sırası plan başında ve sonunda aynı kalır
+                        continue
+                    left = _blocked_pairs(trial, designs, dur)
+                    if len(left) < len(pairs) and not set(left) - set(pairs):
+                        best = (cid, which, cand); break
+                if best:
+                    break
+            if best:
+                break
+        if best is None:
+            break
+        cid, which, cand = best
+        key = "x1" if which == "end" else "x0"
+        old = float(motion[cid][key])
+        motion[cid] = cand
+        other = b if cid == a else a
+        notes.append({"rule": "blocking", "kind": "adjusted", "actor": cid, "intent_x": round(old, 3), "to": round(float(cand[key]), 3),
+                      "why": f"{cid} ile {other} {OCCL_MAX_S:.1f} sn'den uzun üst üste kalıp yüz örtüyordu: {cid} {'yürüyüş hedefi' if which == 'end' else 'işareti'} {old:.2f} → {float(cand[key]):.2f} m"})
+    for a, b in _blocked_pairs(motion, designs, dur):
+        notes.append({"rule": "blocking", "kind": "unresolved", "actor": a, "why": f"{a} ve {b} yüz örtmeyecek aralığa ayrılamadı: plan bölünmeli ya da bloklama yeniden yazılmalı"})
+    return notes
 
 
 def _events(beat):
