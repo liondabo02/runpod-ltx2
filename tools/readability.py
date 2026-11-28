@@ -9,6 +9,7 @@ from PIL import Image, ImageChops, ImageDraw
 import action_staging
 import listener_reaction
 import object_state
+import pointing
 import props2d
 import puppet2d as pp
 import scenes2d as sc
@@ -43,6 +44,12 @@ DEFAULTS = {
     "pop_jerk_px": 25,            # tek karelik kayma sıçraması: iki komşu karenin kaymasından bu kadar farklı (px, 1280x720)
     "cut_zoom_ratio": shot_cuts.CUT_ZOOM_RATIO,   # gerçek kesme: ölçek en az bu oranda değişir...
     "cut_shift_px": shot_cuts.CUT_SHIFT_PX,       # ...ya da merkez yatayda/dikeyde en az bu kadar kayar (kamera ile aynı kaynak)
+    # gösterme jesti: jest boyunca hedef kadrajda ve açıkta, kol hedefe bakıyor
+    "point_fps": 8,
+    "point_target_visible": 0.60,  # gösterilen nesne/hedef piksellerinin kadrajda + örtülmemiş oranı
+    "point_hand_visible": 0.75,    # gösteren el ve ön kol örnek noktalarının başka oyuncu/ön plan altında kalmayan oranı
+    "point_angle_deg": 20.0,       # omuz->el doğrusu ile omuz->hedef doğrusu arasındaki en büyük açı
+    "point_margin_px": 8,          # hedef merkezi ve gösterenin omzu/eli ekran kenarından en az bu kadar içeride
     "lead_s": 0.3, "tail_s": 0.3, "fps": 12,
     # kap içine atış (entry): nesne ağızdan, yukarıdan girip ağız çizgisinde parça parça kaybolmalı
     "entry_fps": 24,
@@ -494,7 +501,7 @@ def camera_pops(plan, designs, cfg=DEFAULTS):
         if not held_close and (max(zr, 1.0 / zr) >= cfg["cut_zoom_ratio"] or abs(dx) >= cfg["cut_shift_px"][0] or abs(dy) >= cfg["cut_shift_px"][1]):
             continue                                                # gerçek kesme
         fa, fb = shot_cuts.family(a["preset"]), shot_cuts.family(b["preset"])
-        same = fa == fb and (fa in ("group", "action") or a["focus"] == b["focus"])
+        same = fa == fb and (fa in ("group", "action", "point") or a["focus"] == b["focus"])
         beat = b["beat"]
         walking = sorted(c for c, m in beat["motion"].items() if r2.follow_steadiness(beat, designs, c, b["lt"]) < 0.5)
         out.append({"t": round(t, 3), "shot": beat.get("shot_id") or str(beat.get("i")), "kind": "edit" if same else "framing",
@@ -508,7 +515,113 @@ def camera_pop_problems(report):
             for r in report]
 
 
-__all__ = ["camera_pops", "camera_pop_problems", "face_change", "reaction_shots", "reaction_problems", "DEFAULTS", "action_events", "window", "sample", "measure_event", "measure_plan", "problems",
+def _point_sample(plan, designs, beat, item, lt, cfg):
+    """Gösterme jestinin bir anı, ÇİZİLEN katmanlardan: {'preset','target_visible','target_inside','arm_inside','angle_deg'}."""
+    tr = {}
+    if r2.frame(plan, designs, beat["t_start"] + lt, trace=tr) is None:
+        return None
+    cam, layers = tr["cam"], tr["layers"]
+    m_ = cfg["point_margin_px"]
+
+    def inside(x, y):
+        return m_ <= x <= W - m_ and m_ <= y <= H - m_
+    by = item["by"]
+    row = next((r for r in tr["items"] if r[0] == by), None)
+    box = pointing.target_box(beat, designs, item, lt)
+    drawn = any(k == "character" and key == by for k, key, _f, _a in layers)
+    res = {"preset": tr["preset"], "target_visible": 0.0, "target_inside": False, "arm_inside": False, "angle_deg": 180.0, "hand_visible": 0.0}
+    if row is None or box is None:
+        return res
+    _c, d, p, *_ = row
+    tx, ty = box[0], (box[1] + box[2]) / 2
+    res["target_inside"] = inside(cam.x(tx), cam.y(ty))
+    side = pointing.arm_side(d, p, tx - p["x"])
+    (sx, sh), (ex, eh), (hx, hh) = pp.arm_joints(d, p, side)
+    ex = p["x"] + ex
+    sx, hx, gx = p["x"] + sx, p["x"] + hx, tx - p["x"]
+    res["arm_inside"] = drawn and inside(cam.x(sx), cam.y(sh)) and inside(cam.x(hx), cam.y(hh))
+    ax, ay, bx, by_ = hx - sx, hh - sh, p["x"] + gx - sx, ty - sh
+    res["angle_deg"] = abs(math.degrees(math.atan2(ax * by_ - ay * bx, ax * bx + ay * by_)))
+    masks = [_mask(fn, cam) for _k, _key, fn, _at in layers]
+    to = item.get("to")
+    me = next((k for k, lay in enumerate(layers) if lay[0] == "character" and lay[1] == by), None)
+    if me is not None:                                              # el + ön kolun dış yarısı: kolun nereye uzandığını okutan parça
+        over = _union([masks[k] for k in range(me + 1, len(layers)) if layers[k][0] in ("character", "front") and layers[k][1] != by])
+        seen_, all_ = 0.0, 0.0
+        for u, rad in ((1.0, 1.0), (0.75, 0.7), (0.5, 0.7)):
+            px_ = hx + (ex - hx) * (1.0 - u) * 2.0 if u < 1.0 else hx
+            ph_ = hh + (eh - hh) * (1.0 - u) * 2.0 if u < 1.0 else hh
+            disk, area = _disk(cam.x(px_), cam.y(ph_), max(3.0, pp.HAND_R_K * rad * d["height"] * cam.s))
+            seen_ += _count(_minus(disk, over)); all_ += area
+        res["hand_visible"] = min(1.0, seen_ / max(1.0, all_))
+
+    def cover(i, skip=()):
+        return _union([masks[j] for j in range(i + 1, len(layers)) if layers[j][0] not in ("grip",) + skip])
+    i = None
+    if isinstance(to, dict):
+        ids = [ob.get("id") or ob.get("prop") for ob in (beat.get("choreo") or {}).get("objects", []) if ob.get("prop") == to.get("prop")]
+        i = next((k for k, lay in enumerate(layers) if lay[0] == "object" and (lay[1] in ids or lay[1] == to.get("prop"))), None)
+        if i is None:
+            return res                                              # gösterilen nesne hiç çizilmiyor
+    elif isinstance(to, str) and to in (beat.get("cast") or []):
+        i = next((k for k, lay in enumerate(layers) if lay[0] == "character" and lay[1] == to), None)
+        if i is None:
+            return res
+    if i is not None:
+        fn, at = layers[i][2], layers[i][3]
+        whole = getattr(fn, "full", fn)
+        total = max(1, _count(_mask(whole, sc.Cam(at[0], at[1] if isinstance(to, dict) else (box[1] + box[2]) / 2, cam.z))))
+        res["target_visible"] = min(1.0, _count(_minus(masks[i], cover(i))) / total)
+    else:                                                           # adlı nokta: noktanın çevresi oyuncu/ön plan altında kalmıyor
+        disk, area = _disk(cam.x(tx), cam.y(ty), 14.0)
+        occ = _union([masks[k] for k in range(len(layers)) if layers[k][0] in ("character", "front")])
+        res["target_visible"] = min(1.0, _count(_minus(disk, occ)) / area)
+    return res
+
+
+def measure_pointing(plan, designs, cfg=DEFAULTS):
+    """Planın bütün gösterme jestleri: [{'shot','by','to','t0','t1','samples','ok': {ölçüt: oran},'worst': {...},'why': [..]}].
+    Kolun tam uzandığı aralık (kalkış ve iniş hariç) ölçülür."""
+    cfg = dict(DEFAULTS, **(cfg or {}))
+    out = []
+    for beat in plan["beats"]:
+        shot = beat.get("shot_id") or str(beat.get("i"))
+        for item in pointing.items(beat):
+            row = {"shot": shot, "by": item.get("by"), "to": item.get("to"), "samples": 0, "why": []}
+            out.append(row)
+            bad = pointing.problem(beat, item)
+            if bad:
+                row["why"].append({"rule": "JEST_COZULEMEDI", "why": f"{item.get('by')}: {bad}"})
+                continue
+            a, b = pointing.span(beat, item)
+            row.update(t0=round(beat["t_start"] + a, 3), t1=round(beat["t_start"] + b, 3))
+            a, b = a + pointing.RAMP_S, min(b - pointing.RAMP_S, beat["t_end"] - beat["t_start"] - 1e-3)
+            n = max(2, int(round((b - a) * cfg["point_fps"])) + 1)
+            seen = [s for s in (_point_sample(plan, designs, beat, item, a + (b - a) * k / (n - 1), cfg) for k in range(n)) if s]
+            row["samples"] = len(seen)
+            checks = {"target": [s["target_inside"] and s["target_visible"] >= cfg["point_target_visible"] for s in seen],
+                      "arm_inside": [s["arm_inside"] for s in seen],
+                      "arm_aim": [s["angle_deg"] <= cfg["point_angle_deg"] for s in seen],
+                      "hand": [s["hand_visible"] >= cfg["point_hand_visible"] for s in seen]}
+            row["ok"] = {k: round(sum(v) / max(1, len(v)), 3) for k, v in checks.items()}
+            row["worst"] = {"target_visible": round(min((s["target_visible"] for s in seen), default=0.0), 3),
+                            "angle_deg": round(max((s["angle_deg"] for s in seen), default=180.0), 1),
+                            "hand_visible": round(min((s["hand_visible"] for s in seen), default=0.0), 3)}
+            for key, rule, text in (("target", "JEST_HEDEFI_GORUNMUYOR", "gösterilen hedef jest boyunca kadrajda/açıkta değil"),
+                                    ("arm_inside", "JEST_OYUNCU_KADRAJ_DISI", "gösteren kol kadrajda değil"),
+                                    ("arm_aim", "JEST_KOLU_HEDEFE_BAKMIYOR", "gösteren kol hedefe bakmıyor"),
+                                    ("hand", "JEST_KOLU_ORTULU", "gösteren el başka bir oyuncunun/ön planın arkasında")):
+                if row["ok"][key] < cfg["pass_ratio"]:
+                    row["why"].append({"rule": rule, "why": f"{item['by']}: {row['t0']:.2f}-{row['t1']:.2f} sn {text} (örneklerin yalnız %{100 * row['ok'][key]:.0f}'i; "
+                                                          f"en kötü hedef görünürlüğü {row['worst']['target_visible']}, el görünürlüğü {row['worst']['hand_visible']}, açı {row['worst']['angle_deg']} derece)"})
+    return out
+
+
+def pointing_problems(report):
+    return [{"engine": "camera", "rule": w["rule"], "shot": r["shot"], "why": w["why"]} for r in report for w in r["why"]]
+
+
+__all__ = ["measure_pointing", "pointing_problems", "camera_pops", "camera_pop_problems", "face_change", "reaction_shots", "reaction_problems", "DEFAULTS", "action_events", "window", "sample", "measure_event", "measure_plan", "problems",
            "actor_cover", "measure_occlusion", "occlusion_problems"]
 
 

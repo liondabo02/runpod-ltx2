@@ -189,14 +189,17 @@ def hand_rest(pose, side, ang, fwd):
     return below(abs(ang), REST_ARM_ANG) * below(abs(fwd), REST_ARM_FWD) * (1.0 - reaching)
 
 
-def _hand(cv, pos, r, skin, sg, fwd, ow, t, emo, g=None, rest=0.0):
+def _hand(cv, pos, r, skin, sg, fwd, ow, t, emo, g=None, rest=0.0, aim=None):
     """Beş parmaklı el: avuç + başparmak + 4 parmak. Açıklık eylemle (fwd) ve duyguyla değişir: kapalı yumruk <-> açık avuç.
     rest (0..1, hand_rest): kol dururken parmaklar yukarı açılmaz; aşağı döner, kısalır ve bitişir (yoksa belde 'dur' işareti gibi okunur)."""
     openness = max(0.0, min(1.0, 0.55 + 0.35 * math.sin(abs(fwd) * 2.0 + t * 1.3) + (0.3 if emo in ("surprise", "laugh", "happy") else 0)))
     x, y = pos
     if g in ("point", "thumb", "fist"):                  # jest elleri: işaret (tek parmak), başparmak yukarı, yumruk
         cv.ellipse(x, y, r * 0.95, r * 0.9, skin, INK, ow * 0.9)
-        if g == "point":
+        if g == "point" and aim:                          # hedefli gösterme: parmak kolun baktığı yöne uzanır
+            ux, uy = aim
+            cv.capsule((x + ux * r * 0.3, y + uy * r * 0.3), (x + ux * r * 2.0, y + uy * r * 2.0), r * 0.24, r * 0.19, skin, INK, ow * 0.7)
+        elif g == "point":
             cv.capsule((x, y - r * 0.3), (x - sg * r * 0.2, y - r * 1.9), r * 0.22, r * 0.18, skin, INK, ow * 0.7)
             for i in range(3):
                 cv.ellipse(x + (i - 1) * r * 0.45, y + r * 0.2, r * 0.26, r * 0.3, skin, INK, ow * 0.6)
@@ -706,8 +709,13 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
             cv.capsule(sh, hand, Hh * 0.036, Hh * 0.030, skin, INK, ow)
             mid = (sh[0] + (hand[0] - sh[0]) * 0.42, sh[1] + (hand[1] - sh[1]) * 0.42)
             cv.capsule(sh, mid, Hh * 0.045, Hh * 0.040, shirt, INK, ow)
+        aim = None
+        if pose.get("aim") == side:
+            base = _elbow(sh, hand, arm_len, sg) if bent and ln < arm_len * 0.985 else sh
+            reach = math.hypot(hand[0] - base[0], hand[1] - base[1]) or 1.0
+            aim = ((hand[0] - base[0]) / reach, (hand[1] - base[1]) / reach)
         _hand(cv, hand, Hh * 0.052, skin, sg, fwd, ow, t, st.get("emotion", "neutral"), pose.get("hand") if pose.get("hand_side") == side else None,
-              hand_rest(pose, side, ang, fwd))
+              hand_rest(pose, side, ang, fwd), aim)
 
     behind = far_arm(pose)
     if behind:

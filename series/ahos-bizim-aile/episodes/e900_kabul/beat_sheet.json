@@ -63,6 +63,17 @@
     "gaze": {
      "harun": "aden"
     },
+    "points": [
+     {
+      "by": "harun",
+      "to": {
+       "prop": "bottle"
+      },
+      "line": 0,
+      "t": 1.0,
+      "dur": 2.6
+     }
+    ],
     "icons": []
    },
    "enrichment": {

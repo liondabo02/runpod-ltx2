@@ -8,6 +8,10 @@ import continuity
 import action_staging
 import shot_cuts
 try:
+    import pointing                       # gösterme jesti bloklaması (çizim modülü gerektirir)
+except ImportError:
+    pointing = None
+try:
     import puppet2d as _pp
 except ImportError:
     _pp = None
@@ -145,6 +149,12 @@ def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
             sep_ = action_staging.separate(mot, objs_, des_, world_x_, trans_, te - ts, react_,
                                            {n_["actor"] for n_ in stg_notes if n_.get("kind") == "conflict"})
             stg_notes = action_staging.merge(stg_notes, sep_, mot, world_x_, trans_)
+        if des_ and pointing is not None and ch_.get("points"):         # gösteren elin önü açık olsun (jest zamanı replikten de gelebilir)
+            view_ = {"t_start": ts, "t_end": te, "cast": cast, "lines": lines, "motion": mot, "targets": tg_,
+                     "choreo": {"objects": objs_, "points": ch_["points"]}}
+            pt_ = pointing.clear(view_, des_, world_x_, trans_, react_,
+                                 {n_["actor"] for n_ in stg_notes if n_.get("kind") == "conflict"})
+            stg_notes = action_staging.merge(stg_notes, pt_, mot, world_x_, trans_)
         for c_, m_ in mot.items():                                      # sonraki plana süreklilik: plan sonunda ÇİZİLEN konum
             m_["x_end"] = round(sm.exit_x(m_, te - ts, heights_[c_], react_.get(c_)), 4)
             world_x_[c_] = m_["x_end"]
@@ -162,7 +172,7 @@ def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
                              "cast": cast, "motion": mot, "lines": lines, "camera": preset, "focus": focus,
                              "loc": b.get("location"), "light": b.get("light_time", ""), "shot_id": b.get("shot_id"),
                              "mood": (mood_engine.mood_for(b.get("action", ""), (b.get("emotion") or {}).get("valence")) if mood_engine else "neutral"),
-                             "staging_notes": stg_notes, "pieces": pieces_, "targets": tg_, "sinks": sorted(sk_), "capability_gaps": gaps_, "transition_kind": trans_, "choreo": {"objects": objs_, "gaze": gaze_, "react": react_},
+                             "staging_notes": stg_notes, "pieces": pieces_, "targets": tg_, "sinks": sorted(sk_), "capability_gaps": gaps_, "transition_kind": trans_, "choreo": {"objects": objs_, "gaze": gaze_, "react": react_, "points": ch_.get("points", [])},
                              "icons": (ch_.get("icons", []) if ch_ else _icons(b.get("action", ""))), "scene_id": b.get("scene_id"),
                              "first_of_scene": bi == 0 or sheet["beats"][bi - 1].get("scene_id") != b.get("scene_id"),
                              "props": ([] if ch_ else props2d.extract(str(b.get("action", "")) + " " + str(b.get("camera", "")))),

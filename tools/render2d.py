@@ -11,6 +11,7 @@ import scenes2d as sc  # noqa: E402
 import props2d
 import object_state  # noqa: E402
 import action_staging  # noqa: E402
+import pointing  # noqa: E402
 import listener_reaction  # noqa: E402
 import shot_cuts  # noqa: E402
 import setpieces2d  # noqa: E402
@@ -520,6 +521,8 @@ def camera_choice(beat, t):
         preset = "xclose"                               # şaşırma anında aşırı yakın plan (yüz dolsun)
     if reaction:
         preset = "close"                                # tepki planı her zaman yakın plan
+    if pointing.window_at(beat, lt):
+        preset = "point"                                # gösterme jesti: gösteren ve hedef birlikte (tepki/yakın plan kesmesi yapılmaz)
     if any(w[0] <= lt <= w[1] for w in action_staging.hold_windows(beat)):
         preset = "action"                               # temas penceresi: sabit aksiyon kadrajı
     return preset, focus, ph
@@ -661,10 +664,10 @@ def reaction_target(beat, t):
 
 
 def action_blocks(beat):
-    """Sabit aksiyon kadrajının sürdüğü aralıklar (mutlak sn)."""
+    """Sabit aksiyon ve gösterme kadrajının sürdüğü aralıklar (mutlak sn): bu aralıklarda tepki planına kesilmez."""
     if "t_start" not in beat or "t_end" not in beat:
         return []
-    return [(beat["t_start"] + w[0], beat["t_start"] + w[1]) for w in action_staging.hold_windows(beat)]
+    return [(beat["t_start"] + w[0], beat["t_start"] + w[1]) for w in action_staging.hold_windows(beat) + pointing.shot_windows(beat)]
 
 
 def poses_at(plan, designs, t):
@@ -719,6 +722,10 @@ def camera_raw(plan, designs, beat, t, items):
     out = {"focus": focus, "crop": None, "reaction": reaction, "opened_from": None}
     if act_:
         return dict(out, cam=sc.Cam(act_["cx"], act_["cy"], act_["zoom"]), preset="action", rule=("action",))
+    if preset == "point":
+        pt_ = pointing.framing(beat, designs, lt, sc.BASE_PPM)
+        if pt_:
+            return dict(out, cam=sc.Cam(pt_["cx"], pt_["cy"], pt_["zoom"]), preset="point", rule=("point",))
     if preset in CLOSE_PRESETS and focus in designs:        # yakın plan: alt kenar ya ayak zeminini gösterir ya kasıtlı olarak üst bedenden keser
         run = close_run(plan, beat, lt, (preset, focus))
         ph = run_phase(run, beat, lt)
@@ -749,7 +756,8 @@ def camera_raw(plan, designs, beat, t, items):
 def _decision_key(beat, t):
     """Kadraj kuralının değişebileceği anları bulmak için ucuz veri anahtarı (poz hesabı yok)."""
     lt = t - beat["t_start"]
-    return camera_choice(beat, t)[:2] + (next((i for i, w in enumerate(action_staging.hold_windows(beat)) if w[0] <= lt <= w[1]), None),)
+    return camera_choice(beat, t)[:2] + (next((i for i, w in enumerate(action_staging.hold_windows(beat)) if w[0] <= lt <= w[1]), None),
+                                         next((i for i, w in enumerate(pointing.shot_windows(beat)) if w[0] <= lt <= w[1]), None))
 
 
 def _timeline(plan):
@@ -909,6 +917,7 @@ def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False, came
         xs.append(p["x"])
     apply_throw_swing(beat, items, lt)                   # atışta kol savurma
     apply_handoff_reach(beat, items, lt)                 # el değiştirmede eller buluşma noktasına uzanır
+    pointing.apply(beat, designs, items, lt)             # hedefli gösterme jesti: kol hedefe uzanır
     if poses_only:
         return items
     _memo = {}
@@ -920,9 +929,12 @@ def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False, came
     view_ = soft_camera(plan, designs, beat, t, items)
     cam, preset, focus, crop, reaction = (view_[k] for k in ("cam", "preset", "focus", "crop", "reaction"))
     act_ids_ = {c for ev_ in action_staging._events(beat) for c in (ev_["by"], ev_.get("to")) if c} if preset == "action" else set()
+    if preset == "point":                       # gösterme kadrajının katılanları: gösteren ve gösterilen oyuncu
+        its_ = pointing.window_at(beat, lt)[2]
+        act_ids_ = {c for it_ in its_ for c in (it_["by"], it_.get("to") if isinstance(it_.get("to"), str) else None) if c}
 
     def skipped_(cid_, d_, p_):      # yakın planda odak dışı karakterin yüzü kenarda yarım kesilecekse çizilmez (kazara kesik yüz yok)
-        return ((preset in ("close", "xclose") and cid_ != focus) or (preset == "action" and cid_ not in act_ids_)) and _head_cropped(cam, p_["x"], d_["height"])
+        return ((preset in ("close", "xclose") and cid_ != focus) or (preset in ("action", "point") and cid_ not in act_ids_)) and _head_cropped(cam, p_["x"], d_["height"])
     if camera_only:
         if trace is not None:
             trace.update(cam=cam, preset=preset, crop=crop, focus=focus, items=items, beat=beat, lt=lt, items_at=items_at_,
@@ -1049,7 +1061,8 @@ def grade(im, light, t):
 
 _G = {}
 ENGINE_FILES = ("render2d.py", "puppet2d.py", "scenes2d.py", "setpieces2d.py", "props2d.py", "fx_layer.py", "bg_art.py", "shot_motion.py", "puppet_side.py", "object_state.py",
-                "shot_planner.py", "style_profile.py", "mood_engine.py", "action_staging.py", "staging.py", "continuity.py", "listener_reaction.py", "shot_cuts.py")
+                "shot_planner.py", "style_profile.py", "mood_engine.py", "action_staging.py", "staging.py", "continuity.py", "listener_reaction.py", "shot_cuts.py",
+                "pointing.py")
 
 
 def available_mem_mb():

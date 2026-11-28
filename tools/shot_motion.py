@@ -91,6 +91,9 @@ except Exception:       # profil yoksa varsayılan davranış
     _stp = None
 
 
+IDLE_ARM_BASE, IDLE_ARM_LIFT = 0.12, 0.36       # boşta kıpırtının kol açısı (radyan): el gevşek kalır (puppet2d.REST_ARM_ANG altı)
+
+
 # ---------------------------------------------------------------- ayak izleri (birim: bir adım çevrimi boyu D; konum = gidilen yol)
 # Her salınım (p0, p1, hedef): ayak, gövde p0 yolundayken kalkar, p1'de 'hedef' noktasına basar; arada kalan her yerde bastığı noktada SABİTTİR.
 # Basışlar yarım adım arayla dizilir (0.5, 1.0, ... n): ardışık iki basış arası hiç yarım adımı geçmez, ayak gövdeden en çok ±stance/2 uzaklaşır.
@@ -309,7 +312,9 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
             side = "R" if h2 > 0.72 else "L"
             en = prof.get("energy", 1.0); arm_out(p, side, 0.4 + 0.9 * e * en); arm_fwd(p, side, 0.6 * e * en)
             if e > 0.55:                                  # vurgu tepesinde jest eli: işaret / yumruk / başparmak (kişiliğe göre)
-                p["hand"] = ("point", "fist", "thumb")[int(h2 * 7) % 3]; p["hand_side"] = side
+                g_ = (None, "fist", "thumb")[int(h2 * 7) % 3]      # işaret parmağı rastgele seçilmez: gösterme hedefi olan veridir (pointing)
+                if g_:
+                    p["hand"], p["hand_side"] = g_, side
             p["head"][0] += 0.16 * e; p["lean"] += 0.04 * e; p["sq"] = p.get("sq", 1.0) + 0.01 * e
     # canlılık katmanı: bekleyen karakter de yaşar (ağırlık kaydırma, ara sıra jest, merak)
     if kind in ("idle", "look", "sit"):
@@ -318,9 +323,9 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
         bump = math.sin(math.pi * min(1.0, loc / 0.45)) if loc < 0.45 else 0.0
         if kind != "sit":
             p["x"] += 0.10 * math.sin(W * 0.11 * t + s) * (H / 1.0) * 0.5 * smooth(t / SWAY_IN_S)   # ağırlık kaydırma (plan başında sıfırdan açılır)
-        if h > 0.55:                                  # jest: el kaldır / kol salla
+        if h > 0.55:                                  # boşta kıpırtı: kol hafifçe açılır; yataya yakın kalkmaz (hedefsiz 'gösterme' gibi okunuyordu)
             side = "R" if h > 0.78 else "L"
-            arm_out(p, side, 0.35 + 1.1 * bump); arm_fwd(p, side, 0.5 * bump)
+            arm_out(p, side, IDLE_ARM_BASE + IDLE_ARM_LIFT * bump); arm_fwd(p, side, 0.4 * bump)
             p["head"][2] += 0.3 * bump * (1 if h > 0.78 else -1)
         elif h < 0.2:                                 # kafa eğ, düşün
             p["head"][2] += 0.35 * bump; p["lean"] += 0.05 * bump

@@ -127,6 +127,15 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
         if _crop["violations"]:
             return {"status": "BLOCKED", "error": "KADRAJ_ALTTAN_KESIK",
                     "problems": [f"[{x['engine']}] {x['rule']} {x['shot']}: {x['why']}" for x in readability.crop_problems(_crop)]}
+    if engine == "2d":                                   # gösterme kapısı: gösterilen hedef jest boyunca görünür ve kol ona bakar
+        import readability
+        _pts = readability.measure_pointing(_plan, pp2.designs_for(bible, assets))
+        json.dump({"gestures": _pts, "thresholds": {k: v for k, v in readability.DEFAULTS.items() if k.startswith("point_")}},
+                  open(os.path.join(rdir, "pointing.json"), "w", encoding="utf-8"), ensure_ascii=False)
+        _lost = readability.pointing_problems(_pts)
+        if _lost:
+            return {"status": "BLOCKED", "error": "JEST_HEDEFI_OKUNAMIYOR",
+                    "problems": [f"[{x['engine']}] {x['rule']} {x['shot']}: {x['why']}" for x in _lost]}
     if engine == "2d":                                   # tepki planı kapısı: kamera dinleyene kesiyorsa tepki çizilen yüzde görünmeli ve plan göz yakalayacak kadar sürmeli
         import readability
         _shots = readability.reaction_shots(_plan, pp2.designs_for(bible, assets))
