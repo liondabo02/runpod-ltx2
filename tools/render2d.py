@@ -12,6 +12,7 @@ import props2d
 import object_state  # noqa: E402
 import action_staging  # noqa: E402
 import listener_reaction  # noqa: E402
+import shot_cuts  # noqa: E402
 import setpieces2d  # noqa: E402
 import fx_layer  # noqa: E402
 try:
@@ -556,6 +557,20 @@ def crop_safe_framing(cy, zoom, design, base_ppm, needs=None, ph=0.0, E=0.0):
     return max(top - (pp.H / 2 - HEAD_MARGIN_PX) / s, min(cy, (FEET_MAX_PX - pp.H / 2) / s)), zoom, "full"
 
 
+FOLLOW_CALM_MPS, FOLLOW_FULL_MPS = 0.03, 0.18      # odaktaki oyuncu bundan yavaşsa vurgu itmesi tam; bundan hızlıysa yok (arada sürekli)
+
+
+def follow_steadiness(beat, designs, cid, lt):
+    """1: kamera duran oyuncuda; 0: yürüyen oyuncuyu izliyor. Yürüyüşün başı ve sonunda sürekli geçer."""
+    m = (beat.get("motion") or {}).get(cid)
+    if not m or cid not in designs:
+        return 1.0
+    dur, H = beat["t_end"] - beat["t_start"], designs[cid]["height"]
+    v = max(abs(sm.motion_x(m, max(0.0, min(dur, lt + d)), dur, H) - sm.motion_x(m, max(0.0, min(dur, lt + d - 0.5)), dur, H)) / 0.5
+            for d in (0.0, 0.5))
+    return max(0.0, min(1.0, (FOLLOW_FULL_MPS - v) / (FOLLOW_FULL_MPS - FOLLOW_CALM_MPS)))
+
+
 def reaction_target(beat, t):
     """Tepki planında kamera kimde olmalı? (karar: listener_reaction; dinleyen yoksa None). Aksiyon kadrajı süren aralıklar tepki planına sayılmaz."""
     return listener_reaction.target(beat, t, action_blocks(beat))
@@ -679,21 +694,15 @@ def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False, came
         focus = speaker
     fh = designs[focus]["height"] if focus in designs else 1.1
     fx = xs[beat["cast"].index(focus)] if focus in beat["cast"] else avg
-    SUB = 3.5                                          # kurgu: uzun vuruş 3,5 sn'lik çekimlere bölünür (kesme)
-    sub = int(lt / SUB) if dur > 5.0 else 0
-    ph = ((lt % SUB) / SUB) if dur > 5.0 else lt / max(dur, 0.1)
-    preset = beat["camera"]
-    if sub > 0:
-        preset = ("wide", "medium", "close", "wide")[(int(beat.get("i", 0)) + sub) % 4]
-        if beat.get("props") and sub % 2 == 0:
-            preset = "insert"
+    preset, ph, _shot = shot_cuts.at(beat, lt)   # kurgu listesi: yalnız gerçek kesmeler; yavaş yaklaşma çekim boyunca bir kez ilerler
     if lt < 1.4 and any(m_["kind"] == "surprise" for m_ in beat["motion"].values()):
         preset = "xclose"                               # şaşırma anında aşırı yakın plan (yüz dolsun)
     if reaction:
         preset = "close"                                # tepki planı her zaman yakın plan
     if speaker and speaker in beat["cast"] and preset in ("close", "xclose") and not reaction:
         fx = xs[beat["cast"].index(speaker)]
-    zoom = ZOOM.get(preset, 1.5) * (1.0 + 0.05 * ph) * (1.0 + 0.18 * E if preset == "close" else 1.0)   # vurguda kamera içeri vurur
+    E_cam = E * follow_steadiness(beat, designs, focus, lt) if focus == speaker else 0.0     # vurgu itmesi yalnız duran KONUŞANIN planında: takip planı ve dinleyen planı nabız gibi atmaz
+    zoom = ZOOM.get(preset, 1.5) * (1.0 + 0.05 * ph) * (1.0 + 0.18 * E_cam if preset == "close" else 1.0)   # vurguda kamera içeri vurur
     if preset in ("close", "xclose") and focus in designs and designs[focus]["height"] > 1.3:
         zoom *= 0.78                                    # yetişkin yakın planda ekranı doldurmasın: kadraj biraz açılır
     cx = fx if preset in ("close", "xclose") else avg
@@ -705,7 +714,7 @@ def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False, came
         cy, zoom = head_safe_framing(cy, zoom, max((designs[c]["height"] for c in beat["cast"]), default=0.0), sc.BASE_PPM)
     crop = None
     if preset in ("close", "xclose") and focus in designs:           # yakın plan: alt kenar ya ayak zeminini gösterir ya kasıtlı olarak üst bedenden keser
-        cy, zoom, crop = crop_safe_framing(cy, zoom, designs[focus], sc.BASE_PPM, shot_needs(plan, designs, beat, focus), ph, E if preset == "close" else 0.0)
+        cy, zoom, crop = crop_safe_framing(cy, zoom, designs[focus], sc.BASE_PPM, shot_needs(plan, designs, beat, focus), ph, E_cam if preset == "close" else 0.0)
     cam = sc.Cam(cx, cy, zoom)
     if preset == "insert" and beat.get("props"):
         ix, iy = props2d.place(beat["props"][0], xs, [designs[c]["height"] for c in beat["cast"]], t, lt, dur)
@@ -841,7 +850,7 @@ def grade(im, light, t):
 
 _G = {}
 ENGINE_FILES = ("render2d.py", "puppet2d.py", "scenes2d.py", "setpieces2d.py", "props2d.py", "fx_layer.py", "bg_art.py", "shot_motion.py", "puppet_side.py", "object_state.py",
-                "shot_planner.py", "style_profile.py", "mood_engine.py", "action_staging.py", "staging.py", "continuity.py", "listener_reaction.py")
+                "shot_planner.py", "style_profile.py", "mood_engine.py", "action_staging.py", "staging.py", "continuity.py", "listener_reaction.py", "shot_cuts.py")
 
 
 def available_mem_mb():

@@ -136,6 +136,15 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
         if _empty:
             return {"status": "BLOCKED", "error": "TEPKI_PLANI_BOS",
                     "problems": [f"[{x['engine']}] {x['rule']} {x['shot']}: {x['why']}" for x in _empty]}
+    if engine == "2d":                                   # kamera kapısı: aynı plan ailesinde/odakta kadraj tek karede atlayamaz (yakın ama farklı kadrajlar arası kesmeler raporlanır)
+        import readability
+        _pops = readability.camera_pops(_plan, pp2.designs_for(bible, assets))
+        json.dump({"pops": _pops, "thresholds": {k: v for k, v in readability.DEFAULTS.items() if k.startswith(("pop_", "cut_"))}},
+                  open(os.path.join(rdir, "camera_pops.json"), "w", encoding="utf-8"), ensure_ascii=False)
+        _jump = readability.camera_pop_problems(_pops)
+        if _jump:
+            return {"status": "BLOCKED", "error": "KAMERA_ATLAMASI",
+                    "problems": [f"[{x['engine']}] {x['rule']} {x['shot']}: {x['why']}" for x in _jump]}
     blender = find_blender() if engine != "2d" else "n/a"
     if not blender:
         return {"status": "BLOCKED", "error": "BLENDER_MISSING"}

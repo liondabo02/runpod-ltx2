@@ -14,6 +14,7 @@ import puppet2d as pp
 import scenes2d as sc
 import setpieces2d
 import render2d as r2
+import shot_cuts
 
 DEFAULTS = {
     "object_visible": 0.60,       # nesne piksellerinin kadrajda + örtülmemiş oranı (örnek başına)
@@ -36,6 +37,11 @@ DEFAULTS = {
     "react_face_min": 0.015,      # planın ilerisindeki karede yüz, aynı pozun ifadesiz yüzünden baş kutusu piksellerinin en az bu oranında farklı
     "react_gaze_min": 0.5,        # göz bebeği konuşandan yana en az bu kadar kayık (nesne eylemi izleniyorsa aranmaz)
     "react_sample_at": 0.7,       # ölçülen kare: planın bu oranındaki an (ifade oturmuş olmalı)
+    # kamera atlaması: kadraj tek karede değişiyor ama gerçek bir kesme kadar farklı değil
+    "pop_zoom_step": 0.025,       # tek karede bundan büyük ölçek değişimi sürekli hareket sayılmaz
+    "pop_jerk_px": 25,            # tek karelik kayma sıçraması: iki komşu karenin kaymasından bu kadar farklı (px, 1280x720)
+    "cut_zoom_ratio": 1.20,       # gerçek kesme: ölçek en az bu oranda değişir...
+    "cut_shift_px": (320, 180),   # ...ya da merkez yatayda/dikeyde en az bu kadar kayar
     "lead_s": 0.3, "tail_s": 0.3, "fps": 12,
     # kap içine atış (entry): nesne ağızdan, yukarıdan girip ağız çizgisinde parça parça kaybolmalı
     "entry_fps": 24,
@@ -449,7 +455,53 @@ def reaction_problems(report, cfg=DEFAULTS):
     return out
 
 
-__all__ = ["face_change", "reaction_shots", "reaction_problems", "DEFAULTS", "action_events", "window", "sample", "measure_event", "measure_plan", "problems",
+def camera_pops(plan, designs, cfg=DEFAULTS):
+    """Kare kare çizim kamerasından atlamalar: [{'t','shot','kind','from','to','zoom','dx','dy','walking'}].
+    kind 'edit': aynı tür/aile ve aynı odakta kadraj atlıyor (kurgu ya da kamera hatası: kapı durdurur);
+    kind 'framing': iki farklı kadraj kuralı (ör. aksiyon kadrajı <-> genel) birbirine çok yakın kesiyor (rapor edilir)."""
+    step = 1.0 / cfg["fps"]
+    rows = []
+    end = max((b["t_end"] for b in plan["beats"]), default=0.0)
+    start = min((b["t_start"] for b in plan["beats"]), default=0.0)
+    for i in range(int(round((end - start) / step))):
+        tr = {}
+        r2.frame(plan, designs, start + i * step, trace=tr, camera_only=True)
+        rows.append((start + i * step, tr or None))
+    moves = [None]
+    for (_t0, a), (_t1, b) in zip(rows, rows[1:]):
+        if a is None or b is None:
+            moves.append(None)
+            continue
+        pc, c = a["cam"], b["cam"]
+        moves.append((c.x(pc.cx) - W / 2, c.y(pc.cy) - H / 2, c.s / pc.s))
+    out = []
+    for i in range(1, len(rows)):
+        if moves[i] is None:
+            continue
+        (t, b), a = rows[i], rows[i - 1][1]
+        dx, dy, zr = moves[i]
+        near = [m for m in (moves[i - 1] if i > 1 else None, moves[i + 1] if i + 1 < len(moves) else None) if m is not None]
+        jerk = bool(near) and all(max(abs(dx - m[0]), abs(dy - m[1])) > cfg["pop_jerk_px"] for m in near)
+        if abs(zr - 1.0) <= cfg["pop_zoom_step"] and not jerk:
+            continue
+        if max(zr, 1.0 / zr) >= cfg["cut_zoom_ratio"] or abs(dx) >= cfg["cut_shift_px"][0] or abs(dy) >= cfg["cut_shift_px"][1]:
+            continue                                                # gerçek kesme
+        fa, fb = shot_cuts.family(a["preset"]), shot_cuts.family(b["preset"])
+        same = fa == fb and (fa in ("group", "action") or a["focus"] == b["focus"])
+        beat = b["beat"]
+        walking = sorted(c for c, m in beat["motion"].items() if r2.follow_steadiness(beat, designs, c, b["lt"]) < 0.5)
+        out.append({"t": round(t, 3), "shot": beat.get("shot_id") or str(beat.get("i")), "kind": "edit" if same else "framing",
+                    "from": a["preset"], "to": b["preset"], "zoom": round(zr, 3), "dx": round(dx, 1), "dy": round(dy, 1), "walking": walking})
+    return out
+
+
+def camera_pop_problems(report):
+    return [{"engine": "camera", "rule": "CAMERA_JUMP", "shot": r["shot"],
+             "why": f"{r['t']:.2f} sn kadraj tek karede atlıyor ({r['from']}->{r['to']}, ölçek x{r['zoom']}, kayma {r['dx']}/{r['dy']} px)"}
+            for r in report if r["kind"] == "edit"]
+
+
+__all__ = ["camera_pops", "camera_pop_problems", "face_change", "reaction_shots", "reaction_problems", "DEFAULTS", "action_events", "window", "sample", "measure_event", "measure_plan", "problems",
            "actor_cover", "measure_occlusion", "occlusion_problems"]
 
 
