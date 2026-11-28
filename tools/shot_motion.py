@@ -97,6 +97,8 @@ except Exception:       # profil yoksa varsayılan davranış
 # Yürüyüş duruş pozunda (iki ayak da gövdenin altında, 0) başlar; ilk adım yarım boydur, sonuncusu geride kalan ayağı hedefte toplar.
 STANCE = {"walk": 0.62, "run": 0.38}      # bir ayağın çevrim içinde yerde kaldığı oran
 FIRST_LIFT, LAST_LAND = 0.02, 0.02        # ilk kalkış yoldan bu kadar sonra, son basış hedeften bu kadar önce (D)
+ARM_SWING_K = 0.85             # ön / üç-çeyrek yürüyüş: ayakların açıklığı (boy oranı) başına kolun ekran yönünde salınım açısı
+ARM_SWING_MAX = 0.22           # en büyük salınım açısı (radyan): daha büyüğünde iki el gövde önünde üst üste biner (el çırpma gibi okunur)
 STRIDE_STRETCH_MAX = 1.2       # yol tam sayıda çevrime bölünürken adım doğal boyunun en çok bu katına uzar
 LIFT_MIN_STEP = 0.35           # kısa toplama adımında ayak en az tam kaldırmanın bu oranı kadar kalkar
 BOB_FADE = 0.25                # adım yaylanması yolun bu ilk/son parçasında (D) açılır/söner
@@ -189,6 +191,9 @@ def pose_at(kind, t, dur, seed, x0, x1, H, hip_z, speaking=False):
             lf = up * (0.18 if run_ else 0.10) * H * max(LIFT_MIN_STEP, min(1.0, size)) * min(1.0, D / D0)
             p["f" + key] = direction * (at * D - dpath) / H          # gövdeye göre, H'ye oran (puppet piksele çevirir); duruşta 0
             p["h" + key] = lf / H
+        if not carry:                                                                       # kol, aynı yandaki ayakla ters fazda; duruşta kendiliğinden 0
+            a_sw = max(-ARM_SWING_MAX, min(ARM_SWING_MAX, ARM_SWING_K * (p["fR"] - p["fL"])))
+            p["swL"], p["swR"] = a_sw, -a_sw
         sw = math.sin(W * (dpath / D))                                                      # kol/bacak salınımı (ayaklarla ters kol)
         env = smooth(min(dpath, n_cyc * D - dpath) / (BOB_FADE * D)) if n_cyc else 0.0
         bob = env * abs(math.cos(W * (dpath / D)))                                          # gövde ayak yerden geçerken yüksek, çift basışta alçak

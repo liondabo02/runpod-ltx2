@@ -536,6 +536,8 @@ def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False):
             p["lean"] += adj["lean"]; p["sq"] = p.get("sq", 1.0) + adj["sq"]; p["head"][0] += adj["head_nod"]
             if kind_e != "reach":                                  # tepki (şaşırma/gülme) sırasında da tutan kol nesneyi taşımaya devam eder
                 ha = "aL" if ci["hand"] == "L" else "aR"; sg_ = 1 if ci["hand"] == "L" else -1
+                for s_ in (("L", "R") if adj["arms"] == "both_front" else (ci["hand"],)):
+                    p.pop("sw" + s_, None)                          # taşıyan kol yürüyüş salınımına katılmaz
                 if adj["arms"] == "both_front":
                     for a_ in ("aL", "aR"):
                         p[a_][0] = -0.95

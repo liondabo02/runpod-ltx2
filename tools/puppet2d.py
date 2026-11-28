@@ -291,6 +291,7 @@ def arm_toward(des, pose, side, tx, th):
     ratio = math.hypot(vx, vdown) / ln
     key = "aL" if side == "L" else "aR"
     pose[key][0] = 0.0; pose[key][1] = ang if side == "L" else -ang
+    pose.pop("sw" + side, None)
     pose["d" + side] = min(math.hypot(vx, vdown), ln)                                   # el mesafesi: hedefe kadar; yakınsa dirsek bükülür, uzaksa kol tam gerilir
     return ratio
 
@@ -301,7 +302,10 @@ def arm_blend(des, pose, side, tx, th, w):
     key = "aL" if side == "L" else "aR"; old = list(pose[key]); full = des["height"] * 0.27
     old_len = min(full, pose["d" + side]) if ("d" + side) in pose else full * (1.0 - 0.28 * min(1.0, abs(old[0]) / 1.3))
     had = ("d" + side) in pose
+    swing = float(pose.get("sw" + side, 0.0))
     ratio = arm_toward(des, pose, side, tx, th)
+    if swing and w < 1.0:
+        pose["sw" + side] = swing * (1.0 - max(0.0, w))
     pose[key] = [old[0] + (pose[key][0] - old[0]) * w, old[1] + (pose[key][1] - old[1]) * w]
     if w <= 0.0 and not had:
         del pose["d" + side]
@@ -359,6 +363,12 @@ def meeting_point(des_a, sh_a, des_b, sh_b):
     return sh_a[0] + (sh_b[0] - sh_a[0]) * f, sh_a[1] + (sh_b[1] - sh_a[1]) * f
 
 
+def arm_swing(pose, side, sg):
+    """Yürüyüşte kolun ekran yönündeki salınımı, kol açısına eklenecek değer. Hareket motoru 'sw'+side verir (ekran sağı artı).
+    Yönlü uzanma salınımı kaldırır (el hedefte kalır); uzanmaya geçişte salınım ağırlıkla söner (arm_blend)."""
+    return sg * float(pose.get("sw" + side, 0.0))
+
+
 def hand_offset(des, pose, side):
     """Elin ayağa göre konumu METRE olarak: (dx, yükseklik). Çizimle aynı geometri (ppm=1); nesne ele gerçekten bağlansın diye.
     side: 'L' | 'R' (ekranda sol/sağ el, ön görünüşte). Profilde puppet_side kullanılır."""
@@ -377,7 +387,7 @@ def hand_offset(des, pose, side):
     sg = -1 if side == "L" else 1
     fwd, out = pose["aL"] if side == "L" else pose["aR"]
     ang = abs(out) * 1.0 if out * (1 if side == "L" else -1) >= 0 else -abs(out) * 0.4
-    ang = max(-0.5, ang)
+    ang = max(-0.5, ang) + arm_swing(pose, side, sg)
     ln = Hh * 0.27 * (1.0 - 0.28 * min(1.0, abs(fwd) / 1.3))
     if ("d" + side) in pose:
         ln = min(Hh * 0.27, pose["d" + side])
@@ -648,7 +658,7 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
     for side, sg in (("L", -1), ("R", 1)):
         fwd, out = pose["aL"] if side == "L" else pose["aR"]
         ang = abs(out) * 1.0 if out * (1 if side == "L" else -1) >= 0 else -abs(out) * 0.4
-        ang = max(-0.5, ang)
+        ang = max(-0.5, ang) + arm_swing(pose, side, sg)
         ln = arm_len * (1.0 - 0.28 * min(1.0, abs(fwd) / 1.3))
         sh = (fx + sg * torso_w * 0.52, torso_top + torso_h * 0.14)
         bent = ("d" + side) in pose                                  # yönlü uzanma: gerçek dirsek bükülmesi (kısa menzilde kol kısalmaz, bükülür)
