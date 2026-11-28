@@ -51,6 +51,54 @@ def measure(des, emotion="neutral", view=("front", 0.0, 0.0), blink=0, brow=0.0,
     return out
 
 
+LINE_ITEMS = ("lids", "mouth", "nose")
+LINE_LUM = 40                               # çizgi pikseli, öğesiz kareye göre en az bu parlaklık farkını yaratmıyorsa 'görünmüyor'
+MIN_LINE_VISIBLE = {"lids": 0.80, "mouth": 0.40, "nose": 0.70}   # küçük açık ağızda (F) koyu tende yalnız dudak çizgisi sayılır (ölçülen en az 0.45);
+                                                                 # erimiş çizgi 0.00 ölçülür. Açık tende ölçülen en az 0.78
+REF_SKIN = (255, 214, 170)                  # öğenin yeri açık tenli başvuruda bulunur: ten renginde eriyen çizginin maskesi boşalmasın
+
+
+def _lum_changed(a, b, limit):
+    return ImageChops.difference(a.convert("L"), b.convert("L")).point(lambda v: 255 if v > limit else 0)
+
+
+def measure_lines(des, emotion="neutral", view=("front", 0.0, 0.0), mouth="X", blink=0, t=0.0):
+    """Kapalı göz (lids), ağız ve burun çizgisi PARLAKLIKÇA seçiliyor mu? Kapalı göz yalnız blink=1 ya da gülen gözde ölçülür.
+    Profilde burun yüzün dış hattıdır (zemine karşı); burada ölçülmez."""
+    p = pose(*view)
+    st = {"mouth": mouth, "blink": blink, "emotion": emotion, "gaze": 0.0, "brow": 0.0, "pulse": 0.0}
+    items = [("mouth", "mouth")]
+    if blink or emotion == "laugh":
+        items.append(("lids", "eyes"))
+    if not view[0].startswith("side"):
+        items.append(("nose", "nose"))
+    bare = dict(des, hair_style="bald", accessory="none")
+    light = dict(bare, skin=REF_SKIN)
+    ref, real = render(light, p, st, t), render(des, p, st, t)
+    out = {}
+    for name, hide in items:
+        gone = dict(st, hide=(hide,))
+        mask = _changed(ref, render(light, p, gone, t))
+        seen = _lum_changed(real, render(des, p, gone, t), LINE_LUM)
+        n = mask.histogram()[255]
+        out[name] = ImageChops.darker(mask, seen).histogram()[255] / n if n else 0.0
+        out[name + "_px"] = n
+    return out
+
+
+def line_failures(m, limits=None):
+    L = dict(MIN_LINE_VISIBLE, **(limits or {}))
+    why = []
+    for item in LINE_ITEMS:
+        if item + "_px" not in m:
+            continue
+        if m[item + "_px"] < MIN_MASK_PX:
+            why.append(f"{item}: ölçülecek piksel yok ({m[item + '_px']})")
+        elif m[item] < L[item]:
+            why.append(f"{item} görünür oranı {m[item]:.2f} < {L[item]:.2f}")
+    return why
+
+
 def failures(m, limits=None):
     L = dict(MIN_VISIBLE, **(limits or {}))
     why = []
@@ -77,6 +125,7 @@ def sweep(des, emotions=EMOTIONS, views=VIEWS, blinks=(0, 1), times=(0.0,)):
 # ---------------------------------------------------------------- üretim kapısı: bölümde oynayan HER tasarım (gerçek spec değerleriyle)
 GATE_EMOTIONS = ("neutral", "happy", "laugh", "surprise")
 GATE_VIEWS = tuple(v for v in VIEWS if v[0] in ("front", "front_turn_l", "three_quarter_r", "side_r", "side_l"))
+GATE_LINE_STATES = (("neutral", "X", 0), ("neutral", "X", 1), ("laugh", "X", 0), ("neutral", "F", 0))   # (ifade, ağız harfi, göz kırpma)
 
 
 def check_designs(designs, ids):
@@ -85,8 +134,12 @@ def check_designs(designs, ids):
     out = {}
     for cid in sorted(ids):
         rows = sweep(designs[cid], emotions=GATE_EMOTIONS, views=GATE_VIEWS, blinks=(0,))
-        out[cid] = {"checked": len(rows), "worst": {k: round(min(m[k] for _key, m, _w in rows), 3) for k in ("eyes", "brows")},
-                    "fails": [{"emotion": key[0], "view": key[1], "why": why} for key, _m, why in rows if why]}
+        lines = [((e, v[0]), m, line_failures(m)) for e, mouth, blink in GATE_LINE_STATES for v in GATE_VIEWS
+                 for m in (measure_lines(designs[cid], e, v, mouth, blink),)]
+        out[cid] = {"checked": len(rows) + len(lines), "worst": {k: round(min(m[k] for _key, m, _w in rows), 3) for k in ("eyes", "brows")},
+                    "worst_lines": {k: round(min(m[k] for _key, m, _w in lines if k in m), 3) for k in LINE_ITEMS},
+                    "fails": [{"emotion": key[0], "view": key[1], "why": why} for key, _m, why in rows if why]
+                             + [{"emotion": key[0], "view": key[1], "why": why} for key, _m, why in lines if why]}
     return out
 
 

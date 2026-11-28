@@ -114,7 +114,7 @@ def draw_profile(cv, des, pose, st, fx, fy, ppm, t, P):
     if "eyes" in hide:
         pass
     elif st.get("blink") or (emo == "laugh" and not st.get("eyes_open")):
-        cv.line([(ex_ - erx, ey_ + ery * 0.15), (ex_ + erx, ey_ + ery * 0.15)], INK, ow * 1.2)
+        cv.line([(ex_ - erx, ey_ + ery * 0.15), (ex_ + erx, ey_ + ery * 0.15)], P.face_line(skin, INK), ow * 1.2)
     else:
         cv.ellipse(ex_, ey_, erx, ery, (255, 255, 255), INK, ow * 0.45)
         pr = erx * (0.50 if emo in ("surprise", "scared") else 0.66)
@@ -126,7 +126,8 @@ def draw_profile(cv, des, pose, st, fx, fy, ppm, t, P):
     brow_pts = [(ex_ - d * erx * 0.9, ey_ - ery * 1.45), (ex_ + d * erx * 1.1, ey_ - ery * (1.35 if emo != "surprise" else 1.9))]
     ml = st.get("mouth", "X")
     if emo == "laugh" and ml == "X": ml = "D"
-    P.draw_mouth(cv, hx + d * head_w * 0.36, head_cy + head_h * 0.27, head_w * 0.17 * des.get("mouth_w", 1.0), head_h * 0.15, ml, INK, emo)
+    if "mouth" not in hide:
+        P.draw_mouth(cv, hx + d * head_w * 0.36, head_cy + head_h * 0.27, head_w * 0.17 * des.get("mouth_w", 1.0), head_h * 0.15, ml, P.face_line(skin, INK), emo, skin=skin)
     # ---- ön saç
     if species != "hedgehog" and style not in ("bald", "hijab"):
         pts = cv.arc_pts(hx - d * head_w * 0.02, head_cy, head_w * 0.53, head_h * 0.54, math.pi, 2 * math.pi, 24)

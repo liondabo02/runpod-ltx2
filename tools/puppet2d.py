@@ -144,8 +144,10 @@ def derive_design(ch, spec):
 
 
 # ---------------------------------------------------------------- ağız şekilleri (Rhubarb A-H, X)
-def draw_mouth(cv, mx, my, mw, mh, letter, ol=INK, emo="neutral"):
+def draw_mouth(cv, mx, my, mw, mh, letter, ol=INK, emo="neutral", skin=None):
     dark, tongue = (110, 30, 45), (235, 110, 120)
+    if skin is not None:                        # ağız içi tenle aynı parlaklıktaysa koyulaşır (çok koyu tende dudak çizgisi açık renktir)
+        dark = next((c for c in (dark, shade(dark, 0.6), shade(dark, 0.3)) if abs(luma(c) - luma(skin)) >= FACE_LINE_LUM - 4), dark)
     L = letter if letter in "ABCDEFGHX" else "X"
     if L == "X":
         if emo == "sad":        # somurtma: ağız aşağı kıvrık
@@ -454,6 +456,26 @@ def brow_colour(base, under, skin, over=True):
     return min(good, key=lambda c: _contrast(c, base)) if good else max([base] + cands, key=score)
 
 
+FACE_LINE_LUM = 48        # ağız, kapalı göz ve burun çizgisinin tenden en az bu kadar parlaklık farkı (0-255) olur
+
+
+def luma(c):
+    return 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]
+
+
+def face_line(skin, base):
+    """Yüz çizgisi rengi. Tasarımın rengi tenden ayrışıyorsa aynen kalır; yoksa önce aynı rengin koyusu, o da yetmiyorsa (çok koyu ten)
+    tenin açık tonu kullanılır. Renk farkı değil parlaklık farkı ölçülür: koyu mor çizgi koyu kahve tende renkçe ayrı ama gözle seçilmez."""
+    ok = lambda c: abs(luma(c) - luma(skin)) >= FACE_LINE_LUM
+    for c in (base, shade(base, 0.6), shade(base, 0.3)):
+        if ok(c):
+            return c
+    for k in (1.7, 2.0, 2.3, 2.7, 3.2):
+        if ok(shade(skin, k)):
+            return shade(skin, k)
+    return (235, 215, 200)
+
+
 def cover_colours(des):
     """Alnı örtebilen parçaların renkleri (kaşın altına gelebilecek zeminler)."""
     out = []
@@ -652,6 +674,7 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
     hw_limit = headwear_edge(eye_y, ery, ow * 1.7 * des.get("brow_w", 1.0), ow)
     eyes_x = {}
     covered = des["accessory"] in ("hat", "beanie", "glasses") or des["hair_style"] != "bald" or des["species"] == "hedgehog"
+    ink_ = face_line(skin, INK)                                            # kapalı göz ve ağız çizgisi
     brows, reach = [], {-1: 0.0, 1: 0.0}                                   # reach: gözlerin baş merkezinden iki yana uzanışı (px)
     if emo == "surprise":
         erx *= 1.12; ery *= 1.2
@@ -665,8 +688,8 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         if "eyes" in hide:
             pass
         elif st.get("blink") or (emo == "laugh" and not st.get("eyes_open")):
-            cv.line(cv.arc_pts(cx, eye_y + ery * 0.1, rx, ery * 0.6, math.pi * 1.1, math.pi * 1.9), INK, ow * 1.1) if emo == "laugh" else \
-                cv.line([(cx - rx, eye_y + ery * 0.15), (cx + rx, eye_y + ery * 0.15)], INK, ow * 1.2)
+            cv.line(cv.arc_pts(cx, eye_y + ery * 0.1, rx, ery * 0.6, math.pi * 1.1, math.pi * 1.9), ink_, ow * 1.1) if emo == "laugh" else \
+                cv.line([(cx - rx, eye_y + ery * 0.15), (cx + rx, eye_y + ery * 0.15)], ink_, ow * 1.2)
         else:
             cv.ellipse(cx, eye_y, rx, ery, (255, 255, 255), INK, ow * 0.45)
             gx = cx + face * rx * 0.38 + st.get("gaze", 0) * rx * 0.25
@@ -726,26 +749,30 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         bcol = tuple(int(skin[i_] * 0.62 + hair[i_] * 0.38) for i_ in range(3)) if bd == "stubble" else shade(hair, 0.9)
         cv.poly(jaw + inner, bcol, INK if bd == "full" else None, ow * 0.8)
     # burun
-    if species == "hedgehog":
+    nl_ = lambda k_: face_line(skin, shade(skin, k_))                        # burun çizgisi tenden ayrışır
+    if "nose" in hide:
+        pass
+    elif species == "hedgehog":
         cv.ellipse(hx + face * head_w * 0.17, head_cy + head_h * 0.10, head_w * 0.075, head_h * 0.06, (40, 30, 30), None, 0)
     else:
         nx_, ny_ = hx + face * head_w * 0.22, head_cy + head_h * 0.08; nt_ = des.get("nose", "line")
         if nt_ == "dot":
-            cv.ellipse(nx_, ny_ + head_h * 0.02, head_w * 0.022, head_h * 0.022, shade(skin, 0.72), None, 0)
+            cv.ellipse(nx_, ny_ + head_h * 0.02, head_w * 0.022, head_h * 0.022, nl_(0.72), None, 0)
         elif nt_ == "button":
-            cv.ellipse(nx_, ny_ + head_h * 0.015, head_w * 0.04, head_h * 0.035, shade(skin, 0.95), shade(skin, 0.64), 1.6)
+            cv.ellipse(nx_, ny_ + head_h * 0.015, head_w * 0.04, head_h * 0.035, shade(skin, 0.95), nl_(0.64), 1.6)
         elif nt_ == "round":
-            cv.ellipse(nx_, ny_ + head_h * 0.02, head_w * 0.062, head_h * 0.05, shade(skin, 0.94), shade(skin, 0.6), 2.0)
+            cv.ellipse(nx_, ny_ + head_h * 0.02, head_w * 0.062, head_h * 0.05, shade(skin, 0.94), nl_(0.6), 2.0)
         elif nt_ == "long":
-            cv.line([(nx_ - face * head_w * 0.01, ny_ - head_h * 0.12), (nx_, ny_ + head_h * 0.02)], shade(skin, 0.66), 2.2)
-            cv.line(cv.arc_pts(nx_, ny_ + head_h * 0.03, head_w * 0.05, head_h * 0.035, 0.2, math.pi - 0.2), shade(skin, 0.62), 2.6)
+            cv.line([(nx_ - face * head_w * 0.01, ny_ - head_h * 0.12), (nx_, ny_ + head_h * 0.02)], nl_(0.66), 2.2)
+            cv.line(cv.arc_pts(nx_, ny_ + head_h * 0.03, head_w * 0.05, head_h * 0.035, 0.2, math.pi - 0.2), nl_(0.62), 2.6)
         else:
-            cv.line(cv.arc_pts(nx_, ny_, head_w * 0.035, head_h * 0.04, 0.3, math.pi - 0.3), shade(skin, 0.62), 2.6)
+            cv.line(cv.arc_pts(nx_, ny_, head_w * 0.035, head_h * 0.04, 0.3, math.pi - 0.3), nl_(0.62), 2.6)
     # ağız
     mouth_letter = st.get("mouth", "X")
     if emo == "laugh" and mouth_letter == "X":
         mouth_letter = "D"
-    draw_mouth(cv, hx + face * head_w * 0.20, head_cy + head_h * 0.26, head_w * 0.26 * des.get("mouth_w", 1.0), head_h * 0.16, mouth_letter, INK, emo)
+    if "mouth" not in hide:
+        draw_mouth(cv, hx + face * head_w * 0.20, head_cy + head_h * 0.26, head_w * 0.26 * des.get("mouth_w", 1.0), head_h * 0.16, mouth_letter, ink_, emo, skin=skin)
     if des.get("dimple"):
         cv.line(cv.arc_pts(hx + face * head_w * 0.14 + head_w * 0.17, head_cy + head_h * 0.27, head_w * 0.03, head_h * 0.03, -1.2, 1.2), shade(skin, 0.6), 2.4)
     # ---- saç (ön)
