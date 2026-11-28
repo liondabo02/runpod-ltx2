@@ -171,8 +171,21 @@ def draw_mouth(cv, mx, my, mw, mh, letter, ol=INK, emo="neutral", skin=None):
 
 
 # ---------------------------------------------------------------- eller
-def _hand(cv, pos, r, skin, sg, fwd, ow, t, emo, g=None):
-    """Beş parmaklı el: avuç + başparmak + 4 parmak. Açıklık eylemle (fwd) ve duyguyla değişir: kapalı yumruk <-> açık avuç."""
+REST_ARM_ANG = (0.50, 0.75)     # kol açısı bu aralıkta büyürken el gevşekten açığa geçer (boşta ve yürürken ~0.35'in altında kalır)
+REST_ARM_FWD = (0.50, 0.75)     # kolun öne uzanışı için aynı geçiş
+
+
+def hand_rest(pose, side, ang, fwd):
+    """Elin gevşeklik ağırlığı 0..1: 1 = gevşek (parmaklar kol boyunca aşağı, bitişik), 0 = jest/uzanma eli. Sürekli: tek karede biçim değiştirmez."""
+    def below(v, lo_hi):
+        return max(0.0, min(1.0, (lo_hi[1] - v) / (lo_hi[1] - lo_hi[0])))
+    reaching = max(0.0, min(1.0, 3.0 * float(pose.get("rw" + side, 1.0 if ("d" + side) in pose else 0.0))))
+    return below(abs(ang), REST_ARM_ANG) * below(abs(fwd), REST_ARM_FWD) * (1.0 - reaching)
+
+
+def _hand(cv, pos, r, skin, sg, fwd, ow, t, emo, g=None, rest=0.0):
+    """Beş parmaklı el: avuç + başparmak + 4 parmak. Açıklık eylemle (fwd) ve duyguyla değişir: kapalı yumruk <-> açık avuç.
+    rest (0..1, hand_rest): kol dururken parmaklar yukarı açılmaz; aşağı döner, kısalır ve bitişir (yoksa belde 'dur' işareti gibi okunur)."""
     openness = max(0.0, min(1.0, 0.55 + 0.35 * math.sin(abs(fwd) * 2.0 + t * 1.3) + (0.3 if emo in ("surprise", "laugh", "happy") else 0)))
     x, y = pos
     if g in ("point", "thumb", "fist"):                  # jest elleri: işaret (tek parmak), başparmak yukarı, yumruk
@@ -190,12 +203,14 @@ def _hand(cv, pos, r, skin, sg, fwd, ow, t, emo, g=None):
                 cv.ellipse(x + (i - 1.5) * r * 0.4, y - r * 0.05, r * 0.24, r * 0.3, skin, INK, ow * 0.55)
         return
     cv.ellipse(x, y, r * 0.95, r * 0.9, skin, INK, ow * 0.9)
-    cv.capsule((x - sg * r * 0.55, y - r * 0.05), (x - sg * r * 1.05, y - r * (0.25 + 0.5 * openness)), r * 0.28, r * 0.22, skin, INK, ow * 0.8)
+    mix = lambda a_, b_: a_ + (b_ - a_) * rest
+    cv.capsule((x - sg * r * 0.55, y - r * 0.05), (x - sg * r * mix(1.05, 0.80), y - r * mix(0.25 + 0.5 * openness, -0.55)), r * 0.28, r * 0.22, skin, INK, ow * 0.8)
     for i in range(4):
-        a = math.radians(-100 + i * 24) if sg > 0 else math.radians(-80 - i * 24)
-        L = r * (0.55 + 0.65 * openness) * (1.0 - 0.1 * abs(i - 1.5))
+        # gevşek hedef: aşağı bakan bitişik parmaklar; iki el ayna (sol el açıyı dış yandan döndürür)
+        a = math.radians(mix(-100 + i * 24, 90 + (i - 1.5) * 13) if sg > 0 else mix(-80 - i * 24, -270 - (i - 1.5) * 13))
+        L = r * mix(0.55 + 0.65 * openness, 0.42) * (1.0 - 0.1 * abs(i - 1.5))
         base = (x + math.cos(a) * r * 0.72, y + math.sin(a) * r * 0.62)
-        tip = (x + math.cos(a) * (r * 0.72 + L), y + math.sin(a) * (r * 0.62 + L * (0.75 if openness > 0.4 else 0.35)) + (r * 0.25 if openness < 0.35 else 0))
+        tip = (x + math.cos(a) * (r * 0.72 + L), y + math.sin(a) * (r * 0.62 + L * mix(0.75 if openness > 0.4 else 0.35, 1.0)) + (r * 0.25 * (1.0 - rest) if openness < 0.35 else 0))
         cv.capsule(base, tip, r * 0.20, r * 0.17, skin, INK, ow * 0.7)
     cv.ellipse(x - sg * r * 0.05, y + r * 0.08, r * 0.78, r * 0.7, skin, None, 0)
 
@@ -292,6 +307,7 @@ def arm_toward(des, pose, side, tx, th):
     key = "aL" if side == "L" else "aR"
     pose[key][0] = 0.0; pose[key][1] = ang if side == "L" else -ang
     pose.pop("sw" + side, None)
+    pose["rw" + side] = 1.0
     pose["d" + side] = min(math.hypot(vx, vdown), ln)                                   # el mesafesi: hedefe kadar; yakınsa dirsek bükülür, uzaksa kol tam gerilir
     return ratio
 
@@ -302,14 +318,16 @@ def arm_blend(des, pose, side, tx, th, w):
     key = "aL" if side == "L" else "aR"; old = list(pose[key]); full = des["height"] * 0.27
     old_len = min(full, pose["d" + side]) if ("d" + side) in pose else full * (1.0 - 0.28 * min(1.0, abs(old[0]) / 1.3))
     had = ("d" + side) in pose
+    old_rw = float(pose.get("rw" + side, 1.0 if had else 0.0))
     swing = float(pose.get("sw" + side, 0.0))
     ratio = arm_toward(des, pose, side, tx, th)
     if swing and w < 1.0:
         pose["sw" + side] = swing * (1.0 - max(0.0, w))
     pose[key] = [old[0] + (pose[key][0] - old[0]) * w, old[1] + (pose[key][1] - old[1]) * w]
     if w <= 0.0 and not had:
-        del pose["d" + side]
+        del pose["d" + side], pose["rw" + side]
     else:
+        pose["rw" + side] = max(old_rw, min(1.0, w))
         pose["d" + side] = old_len + (pose["d" + side] - old_len) * w
     return ratio
 
@@ -651,7 +669,8 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
             cv.capsule(sh, hand, Hh * 0.036, Hh * 0.030, skin, INK, ow)
             mid = (sh[0] + (hand[0] - sh[0]) * 0.42, sh[1] + (hand[1] - sh[1]) * 0.42)
             cv.capsule(sh, mid, Hh * 0.045, Hh * 0.040, shirt, INK, ow)
-        _hand(cv, hand, Hh * 0.052, skin, sg, fwd, ow, t, st.get("emotion", "neutral"), pose.get("hand") if pose.get("hand_side") == side else None)
+        _hand(cv, hand, Hh * 0.052, skin, sg, fwd, ow, t, st.get("emotion", "neutral"), pose.get("hand") if pose.get("hand_side") == side else None,
+              hand_rest(pose, side, ang, fwd))
 
     behind = far_arm(pose)
     if behind:
