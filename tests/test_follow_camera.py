@@ -234,7 +234,7 @@ def test_hold_outside_the_close_shot_does_not_open_it_and_per_beat_framing_is_ca
         one["choreo"]["objects"] = [{"prop": "shovel", "track": track + [{"t": 8.0, "holder": a}]}] if track else []
         sheet_path.write_text(json.dumps(sheet, ensure_ascii=False), encoding="utf-8")
         tr = cam_at(planned(), designs, 1.5)
-        assert tr["preset"] == "close"
+        assert "close" in (tr["preset"], tr["opened_from"])               # tam boya açılan yakın plan dürüstçe 'orta' adını alır (Y2d)
         return tr["crop"], designs[a]["height"] * tr["cam"].s / pp.H
 
     free = head_share(None)

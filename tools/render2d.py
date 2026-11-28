@@ -672,6 +672,154 @@ def poses_at(plan, designs, t):
     return frame(plan, designs, t, poses_only=True)
 
 
+def group_framing(beat, designs, xs, preset, ph):
+    """Genel/orta planın kadrajı (cx, cy, zoom): bütün oyuncular sığar, en uzunun başı üstten kesilmez."""
+    cx = sum(xs) / len(xs) if xs else 0.0
+    fh = designs[beat["focus"]]["height"] if beat.get("focus") in designs else 1.1
+    zoom = ZOOM[preset] * (1.0 + 0.05 * ph)
+    cy = 0.95 if preset == "wide" else min(0.85, fh * 0.62 + 0.25)     # orta planda çocuk için kamera alçalır (bacak değil gövde+yüz)
+    if len(xs) > 1:                                                     # kadraj güvenliği: tüm oyuncular kadraja sığsın
+        lo, hi = min(xs), max(xs); half = (hi - lo) / 2 + 0.7
+        zoom = max(0.8, min(zoom, 5.12 / (2 * half))); cx = (lo + hi) / 2
+    cy, zoom = head_safe_framing(cy, zoom, max((designs[c]["height"] for c in beat["cast"]), default=0.0), sc.BASE_PPM)
+    return cx, cy, zoom
+
+
+def close_base(preset, design, ph=0.0, E=0.0):
+    """Yakın planın kırpma güvenliğinden ÖNCEKİ (cy, zoom) değeri."""
+    zoom = ZOOM[preset] * (1.0 + 0.05 * ph) * (1.0 + 0.18 * E if preset == "close" else 1.0)   # vurguda kamera içeri vurur
+    if design["height"] > 1.3:
+        zoom *= 0.78                                    # yetişkin yakın planda ekranı doldurmasın: kadraj biraz açılır
+    return design["height"] * 0.80, zoom
+
+
+def close_tightness(plan, designs, preset, focus, run, needs):
+    """Bu yakın çekim grup planından kaç kat dar: (yakın ölçek / aynı anın orta plan ölçeği, kırpma kipi).
+    Çekim boyunca TEK değerdir (çekimin ilk anı, yaklaşma ve vurgu olmadan): plan türü çekimin ortasında değişemez."""
+    beat, a, _b = run[0]
+    dur = beat["t_end"] - beat["t_start"]
+    xs = [sm.motion_x(beat["motion"][c], a, dur, designs[c]["height"]) for c in beat["cast"]]
+    cy, zoom = close_base(preset, designs[focus])
+    _cy, zoom, crop = crop_safe_framing(cy, zoom, designs[focus], sc.BASE_PPM, needs)
+    return zoom / group_framing(beat, designs, xs, "medium", 0.0)[2], crop
+
+
+def camera_raw(plan, designs, beat, t, items):
+    """t anının TEK BAŞINA kadraj kararı (geçiş uygulanmadan): {'cam','preset','focus','crop','reaction','rule','opened_from'}.
+    'rule' kadrajı üreten kuralın kimliğidir: aynı kural içinde kadraj sürekli değişir; farklı kurallar arasındaki geçişi soft_camera denetler."""
+    lt, dur = t - beat["t_start"], beat["t_end"] - beat["t_start"]
+    xs = [it[2]["x"] for it in items]
+    speaker = speaker_at(beat, t)
+    sp_ln = next((ln for ln in beat["lines"] if ln["char"] == speaker and ln["start"] <= t < ln["end"]), None)
+    E = emphasis(sp_ln.get("cues", []), t - sp_ln["start"]) if speaker else 0.0
+    avg = sum(xs) / len(xs) if xs else 0.0
+    preset, focus, ph = camera_choice(beat, t)
+    reaction = reaction_target(beat, t)
+    act_ = action_staging.framing(beat, designs, lt, sc.BASE_PPM)      # temas penceresi: sabit aksiyon kadrajı (tepki/yakın plan/ek plan kesmesi yapılmaz)
+    out = {"focus": focus, "crop": None, "reaction": reaction, "opened_from": None}
+    if act_:
+        return dict(out, cam=sc.Cam(act_["cx"], act_["cy"], act_["zoom"]), preset="action", rule=("action",))
+    if preset in CLOSE_PRESETS and focus in designs:        # yakın plan: alt kenar ya ayak zeminini gösterir ya kasıtlı olarak üst bedenden keser
+        run = close_run(plan, beat, lt, (preset, focus))
+        ph = run_phase(run, beat, lt)
+        needs = shot_needs(plan, designs, focus, run)
+        ratio, crop0 = close_tightness(plan, designs, preset, focus, run, needs)
+        if crop0 == "full" and ratio < shot_cuts.CUT_ZOOM_RATIO:   # tam boya açılan ve grup planından gerçek kesme kadar dar olmayan plan 'yakın' değildir: dürüstçe orta plan
+            cx, cy, zoom = group_framing(beat, designs, xs, "medium", ph)
+            return dict(out, cam=sc.Cam(cx, cy, zoom), preset="medium", rule=("opened", focus), opened_from=preset)
+        fx = xs[beat["cast"].index(focus)] if focus in beat["cast"] else avg
+        if speaker and speaker in beat["cast"] and not reaction:
+            fx = xs[beat["cast"].index(speaker)]
+        E_cam = E * follow_steadiness(beat, designs, focus, lt) if focus == speaker else 0.0     # vurgu itmesi yalnız duran KONUŞANIN planında: takip planı ve dinleyen planı nabız gibi atmaz
+        cy, zoom = close_base(preset, designs[focus], ph, E_cam)
+        cy, zoom, crop = crop_safe_framing(cy, zoom, designs[focus], sc.BASE_PPM, needs, ph, E_cam if preset == "close" else 0.0)
+        return dict(out, cam=sc.Cam(fx, cy, zoom), preset=preset, crop=crop, rule=("close", preset, focus))
+    if preset in shot_cuts.GROUP:
+        cx, cy, zoom = group_framing(beat, designs, xs, preset, ph)
+        return dict(out, cam=sc.Cam(cx, cy, zoom), preset=preset, rule=("group",))
+    if preset == "insert" and beat.get("props"):
+        ix, iy = props2d.place(beat["props"][0], xs, [designs[c]["height"] for c in beat["cast"]], t, lt, dur)
+        cam = sc.Cam(ix, max(0.55, min(iy - 0.35, 1.0)), 1.05)      # ek plan: nesne + karakterler birlikte kadrajda (başsız/bacaksız kadraj yok)
+    else:
+        fh = designs[focus]["height"] if focus in designs else 1.1
+        cam = sc.Cam(avg, fh * 0.80, ZOOM.get(preset, 1.5) * (1.0 + 0.05 * ph))
+    return dict(out, cam=cam, preset=preset, rule=(preset,))
+
+
+def _decision_key(beat, t):
+    """Kadraj kuralının değişebileceği anları bulmak için ucuz veri anahtarı (poz hesabı yok)."""
+    lt = t - beat["t_start"]
+    return camera_choice(beat, t)[:2] + (next((i for i, w in enumerate(action_staging.hold_windows(beat)) if w[0] <= lt <= w[1]), None),)
+
+
+def _timeline(plan):
+    return sorted(list(plan.get("context") or []) + list(plan["beats"]), key=lambda b_: b_["t_start"])
+
+
+def _changes_before(plan, beat, t):
+    """t'den geriye, en çok SOFT_MAX_S içinde, kadraj kuralının değişmiş olabileceği anlar (yeniden eskiye): [(an, önceki vuruş, sonraki vuruş)].
+    Gerçek kesmede (sahne/mekân/kadro değişimi) durur. Plan penceresi dışındaki sürekli komşular plan['context'] verisindedir."""
+    order = _timeline(plan)
+    i = next((n for n, b_ in enumerate(order) if b_ is beat), None)
+    limit, cur, hi = t - shot_cuts.SOFT_MAX_S, beat, t
+    key = _decision_key(cur, hi)
+    while hi > limit:
+        lo = max(cur["t_start"], hi - CHOICE_STEP_S)
+        k = _decision_key(cur, lo)
+        if k != key:
+            a, b = lo, hi
+            while b - a > 1e-5:                            # sınır ikiye bölerek bulunur
+                m = (a + b) / 2
+                a, b = (m, b) if _decision_key(cur, m) == k else (a, m)
+            yield b, cur, cur
+        key, hi = k, lo
+        if hi <= cur["t_start"] + 1e-9:
+            prev = order[i - 1] if i else None
+            if prev is None or not shot_cuts.continues(prev, cur):
+                return
+            at = cur["t_start"]
+            yield at, prev, cur
+            cur, i, hi = prev, i - 1, at - 1e-5
+            key = _decision_key(cur, hi)
+
+
+def soft_camera(plan, designs, beat, t, items, _memo=None):
+    """camera_raw + yakın kadrajlar arası sürekli geçiş. İki FARKLI kural gerçek kesme eşiğini geçemiyorsa (shot_cuts.is_real_cut)
+    kamera tek karede atlamaz: değişim anındaki kadrajdan yeni kuralın kadrajına yumuşak geçer. Aynı kuralın içindeki sıçrama
+    YUMUŞATILMAZ (kurgu/kamera hatasıdır; atlama ölçüsü ve render kapısı yakalar). Çıktıdaki 'soft': geçişin ilerlemesi 0..1 ya da None."""
+    memo = {} if _memo is None else _memo
+    now = dict(camera_raw(plan, designs, beat, t, items), soft=None)
+
+    def view(beat_, t_):
+        return dict(plan, beats=[beat_])
+
+    def poses(beat_, t_):
+        return poses_at(view(beat_, t_), designs, t_)
+    for tb, before, after in _changes_before(plan, beat, t):
+        if (before["i"], round(tb, 4)) not in memo:
+            t0 = min(tb - 1e-5, before["t_end"] - 1e-5)
+            its0 = poses(before, t0)
+            raw0 = camera_raw(plan, designs, before, t0, its0)
+            raw1 = camera_raw(plan, designs, after, tb, poses(after, tb))
+            memo[(before["i"], round(tb, 4))] = (t0, its0, raw0, raw1)
+        t0, its0, raw0, raw1 = memo[(before["i"], round(tb, 4))]
+        if raw0["rule"] == raw1["rule"]:
+            continue
+        old = soft_camera(plan, designs, before, t0, its0, memo)["cam"]      # geçiş sürerken yeni değişim gelirse ekrandaki kadrajdan devam edilir
+        new = raw1["cam"]
+        zr, dx, dy = new.s / old.s, new.x(old.cx) - pp.W / 2, new.y(old.cy) - pp.H / 2
+        if shot_cuts.is_real_cut(zr, dx, dy, shot_cuts.JOIN_MARGIN):
+            return now
+        u = (t - tb) / shot_cuts.soft_seconds(zr, dx, dy)
+        if u >= 1.0:
+            return now
+        w, c = pp_smooth(u), now["cam"]
+        now["cam"] = sc.Cam(old.cx + (c.cx - old.cx) * w, old.cy + (c.cy - old.cy) * w, old.z * (c.z / old.z) ** w)
+        now["soft"] = round(max(0.0, u), 3)
+        return now
+    return now
+
+
 def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False, camera_only=False):
     """trace (dict) verilirse çizimin GERÇEK yerleşimi yazılır: kamera, pozlar ve çizim sırasıyla katmanlar [(tür, kimlik, çizici(cv, cam), nokta)].
     Okunabilirlik ölçüsü bu kayıttan çalışır; ayrı bir yerleşim tahmini yapılmaz.
@@ -769,45 +917,16 @@ def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False, came
         if t_ not in _memo:
             _memo[t_] = poses_at(plan, designs, _b["t_start"] + t_) or items
         return _memo[t_]
-    avg = sum(xs) / len(xs) if xs else 0.0
-    preset, focus, ph = camera_choice(beat, t)
-    reaction = reaction_target(beat, t)
-    fh = designs[focus]["height"] if focus in designs else 1.1
-    run = None
-    if preset in CLOSE_PRESETS:
-        run = close_run(plan, beat, lt, (preset, focus))
-        ph = run_phase(run, beat, lt)
-    fx = xs[beat["cast"].index(focus)] if focus in beat["cast"] else avg
-    if speaker and speaker in beat["cast"] and preset in ("close", "xclose") and not reaction:
-        fx = xs[beat["cast"].index(speaker)]
-    E_cam = E * follow_steadiness(beat, designs, focus, lt) if focus == speaker else 0.0     # vurgu itmesi yalnız duran KONUŞANIN planında: takip planı ve dinleyen planı nabız gibi atmaz
-    zoom = ZOOM.get(preset, 1.5) * (1.0 + 0.05 * ph) * (1.0 + 0.18 * E_cam if preset == "close" else 1.0)   # vurguda kamera içeri vurur
-    if preset in ("close", "xclose") and focus in designs and designs[focus]["height"] > 1.3:
-        zoom *= 0.78                                    # yetişkin yakın planda ekranı doldurmasın: kadraj biraz açılır
-    cx = fx if preset in ("close", "xclose") else avg
-    cy = {"wide": 0.95, "medium": min(0.85, fh * 0.62 + 0.25)}.get(preset, fh * 0.80)   # orta planda çocuk için kamera alçalır (bacak değil gövde+yüz)
-    if preset in ("wide", "medium") and len(xs) > 1:            # kadraj güvenliği: tüm oyuncular kadraja sığsın
-        lo, hi = min(xs), max(xs); half = (hi - lo) / 2 + 0.7
-        zoom = max(0.8, min(zoom, 5.12 / (2 * half))); cx = (lo + hi) / 2
-    if preset in ("wide", "medium"):
-        cy, zoom = head_safe_framing(cy, zoom, max((designs[c]["height"] for c in beat["cast"]), default=0.0), sc.BASE_PPM)
-    crop = None
-    if preset in ("close", "xclose") and focus in designs:           # yakın plan: alt kenar ya ayak zeminini gösterir ya kasıtlı olarak üst bedenden keser
-        cy, zoom, crop = crop_safe_framing(cy, zoom, designs[focus], sc.BASE_PPM, shot_needs(plan, designs, focus, run), ph, E_cam if preset == "close" else 0.0)
-    cam = sc.Cam(cx, cy, zoom)
-    if preset == "insert" and beat.get("props"):
-        ix, iy = props2d.place(beat["props"][0], xs, [designs[c]["height"] for c in beat["cast"]], t, lt, dur)
-        cam = sc.Cam(ix, max(0.55, min(iy - 0.35, 1.0)), 1.05)      # ek plan: nesne + karakterler birlikte kadrajda (başsız/bacaksız kadraj yok)
-    act_ = action_staging.framing(beat, designs, lt, sc.BASE_PPM)      # temas penceresi: sabit aksiyon kadrajı (tepki/yakın plan/ek plan kesmesi yapılmaz)
-    if act_:
-        preset = "action"; cam = sc.Cam(act_["cx"], act_["cy"], act_["zoom"]); crop = None
-    act_ids_ = {c for ev_ in action_staging._events(beat) for c in (ev_["by"], ev_.get("to")) if c} if act_ else set()
+    view_ = soft_camera(plan, designs, beat, t, items)
+    cam, preset, focus, crop, reaction = (view_[k] for k in ("cam", "preset", "focus", "crop", "reaction"))
+    act_ids_ = {c for ev_ in action_staging._events(beat) for c in (ev_["by"], ev_.get("to")) if c} if preset == "action" else set()
 
     def skipped_(cid_, d_, p_):      # yakın planda odak dışı karakterin yüzü kenarda yarım kesilecekse çizilmez (kazara kesik yüz yok)
         return ((preset in ("close", "xclose") and cid_ != focus) or (preset == "action" and cid_ not in act_ids_)) and _head_cropped(cam, p_["x"], d_["height"])
     if camera_only:
         if trace is not None:
             trace.update(cam=cam, preset=preset, crop=crop, focus=focus, items=items, beat=beat, lt=lt, items_at=items_at_,
+                         opened_from=view_["opened_from"], soft=view_["soft"],
                          drawn=[i[0] for i in items if not skipped_(i[0], i[1], i[2])])
         return None
     cv = pp.Cv()
@@ -887,7 +1006,8 @@ def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False, came
     sc.scene_front(cv, beat["scene"], cam, t)
     if trace is not None:
         emit("front", "scene_front", lambda c, cm: sc.scene_front(c, beat["scene"], cm, t))
-        trace.update(cam=cam, preset=preset, crop=crop, focus=focus, items=items, layers=layers, states=states, beat=beat, lt=lt)
+        trace.update(cam=cam, preset=preset, crop=crop, focus=focus, items=items, layers=layers, states=states, beat=beat, lt=lt,
+                     opened_from=view_["opened_from"], soft=view_["soft"])
     im = grade(cv.done(), beat.get("light") or "", t)
     try:
         return fx_layer.post(im, beat, t, lt, dur, float(plan.get("total_s", 480.0)), bool(beat.get("first_of_scene")))

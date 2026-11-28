@@ -33,6 +33,7 @@ DEFAULTS = {
     "crop_fps": 4,
     "crop_leg_tol": 0.85,         # odakta olmayan oyuncuda alt kenar kalça yüksekliğinin en az bu katında olmalı (benzer boy payı); odakta kalçanın üstünde
     "crop_object_margin_px": 20,  # yakın planda odağın tuttuğu nesnenin alt kenarı ekran altından en az bu kadar yukarıda
+    "close_tight_slack": 0.95,    # tam boy 'yakın' plan, o anın orta planından gerçek kesme eşiği x bu pay kadar dar olmalı (oyuncular çekim içinde yürür)
     # tepki planı: kamera dinleyene kesiyorsa o planda gerçekten tepki görünmeli
     "react_face_min": 0.015,      # planın ilerisindeki karede yüz, aynı pozun ifadesiz yüzünden baş kutusu piksellerinin en az bu oranında farklı
     "react_gaze_min": 0.5,        # göz bebeği konuşandan yana en az bu kadar kayık (nesne eylemi izleniyorsa aranmaz)
@@ -40,8 +41,8 @@ DEFAULTS = {
     # kamera atlaması: kadraj tek karede değişiyor ama gerçek bir kesme kadar farklı değil
     "pop_zoom_step": 0.025,       # tek karede bundan büyük ölçek değişimi sürekli hareket sayılmaz
     "pop_jerk_px": 25,            # tek karelik kayma sıçraması: iki komşu karenin kaymasından bu kadar farklı (px, 1280x720)
-    "cut_zoom_ratio": 1.20,       # gerçek kesme: ölçek en az bu oranda değişir...
-    "cut_shift_px": (320, 180),   # ...ya da merkez yatayda/dikeyde en az bu kadar kayar
+    "cut_zoom_ratio": shot_cuts.CUT_ZOOM_RATIO,   # gerçek kesme: ölçek en az bu oranda değişir...
+    "cut_shift_px": shot_cuts.CUT_SHIFT_PX,       # ...ya da merkez yatayda/dikeyde en az bu kadar kayar (kamera ile aynı kaynak)
     "lead_s": 0.3, "tail_s": 0.3, "fps": 12,
     # kap içine atış (entry): nesne ağızdan, yukarıdan girip ağız çizgisinde parça parça kaybolmalı
     "entry_fps": 24,
@@ -416,7 +417,7 @@ def reaction_shots(plan, designs, cfg=DEFAULTS):
             while k * step < min(w["t1"], beat["t_end"]) - 1e-9:
                 tr = {}
                 r2.frame(plan, designs, k * step, trace=tr, camera_only=True)
-                if tr.get("preset") == "close" and tr.get("focus") == w["listener"]:
+                if "close" in (tr.get("preset"), tr.get("opened_from")) and tr.get("focus") == w["listener"]:   # dürüstçe orta plana açılan tepki planı da ölçülür
                     seen.append(k * step)
                 k += 1
             if not seen:
@@ -457,8 +458,9 @@ def reaction_problems(report, cfg=DEFAULTS):
 
 def camera_pops(plan, designs, cfg=DEFAULTS):
     """Kare kare çizim kamerasından atlamalar: [{'t','shot','kind','from','to','zoom','dx','dy','walking'}].
-    kind 'edit': aynı tür/aile ve aynı odakta kadraj atlıyor (kurgu ya da kamera hatası: kapı durdurur);
-    kind 'framing': iki farklı kadraj kuralı (ör. aksiyon kadrajı <-> genel) birbirine çok yakın kesiyor (rapor edilir)."""
+    kind 'edit': aynı tür/aile ve aynı odakta kadraj atlıyor (kurgu ya da kamera hatası);
+    kind 'framing': iki farklı kadraj kuralı (ör. aksiyon kadrajı <-> genel) birbirine çok yakın kesiyor.
+    İkisi de üretimi durdurur: her kesme ya gerçek kesme eşiğini geçer ya da sürekli harekettir."""
     step = 1.0 / cfg["fps"]
     rows = []
     end = max((b["t_end"] for b in plan["beats"]), default=0.0)
@@ -503,7 +505,7 @@ def camera_pops(plan, designs, cfg=DEFAULTS):
 def camera_pop_problems(report):
     return [{"engine": "camera", "rule": "CAMERA_JUMP", "shot": r["shot"],
              "why": f"{r['t']:.2f} sn kadraj tek karede atlıyor ({r['from']}->{r['to']}, ölçek x{r['zoom']}, kayma {r['dx']}/{r['dy']} px)"}
-            for r in report if r["kind"] == "edit"]
+            for r in report]
 
 
 __all__ = ["camera_pops", "camera_pop_problems", "face_change", "reaction_shots", "reaction_problems", "DEFAULTS", "action_events", "window", "sample", "measure_event", "measure_plan", "problems",
@@ -520,6 +522,12 @@ def crop_frame(plan, designs, t, cfg=DEFAULTS):
     bottom, ground = r2.frame_bottom(cam), cam.y(0.0)
     close = tr["preset"] in ("close", "xclose")
     out = []
+    if close and tr.get("crop") == "full" and tr.get("soft") is None:     # 'yakın' denen plan tam boya açılmışsa grup planından gerçek kesme kadar dar olmalı
+        group = r2.group_framing(beat, designs, [i[2]["x"] for i in tr["items"]], "medium", 0.0)[2]
+        ratio = cam.z / group
+        if ratio < shot_cuts.CUT_ZOOM_RATIO * cfg["close_tight_slack"]:
+            hh = designs[tr["focus"]]["height"] * cam.s / H
+            out.append({"rule": "YAKIN_PLAN_YAKIN_DEGIL", "who": tr["focus"], "tightness": round(ratio, 3), "height_over_frame": round(hh, 2)})
     if ground > r2.FEET_MAX_PX + 0.5:
         for cid, d, p, *_ in tr["items"]:
             if cid not in tr["drawn"] or not 0 <= cam.x(p["x"]) <= W:
@@ -565,5 +573,7 @@ def measure_crop(plan, designs, cfg=DEFAULTS):
 
 def crop_problems(report):
     return [{"engine": "camera", "rule": v["rule"], "shot": v["shot"],
-             "why": f"{v['who']}: {v['t0']:.2f}-{v['t1']:.2f} sn alt kadraj kenarı " + (f"bacak ortasından geçiyor ({v['cut_m']} m, kalça {v['hip_m']} m)" if v["rule"] == "ALTTAN_KAZARA_KESIK" else f"tutulan '{v.get('prop')}' nesnesini kesiyor")}
+             "why": f"{v['who']}: {v['t0']:.2f}-{v['t1']:.2f} sn " + (f"alt kadraj kenarı bacak ortasından geçiyor ({v['cut_m']} m, kalça {v['hip_m']} m)" if v["rule"] == "ALTTAN_KAZARA_KESIK"
+                    else f"'yakın' plan tam boya açık: orta plandan yalnız x{v['tightness']} dar (boy/kare {v['height_over_frame']})" if v["rule"] == "YAKIN_PLAN_YAKIN_DEGIL"
+                    else f"alt kadraj kenarı tutulan '{v.get('prop')}' nesnesini kesiyor")}
             for v in report["violations"]]

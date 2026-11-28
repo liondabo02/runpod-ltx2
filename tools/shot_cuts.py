@@ -15,6 +15,26 @@ MIN_CUT_S = 1.0           # bundan kısa çekim kesilmez
 ROTATION = ("wide", "medium", "close", "wide")
 GROUP = ("wide", "medium")            # aralarındaki fark küçük (yaklaşık %10): aralarında kesme 'atlama' gibi okunur
 
+# Gerçek kesme eşiği (tek kaynak: kamera ve atlama ölçüsü aynı değeri okur). 1280x720 ekran.
+CUT_ZOOM_RATIO = 1.20                 # ölçek en az bu oranda değişir...
+CUT_SHIFT_PX = (320, 180)             # ...ya da eski kadrajın merkezi yatayda/dikeyde en az bu kadar kayar
+# İki FARKLI kadraj kuralı eşiği geçemeyecek kadar yakınsa kesme yoktur: kamera bir kadrajdan ötekine sürekli geçer.
+JOIN_MARGIN = (1.03, 1.05)            # eşiğin kıl payı üstü de geçiş sayılır (karşılaştırılan iki kare arasında kadraj biraz kayar)
+SOFT_MIN_S, SOFT_MAX_S = 0.4, 1.25    # geçiş süresi sınırları (sn)
+SOFT_ZOOM_STEP = 0.022                # 12 fps karede en büyük ölçek adımı (ln); atlama ölçüsünün sınırının altında
+SOFT_PAN_PX = 40.0                    # 12 fps karede en büyük kayma (px)
+
+
+def is_real_cut(zoom_ratio, dx, dy, margin=(1.0, 1.0)):
+    return (max(zoom_ratio, 1.0 / zoom_ratio) >= CUT_ZOOM_RATIO * margin[0]
+            or abs(dx) >= CUT_SHIFT_PX[0] * margin[1] or abs(dy) >= CUT_SHIFT_PX[1] * margin[1])
+
+
+def soft_seconds(zoom_ratio, dx, dy):
+    """Yakın iki kadraj arasındaki sürekli geçişin süresi: yumuşatılmış eğrinin tepe hızı (ortalamanın 1,5 katı) kare başı sınırı aşmaz."""
+    frames = 1.5 * max(abs(math.log(zoom_ratio)) / SOFT_ZOOM_STEP, max(abs(dx), abs(dy)) / SOFT_PAN_PX)
+    return max(SOFT_MIN_S, min(SOFT_MAX_S, frames / 12.0))
+
 
 def family(preset):
     return "group" if preset in GROUP else preset

@@ -136,7 +136,7 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
         if _empty:
             return {"status": "BLOCKED", "error": "TEPKI_PLANI_BOS",
                     "problems": [f"[{x['engine']}] {x['rule']} {x['shot']}: {x['why']}" for x in _empty]}
-    if engine == "2d":                                   # kamera kapısı: aynı plan ailesinde/odakta kadraj tek karede atlayamaz (yakın ama farklı kadrajlar arası kesmeler raporlanır)
+    if engine == "2d":                                   # kamera kapısı: kadraj tek karede atlayamaz; her kesme gerçek kesme eşiğini geçer ya da sürekli harekettir
         import readability
         _pops = readability.camera_pops(_plan, pp2.designs_for(bible, assets))
         json.dump({"pops": _pops, "thresholds": {k: v for k, v in readability.DEFAULTS.items() if k.startswith(("pop_", "cut_"))}},
