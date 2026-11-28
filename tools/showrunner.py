@@ -176,7 +176,7 @@ class StepLog(list):
     def append(self, item):
         super().append(item)
         try:
-            q = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "studio", "queue")
+            q = os.environ.get("AHOS_QUEUE_DIR") or os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "studio", "queue")
             os.makedirs(q, exist_ok=True)
             json.dump({"done": [x.get("worker") for x in self if x.get("status") not in ("FAILED", "BLOCKED")],
                        "failed": [x.get("worker") for x in self if x.get("status") in ("FAILED", "BLOCKED")],
