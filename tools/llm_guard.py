@@ -17,16 +17,17 @@ PAID_PATTERNS = (r"^gpt[-.]", r"^o[134](-|$)", r"claude", r"\bopus\b", r"\bsonne
 def check(model, base, env=None):
     """-> {"ok": bool, "reason": str, "note": str}. Karar yalnız girdilerden çıkar (ağ yok)."""
     env = os.environ if env is None else env
-    if str(env.get("AHOS_ALLOW_PAID", "")).strip() == "1":
-        return {"ok": True, "reason": "", "note": "AHOS_ALLOW_PAID=1: sahibin açık izni var"}
+    for k in ("AHOS_ALLOW_PAID_LLM", "AHOS_ALLOW_PAID"):          # AHOS_ALLOW_PAID_LLM: ahos_core'daki (premium, llm_executor) ortak anahtar
+        if str(env.get(k, "")).strip().lower() in ("1", "true", "yes", "on"):
+            return {"ok": True, "reason": "", "note": "%s açık: sahibin açık izni var" % k}
     host = (urlparse(str(base or "")).hostname or "").lower()
     if host not in LOCAL_HOSTS:
-        return {"ok": False, "reason": "LLM adresi yerel değil (%s): ücretli uç olabilir; AHOS_ALLOW_PAID=1 gerekir" % (host or "boş"), "note": ""}
+        return {"ok": False, "reason": "LLM adresi yerel değil (%s): ücretli uç olabilir; AHOS_ALLOW_PAID_LLM=1 gerekir" % (host or "boş"), "note": ""}
     m = str(model or "").strip().lower()
     free = {x.strip().lower() for x in str(env.get("AHOS_FREE_MODELS", "")).split(",") if x.strip()}
     if m in free:
         return {"ok": True, "reason": "", "note": "model AHOS_FREE_MODELS listesinde"}
     for p in PAID_PATTERNS:
         if re.search(p, m):
-            return {"ok": False, "reason": "model adı ücretli görünüyor (%s); AHOS_ALLOW_PAID=1 ya da AHOS_FREE_MODELS gerekir" % m, "note": ""}
+            return {"ok": False, "reason": "model adı ücretli görünüyor (%s); AHOS_ALLOW_PAID_LLM=1 ya da AHOS_FREE_MODELS gerekir" % m, "note": ""}
     return {"ok": True, "reason": "", "note": "maliyet doğrulanmadı: model '%s' yerel ağ geçidinde arkada ne seçeceği bilinmiyor" % m}

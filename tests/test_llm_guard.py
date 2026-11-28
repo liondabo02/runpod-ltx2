@@ -51,3 +51,18 @@ def test_bilerek_bozma_koruma_kaldirilinca_ag_cagrisi_olur(monkeypatch):
     monkeypatch.setattr(writers_room.urllib.request, "urlopen", lambda *a, **k: (cagri.append(1), R())[1])
     monkeypatch.setattr(writers_room.json, "load", lambda r: {"choices": [{"message": {"content": "x"}}]})
     assert writers_room.llm_call("s", "u") == "x" and cagri
+
+
+def test_ahos_core_ile_ayni_izin_anahtari():
+    assert llm_guard.check("gpt-4o", LOCAL, {"AHOS_ALLOW_PAID_LLM": "1"})["ok"]
+    assert llm_guard.check("gpt-4o", LOCAL, {"AHOS_ALLOW_PAID_LLM": "0"})["ok"] is False
+
+
+def test_ahos_core_ucretli_katmanlar_varsayilan_kapali(monkeypatch):
+    """V7 kalan kapsam: premium katman izin anahtarı olmadan kapalı (koddan doğrulandı, burada ölçülür)."""
+    sys.path.insert(0, os.path.join(ROOT, "ahos_core"))
+    from ahos import premium
+    monkeypatch.delenv("AHOS_ALLOW_PAID_LLM", raising=False)
+    assert premium.enabled() is False
+    monkeypatch.setenv("AHOS_ALLOW_PAID_LLM", "1")
+    assert premium.enabled() is True
