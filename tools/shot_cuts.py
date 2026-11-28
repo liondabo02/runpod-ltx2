@@ -49,7 +49,7 @@ def _merged(beat):
     return out
 
 
-def _continues(prev, beat):
+def continues(prev, beat):
     """beat, prev'in devamı mı: kesintisiz zaman, aynı mekân, sürekli geçiş, aynı kadro."""
     return (prev is not None and beat.get("transition_kind") not in continuity.FREE
             and abs(prev.get("t_end", -1.0) - beat.get("t_start", 0.0)) < 1e-6
@@ -70,12 +70,27 @@ def link(prev, beat):
     """Planlayıcı, vuruşları SIRAYLA bağlar (üretim penceresi dışındakiler dahil): sonuç beat['cut_in'] olarak planın verisidir,
     parça parça üretimde de aynı kurgu çıkar. Dönüş: yazılan değer (devam yoksa None)."""
     beat["cut_in"] = None
-    if _continues(prev, beat):
+    if continues(prev, beat):
         tail, first = shots(prev)[-1], _merged(beat)[0]
         if family(tail["preset"]) == family(first["preset"]) and (
                 family(first["preset"]) == "group" or prev.get("focus") == beat.get("focus")):
             beat["cut_in"] = {"preset": tail["preset"], "push": tail["push_to"]}
     return beat["cut_in"]
+
+
+def window_context(rows):
+    """rows: [(vuruş, pencerede_mi)] sırayla. Pencerenin iki ucundan kesintisiz süren (pencere dışı) komşu vuruşlar: çizilmez, yalnız çekim kararında okunur."""
+    inside = [i for i, (_b, w) in enumerate(rows) if w]
+    out = []
+    for edge, step in ((inside[0], -1), (inside[-1], 1)) if inside else ():
+        i = edge
+        while 0 <= i + step < len(rows) and not rows[i + step][1]:
+            a, b = sorted((i, i + step))
+            if not continues(rows[a][0], rows[b][0]):
+                break
+            i += step
+            out.append(rows[i][0])
+    return out
 
 
 def at(beat, lt):

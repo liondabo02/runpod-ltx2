@@ -139,7 +139,7 @@ def test_low_held_object_from_the_real_track_stays_in_frame_and_ignoring_it_is_c
     json.dump(sheet, open(ep / "beat_sheet.json", "w"))
     assets = str(root / "assets")
     plan, des = sp.plan(str(ep), bible, assets, 0, DUR), pp.designs_for(bible, assets)
-    assert r2.shot_needs(plan, des, plan["beats"][0], tall)["held"] < r2.hip_height(des[tall])
+    assert r2.shot_needs(plan, des, tall, [(plan["beats"][0], 0.0, DUR)])["held"] < r2.hip_height(des[tall])
     assert rd.measure_crop(plan, des)["violations"] == []
     monkeypatch.setattr(r2, "shot_needs", lambda *a: {})
     assert [v["rule"] for v in rd.measure_crop(plan, des)["violations"]] == ["KONU_NESNE_ALTTAN_KESIK"]

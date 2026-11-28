@@ -484,7 +484,12 @@ def camera_pops(plan, designs, cfg=DEFAULTS):
         jerk = bool(near) and all(max(abs(dx - m[0]), abs(dy - m[1])) > cfg["pop_jerk_px"] for m in near)
         if abs(zr - 1.0) <= cfg["pop_zoom_step"] and not jerk:
             continue
-        if max(zr, 1.0 / zr) >= cfg["cut_zoom_ratio"] or abs(dx) >= cfg["cut_shift_px"][0] or abs(dy) >= cfg["cut_shift_px"][1]:
+        joined = a["beat"] is b["beat"] or shot_cuts.continues(a["beat"], b["beat"])
+        if not joined:
+            continue                                                # sahne/mekân/kadro değişimi: kadraj farkı küçük olsa da gerçek kesme
+        # aynı yüzde süren yakın çekim vuruş sınırında tek karede ne kadar atlarsa atlasın kesme sayılmaz
+        held_close = (a["beat"] is not b["beat"] and a["preset"] == b["preset"] and a["preset"] in r2.CLOSE_PRESETS and a["focus"] == b["focus"])
+        if not held_close and (max(zr, 1.0 / zr) >= cfg["cut_zoom_ratio"] or abs(dx) >= cfg["cut_shift_px"][0] or abs(dy) >= cfg["cut_shift_px"][1]):
             continue                                                # gerçek kesme
         fa, fb = shot_cuts.family(a["preset"]), shot_cuts.family(b["preset"])
         same = fa == fb and (fa in ("group", "action") or a["focus"] == b["focus"])

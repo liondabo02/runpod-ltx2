@@ -497,30 +497,101 @@ def frame_bottom(cam):
     return cam.cy - (pp.H / 2) / cam.s
 
 
-def shot_needs(plan, designs, beat, cid):
-    """cid yakın plandayken kadrajın bilmesi gerekenler, aksiyon kadrajı dışındaki bütün plan boyunca (4 fps), çizimin gerçek pozlarından:
-    'held' elinde tuttuğu nesnelerin en alçak alt kenarı (m; tutmuyorsa None), 'rise' en yüksek zıplama (m), 'sink' en derin oturma (m).
-    Plan boyunca tek değerdir: kadraj kararı kare kare değişip kamerayı sıçratmaz."""
-    dur, memo = beat["t_end"] - beat["t_start"], {}
+CLOSE_PRESETS = ("close", "xclose")
+CHOICE_STEP_S = 1.0 / 24                          # yakın çekimin sınırları bu aralıkla bulunur (yalnız kurgu kararı; poz hesabı yok)
 
-    def at(t_):
-        if t_ not in memo:
-            memo[t_] = poses_at(plan, designs, beat["t_start"] + t_) or []
-        return memo[t_]
+
+def speaker_at(beat, t):
+    """t anında replik söyleyen (yoksa None)."""
+    return next((ln["char"] for ln in reversed(beat.get("lines") or []) if ln["start"] <= t < ln["end"]), None)
+
+
+def camera_choice(beat, t):
+    """t anının kurgu kararı (saf veri; çizim ve poz hesabı yok): (plan türü, odak, yaklaşma oranı). frame() ve kadraj ihtiyacı aynı kararı kullanır."""
+    lt = t - beat["t_start"]
+    speaker, focus = speaker_at(beat, t), beat.get("focus")
+    reaction = reaction_target(beat, t)               # tepki planı: replik bitince / uzun replikin ortasında dinleyene kesilir
+    if reaction:
+        focus = reaction
+    elif speaker and speaker in beat["cast"]:       # yakın planda kamera hep o an konuşana bakar (yüz + omuz kadrajda)
+        focus = speaker
+    preset, ph, _shot = shot_cuts.at(beat, lt)   # kurgu listesi: yalnız gerçek kesmeler; yavaş yaklaşma çekim boyunca bir kez ilerler
+    if lt < 1.4 and any(m_["kind"] == "surprise" for m_ in (beat.get("motion") or {}).values()):
+        preset = "xclose"                               # şaşırma anında aşırı yakın plan (yüz dolsun)
+    if reaction:
+        preset = "close"                                # tepki planı her zaman yakın plan
+    if any(w[0] <= lt <= w[1] for w in action_staging.hold_windows(beat)):
+        preset = "action"                               # temas penceresi: sabit aksiyon kadrajı
+    return preset, focus, ph
+
+
+def _choice_spans(beat):
+    """Vuruşun kurgu kararı aralıkları: [((tür, odak), başlangıç, bitiş)] (vuruş içi sn)."""
+    dur, out = beat["t_end"] - beat["t_start"], []
+    for k in range(max(1, int(math.ceil(dur / CHOICE_STEP_S - 1e-6)))):
+        lt = k * CHOICE_STEP_S
+        key = camera_choice(beat, beat["t_start"] + lt)[:2]
+        if out and out[-1][0] == key:
+            out[-1][2] = min(dur, lt + CHOICE_STEP_S)
+        else:
+            out.append([key, lt, min(dur, lt + CHOICE_STEP_S)])
+    return [tuple(r) for r in out]
+
+
+def close_run(plan, beat, lt, key):
+    """lt anını içeren, aynı yüzdeki kesintisiz yakın çekim: [(vuruş, a, b)] (vuruş içi sn).
+    Çekim sürekli geçişte vuruş sınırını aşar; planın üretim penceresi dışındaki komşuları plan['context'] verisindedir."""
+    own = _choice_spans(beat)
+    hit = [r for r in own if r[0] == key and r[1] - CHOICE_STEP_S <= lt <= r[2] + CHOICE_STEP_S]
+    if not hit:
+        return [(beat, lt, lt)]
+    span = min(hit, key=lambda r: max(r[1] - lt, lt - r[2], 0.0))
+    run = [(beat, span[1], span[2])]
+    order = sorted(list(plan.get("context") or []) + [b_ for b_ in plan["beats"]], key=lambda b_: b_["t_start"])
+    i = next((n for n, b_ in enumerate(order) if b_ is beat), None)
+    if i is None:
+        return run
+    for step in (-1, 1):
+        cur, spans, edge, j = beat, own, span, i + step
+        while 0 <= j < len(order):
+            dur = cur["t_end"] - cur["t_start"]
+            if edge != (spans[0] if step < 0 else spans[-1]) or (edge[1] > 1e-6 if step < 0 else edge[2] < dur - 1e-6):
+                break
+            nxt = order[j]
+            if not (shot_cuts.continues(nxt, cur) if step < 0 else shot_cuts.continues(cur, nxt)):
+                break
+            spans = _choice_spans(nxt)
+            edge = spans[-1] if step < 0 else spans[0]
+            if edge[0] != key:
+                break
+            run.insert(0, (nxt, edge[1], edge[2])) if step < 0 else run.append((nxt, edge[1], edge[2]))
+            cur, j = nxt, j + step
+    return run
+
+
+def shot_needs(plan, designs, cid, run):
+    """cid yakın plandayken kadrajın bilmesi gerekenler, yalnız BU yakın çekim boyunca (4 fps + son an), çizimin gerçek pozlarından:
+    'held' elinde tuttuğu nesnelerin en alçak alt kenarı (m; tutmuyorsa None), 'rise' en yüksek zıplama (m), 'sink' en derin oturma (m).
+    Çekim boyunca tek değerdir (vuruş sınırını aşan çekimde de): kadraj kare kare ya da sınırda sıçramaz; çekimde olmayan tutuş/oturuş kadrajı açmaz."""
     out = {"held": None, "rise": 0.0, "sink": 0.0}
-    action_spans = action_staging.hold_windows(beat)
-    for i in range(int(math.ceil(dur * 4))):
-        lt = i / 4.0
-        if lt >= dur or any(w[0] <= lt <= w[1] for w in action_spans):
-            continue
-        for it in at(lt):
-            if it[0] == cid:
-                z = float(it[2].get("z", 0.0))
-                out["rise"], out["sink"] = max(out["rise"], z), max(out["sink"], -z)
-        for ob, _x, y, _st, own, _h in _objects_now(beat, at(lt), lt, at):
-            if own == cid:
-                low = y - props2d.extent(ob.get("prop", ""), ob.get("scale", 0.55))[0]
-                out["held"] = low if out["held"] is None else min(out["held"], low)
+    for beat, a, b in run:
+        view, memo = dict(plan, beats=[beat]), {}
+
+        def at(t_, _beat=beat, _view=view, _memo=memo):
+            if t_ not in _memo:
+                _memo[t_] = poses_at(_view, designs, _beat["t_start"] + t_) or []
+            return _memo[t_]
+        end = max(a, min(b, beat["t_end"] - beat["t_start"]) - 1e-3)
+        times = [a + i / 4.0 for i in range(int(math.ceil((end - a) * 4 - 1e-9)))] + [end]
+        for lt in times:
+            for it in at(lt):
+                if it[0] == cid:
+                    z = float(it[2].get("z", 0.0))
+                    out["rise"], out["sink"] = max(out["rise"], z), max(out["sink"], -z)
+            for ob, _x, y, _st, own, _h in _objects_now(beat, at(lt), lt, at):
+                if own == cid:
+                    low = y - props2d.extent(ob.get("prop", ""), ob.get("scale", 0.55))[0]
+                    out["held"] = low if out["held"] is None else min(out["held"], low)
     return out
 
 
@@ -686,19 +757,10 @@ def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False, came
             _memo[t_] = poses_at(plan, designs, _b["t_start"] + t_) or items
         return _memo[t_]
     avg = sum(xs) / len(xs) if xs else 0.0
-    focus = beat.get("focus")
-    reaction = reaction_target(beat, t)               # tepki planı: replik bitince / uzun replikin ortasında dinleyene kesilir
-    if reaction:
-        focus = reaction
-    elif speaker and speaker in beat["cast"]:       # yakın planda kamera hep o an konuşana bakar (yüz + omuz kadrajda)
-        focus = speaker
+    preset, focus, ph = camera_choice(beat, t)
+    reaction = reaction_target(beat, t)
     fh = designs[focus]["height"] if focus in designs else 1.1
     fx = xs[beat["cast"].index(focus)] if focus in beat["cast"] else avg
-    preset, ph, _shot = shot_cuts.at(beat, lt)   # kurgu listesi: yalnız gerçek kesmeler; yavaş yaklaşma çekim boyunca bir kez ilerler
-    if lt < 1.4 and any(m_["kind"] == "surprise" for m_ in beat["motion"].values()):
-        preset = "xclose"                               # şaşırma anında aşırı yakın plan (yüz dolsun)
-    if reaction:
-        preset = "close"                                # tepki planı her zaman yakın plan
     if speaker and speaker in beat["cast"] and preset in ("close", "xclose") and not reaction:
         fx = xs[beat["cast"].index(speaker)]
     E_cam = E * follow_steadiness(beat, designs, focus, lt) if focus == speaker else 0.0     # vurgu itmesi yalnız duran KONUŞANIN planında: takip planı ve dinleyen planı nabız gibi atmaz
@@ -714,7 +776,7 @@ def frame(plan, designs, t, bible_chars=None, trace=None, poses_only=False, came
         cy, zoom = head_safe_framing(cy, zoom, max((designs[c]["height"] for c in beat["cast"]), default=0.0), sc.BASE_PPM)
     crop = None
     if preset in ("close", "xclose") and focus in designs:           # yakın plan: alt kenar ya ayak zeminini gösterir ya kasıtlı olarak üst bedenden keser
-        cy, zoom, crop = crop_safe_framing(cy, zoom, designs[focus], sc.BASE_PPM, shot_needs(plan, designs, beat, focus), ph, E_cam if preset == "close" else 0.0)
+        cy, zoom, crop = crop_safe_framing(cy, zoom, designs[focus], sc.BASE_PPM, shot_needs(plan, designs, focus, close_run(plan, beat, lt, (preset, focus))), ph, E_cam if preset == "close" else 0.0)
     cam = sc.Cam(cx, cy, zoom)
     if preset == "insert" and beat.get("props"):
         ix, iy = props2d.place(beat["props"][0], xs, [designs[c]["height"] for c in beat["cast"]], t, lt, dur)

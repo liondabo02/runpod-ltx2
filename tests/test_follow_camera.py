@@ -9,6 +9,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(
 import readability  # noqa: E402
 import render2d as r2  # noqa: E402
 import shot_cuts  # noqa: E402
+import shot_planner as sp  # noqa: E402
+import puppet2d as pp  # noqa: E402
 from test_listener_reaction import PROJECTS, make_project  # noqa: E402
 
 
@@ -154,3 +156,89 @@ def test_chunked_window_gets_the_same_edit_as_the_whole_plan(tmp_path, name):
     part = sp.plan(str(root / "ep"), bible, str(root / "assets"), 9, 18)
     assert part["beats"][0]["cut_in"] == whole["beats"][1]["cut_in"]
     assert shot_cuts.shots(part["beats"][0]) == shot_cuts.shots(whole["beats"][1])
+
+
+# ---------------------------------------------------------------- yakın çekimin kadraj ihtiyacı: kesintisiz çekim boyunca tek değer
+def close_chain(tmp_path, name, second="dance", camera_b="yakın", objects=None):
+    """İki sürekli vuruşta aynı yüzde yakın plan; ikinci vuruşta kadrajın bilmesi gereken pay farklı (yerinde dans: baş yükselir)."""
+    plan, designs = make_project(tmp_path, name, ["Bugün hava güzel."])
+    root = tmp_path / name
+    a, b = [c[0] for c in sorted(PROJECTS[name][:2], key=lambda c: -c[3])]       # odak: uzun olan (üst beden kadrajı)
+
+    def row(t0, kind, camera):
+        return {"t_start": t0, "t_end": t0 + 4, "characters": [a, b], "camera": camera, "location": "yer", "action": "Durur.", "scene_id": "S",
+                "choreo": {"motion": {a: {"kind": kind, "x0": -1.0}, b: {"kind": "idle", "x0": 1.2}}}}
+    sheet = {"beats": [row(0, "idle", "yakın"), row(4, second, camera_b)]}
+    for i, obs in (objects or {}).items():
+        sheet["beats"][i]["choreo"]["objects"] = obs(a)
+    (root / "ep" / "beat_sheet.json").write_text(json.dumps(sheet, ensure_ascii=False), encoding="utf-8")
+    (root / "ep" / "voice_manifest.json").write_text(json.dumps({"items": []}), encoding="utf-8")
+    bible = {"id": name, "characters": [{"id": c, "name": c.title(), "role": r, "age": g} for c, r, g, _h in PROJECTS[name]]}
+
+    def planned(t0=0, t1=8):
+        out = sp.plan(str(root / "ep"), bible, str(root / "assets"), t0, t1)
+        for pb in out["beats"] + out["context"]:
+            pb["focus"] = a
+        return out
+    return planned, designs, a
+
+
+def per_beat_run(plan, beat, lt, key):
+    """Bozma: eski davranış (kadraj ihtiyacı vuruşun tamamından, her vuruşta ayrı)."""
+    return [(beat, 0.0, beat["t_end"] - beat["t_start"])]
+
+
+def cam_at(plan, designs, t):
+    tr = {}
+    r2.frame(plan, designs, t, trace=tr, camera_only=True)
+    return tr
+
+
+@pytest.mark.parametrize("name", sorted(PROJECTS))
+def test_close_shot_across_a_beat_boundary_has_one_framing_and_per_beat_framing_is_caught(tmp_path, name, monkeypatch):
+    planned, designs, _a = close_chain(tmp_path, name)
+    plan = planned()
+    assert plan["beats"][1]["cut_in"] and cam_at(plan, designs, 3.9)["preset"] == cam_at(plan, designs, 4.1)["preset"] == "close"
+    assert readability.camera_pop_problems(readability.camera_pops(plan, designs)) == []
+    monkeypatch.setattr(r2, "close_run", per_beat_run)               # bozma: vuruş başına kadraj sınırda atlar
+    assert [p for p in readability.camera_pops(plan, designs) if p["kind"] == "edit" and abs(p["t"] - 4.0) < 0.1]
+
+
+@pytest.mark.parametrize("name", sorted(PROJECTS))
+def test_chunk_edge_keeps_the_framing_of_the_shot_that_crosses_it(tmp_path, name):
+    planned, designs, _a = close_chain(tmp_path, name)
+    whole = planned()
+    for t0, t1, t in ((0, 4, 3.5), (4, 8, 4.5)):                         # iki yönde de pencere kenarı
+        part = planned(t0, t1)
+        assert len(part["beats"]) == 1 and part["context"]
+        want, got = cam_at(whole, designs, t)["cam"], cam_at(part, designs, t)["cam"]
+        assert (got.cx, got.cy, got.s) == pytest.approx((want.cx, want.cy, want.s))
+    lone = dict(planned(0, 4), context=[])                          # bozma: komşu verisi yoksa parça farklı kadraj çizer
+    assert cam_at(lone, designs, 3.5)["cam"].s != pytest.approx(cam_at(whole, designs, 3.5)["cam"].s, rel=0.005)
+
+
+@pytest.mark.parametrize("name", sorted(PROJECTS))
+def test_hold_outside_the_close_shot_does_not_open_it_and_per_beat_framing_is_caught(tmp_path, name, monkeypatch):
+    """Y2c: aynı vuruşun SONRAKİ planındaki alçak tutuş, önceki yakın planı genişletmez."""
+    planned, designs, a = close_chain(tmp_path, name, second="idle", camera_b="geniş")
+    sheet_path = tmp_path / name / "ep" / "beat_sheet.json"
+    sheet = json.loads(sheet_path.read_text(encoding="utf-8"))
+    one = sheet["beats"][0]
+    one["t_end"] = 8                                                     # tek uzun vuruş: 0-3.5 yakın, sonrası başka plan
+    sheet["beats"] = [one]
+
+    def head_share(track_start):
+        """1.5 sn yakın plandaki (kip, oyuncu boyu / kare yüksekliği); kürek track_start'tan sonra elde."""
+        track = [{"t": 0, "holder": a}] if track_start == 0.0 else [{"t": 0, "at": [-1.4, 0.0]}, {"t": track_start, "at": [-1.4, 0.0]}, {"t": track_start + 0.6, "holder": a}] if track_start else []
+        one["choreo"]["objects"] = [{"prop": "shovel", "track": track + [{"t": 8.0, "holder": a}]}] if track else []
+        sheet_path.write_text(json.dumps(sheet, ensure_ascii=False), encoding="utf-8")
+        tr = cam_at(planned(), designs, 1.5)
+        assert tr["preset"] == "close"
+        return tr["crop"], designs[a]["height"] * tr["cam"].s / pp.H
+
+    free = head_share(None)
+    assert cam_at(planned(), designs, 5.0)["preset"] != "close"
+    assert head_share(5.5)[1] == pytest.approx(free[1])                  # sonraki plandaki tutuş yakın planı etkilemez
+    assert head_share(0.0)[1] < free[1] - 0.05                            # tutuş çekimin İÇİNDEYSE kadraj açılır
+    monkeypatch.setattr(r2, "close_run", per_beat_run)                   # bozma: eski, vuruşun tamamına bakan kadraj
+    assert head_share(5.5)[1] < free[1] - 0.05

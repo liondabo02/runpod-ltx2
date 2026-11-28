@@ -93,13 +93,11 @@ def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
         h = des_[ch["id"]]["height"] if ch["id"] in des_ else spec_height(assets_dir, ch["id"])
         out["characters"][ch["id"]] = {"glb": glb, "height": h, "name": names[ch["id"]]}
     reach_fn_ = (lambda a, xa, b, xb: _pp.handoff_reach_ratio(des_[a], xa, des_[b], xb)) if _pp is not None and des_ else None
-    world_x_ = {}; world_obj_ = {}; prev_meta_ = None; prev_beat_ = None       # birikmiş dünya durumu: kadraj dışındaki oyuncu/nesne de korunur
+    world_x_ = {}; world_obj_ = {}; prev_meta_ = None; prev_beat_ = None; every_ = []       # birikmiş dünya durumu: kadraj dışındaki oyuncu/nesne de korunur
     locs_ = setpieces2d.load_locations(os.path.dirname(os.path.abspath(assets_dir)))        # proje verisi: mekân -> dekor parçaları (motor mekân adlarını bilmez)
     for bi, b in enumerate(sheet["beats"]):
         ts, te = float(b["t_start"]), float(b["t_end"])
-        if ts >= t1:
-            break
-        in_win = te > t0                                                # pencere öncesi planlar da hesaplanır (durum taşınır), çıktıya yazılmaz
+        in_win = te > t0 and ts < t1                                    # pencere öncesi planlar da hesaplanır (durum taşınır), çıktıya yazılmaz
         cast = [c for c in b.get("characters", []) if c in out["characters"]]
         lines = [{"char": it["char"], "start": ts + it["start_s"], "end": ts + it["start_s"] + float(it["duration_s"]),
                   "cues": load_cues(episode_dir, it), "mood": mood_engine.mood_for(it.get("text")) if mood_engine else "neutral"}
@@ -173,6 +171,10 @@ def plan(episode_dir, bible, assets_dir, t0, t1, fps=None, size=(1280, 720)):
             out["beats"][-1]["camera"] = "insert"
         shot_cuts.link(prev_beat_, out["beats"][-1])                  # kurgu sürekliliği pencere öncesi vuruşlardan da taşınır
         prev_beat_ = out["beats"][-1]
+        every_.append((prev_beat_, in_win))
         if not in_win:
             out["beats"].pop()
+        if ts >= t1 and not (len(every_) > 1 and shot_cuts.continues(every_[-2][0], prev_beat_)):
+            break                                                       # pencere sonrası yalnız kesintisiz süren komşular okunur
+    out["context"] = shot_cuts.window_context(every_)       # pencere kenarında süren çekimin komşuları: parça parça üretimde kadraj aynı kalır
     return out
