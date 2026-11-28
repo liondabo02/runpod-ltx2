@@ -488,6 +488,10 @@ def apply_handoff_reach(beat, items, lt):
             for who, drop in zip((ga, ra), pp.kneel_drops(ga[1], ra[1])):
                 if drop > 0.0 and wc > 0.0:
                     who[2]["crouch"] = max(who[2].get("crouch", 0.0), drop * wc); who[2]["head"][0] += 0.12 * wc * min(1.0, drop / (0.1 * who[1]["height"]))
+            for who in (ga, ra):
+                if who[2].get("crouch", 0.0) > 0.0 and pp.view_of(who[2]) != "side":
+                    for side in "LR":
+                        pp.keep_hand_off_feet(who[1], who[2], side, wc)
             gx, gh = pp.shoulder_offset(ga[1], ga[2], sg_); rx, rh = pp.shoulder_offset(ra[1], ra[2], sr_)
             span = 2.0 * object_state.grip_of(ob.get("prop", ""), ob.get("scale", 0.55))          # kavrama noktası nesnenin ortası sayılır
             ha_, hb_ = pp.grip_points(ga[1], (xg + gx, gh), ra[1], (xr + rx, rh), span)

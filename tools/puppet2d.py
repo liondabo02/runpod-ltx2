@@ -596,6 +596,23 @@ def hand_offset(des, pose, side):
     return shx + sg * math.sin(ang) * ln, -(shy + math.cos(ang) * ln)
 
 
+# ---------------------------------------------------------------- çömelirken boştaki el (H25)
+CROUCH_HAND_H_K = 0.17      # çömelen oyuncunun sarkan eli yerden en az boyun bu katı yüksekte durur (ayakkabının üstüne inmez)
+CROUCH_HAND_OUT_K = 0.075   # ve omuzdan boyun bu katı kadar dışarı açılır (dirsek bükülür, bacak açıkta kalır)
+CROUCH_HAND_FADE_K = 0.04   # alçaklık bu aralıkta ağırlığa döner (eşikte sıçrama olmaz)
+
+
+def keep_hand_off_feet(des, pose, side, w):
+    """Çömelme omzu alçalttığı için sarkan el ayağa iner: yalnız alçak kalan kol, çömelme ağırlığı w ile yana-yukarı alınır.
+    Zaten yüksekte olan (taşıyan, tutan, jest yapan) kola dokunulmaz."""
+    Hh = des["height"]; target = CROUCH_HAND_H_K * Hh
+    low = (target - hand_offset(des, pose, side)[1]) / (CROUCH_HAND_FADE_K * Hh)
+    k = max(0.0, min(1.0, w)) * max(0.0, min(1.0, low))
+    if k > 0.0:
+        sg = -1 if side == "L" else 1
+        arm_blend(des, pose, side, shoulder_offset(des, pose, side)[0] + sg * CROUCH_HAND_OUT_K * Hh, target, k)
+
+
 def draw_turn_arm(cv, sh, elb, hand, Hh, skin, shirt, ow, k=1.0):
     """Dönüş sırasındaki kol (iki parça). Kol düzken düz çizimle aynı siluet (kısa yen kolun %42'sinde biter)."""
     cv.capsule(sh, elb, Hh * 0.036, Hh * 0.031, shade(skin, k), INK, ow); cv.capsule(elb, hand, Hh * 0.031, Hh * 0.029, shade(skin, k), INK, ow)
