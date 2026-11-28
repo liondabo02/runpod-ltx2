@@ -11,7 +11,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SCHEMA = "ahos.clip_inputs.v1"
 ENV_KEYS = ("AHOS_STYLE", "AHOS_ALLOW_ESTIMATED_VOICE")
 EPISODE_FILES = ("beat_sheet.json", "voice_manifest.json")
-SERIES_FILES = ("series-bible.json", "locations.json")
+SERIES_FILES = ("series-bible.json", "locations.json", "action_cues.json")
 
 
 def file_sha(path):

@@ -1,0 +1,7 @@
+{
+  "point": ["gösterir", "gösteriyor", "gösterdi", "işaret ed"],
+  "take": ["yerden alır", "yerden alıyor", "yerden aldı"],
+  "give": ["uzatır", "uzatıyor", "uzattı"],
+  "release": ["atar", "atıyor", "bırakır", "bırakıyor"],
+  "move": ["yürür", "yürüyor", "koşar", "koşuyor"]
+}

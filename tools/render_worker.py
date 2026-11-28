@@ -73,6 +73,11 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
     json.dump(_dlg, open(os.path.join(rdir, "dialogue_gate.json"), "w", encoding="utf-8"), ensure_ascii=False)
     if _dlg["problems"]:
         return {"status": "BLOCKED", "error": "DIYALOG_EKSIK_VEYA_HATALI", "problems": dialogue_check.messages(_dlg)}
+    import action_trace                                  # izlenebilirlik kapısı: storyboard'un/metnin istediği eylem üretim verisinde yoksa sessizce çizilmez
+    _trace = action_trace.check(sheet, series_dir, t0, t1)
+    json.dump(_trace, open(os.path.join(rdir, "action_trace.json"), "w", encoding="utf-8"), ensure_ascii=False)
+    if _trace["problems"]:
+        return {"status": "BLOCKED", "error": "EYLEM_VERIYE_BAGLANMAMIS", "problems": action_trace.messages(_trace)}
     import object_state, setpieces2d
     _H = {cid: d["height"] for cid, d in pp2.designs_for(bible, assets).items()}      # çizilen boy (planlayıcıyla aynı kaynak)
     locs_ = setpieces2d.load_locations(series_dir)
@@ -239,6 +244,7 @@ def run(episode_dir, bible, t0, t1, series_dir, engine="2d", samples=16, runner=
     man = {"status": "PASSED", "clip": out, "frames": len(pngs), "sec_per_frame": spf, "engine": st.get("engine"),
            "estimate_hours_for_480s": est, "cost_eur": 0, "problems": problems,
            "voice": _dlg["voice"], "draft": _dlg["voice"] == "estimated",           # tahmini süreli sesle çizilen klip taslaktır, teslim değildir
+           "untraced_beats": _trace["untraced_beats"],       # eylem metni hiçbir veriyle denetlenmeyen vuruşlar ('geçti' değil, 'denetlenmedi')
            "note": "yerel render: para harcanmaz, süre harcanır"}
     json.dump(man, open(os.path.join(rdir, "render_manifest.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
     return man
