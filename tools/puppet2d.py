@@ -947,25 +947,25 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
         inner = [(x, y - depth * (0.35 + 0.65 * abs(math.sin((x - hx) / (head_w * 0.5 + 1e-6) * 1.2)) )) for x, y in reversed(jaw)]
         bcol = tuple(int(skin[i_] * 0.62 + hair[i_] * 0.38) for i_ in range(3)) if bd == "stubble" else shade(hair, 0.9)
         cv.poly(jaw + inner, bcol, INK if bd == "full" else None, ow * 0.8)
-    # burun
-    nl_ = lambda k_: face_line(skin, shade(skin, k_))                        # burun çizgisi tenden ayrışır
-    if "nose" in hide:
-        pass
-    elif species == "hedgehog":
-        cv.ellipse(hx + face * head_w * 0.17, head_cy + head_h * 0.10, head_w * 0.075, head_h * 0.06, (40, 30, 30), None, 0)
-    else:
-        nx_, ny_ = hx + face * head_w * 0.22, head_cy + head_h * 0.08; nt_ = des.get("nose", "line")
-        if nt_ == "dot":
-            cv.ellipse(nx_, ny_ + head_h * 0.02, head_w * 0.022, head_h * 0.022, nl_(0.72), None, 0)
-        elif nt_ == "button":
-            cv.ellipse(nx_, ny_ + head_h * 0.015, head_w * 0.04, head_h * 0.035, shade(skin, 0.95), nl_(0.64), 1.6)
-        elif nt_ == "round":
-            cv.ellipse(nx_, ny_ + head_h * 0.02, head_w * 0.062, head_h * 0.05, shade(skin, 0.94), nl_(0.6), 2.0)
-        elif nt_ == "long":
-            cv.line([(nx_ - face * head_w * 0.01, ny_ - head_h * 0.12), (nx_, ny_ + head_h * 0.02)], nl_(0.66), 2.2)
-            cv.line(cv.arc_pts(nx_, ny_ + head_h * 0.03, head_w * 0.05, head_h * 0.035, 0.2, math.pi - 0.2), nl_(0.62), 2.6)
+    def draw_nose():                                                           # gözlükten SONRA çizilir: dönen yüzde burun uzak camın önündedir
+        nl_ = lambda k_: face_line(skin, shade(skin, k_))                        # burun çizgisi tenden ayrışır
+        if "nose" in hide:
+            pass
+        elif species == "hedgehog":
+            cv.ellipse(hx + face * head_w * 0.17, head_cy + head_h * 0.10, head_w * 0.075, head_h * 0.06, (40, 30, 30), None, 0)
         else:
-            cv.line(cv.arc_pts(nx_, ny_, head_w * 0.035, head_h * 0.04, 0.3, math.pi - 0.3), nl_(0.62), 2.6)
+            nx_, ny_ = hx + face * head_w * 0.22, head_cy + head_h * 0.08; nt_ = des.get("nose", "line")
+            if nt_ == "dot":
+                cv.ellipse(nx_, ny_ + head_h * 0.02, head_w * 0.022, head_h * 0.022, nl_(0.72), None, 0)
+            elif nt_ == "button":
+                cv.ellipse(nx_, ny_ + head_h * 0.015, head_w * 0.04, head_h * 0.035, shade(skin, 0.95), nl_(0.64), 1.6)
+            elif nt_ == "round":
+                cv.ellipse(nx_, ny_ + head_h * 0.02, head_w * 0.062, head_h * 0.05, shade(skin, 0.94), nl_(0.6), 2.0)
+            elif nt_ == "long":
+                cv.line([(nx_ - face * head_w * 0.01, ny_ - head_h * 0.12), (nx_, ny_ + head_h * 0.02)], nl_(0.66), 2.2)
+                cv.line(cv.arc_pts(nx_, ny_ + head_h * 0.03, head_w * 0.05, head_h * 0.035, 0.2, math.pi - 0.2), nl_(0.62), 2.6)
+            else:
+                cv.line(cv.arc_pts(nx_, ny_, head_w * 0.035, head_h * 0.04, 0.3, math.pi - 0.3), nl_(0.62), 2.6)
     # ağız
     mouth_letter = st.get("mouth", "X")
     if emo == "laugh" and mouth_letter == "X":
@@ -1032,6 +1032,7 @@ def draw_character(cv, des, pose, st, fx, fy, ppm, t=0.0):
             cv.line(cv.arc_pts(eyes_x[sg], eye_y, gr, ery * 1.2 + ow * 0.5, 0, 2 * math.pi, 28), INK, ow)
         if eyes_x[-1] + gr < eyes_x[1] - gr:
             cv.line([(eyes_x[-1] + gr, eye_y), (eyes_x[1] - gr, eye_y)], INK, ow)
+    draw_nose()
     if acc == "hat":
         brim_y = min(top + head_h * 0.06, hw_limit - head_h * 0.10)
         cv.ellipse(hx, brim_y, head_w * 0.62, head_h * 0.10, shade(des["accent"], 0.85), INK, ow)
