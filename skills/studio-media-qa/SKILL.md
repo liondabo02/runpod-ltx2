@@ -25,3 +25,14 @@ Makine-okur JSON: her kontrol için `ok`, sayısal değer, eşik, gerekçe.
 - Eşiği düşürerek PASS üretmek.
 - Ölçüm yokken tahmini puan vermek.
 - Teknik PASS'i profesyonel kalite sanmak.
+
+<!-- MOTORLAR:BASLA (tools/engine_gaps.py --write-skills yazar; elle düzenleme) -->
+## Motorlar ve yetenekler (gerçek araçlar)
+
+Bu işçinin kullandığı motorlar ve her yeteneğin kanıttan hesaplanan durumu.
+Eksik yetenek için önce açık görevi Yazılım Şirketi'ne bildir; olmayan aracı varmış gibi kullanma.
+
+- QA-01 Video teknik denetimi [VAR]: `tools/video_qa.py`
+- QA-02 Ses teknik denetimi (konuşma, seviye) [VAR]: `tools/audio_qa.py`
+- QA-07 Parçalı üretimde ses/kare sürekliliği [YOK]: araç yok — açık: Q11
+<!-- MOTORLAR:BITIS -->

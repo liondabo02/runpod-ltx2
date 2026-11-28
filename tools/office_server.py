@@ -26,6 +26,7 @@ WORKERS = [
     ("audio_polish", "Ses Mühendisi", "TTS sessizlik kırpma, seviye eşitleme, senkron", True),
     ("script_enrich", "Senaryo Zenginleştirici", "senaryoyu bozmadan tepki/şaka/arka plan ekler (onaya sunar)", True),
     ("standards", "Kalite Standardı Denetçisi", "2D kalite kapıları: yüz, ses, senkron, müzik, kurgu", True),
+    ("software", "Yazılım Şirketi", "motorları geliştirir: eksiği bulur, düzeltir, kırmızı-yeşil testle kabul eder", True),
 ]
 
 def jobs():

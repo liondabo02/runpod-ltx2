@@ -7,7 +7,8 @@ sys_path_ok = __import__('sys').path.insert(0, os.path.dirname(os.path.abspath(_
 import llm_guard  # noqa: E402
 
 # Çalışırken canlı bildirim gönderen işçiler (motor kodunda bağlı). Diğerleri için ofis 'çalışıyor' diyemez.
-INSTRUMENTED = ("showrunner", "director", "writers_room", "validator", "voice", "animatic", "character", "render", "video_qa")
+INSTRUMENTED = ("showrunner", "director", "writers_room", "validator", "voice", "animatic", "character", "render", "video_qa",
+                "software")  # software: daldaki gerçek commit'ler (tools/software_dept.py ofis-senkron)
 
 
 def derive(workers, events, running_ids, alive, now):

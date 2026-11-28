@@ -28,3 +28,14 @@ when_to_use: 30 saniyeden uzun veya 8 dakikalık çok sahneli bölüm üretilece
 - 1 dakikalık klibi döngüyle 8 dakika saymak.
 - Başarısız sahnede tüm bölümü baştan üretmek.
 - Bütçe aşımını gizlemek.
+
+<!-- MOTORLAR:BASLA (tools/engine_gaps.py --write-skills yazar; elle düzenleme) -->
+## Motorlar ve yetenekler (gerçek araçlar)
+
+Bu işçinin kullandığı motorlar ve her yeteneğin kanıttan hesaplanan durumu.
+Eksik yetenek için önce açık görevi Yazılım Şirketi'ne bildir; olmayan aracı varmış gibi kullanma.
+
+- URE-01 Bölüm en az 8 dakika kapısı [VAR]: `tools/episode_length.py`
+- URE-02 İş defteri: mükerrer iş ve yarış engeli [VAR]: `tools/job_ledger.py`
+- URE-05 İki farklı projeyle kaynak değişmeden uçtan uca üretim [YOK]: araç yok — açık: U1
+<!-- MOTORLAR:BITIS -->

@@ -31,3 +31,12 @@ when_to_use: Karakterin yüzü/kimliği korunarak yürüme, el sallama, göz kı
 - Tek PNG'yi kaydırarak yürüyüş/oyunculuk taklidi.
 - Onaysız yüzü "onaylı karakter" diye sunmak.
 - Kapı eşiklerini düşürmek.
+
+<!-- MOTORLAR:BASLA (tools/engine_gaps.py --write-skills yazar; elle düzenleme) -->
+## Motorlar ve yetenekler (gerçek araçlar)
+
+Bu işçinin kullandığı motorlar ve her yeteneğin kanıttan hesaplanan durumu.
+Eksik yetenek için önce açık görevi Yazılım Şirketi'ne bildir; olmayan aracı varmış gibi kullanma.
+
+- KAR-04 Model sayfası / dönüş görünümleri [VAR]: `tools/turn_sheet.py`
+<!-- MOTORLAR:BITIS -->

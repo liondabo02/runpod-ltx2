@@ -106,7 +106,7 @@ const ROOMS=[
  {n:'Müzik Odası',s:'tema, efekt sesi',w:['music_sfx','score_engine']},
  {n:'Kalite Salonu',s:'izle, ölç, denetle',w:['video_qa','standards','agent_doctor']},
  {n:'Hukuk, Para, Yayın',s:'lisans, bütçe, dağıtım',w:['rights','finance','distribution','analytics']},
- {n:'Kütüphane',s:'araştırma ve gözlem',w:['research','task_observer']}
+ {n:'Kütüphane ve Yazılım',s:'araştırma, gözlem, motor geliştirme',w:['research','task_observer','software']}
 ];
 const LOOK={
  showrunner:{sk:'#e6b996',h:'#2d2018',hs:'long',g:1,o:'#2f3e5c'}, director:{sk:'#d9a47c',h:'#1e1712',hs:'short',b:'full',o:'#6a2c2c'},
@@ -120,7 +120,8 @@ const LOOK={
  task_observer:{sk:'#e0ae86',h:'#222222',hs:'bald',b:'full',g:1,o:'#6b6b6b'}, agent_doctor:{sk:'#ecc7a4',h:'#4b2a20',hs:'bun',o:'#f2f2f0'},
  score_engine:{sk:'#b87c55',h:'#150f0c',hs:'curly',hp:1,o:'#2e5b45'}, fx_layer:{sk:'#f2d2b6',h:'#8c3a2a',hs:'wavy',o:'#7b4aa0'},
  audio_polish:{sk:'#dba982',h:'#2a1d16',hs:'short',hp:1,o:'#3a4d63'}, script_enrich:{sk:'#e7bf9b',h:'#2e2030',hs:'hijab',o:'#a8663a'},
- standards:{sk:'#d5a07a',h:'#4a4a4a',hs:'short',g:1,b:'stub',o:'#304a6b'}
+ standards:{sk:'#d5a07a',h:'#4a4a4a',hs:'short',g:1,b:'stub',o:'#304a6b'},
+ software:{sk:'#c99470',h:'#1d1a17',hs:'short',g:1,hp:1,o:'#2f5f4f'}
 };
 function shade(c,k){const n=parseInt(c.slice(1),16);let r=(n>>16)&255,g=(n>>8)&255,b=n&255;[r,g,b]=[r,g,b].map(v=>Math.max(0,Math.min(255,v*k)));return'#'+[r,g,b].map(v=>Math.round(v).toString(16).padStart(2,'0')).join('')}
 function person(id,uid){

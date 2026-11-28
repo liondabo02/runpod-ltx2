@@ -28,3 +28,16 @@ when_to_use: Diyalog, anlatım, dublaj veya ağız-ses eşleşmesi gerektiğinde
 - Yetişkin sesi pitch ile inceltip "doğal çocuk sesi" demek.
 - Sessiz videoyu sesli teslim saymak.
 - Lisansı belirsiz ses modeli kullanmak.
+
+<!-- MOTORLAR:BASLA (tools/engine_gaps.py --write-skills yazar; elle düzenleme) -->
+## Motorlar ve yetenekler (gerçek araçlar)
+
+Bu işçinin kullandığı motorlar ve her yeteneğin kanıttan hesaplanan durumu.
+Eksik yetenek için önce açık görevi Yazılım Şirketi'ne bildir; olmayan aracı varmış gibi kullanma.
+
+- SES-01 Dudak senkronu (ağız sesten biraz önce açılır) [VAR]: `tools/render2d.py`
+- SES-02 Karakter başına sabit, ayırt edilir ses kimliği [KISMI, insan onayı]: `tools/voice_identity.py` — açık: A3
+- SES-07 Nefes ve tepki sesleri (gülme, iç çekme, şaşırma) [YOK]: araç yok
+- SES-08 Doğal insan sesine yakın seslendirme (ücretsiz motor) [KISMI, insan onayı]: `tools/voice_backend.py` — açık: A1, A3
+- YER-03 Dublaj dilinde dudak senkronu [YOK]: araç yok
+<!-- MOTORLAR:BITIS -->

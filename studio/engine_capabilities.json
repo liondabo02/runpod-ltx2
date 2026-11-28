@@ -1,0 +1,1191 @@
+{
+ "surum": 1,
+ "aciklama": "AHOS motor yetenek haritası. Durum elle yazılmaz: tools/engine_gaps.py kanıtı (modül + sembol/desen + modülü anan test dosyası) denetleyerek hesaplar. Yeni yetenek eklemek için buraya satır ekle; 'kanit' boşsa yetenek YOK sayılır.",
+ "kaynaklar": [
+  "docs/2D_KALITE_STANDARDI.md",
+  "Project: claude/gorev_kuyrugu.md",
+  "Project: claude/motor_haritasi_2026-11-27.md"
+ ],
+ "yetenekler": [
+  {
+   "id": "SEN-01",
+   "motor": "senaryo",
+   "isci": "writers_room",
+   "skill": "studio-screenwriting",
+   "yetenek": "Sahip senaryosundan sadık vuruşlar (replik/süre/karakter değişmez)",
+   "kanit": [
+    {
+     "modul": "tools/script_to_beats.py",
+     "sembol": "build"
+    }
+   ],
+   "test": []
+  },
+  {
+   "id": "SEN-02",
+   "motor": "senaryo",
+   "isci": "script_enrich",
+   "skill": "studio-screenwriting",
+   "yetenek": "Senaryoyu bozmadan zenginleştirme (tepki/şaka/arka plan), onaya sunulur",
+   "kanit": [
+    {
+     "modul": "tools/script_enrich.py",
+     "sembol": "enrich"
+    }
+   ],
+   "test": [
+    "tests/test_quality_upgrade.py"
+   ],
+   "insan_onayi": true
+  },
+  {
+   "id": "SEN-03",
+   "motor": "senaryo",
+   "isci": "writers_room",
+   "skill": "studio-screenwriting",
+   "yetenek": "Dizi hafızası ve kanon kilidi (bölümler arası tutarlılık)",
+   "kanit": [
+    {
+     "modul": "tools/series_memory.py",
+     "sembol": "lock_canon"
+    }
+   ],
+   "test": [
+    "tests/test_support_agents.py"
+   ]
+  },
+  {
+   "id": "SEN-04",
+   "motor": "senaryo",
+   "isci": "writers_room",
+   "skill": "studio-screenwriting",
+   "yetenek": "Yaz-eleştir-düzelt döngüsü",
+   "kanit": [
+    {
+     "modul": "tools/writers_room.py",
+     "sembol": "critique"
+    }
+   ],
+   "test": [
+    "tests/test_self_improve.py"
+   ]
+  },
+  {
+   "id": "SEN-05",
+   "motor": "senaryo",
+   "isci": "validator",
+   "skill": "studio-screenwriting",
+   "yetenek": "Konu -> senaryo -> sahne -> üretim -> QA izlenebilirliği",
+   "kanit": [
+    {
+     "modul": "tools/action_trace.py",
+     "sembol": "check"
+    }
+   ],
+   "test": [
+    "tests/test_action_trace.py"
+   ],
+   "acik_gorev": [
+    "P1",
+    "P1a"
+   ]
+  },
+  {
+   "id": "SEN-06",
+   "motor": "senaryo",
+   "isci": "validator",
+   "skill": "studio-screenwriting",
+   "yetenek": "Ayrı senaryo kalite değerlendirmesi (rubrik; üretenden bağımsız)",
+   "kanit": [],
+   "test": [],
+   "acik_gorev": [
+    "P1"
+   ]
+  },
+  {
+   "id": "SEN-07",
+   "motor": "senaryo",
+   "isci": "writers_room",
+   "skill": "studio-screenwriting",
+   "yetenek": "Çocuk programı yazım kalıpları ölçüsü (tekrar, çağrı-cevap, ödül anı)",
+   "kanit": [],
+   "test": [],
+   "not": "2D standardı §2.9; ölçü yok"
+  },
+  {
+   "id": "SEN-08",
+   "motor": "senaryo",
+   "isci": "rights",
+   "skill": "studio-rights-licence",
+   "yetenek": "Özgünlük denetimi (bilinen esere benzerlik)",
+   "kanit": [
+    {
+     "modul": "tools/originality_check.py",
+     "sembol": "check"
+    }
+   ],
+   "test": [
+    "tests/test_style_adapt.py"
+   ]
+  },
+  {
+   "id": "KAR-01",
+   "motor": "karakter",
+   "isci": "character",
+   "skill": "studio-character-design",
+   "yetenek": "Karakter yüzleri birbirinden ayrışır (özellik mesafesi ölçüsü)",
+   "kanit": [
+    {
+     "modul": "tools/studio_standards_check.py",
+     "sembol": "face_distinctness"
+    }
+   ],
+   "test": [
+    "tests/test_quality_upgrade.py"
+   ],
+   "acik_gorev": [
+    "Q3"
+   ]
+  },
+  {
+   "id": "KAR-02",
+   "motor": "karakter",
+   "isci": "character",
+   "skill": "studio-character-design",
+   "yetenek": "Yaş/boy oranlı tasarım tek kaynaktan",
+   "kanit": [
+    {
+     "modul": "tools/puppet2d.py",
+     "sembol": "designs_for"
+    }
+   ],
+   "test": [
+    "tests/test_height_source.py"
+   ]
+  },
+  {
+   "id": "KAR-03",
+   "motor": "karakter",
+   "isci": "character",
+   "skill": "studio-character-design",
+   "yetenek": "Siluet testi (gölge halinde bile tanınma)",
+   "kanit": [],
+   "test": [],
+   "not": "2D standardı §2.3; ölçü yok"
+  },
+  {
+   "id": "KAR-04",
+   "motor": "karakter",
+   "isci": "character",
+   "skill": "studio-character-rig",
+   "yetenek": "Model sayfası / dönüş görünümleri",
+   "kanit": [
+    {
+     "modul": "tools/turn_sheet.py",
+     "sembol": "sheet"
+    }
+   ],
+   "test": [
+    "tests/test_side_view.py"
+   ]
+  },
+  {
+   "id": "KAR-05",
+   "motor": "karakter",
+   "isci": "character",
+   "skill": "studio-character-design",
+   "yetenek": "Yüz okunurluğu (ten, gözlük, yaş) ölçü ve kapısı",
+   "kanit": [
+    {
+     "modul": "tools/face_visibility.py",
+     "sembol": "check_designs"
+    }
+   ],
+   "test": [
+    "tests/test_face_readability.py",
+    "tests/test_glasses_face.py"
+   ],
+   "insan_onayi": true
+  },
+  {
+   "id": "ANI-01",
+   "motor": "animasyon",
+   "isci": "render",
+   "skill": "studio-animation-acting",
+   "yetenek": "Yürüyüşte basılı ayak, ayak kayması ölçü ve kapısı",
+   "kanit": [
+    {
+     "modul": "tools/foot_slide.py",
+     "sembol": "check"
+    },
+    {
+     "modul": "tools/readability.py",
+     "sembol": "foot_slides"
+    }
+   ],
+   "test": [
+    "tests/test_foot_slide.py",
+    "tests/test_planted_feet.py"
+   ],
+   "acik_gorev": [
+    "H6b",
+    "H27",
+    "H28"
+   ]
+  },
+  {
+   "id": "ANI-02",
+   "motor": "animasyon",
+   "isci": "render",
+   "skill": "studio-animation-acting",
+   "yetenek": "Poz geçişi sıçramasız (poz sıçraması kapısı)",
+   "kanit": [
+    {
+     "modul": "tools/pose_blend.py",
+     "sembol": "blend"
+    },
+    {
+     "modul": "tools/readability.py",
+     "sembol": "pose_jumps"
+    }
+   ],
+   "test": [
+    "tests/test_pose_jumps.py"
+   ],
+   "acik_gorev": [
+    "C2a"
+   ]
+  },
+  {
+   "id": "ANI-03",
+   "motor": "animasyon",
+   "isci": "render",
+   "skill": "studio-animation-acting",
+   "yetenek": "Ezme-esneme (squash & stretch)",
+   "kanit": [
+    {
+     "modul": "tools/puppet2d.py",
+     "desen": "squash"
+    }
+   ],
+   "test": [],
+   "not": "yalnız zıplamada gövde ezmesi; ölçü/test yok"
+  },
+  {
+   "id": "ANI-04",
+   "motor": "animasyon",
+   "isci": "render",
+   "skill": "studio-animation-acting",
+   "yetenek": "Hazırlık (anticipation) ve toparlanma ölçüsü",
+   "kanit": [
+    {
+     "modul": "tools/motion_continuity.py",
+     "sembol": "stance_report"
+    }
+   ],
+   "test": [
+    "tests/test_walk_stance.py"
+   ]
+  },
+  {
+   "id": "ANI-05",
+   "motor": "animasyon",
+   "isci": "render",
+   "skill": "studio-animation-acting",
+   "yetenek": "Takip ve bindirme (saç, kulak, giysi gecikmesi)",
+   "kanit": [],
+   "test": [],
+   "not": "yalnız atış kolu takibi var (H3); genel takip/bindirme yok"
+  },
+  {
+   "id": "ANI-06",
+   "motor": "animasyon",
+   "isci": "render",
+   "skill": "studio-animation-acting",
+   "yetenek": "İkincil hareket (ana eylemi destekleyen küçük hareketler)",
+   "kanit": [],
+   "test": [],
+   "not": "2D standardı §2.1"
+  },
+  {
+   "id": "ANI-07",
+   "motor": "animasyon",
+   "isci": "render",
+   "skill": "studio-animation-acting",
+   "yetenek": "Hareketli tutuş (beklerken nefes/salınım)",
+   "kanit": [
+    {
+     "modul": "tools/shot_motion.py",
+     "sembol": "sway_envelope"
+    }
+   ],
+   "test": [],
+   "not": "testi yok"
+  },
+  {
+   "id": "ANI-08",
+   "motor": "animasyon",
+   "isci": "render",
+   "skill": "studio-animation-acting",
+   "yetenek": "Göz kırpma (şaşırmada kırpmama dahil)",
+   "kanit": [
+    {
+     "modul": "tools/render2d.py",
+     "sembol": "blink_at"
+    }
+   ],
+   "test": [
+    "tests/test_action_gaze.py"
+   ]
+  },
+  {
+   "id": "ANI-09",
+   "motor": "animasyon",
+   "isci": "render",
+   "skill": "studio-animation-acting",
+   "yetenek": "Bakış: eylemi izleme, önce bak sonra konuş",
+   "kanit": [
+    {
+     "modul": "tools/listener_reaction.py",
+     "sembol": "target"
+    }
+   ],
+   "test": [
+    "tests/test_listener_reaction.py"
+   ],
+   "acik_gorev": [
+    "H14"
+   ]
+  },
+  {
+   "id": "ANI-10",
+   "motor": "animasyon",
+   "isci": "render",
+   "skill": "studio-animation-acting",
+   "yetenek": "Dinleyen karakterin tepkisi",
+   "kanit": [
+    {
+     "modul": "tools/listener_reaction.py",
+     "sembol": "performance"
+    }
+   ],
+   "test": [
+    "tests/test_listener_reaction.py"
+   ],
+   "insan_onayi": true
+  },
+  {
+   "id": "ANI-11",
+   "motor": "animasyon",
+   "isci": "render",
+   "skill": "studio-animation-acting",
+   "yetenek": "Önden/üç-çeyrekten profile yumuşak dönüş",
+   "kanit": [
+    {
+     "modul": "tools/puppet_side.py",
+     "sembol": "hand_offset"
+    }
+   ],
+   "test": [
+    "tests/test_side_view.py"
+   ],
+   "acik_gorev": [
+    "C2a",
+    "H23",
+    "H18"
+   ]
+  },
+  {
+   "id": "ANI-12",
+   "motor": "animasyon",
+   "isci": "render",
+   "skill": "studio-animation-acting",
+   "yetenek": "Duygu ifadesi (kaş, ağız, göz)",
+   "kanit": [
+    {
+     "modul": "tools/puppet2d.py",
+     "sembol": "draw_mouth"
+    }
+   ],
+   "test": [
+    "tests/test_puppet2d.py",
+    "tests/test_profile_face.py"
+   ],
+   "acik_gorev": [
+    "H24"
+   ],
+   "insan_onayi": true
+  },
+  {
+   "id": "ANI-13",
+   "motor": "animasyon",
+   "isci": "render",
+   "skill": "studio-animation-acting",
+   "yetenek": "Nesne tutma, devir, atış, bırakma",
+   "kanit": [
+    {
+     "modul": "tools/continuity.py",
+     "sembol": "carry_starts"
+    },
+    {
+     "modul": "tools/readability.py",
+     "sembol": "object_jumps"
+    }
+   ],
+   "test": [
+    "tests/test_contact_matrix.py",
+    "tests/test_continuity_world.py"
+   ],
+   "acik_gorev": [
+    "C3a",
+    "C3b",
+    "C3c",
+    "C3d",
+    "C3e",
+    "C3f",
+    "C3g",
+    "C3h"
+   ]
+  },
+  {
+   "id": "SES-01",
+   "motor": "ses",
+   "isci": "voice",
+   "skill": "studio-voice-lipsync",
+   "yetenek": "Dudak senkronu (ağız sesten biraz önce açılır)",
+   "kanit": [
+    {
+     "modul": "tools/render2d.py",
+     "sembol": "_mouth"
+    }
+   ],
+   "test": [
+    "tests/test_profile_face.py"
+   ],
+   "not": "2D standardı: ses-ağız farkı <= 80 ms ölçüsü gerçek sesle Windows'ta doğrulanmalı"
+  },
+  {
+   "id": "SES-02",
+   "motor": "ses",
+   "isci": "voice",
+   "skill": "studio-voice-lipsync",
+   "yetenek": "Karakter başına sabit, ayırt edilir ses kimliği",
+   "kanit": [
+    {
+     "modul": "tools/voice_identity.py",
+     "sembol": "derive"
+    }
+   ],
+   "test": [
+    "tests/test_voice_identity.py"
+   ],
+   "acik_gorev": [
+    "A3"
+   ],
+   "insan_onayi": true
+  },
+  {
+   "id": "SES-03",
+   "motor": "ses",
+   "isci": "audio_polish",
+   "skill": "studio-editing-sound",
+   "yetenek": "Ses temizleme: sessizlik kırpma, seviye eşitleme",
+   "kanit": [
+    {
+     "modul": "tools/audio_polish.py",
+     "sembol": "polish_wav"
+    }
+   ],
+   "test": [
+    "tests/test_quality_upgrade.py"
+   ]
+  },
+  {
+   "id": "SES-04",
+   "motor": "ses",
+   "isci": "music_sfx",
+   "skill": "studio-editing-sound",
+   "yetenek": "Foley (adım, kapı, kumaş) olaydan türetilir",
+   "kanit": [
+    {
+     "modul": "tools/sfx_events.py",
+     "sembol": "cues_from_beats"
+    }
+   ],
+   "test": [
+    "tests/test_sfx_events.py"
+   ],
+   "acik_gorev": [
+    "C3f"
+   ]
+  },
+  {
+   "id": "SES-05",
+   "motor": "ses",
+   "isci": "music_sfx",
+   "skill": "studio-editing-sound",
+   "yetenek": "Ortam sesi (mekâna göre ambiyans katmanı)",
+   "kanit": [],
+   "test": [],
+   "not": "2D standardı §2.6"
+  },
+  {
+   "id": "SES-06",
+   "motor": "ses",
+   "isci": "audio_polish",
+   "skill": "studio-editing-sound",
+   "yetenek": "Diyalogda müziğin kısılması (ducking) ve ölçüsü",
+   "kanit": [
+    {
+     "modul": "tools/audio_qa.py",
+     "sembol": "ducking_db"
+    }
+   ],
+   "test": [
+    "tests/test_audio_qa.py"
+   ]
+  },
+  {
+   "id": "SES-07",
+   "motor": "ses",
+   "isci": "voice",
+   "skill": "studio-voice-lipsync",
+   "yetenek": "Nefes ve tepki sesleri (gülme, iç çekme, şaşırma)",
+   "kanit": [],
+   "test": [],
+   "not": "2D standardı §2.6"
+  },
+  {
+   "id": "SES-08",
+   "motor": "ses",
+   "isci": "voice",
+   "skill": "studio-voice-lipsync",
+   "yetenek": "Doğal insan sesine yakın seslendirme (ücretsiz motor)",
+   "kanit": [
+    {
+     "modul": "tools/voice_backend.py",
+     "sembol": "world_transform"
+    }
+   ],
+   "test": [
+    "tests/test_voice_backend.py"
+   ],
+   "acik_gorev": [
+    "A1",
+    "A3"
+   ],
+   "insan_onayi": true,
+   "not": "teknik ölçü doğallığı kanıtlamaz; insan dinlemesi gerekir"
+  },
+  {
+   "id": "MUZ-01",
+   "motor": "muzik",
+   "isci": "score_engine",
+   "skill": "studio-editing-sound",
+   "yetenek": "Dizinin ana teması her bölümde geri gelir",
+   "kanit": [
+    {
+     "modul": "tools/score_engine.py",
+     "sembol": "theme"
+    }
+   ],
+   "test": [
+    "tests/test_quality_upgrade.py"
+   ],
+   "insan_onayi": true
+  },
+  {
+   "id": "MUZ-02",
+   "motor": "muzik",
+   "isci": "score_engine",
+   "skill": "studio-editing-sound",
+   "yetenek": "Sahne yoğunluğuna göre müzik",
+   "kanit": [
+    {
+     "modul": "tools/score_engine.py",
+     "sembol": "compose"
+    }
+   ],
+   "test": [
+    "tests/test_quality_upgrade.py"
+   ],
+   "insan_onayi": true
+  },
+  {
+   "id": "MUZ-03",
+   "motor": "muzik",
+   "isci": "score_engine",
+   "skill": "studio-editing-sound",
+   "yetenek": "Sahne geçişinde müzik vurgusu",
+   "kanit": [
+    {
+     "modul": "tools/score_engine.py",
+     "sembol": "whoosh"
+    }
+   ],
+   "test": [],
+   "not": "testi yok"
+  },
+  {
+   "id": "MEK-01",
+   "motor": "mekan",
+   "isci": "render",
+   "skill": "studio-scene-camera",
+   "yetenek": "Çok katmanlı mekân (arka + ön plan)",
+   "kanit": [
+    {
+     "modul": "tools/scenes2d.py",
+     "sembol": "scene_back"
+    },
+    {
+     "modul": "tools/scenes2d.py",
+     "sembol": "scene_front"
+    }
+   ],
+   "test": [
+    "tests/test_props.py"
+   ]
+  },
+  {
+   "id": "MEK-02",
+   "motor": "mekan",
+   "isci": "render",
+   "skill": "studio-scene-camera",
+   "yetenek": "Kamera hareketinde katman paralaksı",
+   "kanit": [],
+   "test": [],
+   "not": "2D standardı §2.4"
+  },
+  {
+   "id": "MEK-03",
+   "motor": "mekan",
+   "isci": "render",
+   "skill": "studio-scene-camera",
+   "yetenek": "Senaryodaki ışık/gün saatine göre mekân",
+   "kanit": [
+    {
+     "modul": "tools/scenes2d.py",
+     "desen": "light"
+    }
+   ],
+   "test": [],
+   "not": "yalnız gün batımı rengi; testi yok"
+  },
+  {
+   "id": "MEK-04",
+   "motor": "mekan",
+   "isci": "render",
+   "skill": "studio-scene-camera",
+   "yetenek": "Renk betiği (sahne duygusuna göre ton)",
+   "kanit": [],
+   "test": [],
+   "not": "2D standardı §2.4"
+  },
+  {
+   "id": "MEK-05",
+   "motor": "mekan",
+   "isci": "fx_layer",
+   "skill": "studio-scene-camera",
+   "yetenek": "Atmosfer parçacıkları ve ışık huzmesi",
+   "kanit": [
+    {
+     "modul": "tools/fx_layer.py",
+     "sembol": "post"
+    }
+   ],
+   "test": [
+    "tests/test_quality_upgrade.py"
+   ]
+  },
+  {
+   "id": "MEK-06",
+   "motor": "mekan",
+   "isci": "render",
+   "skill": "studio-render",
+   "yetenek": "Karakter gölgesi ve ışık yönü",
+   "kanit": [
+    {
+     "modul": "tools/puppet2d.py",
+     "desen": "shadow"
+    }
+   ],
+   "test": [
+    "tests/test_ground_shadow.py"
+   ],
+   "not": "yer gölgesi var; ışık yönüne bağlı gölgelendirme yok"
+  },
+  {
+   "id": "EFX-01",
+   "motor": "efekt",
+   "isci": "fx_layer",
+   "skill": "studio-editing-sound",
+   "yetenek": "Duygu simgeleri (kalp, yıldız, ter)",
+   "kanit": [
+    {
+     "modul": "tools/fx_layer.py",
+     "sembol": "icons"
+    }
+   ],
+   "test": [
+    "tests/test_quality_upgrade.py"
+   ]
+  },
+  {
+   "id": "EFX-02",
+   "motor": "efekt",
+   "isci": "fx_layer",
+   "skill": "studio-editing-sound",
+   "yetenek": "Sahne geçişleri (iris, silme)",
+   "kanit": [
+    {
+     "modul": "tools/fx_layer.py",
+     "desen": "_iris"
+    }
+   ],
+   "test": [
+    "tests/test_quality_upgrade.py"
+   ]
+  },
+  {
+   "id": "EFX-03",
+   "motor": "efekt",
+   "isci": "fx_layer",
+   "skill": "studio-editing-sound",
+   "yetenek": "Hız çizgileri ve darbe efektleri",
+   "kanit": [],
+   "test": [],
+   "not": "2D standardı §2.5"
+  },
+  {
+   "id": "EFX-04",
+   "motor": "efekt",
+   "isci": "fx_layer",
+   "skill": "studio-editing-sound",
+   "yetenek": "Basışa bağlı yürüme tozu",
+   "kanit": [
+    {
+     "modul": "tools/fx_layer.py",
+     "sembol": "dust"
+    }
+   ],
+   "test": [
+    "tests/test_walk_dust.py"
+   ]
+  },
+  {
+   "id": "KAM-01",
+   "motor": "kamera",
+   "isci": "director",
+   "skill": "studio-scene-camera",
+   "yetenek": "Plan türleri (geniş/orta/yakın/tepki)",
+   "kanit": [
+    {
+     "modul": "tools/shot_planner.py",
+     "sembol": "plan"
+    }
+   ],
+   "test": [
+    "tests/test_engine_v2.py"
+   ]
+  },
+  {
+   "id": "KAM-02",
+   "motor": "kamera",
+   "isci": "director",
+   "skill": "studio-scene-camera",
+   "yetenek": "Takip planı, kamera atlaması kapısı",
+   "kanit": [
+    {
+     "modul": "tools/readability.py",
+     "sembol": "camera_pop_problems"
+    }
+   ],
+   "test": [
+    "tests/test_follow_camera.py"
+   ]
+  },
+  {
+   "id": "KAM-03",
+   "motor": "kamera",
+   "isci": "director",
+   "skill": "studio-scene-camera",
+   "yetenek": "Tepki planı",
+   "kanit": [
+    {
+     "modul": "tools/readability.py",
+     "sembol": "reaction_problems"
+    }
+   ],
+   "test": [
+    "tests/test_follow_camera.py"
+   ],
+   "acik_gorev": [
+    "K1i"
+   ],
+   "insan_onayi": true
+  },
+  {
+   "id": "KAM-04",
+   "motor": "kamera",
+   "isci": "director",
+   "skill": "studio-scene-camera",
+   "yetenek": "Kadraj ve baş payı (kazara kesme yok)",
+   "kanit": [
+    {
+     "modul": "tools/readability.py",
+     "sembol": "crop_frame"
+    }
+   ],
+   "test": [
+    "tests/test_framing_crop.py"
+   ],
+   "acik_gorev": [
+    "Y2b"
+   ]
+  },
+  {
+   "id": "KAM-05",
+   "motor": "kamera",
+   "isci": "director",
+   "skill": "studio-scene-camera",
+   "yetenek": "Aksiyon okunabilirliği ölçü ve kapısı",
+   "kanit": [
+    {
+     "modul": "tools/readability.py",
+     "sembol": "measure_event"
+    }
+   ],
+   "test": [
+    "tests/test_action_readability.py"
+   ]
+  },
+  {
+   "id": "KAM-06",
+   "motor": "kamera",
+   "isci": "director",
+   "skill": "studio-scene-camera",
+   "yetenek": "Örtme bloklaması (oyuncular birbirini kapatmaz)",
+   "kanit": [
+    {
+     "modul": "tools/action_staging.py",
+     "sembol": "separate"
+    }
+   ],
+   "test": [
+    "tests/test_occlusion_blocking.py"
+   ],
+   "acik_gorev": [
+    "Y1b",
+    "K1f"
+   ]
+  },
+  {
+   "id": "KAM-07",
+   "motor": "kamera",
+   "isci": "director",
+   "skill": "studio-scene-camera",
+   "yetenek": "Kurgu ritmi (çok kısa çekim yok, plan çeşitliliği)",
+   "kanit": [
+    {
+     "modul": "tools/readability.py",
+     "sembol": "short_shot_problems"
+    }
+   ],
+   "test": [
+    "tests/test_short_shots.py"
+   ]
+  },
+  {
+   "id": "KAM-08",
+   "motor": "kamera",
+   "isci": "director",
+   "skill": "studio-scene-camera",
+   "yetenek": "Derinlik (z) ve storyboard sahnelemesi",
+   "kanit": [],
+   "test": [],
+   "acik_gorev": [
+    "K1f"
+   ],
+   "not": "K1f engelinin çözümü"
+  },
+  {
+   "id": "YER-01",
+   "motor": "yerellestirme",
+   "isci": "localisation",
+   "skill": "studio-localisation-delivery",
+   "yetenek": "Çeviri ve dil dizini (süre bütçesiyle)",
+   "kanit": [
+    {
+     "modul": "tools/localisation_worker.py",
+     "sembol": "build_lang_dir"
+    }
+   ],
+   "test": [
+    "tests/test_localisation.py"
+   ]
+  },
+  {
+   "id": "YER-02",
+   "motor": "yerellestirme",
+   "isci": "localisation",
+   "skill": "studio-localisation-delivery",
+   "yetenek": "Her hedef dil için lisansı uygun yerel ses motoru",
+   "kanit": [
+    {
+     "modul": "tools/localisation_worker.py",
+     "sembol": "translate"
+    }
+   ],
+   "test": [
+    "tests/test_voice_licence.py"
+   ],
+   "insan_onayi": true,
+   "not": "motoru olmayan dil 'destekleniyor' sayılmaz; dil dil insan dinlemesi"
+  },
+  {
+   "id": "YER-03",
+   "motor": "yerellestirme",
+   "isci": "voice",
+   "skill": "studio-voice-lipsync",
+   "yetenek": "Dublaj dilinde dudak senkronu",
+   "kanit": [],
+   "test": [],
+   "not": "doğrulanmadı"
+  },
+  {
+   "id": "QA-01",
+   "motor": "qa",
+   "isci": "video_qa",
+   "skill": "studio-media-qa",
+   "yetenek": "Video teknik denetimi",
+   "kanit": [
+    {
+     "modul": "tools/video_qa.py",
+     "sembol": "check"
+    }
+   ],
+   "test": [
+    "tests/test_video_qa.py"
+   ]
+  },
+  {
+   "id": "QA-02",
+   "motor": "qa",
+   "isci": "video_qa",
+   "skill": "studio-media-qa",
+   "yetenek": "Ses teknik denetimi (konuşma, seviye)",
+   "kanit": [
+    {
+     "modul": "tools/audio_qa.py",
+     "sembol": "validate_speech"
+    }
+   ],
+   "test": [
+    "tests/test_audio_qa.py"
+   ]
+  },
+  {
+   "id": "QA-03",
+   "motor": "qa",
+   "isci": "validator",
+   "skill": "studio-independent-qa",
+   "yetenek": "Diyalog kapsama kapısı (her replik seslendirildi)",
+   "kanit": [
+    {
+     "modul": "tools/dialogue_check.py",
+     "sembol": "check"
+    }
+   ],
+   "test": [
+    "tests/test_dialogue_gate.py"
+   ],
+   "acik_gorev": [
+    "Q12"
+   ]
+  },
+  {
+   "id": "QA-04",
+   "motor": "qa",
+   "isci": "validator",
+   "skill": "studio-independent-qa",
+   "yetenek": "Sahne sözleşmesi ve süreklilik kapısı",
+   "kanit": [
+    {
+     "modul": "tools/scene_contract.py",
+     "sembol": "gate"
+    },
+    {
+     "modul": "tools/continuity.py",
+     "sembol": "check"
+    }
+   ],
+   "test": [
+    "tests/test_scene_contract.py"
+   ],
+   "acik_gorev": [
+    "S1"
+   ]
+  },
+  {
+   "id": "QA-05",
+   "motor": "qa",
+   "isci": "standards",
+   "skill": "studio-independent-qa",
+   "yetenek": "Bilerek eklenmiş hataları yakalayan bağımsız QA",
+   "kanit": [],
+   "test": [],
+   "acik_gorev": [
+    "Q1"
+   ]
+  },
+  {
+   "id": "QA-06",
+   "motor": "qa",
+   "isci": "standards",
+   "skill": "studio-independent-qa",
+   "yetenek": "2D kalite standardı ölçümü",
+   "kanit": [
+    {
+     "modul": "tools/studio_standards_check.py",
+     "sembol": "check"
+    }
+   ],
+   "test": [
+    "tests/test_quality_upgrade.py"
+   ]
+  },
+  {
+   "id": "QA-07",
+   "motor": "qa",
+   "isci": "video_qa",
+   "skill": "studio-media-qa",
+   "yetenek": "Parçalı üretimde ses/kare sürekliliği",
+   "kanit": [],
+   "test": [],
+   "acik_gorev": [
+    "Q11"
+   ]
+  },
+  {
+   "id": "URE-01",
+   "motor": "uretim",
+   "isci": "showrunner",
+   "skill": "studio-longform-production",
+   "yetenek": "Bölüm en az 8 dakika kapısı",
+   "kanit": [
+    {
+     "modul": "tools/episode_length.py",
+     "sembol": "check"
+    }
+   ],
+   "test": [
+    "tests/test_episode_length.py"
+   ]
+  },
+  {
+   "id": "URE-02",
+   "motor": "uretim",
+   "isci": "showrunner",
+   "skill": "studio-longform-production",
+   "yetenek": "İş defteri: mükerrer iş ve yarış engeli",
+   "kanit": [
+    {
+     "modul": "tools/job_ledger.py",
+     "sembol": "claim"
+    }
+   ],
+   "test": [
+    "tests/test_job_ledger.py"
+   ]
+  },
+  {
+   "id": "URE-03",
+   "motor": "uretim",
+   "isci": "finance",
+   "skill": "studio-budget-control",
+   "yetenek": "Ücretli çağrı engeli ve niyet kaydı",
+   "kanit": [
+    {
+     "modul": "tools/llm_guard.py",
+     "sembol": "check"
+    }
+   ],
+   "test": [
+    "tests/test_llm_guard.py"
+   ],
+   "acik_gorev": [
+    "S3"
+   ]
+  },
+  {
+   "id": "URE-04",
+   "motor": "uretim",
+   "isci": "finance",
+   "skill": "studio-budget-control",
+   "yetenek": "Bölüm başı gerçek maliyet ölçümü (<= 1 EUR)",
+   "kanit": [],
+   "test": [],
+   "not": "kabul kapısı 4"
+  },
+  {
+   "id": "URE-05",
+   "motor": "uretim",
+   "isci": "showrunner",
+   "skill": "studio-longform-production",
+   "yetenek": "İki farklı projeyle kaynak değişmeden uçtan uca üretim",
+   "kanit": [],
+   "test": [],
+   "acik_gorev": [
+    "U1"
+   ]
+  },
+  {
+   "id": "YAZ-01",
+   "motor": "yazilim",
+   "isci": "software",
+   "skill": "software",
+   "yetenek": "Motor yetenek/skill eksik envanteri",
+   "kanit": [
+    {
+     "modul": "tools/engine_gaps.py",
+     "sembol": "check"
+    }
+   ],
+   "test": [
+    "tests/test_engine_gaps.py"
+   ]
+  },
+  {
+   "id": "YAZ-02",
+   "motor": "yazilim",
+   "isci": "software",
+   "skill": "software",
+   "yetenek": "Kırmızı-yeşil kabul kapısı (test eski kodda düşer, yenide geçer)",
+   "kanit": [
+    {
+     "modul": "tools/software_dept.py",
+     "sembol": "acceptance"
+    }
+   ],
+   "test": [
+    "tests/test_software_dept.py"
+   ]
+  },
+  {
+   "id": "YAZ-03",
+   "motor": "yazilim",
+   "isci": "software",
+   "skill": "software",
+   "yetenek": "Departman işinin ofiste gerçek kayıtla görünmesi",
+   "kanit": [
+    {
+     "modul": "tools/software_dept.py",
+     "sembol": "office_sync"
+    }
+   ],
+   "test": [
+    "tests/test_software_dept.py"
+   ]
+  }
+ ]
+}
