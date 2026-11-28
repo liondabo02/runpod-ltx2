@@ -11,7 +11,8 @@ import render2d as r2  # noqa: E402
 import shot_cuts  # noqa: E402
 import shot_planner as sp  # noqa: E402
 import puppet2d as pp  # noqa: E402
-from test_listener_reaction import PROJECTS, make_project  # noqa: E402
+from test_listener_reaction import PROJECTS, line, make_project  # noqa: E402
+import listener_reaction as lr  # noqa: E402
 
 
 def pbeat(i, t0, t1, camera="wide", **kw):
@@ -242,3 +243,18 @@ def test_hold_outside_the_close_shot_does_not_open_it_and_per_beat_framing_is_ca
     assert head_share(0.0)[1] < free[1] - 0.05                            # tutuş çekimin İÇİNDEYSE kadraj açılır
     monkeypatch.setattr(r2, "close_run", per_beat_run)                   # bozma: eski, vuruşun tamamına bakan kadraj
     assert head_share(5.5)[1] < free[1] - 0.05
+
+
+@pytest.mark.parametrize("name", sorted(PROJECTS))
+def test_edit_boundary_hidden_under_a_listener_shot_does_not_restart_the_push(tmp_path, name, monkeypatch):
+    """Tepki planı sürerken alttaki kurgu listesi 3,5 sn'de çekim değiştirir: aynı yüzdeki yaklaşma başa dönmez."""
+    planned, designs, a = close_chain(tmp_path, name, second="idle", camera_b="geniş")
+    plan = dict(planned(), context=[])
+    beat = plan["beats"][0]
+    other = next(c for c in beat["cast"] if c != a)
+    beat.update(t_end=8.0, camera="close", lines=[line(other, 0.4, 2.9)])
+    plan["beats"] = [beat]
+    assert lr.target(beat, 3.4) == lr.target(beat, 3.6) == a
+    assert readability.camera_pop_problems(readability.camera_pops(plan, designs)) == []
+    monkeypatch.setattr(r2, "run_phase", lambda run, b, lt: r2.shot_cuts.at(b, lt)[1])     # bozma: yaklaşma kurgu listesinden
+    assert [p for p in readability.camera_pops(plan, designs) if p["kind"] == "edit" and abs(p["t"] - 3.5) < 0.1]
